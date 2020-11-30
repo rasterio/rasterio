@@ -13,7 +13,7 @@ used.
 import json
 import pickle
 
-from rasterio._crs import _CRS, all_proj_keys
+from rasterio._crs import _CRS, all_proj_keys, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
 from rasterio.compat import Mapping, string_types
 from rasterio.errors import CRSError
 
@@ -155,6 +155,18 @@ class CRS(Mapping):
         """
         return self._crs.to_epsg()
 
+    def to_authority(self):
+        """The authority name and code of the CRS
+
+        .. versionadded:: 1.1.7
+
+        Returns
+        -------
+        (str, str) or None
+
+        """
+        return self._crs.to_authority()
+
     def to_dict(self):
         """Convert CRS to a PROJ4 dict
 
@@ -284,9 +296,9 @@ class CRS(Mapping):
         str
 
         """
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return 'EPSG:{}'.format(epsg_code)
+        auth = self.to_authority()
+        if auth:
+            return ":".join(auth)
         else:
             return self.to_wkt() or self.to_proj4()
 
@@ -322,6 +334,25 @@ class CRS(Mapping):
         return obj
 
     @classmethod
+    def from_authority(cls, auth_name, code):
+        """Make a CRS from an authority name and authority code
+
+        .. versionadded:: 1.1.7
+
+        Parameters
+        ----------
+        auth_name: str
+            The name of the authority.
+        code : int or str
+            The code used by the authority.
+
+        Returns
+        -------
+        CRS
+        """
+        return cls.from_string("{auth_name}:{code}".format(auth_name=auth_name, code=code))
+
+    @classmethod
     def from_string(cls, string, morph_from_esri_dialect=False):
         """Make a CRS from an EPSG, PROJ, or WKT string
 
@@ -338,11 +369,16 @@ class CRS(Mapping):
         CRS
 
         """
+        try:
+            string = string.strip()
+        except AttributeError:
+            pass
+
         if not string:
             raise CRSError("CRS is empty or invalid: {!r}".format(string))
 
-        elif string.strip().upper().startswith('EPSG:'):
-            auth, val = string.strip().split(':')
+        elif string.upper().startswith('EPSG:'):
+            auth, val = string.split(':')
             if not val:
                 raise CRSError("Invalid CRS: {!r}".format(string))
             return cls.from_epsg(val)
@@ -358,12 +394,14 @@ class CRS(Mapping):
                 raise CRSError("CRS is empty JSON")
             else:
                 return cls.from_dict(**val)
-
-        elif '+' in string and '=' in string:
+        elif string.endswith("]"):
+            return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
+        elif "=" in string:
             return cls.from_proj4(string)
 
-        else:
-            return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
+        obj = cls()
+        obj._crs = _CRS.from_user_input(string, morph_from_esri_dialect=morph_from_esri_dialect)
+        return obj
 
     @classmethod
     def from_proj4(cls, proj):
@@ -455,8 +493,83 @@ class CRS(Mapping):
         elif isinstance(value, dict):
             return cls(**value)
         elif isinstance(value, string_types):
-            obj = cls()
-            obj._crs = _CRS.from_user_input(value, morph_from_esri_dialect=morph_from_esri_dialect)
-            return obj
+            return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
+
+
+def epsg_treats_as_latlong(input):
+    """Test if the CRS is in latlon order
+
+    From GDAL docs:
+
+    > This method returns TRUE if EPSG feels this geographic coordinate
+    system should be treated as having lat/long coordinate ordering.
+
+    > Currently this returns TRUE for all geographic coordinate systems with
+    an EPSG code set, and axes set defining it as lat, long.
+
+    > FALSE will be returned for all coordinate systems that are not
+    geographic, or that do not have an EPSG code set.
+
+    > **Note**
+
+    > Important change of behavior since GDAL 3.0.
+    In previous versions, geographic CRS imported with importFromEPSG()
+    would cause this method to return FALSE on them, whereas now it returns
+    TRUE, since importFromEPSG() is now equivalent to importFromEPSGA().
+
+    Parameters
+    ----------
+    input : CRS
+        Coordinate reference system, as a rasterio CRS object
+        Example: CRS({'init': 'EPSG:4326'})
+
+    Returns
+    -------
+    bool
+
+    """
+    if not isinstance(input, CRS):
+        input = CRS.from_user_input(input)
+
+    return _epsg_treats_as_latlong(input._crs)
+
+
+def epsg_treats_as_northingeasting(input):
+    """Test if the CRS should be treated as having northing/easting coordinate ordering
+
+    From GDAL docs:
+
+    > This method returns TRUE if EPSG feels this projected coordinate
+    system should be treated as having northing/easting coordinate ordering.
+
+    > Currently this returns TRUE for all projected coordinate systems with
+    an EPSG code set, and axes set defining it as northing, easting.
+
+    > FALSE will be returned for all coordinate systems that are not
+    projected, or that do not have an EPSG code set.
+
+    > **Note**
+
+    > Important change of behavior since GDAL 3.0.
+    In previous versions, projected CRS with northing, easting axis order
+    imported with importFromEPSG() would cause this method to return FALSE
+    on them, whereas now it returns TRUE, since importFromEPSG() is now 
+    equivalent to importFromEPSGA().
+
+    Parameters
+    ----------
+    input : CRS
+        Coordinate reference system, as a rasterio CRS object
+        Example: CRS({'init': 'EPSG:4326'})
+
+    Returns
+    -------
+    bool
+
+    """
+    if not isinstance(input, CRS):
+        input = CRS.from_user_input(input)
+
+    return _epsg_treats_as_northingeasting(input._crs)

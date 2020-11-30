@@ -295,7 +295,9 @@ def rasterize(
         if is_valid_geom(geom):
             shape_values.append(value)
 
-            if geom['type'] == 'GeometryCollection':
+            geom_type = geom['type']
+
+            if geom_type == 'GeometryCollection':
                 # GeometryCollections need to be handled as individual parts to
                 # avoid holes in output:
                 # https://github.com/mapbox/rasterio/issues/1253.
@@ -303,6 +305,11 @@ def rasterize(
                 # GeometryCollections
                 for part in geom['geometries']:
                     valid_shapes.append((part, value))
+
+            elif geom_type == 'MultiPolygon':
+                # Same issue as above
+                for poly in geom['coordinates']:
+                    valid_shapes.append(({'type': 'Polygon', 'coordinates': poly}, value))
 
             else:
                 valid_shapes.append((geom, value))
@@ -373,6 +380,14 @@ def bounds(geometry, north_up=True, transform=None):
         return tuple(geometry['bbox'])
 
     geom = geometry.get('geometry') or geometry
+
+    # geometry must be a geometry, GeometryCollection, or FeatureCollection
+    if not ('coordinates' in geom or 'geometries' in geom or 'features' in geom):
+        raise ValueError(
+            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+            "or FeatureCollection"
+        )
+
     return _bounds(geom, north_up=north_up, transform=transform)
 
 

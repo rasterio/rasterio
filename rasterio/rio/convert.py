@@ -2,7 +2,6 @@
 
 
 import click
-from cligj import format_opt
 import numpy as np
 
 import rasterio
@@ -13,7 +12,7 @@ from rasterio.rio.helpers import resolve_inout
 @click.command(short_help="Copy and convert raster dataset.")
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @options.dtype_opt
 @click.option('--scale-ratio', type=float, default=None,
               help="Source to destination scaling ratio.")
@@ -51,7 +50,9 @@ def convert(
     """
     with ctx.obj['env']:
 
-        outputfile, files = resolve_inout(files=files, output=output, overwrite=overwrite)
+        outputfile, files = resolve_inout(
+            files=files, output=output, overwrite=overwrite, num_inputs=1
+        )
         inputfile = files[0]
 
         with rasterio.open(inputfile) as src:
@@ -60,9 +61,9 @@ def convert(
             # options, as the profile for the output file.
             profile = src.profile
 
+            profile.pop('driver', None)
             if driver:
                 profile['driver'] = driver
-
             if dtype:
                 profile['dtype'] = dtype
             dst_dtype = profile['dtype']

@@ -139,7 +139,7 @@ class GDALError(IntEnum):
 
 cdef inline object exc_check():
     """Checks GDAL error stack for fatal or non-fatal errors
-    
+
     Returns
     -------
     An Exception, SystemExit, or None
@@ -169,6 +169,14 @@ cdef inline object exc_check():
 
     else:
         return
+
+
+cdef int exc_wrap(int retval) except -1:
+    """Wrap a GDAL function that returns int without checking the retval"""
+    exc = exc_check()
+    if exc:
+        raise exc
+    return retval
 
 
 cdef int exc_wrap_int(int err) except -1:

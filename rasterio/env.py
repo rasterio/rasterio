@@ -68,9 +68,9 @@ class Env(object):
 
     Example:
 
-        with rasterio.Env(GDAL_CACHEMAX=512) as env:
+        with rasterio.Env(GDAL_CACHEMAX=128000000) as env:
             # All drivers are registered, GDAL's raster block cache
-            # size is set to 512MB.
+            # size is set to 128 MB.
             # Commence processing...
             ...
             # End of processing.
@@ -98,7 +98,6 @@ class Env(object):
         dict
         """
         return {
-            'CHECK_WITH_INVERT_PROJ': True,
             'GTIFF_IMPLICIT_JPEG_OVR': False,
             "RASTERIO_ENV": True
         }

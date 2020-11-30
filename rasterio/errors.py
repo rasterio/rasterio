@@ -21,6 +21,10 @@ class EnvError(RasterioError):
     or modified."""
 
 
+class DriverCapabilityError(RasterioError, ValueError):
+    """Raised when a format driver can't a feature such as writing."""
+
+
 class DriverRegistrationError(ValueError):
     """Raised when a format driver is requested but is not registered."""
 
@@ -49,6 +53,10 @@ class NodataShadowWarning(UserWarning):
 
 class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
+
+
+class RPCTransformWarning(UserWarning):
+    """Error raised when GDALRPCTransform fails."""
 
 
 class ShapeSkipWarning(UserWarning):
@@ -84,8 +92,12 @@ class WindowEvaluationError(ValueError):
     """Raised when window evaluation fails"""
 
 
-class RasterioDeprecationWarning(UserWarning):
-    """Rasterio module deprecations"""
+class RasterioDeprecationWarning(FutureWarning):
+    """Rasterio module deprecations
+
+    Following https://www.python.org/dev/peps/pep-0565/#additional-use-case-for-futurewarning
+    we base this on FutureWarning while continuing to support Python < 3.7.
+    """
 
 
 class RasterBlockError(RasterioError):
@@ -114,3 +126,15 @@ class DatasetAttributeError(RasterioError, NotImplementedError):
 
 class PathError(RasterioError):
     """Raised when a dataset path is malformed or invalid"""
+
+
+class ResamplingAlgorithmError(RasterioError):
+    """Raised when a resampling algorithm is invalid or inapplicable"""
+
+
+class TransformError(RasterioError):
+    """Raised when transform arguments are invalid"""
+
+
+class WarpedVRTError(RasterioError):
+    """Raised when WarpedVRT can't be initialized"""

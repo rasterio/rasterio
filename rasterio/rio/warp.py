@@ -1,9 +1,9 @@
 """$ rio warp"""
 
+import logging
 from math import ceil
 
 import click
-from cligj import format_opt
 
 import rasterio
 from rasterio.crs import CRS
@@ -16,6 +16,7 @@ from rasterio.warp import (
     reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
     aligned_target, calculate_default_transform as calcdt)
 
+logger = logging.getLogger(__name__)
 
 # Improper usage of rio-warp can lead to accidental creation of
 # extremely large datasets. We'll put a hard limit on the size of
@@ -27,7 +28,7 @@ MAX_OUTPUT_HEIGHT = 100000
 @click.command(short_help='Warp a raster dataset.')
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @click.option(
     '--like',
     type=click.Path(exists=True),
@@ -149,7 +150,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.profile
-            out_kwargs.update(driver=driver)
+            out_kwargs.pop("driver", None)
+            if driver:
+                out_kwargs["driver"] = driver
 
             # Sort out the bounds options.
             if src_bounds and dst_bounds:
@@ -298,12 +301,18 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             )
 
             # Adjust block size if necessary.
-            if ('blockxsize' in out_kwargs and
-                    dst_width < out_kwargs['blockxsize']):
-                del out_kwargs['blockxsize']
-            if ('blockysize' in out_kwargs and
-                    dst_height < out_kwargs['blockysize']):
-                del out_kwargs['blockysize']
+            if "blockxsize" in out_kwargs and dst_width < int(out_kwargs["blockxsize"]):
+                del out_kwargs["blockxsize"]
+                logger.warning(
+                    "Blockxsize removed from creation options to accomodate small output width"
+                )
+            if "blockysize" in out_kwargs and dst_height < int(
+                out_kwargs["blockysize"]
+            ):
+                del out_kwargs["blockysize"]
+                logger.warning(
+                    "Blockxsize removed from creation options to accomodate small output height"
+                )
 
             out_kwargs.update(**creation_options)
 

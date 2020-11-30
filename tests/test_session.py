@@ -234,6 +234,18 @@ def test_session_aws_or_dummy_dummy(monkeypatch):
         assert isinstance(Session.aws_or_dummy(), DummySession)
 
 
+def test_no_sign_request(monkeypatch):
+    """If AWS_NO_SIGN_REQUEST is set do not default to aws_unsigned=False"""
+    monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "YES")
+    assert AWSSession().unsigned
+
+
+def test_no_credentialization_if_unsigned(monkeypatch):
+    """Don't get credentials if we're not signing, see #1984"""
+    sesh = AWSSession(aws_unsigned=True)
+    assert sesh._creds is None
+
+
 def test_azure_session_class():
     """AzureSession works"""
     azure_session = AzureSession(azure_storage_account='foo', azure_storage_access_key='bar')

@@ -8,7 +8,7 @@ import uuid
 import warnings
 import xml.etree.ElementTree as ET
 
-from affine import identity
+from affine import Affine, identity
 import numpy as np
 
 import rasterio
@@ -25,8 +25,7 @@ from rasterio.crs import CRS
 from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
-    RasterioDeprecationWarning, WarpOptionsError)
-from rasterio.path import parse_path, vsi_path
+    RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -108,7 +107,7 @@ def _transform_geom(
 
     factory = new OGRGeometryFactory()
     try:
-        if isinstance(geom, DICT_TYPES):
+        if isinstance(geom, DICT_TYPES) or hasattr(geom, "__geo_interface__"):
             out_geom = _transform_single_geom(geom, factory, transform, options, precision)
         else:
             out_geom = [
@@ -148,7 +147,7 @@ cdef GDALWarpOptions * create_warp_options(
     # get the defaults.
     cdef char **warp_extras = psWOptions.papszWarpOptions
 
-    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
     # is fine.
 
@@ -215,6 +214,7 @@ def _reproject(
         source, destination,
         src_transform=None,
         gcps=None,
+        rpcs=None,
         src_crs=None,
         src_nodata=None,
         dst_transform=None,
@@ -251,6 +251,9 @@ def _reproject(
     gcps: sequence of `GroundControlPoint` instances, optional
         Ground control points for the source. May be used in place of
         src_transform.
+    rpcs: RPC or dict, optional
+        Rational polynomial coefficients for the source. May be used
+        in place of src_transform.
     src_crs: dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -319,6 +322,7 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
+    cdef bint bUseApproxTransformer = True
 
     # Validate nodata values immediately.
     if src_nodata is not None:
@@ -351,13 +355,13 @@ def _reproject(
         # We need a src_transform and src_dst in this case. These will
         # be copied to the MEM dataset.
         if dtypes.is_ndarray(source):
-
             if not src_crs:
                 raise CRSError("Missing src_crs.")
-
             if src_nodata is None and hasattr(source, 'fill_value'):
                 # source is a masked array
                 src_nodata = source.fill_value
+            # ensure data converted to numpy array
+            source = np.array(source, copy=False)
             # Convert 2D single-band arrays to 3D multi-band.
             if len(source.shape) == 2:
                 source = source.reshape(1, *source.shape)
@@ -366,6 +370,7 @@ def _reproject(
             src_mem = InMemoryRaster(image=source,
                                          transform=format_transform(src_transform),
                                          gcps=gcps,
+                                         rpcs=rpcs,
                                          crs=src_crs)
             src_dataset = src_mem.handle()
 
@@ -394,10 +399,10 @@ def _reproject(
     try:
 
         if dtypes.is_ndarray(destination):
-
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
-
+            # ensure data converted to numpy array
+            destination = np.array(destination, copy=False)
             if len(destination.shape) == 2:
                 destination = destination.reshape(1, *destination.shape)
 
@@ -455,33 +460,51 @@ def _reproject(
 
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
-    CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+    imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+    if rpcs:
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
 
-    # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
+    # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
     # copying all the function's keyword arguments to the image to
     # image transformer options mapping; unsupported options should be
     # okay.
     for key, val in kwargs.items():
         key = key.upper().encode('utf-8')
-        val = str(val).upper().encode('utf-8')
+        if key == b"RPC_DEM":
+            # don't .upper() since might be a path
+            val = str(val).encode('utf-8')
+            
+            if rpcs:
+                bUseApproxTransformer = False
+        else:
+            val = str(val).upper().encode('utf-8')
         imgProjOptions = CSLSetNameValue(
             imgProjOptions, <const char *>key, <const char *>val)
+        log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
     try:
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(
                 src_dataset, dst_dataset, imgProjOptions))
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateApproxTransformer(
-                GDALGenImgProjTransform, hTransformArg, tolerance))
-        pfnTransformer = GDALApproxTransform
-        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+        if bUseApproxTransformer:
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateApproxTransformer(
+                    GDALGenImgProjTransform, hTransformArg, tolerance))
+            pfnTransformer = GDALApproxTransform
+            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+            log.debug("Created approximate transformer")
+        else:
+            pfnTransformer = GDALGenImgProjTransform
+            log.debug("Created exact transformer")
 
         log.debug("Created transformer and options.")
 
     except:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         CPLFree(imgProjOptions)
         if src_mem is not None:
             src_mem.close()
@@ -499,7 +522,7 @@ def _reproject(
     if init_dest_nodata:
         warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
-    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
     # is fine.
     for key, val in kwargs.items():
@@ -554,7 +577,10 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
         if mem_raster is not None:
@@ -565,7 +591,7 @@ def _reproject(
 
 def _calculate_default_transform(src_crs, dst_crs, width, height,
                                  left=None, bottom=None, right=None, top=None,
-                                 gcps=None, **kwargs):
+                                 gcps=None, rpcs=None, **kwargs):
     """Wraps GDAL's algorithm."""
     cdef void *hTransformArg = NULL
     cdef int npixels = 0
@@ -575,6 +601,8 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     cdef OGRSpatialReferenceH osr = NULL
     cdef char *wkt = NULL
     cdef GDALDatasetH hds = NULL
+    cdef char **imgProjOptions = NULL
+    cdef char **papszMD = NULL
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -606,11 +634,34 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
 
     try:
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            if key == b"RPC_DEM":
+                # don't .upper() since might be a path
+                val = str(val).encode('utf-8')
+            else:
+                val = str(val).upper().encode('utf-8')
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, <const char *>key, <const char *>val)
+            log.debug("Set _calculate_default_transform Transformer option {0!r}={1!r}".format(key, val))
         hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+        if rpcs:
+            if hasattr(rpcs, 'to_gdal'):
+                rpcs = rpcs.to_gdal()
+            for key, val in rpcs.items():
+                key = key.upper().encode('utf-8')
+                val = str(val).encode('utf-8')
+                papszMD = CSLSetNameValue(
+                    papszMD, <const char *>key, <const char *>val)
+            exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
 
         hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer(
-                hds, NULL, NULL, wkt, 1, 1000.0,0))
+            GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
+        )
         exc_wrap_int(
             GDALSuggestedWarpOutput2(
                 hds, GDALGenImgProjTransform, hTransformArg,
@@ -637,6 +688,10 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             GDALDestroyGenImgProjTransformer(hTransformArg)
         if hds != NULL:
             GDALClose(hds)
+        if imgProjOptions != NULL:
+            CPLFree(imgProjOptions)
+        if papszMD != NULL:
+            CSLDestroy(papszMD)
 
     # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
@@ -663,7 +718,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         Parameters
         ----------
         src_dataset : dataset object
-            The warp source.
+            The warp source dataset. Must be opened in "r" mode.
         src_crs : CRS or str, optional
             Overrides the coordinate reference system of `src_dataset`.
         src_transfrom : Affine, optional
@@ -709,12 +764,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             The working data type for warp operation and output.
         warp_extras : dict
             GDAL extra warp options. See
-            http://www.gdal.org/structGDALWarpOptions.html.
+            https://gdal.org/doxygen/structGDALWarpOptions.html.
 
         Returns
         -------
         WarpedVRT
+
         """
+        if src_dataset.mode != "r":
+            warnings.warn("Source dataset should be opened in read-only mode. Use of datasets opened in modes other than 'r' will be disallowed in a future version.", RasterioDeprecationWarning, stacklevel=2)
+
         self.mode = 'r'
         self.options = {}
         self._count = 0
@@ -742,19 +801,17 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             nodata = dst_nodata
 
         # Deprecate dst_width.
-        if dst_width is not None:
+        if dst_width is not None and width is None:
             warnings.warn(
                 "dst_width will be removed in 1.1, use width",
                 RasterioDeprecationWarning)
-        if width is None:
             width = dst_width
 
         # Deprecate dst_height.
-        if dst_height is not None:
+        if dst_height is not None and height is None:
             warnings.warn(
                 "dst_height will be removed in 1.1, use height",
                 RasterioDeprecationWarning)
-        if height is None:
             height = dst_height
 
         # Deprecate dst_transform.
@@ -824,15 +881,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
 
-        if self.dst_transform:
-            t = self.src_transform.to_gdal()
-            for i in range(6):
-                src_gt[i] = t[i]
-
-            t = self.dst_transform.to_gdal()
-            for i in range(6):
-                dst_gt[i] = t[i]
-
         if not self.src_crs:
             self.src_crs = self.src_dataset.crs
 
@@ -869,11 +917,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
                 src_alpha_band = bidx
 
+        # Adding an alpha band when the source has one is trouble.
+        # It will result in suprisingly unmasked data. We will 
+        # raise an exception instead.
+
         if add_alpha:
 
-            # Adding an alpha band when the source has one is trouble.
-            # It will result in suprisingly unmasked data. We will 
-            # raise an exception instead.
             if src_alpha_band:
                 raise WarpOptionsError(
                     "The VRT already has an alpha band, adding a new one is not supported")
@@ -899,56 +948,98 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         psWOptions.hSrcDS = hds
 
-        try:
+        # We handle four different use cases.
+        #
+        # 1. Destination transform, height, and width are provided by
+        #    the caller.
+        # 2. Pure scaling: source and destination CRS are the same,
+        #    destination height and width are provided by the caller,
+        #    destination transform is not provided; it is computed by
+        #    scaling the source transform.
+        # 3. Warp with scaling: CRS are different, destination height
+        #    and width are provided by the caller, destination transform
+        #    is computed and scaled to preserve given dimensions.
+        # 4. Warp with destination height, width, and transform
+        #    auto-generated by GDAL.
 
-            if self.dst_width and self.dst_height and self.dst_transform:
-                # set up transform args (otherwise handled in
-                # GDALAutoCreateWarpedVRT)
-                try:
+        # Case 4
+        if not self.dst_transform and (not self.dst_width or not self.dst_height):
+
+            with nogil:
+                hds_warped = GDALAutoCreateWarpedVRT(hds, src_crs_wkt, dst_crs_wkt, c_resampling, c_tolerance, psWOptions)
+
+        else:
+
+            # Case 1
+            if self.dst_transform and self.dst_width and self.dst_height:
+                pass
+
+            # Case 2
+            elif self.src_crs == self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+
+                self.dst_transform = Affine.scale(self.src_dataset.width / self.dst_width, self.src_dataset.height / self.dst_height) * self.src_transform
+
+            # Case 3
+            elif self.src_crs != self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+
+                left, bottom, right, top = self.src_dataset.bounds
+                self.dst_transform, width, height = _calculate_default_transform(self.src_crs, self.dst_crs, self.src_dataset.width, self.src_dataset.height, left=left, bottom=bottom, right=right, top=top)
+                self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
+
+            # If we get here it's because the tests above are buggy. We raise a Python exception to indicate that.
+            else:
+                raise RuntimeError(
+                    "Parameterization error: src_crs={!r}, dst_crs={!r}, dst_width={!r}, dst_height={!r}, dst_transform={!r}".format(self.src_crs, self.dst_crs, self.dst_width, self.dst_height, self.dst_transform))
+
+            t = self.src_transform.to_gdal()
+            for i in range(6):
+                src_gt[i] = t[i]
+
+            t = self.dst_transform.to_gdal()
+            for i in range(6):
+                dst_gt[i] = t[i]
+
+            try:
+                hTransformArg = exc_wrap_pointer(
+                    GDALCreateGenImgProjTransformer3(
+                        src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+
+                if c_tolerance > 0.0:
 
                     hTransformArg = exc_wrap_pointer(
-                        GDALCreateGenImgProjTransformer3(
-                            src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+                        GDALCreateApproxTransformer(
+                            GDALGenImgProjTransform,
+                            hTransformArg,
+                            c_tolerance))
 
-                    if c_tolerance > 0.0:
-                        hTransformArg = exc_wrap_pointer(
-                            GDALCreateApproxTransformer(
-                                GDALGenImgProjTransform,
-                                hTransformArg,
-                                c_tolerance))
+                    psWOptions.pfnTransformer = GDALApproxTransform
+                    GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
 
-                        psWOptions.pfnTransformer = GDALApproxTransform
-
-                        GDALApproxTransformerOwnsSubtransformer(
-                            hTransformArg, 1)
-
-                    log.debug("Created transformer and options.")
-                    psWOptions.pTransformerArg = hTransformArg
-
-                except Exception:
-                    GDALDestroyApproxTransformer(hTransformArg)
-                    raise
-
-                with nogil:
-                    hds_warped = GDALCreateWarpedVRT(
-                        hds, c_width, c_height, dst_gt, psWOptions)
-                    GDALSetProjection(hds_warped, dst_crs_wkt)
-
-                self._hds = exc_wrap_pointer(hds_warped)
+            except Exception:
+                CPLFree(dst_crs_wkt)
+                CPLFree(src_crs_wkt)
+                CSLDestroy(c_warp_extras)
+                if psWOptions != NULL:
+                    GDALDestroyWarpOptions(psWOptions)
 
             else:
-                with nogil:
-                    hds_warped = GDALAutoCreateWarpedVRT(
-                        hds, src_crs_wkt, dst_crs_wkt, c_resampling,
-                        c_tolerance, psWOptions)
+                psWOptions.pTransformerArg = hTransformArg
 
-                self._hds = exc_wrap_pointer(hds_warped)
+            with nogil:
+                hds_warped = GDALCreateWarpedVRT(hds, c_width, c_height, dst_gt, psWOptions)
+                GDALSetProjection(hds_warped, dst_crs_wkt)
+
+        # End of the 4 cases.
+
+        try:
+            self._hds = exc_wrap_pointer(hds_warped)
 
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
 
         finally:
             CPLFree(dst_crs_wkt)
+            CPLFree(src_crs_wkt)
             CSLDestroy(c_warp_extras)
             if psWOptions != NULL:
                 GDALDestroyWarpOptions(psWOptions)
@@ -959,6 +1050,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     delete_nodata_value(self.band(i))
                 except NotImplementedError as exc:
                     log.warn(str(exc))
+
         else:
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
@@ -978,17 +1070,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
     def crs(self):
         """The dataset's coordinate reference system"""
         return self.dst_crs
-
-    def start(self):
-        """Starts the VRT's life cycle."""
-        log.debug("Dataset %r is started.", self)
-
-    def stop(self):
-        """Ends the VRT's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        self._closed = True
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
@@ -1102,7 +1183,7 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None)
             gcp.attrib['X'] = str(point.x)
             gcp.attrib['Y'] = str(point.y)
             gcp.attrib['Z'] = str(point.z)
-    else:
+    elif transform:
         geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
         geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
 

@@ -53,10 +53,16 @@ cdef extern from "cpl_string.h" nogil:
     const char* CPLParseNameValue(const char *pszNameValue, char **ppszKey)
 
 
+cdef extern from "sys/stat.h" nogil:
+    struct stat:
+        pass
+
+
 cdef extern from "cpl_vsi.h" nogil:
 
     ctypedef int vsi_l_offset
     ctypedef FILE VSILFILE
+    ctypedef stat VSIStatBufL
 
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
@@ -66,14 +72,15 @@ cdef extern from "cpl_vsi.h" nogil:
     VSILFILE* VSIFOpenL(const char *path, const char *mode)
     int VSIFCloseL(VSILFILE *fp)
     int VSIUnlink(const char *path)
-
+    int VSIMkdir(const char *path, long mode)
+    int VSIRmdir(const char *path)
     int VSIFFlushL(VSILFILE *fp)
     size_t VSIFReadL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIFSeekL(VSILFILE *fp, vsi_l_offset nOffset, int nWhence)
     vsi_l_offset VSIFTellL(VSILFILE *fp)
     int VSIFTruncateL(VSILFILE *fp, vsi_l_offset nNewSize)
     size_t VSIFWriteL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
-
+    int VSIStatL(const char *pszFilename, VSIStatBufL *psStatBuf)
 
 cdef extern from "ogr_srs_api.h" nogil:
 
@@ -108,6 +115,8 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
     OGRErr OSRValidate(OGRSpatialReferenceH srs)
     double OSRGetLinearUnits(OGRSpatialReferenceH srs, char **ppszName)
+    int OSREPSGTreatsAsLatLong(OGRSpatialReferenceH srs)
+    int OSREPSGTreatsAsNorthingEasting(OGRSpatialReferenceH srs)
 
 cdef extern from "gdal.h" nogil:
 
@@ -187,6 +196,30 @@ cdef extern from "gdal.h" nogil:
         double dfGCPY
         double dfGCPZ
 
+    ctypedef struct GDALRPCInfo:
+        double dfLINE_OFF
+        double dfSAMP_OFF
+        double dfLAT_OFF
+        double dfLONG_OFF
+        double dfHEIGHT_OFF
+
+        double dfLINE_SCALE
+        double dfSAMP_SCALE
+        double dfLAT_SCALE
+        double dfLONG_SCALE
+        double dfHEIGHT_SCALE
+
+        double adfLINE_NUM_COEFF[20]
+        double adfLINE_DEN_COEFF[20]
+        double adfSAMP_NUM_COEFF[20]
+        double adfSAMP_DEN_COEFF[20]
+
+        double dfMIN_LONG
+        double dfMIN_LAT
+        double dfMAX_LONG
+        double dfMAX_LAT
+
+    int GDALExtractRPCInfo(char **papszMD, GDALRPCInfo * )
     void GDALAllRegister()
     void GDALDestroyDriverManager()
     int GDALGetDriverCount()
@@ -490,6 +523,13 @@ cdef extern from "gdalwarper.h" nogil:
 
 
 cdef extern from "gdal_alg.h" nogil:
+    void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
+                          double dfPixErrThreshold,
+                          char **papszOptions )
+    void GDALDestroyRPCTransformer( void *pTransformArg )
+    int GDALRPCTransform(void *pTransformArg, int bDstToSrc,
+                         int nPointCount, double *x, double *y, double *z,
+                         int *panSuccess )
 
     int GDALPolygonize(GDALRasterBandH band, GDALRasterBandH mask_band,
                        OGRLayerH layer, int fidx, char **options,

@@ -2,7 +2,6 @@ import json
 import logging
 
 import click
-import cligj
 
 from .helpers import resolve_inout
 from . import options
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
               help='GeoJSON file to use for masking raster.  Use "-" to read '
                    'from stdin.  If not provided, original raster will be '
                    'returned')
-@cligj.format_opt
+@options.format_opt
 @options.all_touched_opt
 @click.option('--crop', is_flag=True, default=False,
               help='Crop output raster to the extent of the geometries. '
@@ -116,6 +115,9 @@ def mask(
 
             profile = src.profile
             profile.update(**creation_options)
+            profile.pop("driver", None)
+            if driver:
+                profile["driver"] = driver
             profile.update({
                 'driver': driver,
                 'height': out_image.shape[1],

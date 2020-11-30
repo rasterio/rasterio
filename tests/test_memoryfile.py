@@ -49,6 +49,13 @@ def rgb_data_and_profile(path_rgb_byte_tif):
     return data, profile
 
 
+def test_initial_empty():
+    with MemoryFile() as memfile:
+        assert len(memfile) == 0
+        assert len(memfile.getbuffer()) == 0
+        assert memfile.tell() == 0
+
+
 def test_initial_not_bytes():
     """Creating a MemoryFile from not bytes fails."""
     with pytest.raises(TypeError):
@@ -113,6 +120,21 @@ def test_non_initial_bytes_in_two(rgb_file_bytes):
             assert src.driver == 'GTiff'
             assert src.count == 3
             assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.read().shape == (3, 718, 791)
+
+
+def test_non_initial_bytes_in_two_reverse(rgb_file_bytes):
+    """MemoryFile contents can be read from bytes in two steps, tail first, and opened.
+    Demonstrates fix of #1926."""
+    with MemoryFile() as memfile:
+        memfile.seek(600000)
+        assert memfile.write(rgb_file_bytes[600000:]) == len(rgb_file_bytes) - 600000
+        memfile.seek(0)
+        assert memfile.write(rgb_file_bytes[:600000]) == 600000
+        with memfile.open() as src:
+            assert src.driver == "GTiff"
+            assert src.count == 3
+            assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 718, 791)
 
 
@@ -264,10 +286,10 @@ def test_memfile_copyfiles(path_rgb_msk_byte_tif):
     """Multiple files can be copied to a MemoryFile using copyfiles"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
         src_basename = os.path.basename(src.name)
-        with MemoryFile(filename=src_basename) as memfile:
+        with MemoryFile(dirname="foo", filename=src_basename) as memfile:
             copyfiles(src.name, memfile.name)
             with memfile.open() as rgb2:
-                assert sorted(rgb2.files) == sorted(['/vsimem/{}'.format(src_basename), '/vsimem/{}.msk'.format(src_basename)])
+                assert sorted(rgb2.files) == sorted(['/vsimem/foo/{}'.format(src_basename), '/vsimem/foo/{}.msk'.format(src_basename)])
 
 
 def test_multi_memfile(path_rgb_msk_byte_tif):
@@ -277,9 +299,9 @@ def test_multi_memfile(path_rgb_msk_byte_tif):
     with open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
         msk_bytes = msk_fp.read()
 
-    with MemoryFile(tif_bytes, filename='foo.tif') as tifmemfile, MemoryFile(msk_bytes, filename='foo.tif.msk') as mskmemfile:
+    with MemoryFile(tif_bytes, dirname="bar", filename='foo.tif') as tifmemfile, MemoryFile(msk_bytes, dirname="bar", filename='foo.tif.msk') as mskmemfile:
         with tifmemfile.open() as src:
-            assert sorted(src.files) == sorted(['/vsimem/foo.tif', '/vsimem/foo.tif.msk'])
+            assert sorted(os.path.basename(fn) for fn in src.files) == sorted(['foo.tif', 'foo.tif.msk'])
             assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
 
 
@@ -311,3 +333,13 @@ def test_write_plus_mode_blockxsize_requires_width():
     with MemoryFile() as memfile:
         with pytest.raises(TypeError):
             memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5), blockxsize=128)
+
+def test_write_rpcs_to_memfile():
+    """Ensure we can write rpcs to a new MemoryFile"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        profile = src.profile.copy()
+        with MemoryFile() as memfile:
+            with memfile.open(**profile) as dst:
+                assert dst.rpcs is None
+                dst.rpcs = src.rpcs
+                assert dst.rpcs

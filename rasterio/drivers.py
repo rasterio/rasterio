@@ -9,6 +9,10 @@ NetCDF writing, for example, is presently blacklisted. Rasterio users
 should use netcdf4-python instead:
 http://unidata.github.io/netcdf4-python/.
 """
+import os
+
+from rasterio._base import _raster_driver_extensions
+from rasterio.env import GDALVersion, ensure_env, require_gdal_version
 
 # Methods like `rasterio.open()` may use this blacklist to preempt
 # combinations of drivers and file modes.
@@ -16,6 +20,58 @@ blacklist = {
     # See https://github.com/mapbox/rasterio/issues/638 for discussion
     # about writing NetCDF files.
     'netCDF': ('r+', 'w')}
+
+
+@ensure_env
+@require_gdal_version("2.0")
+def raster_driver_extensions():
+    """
+    Returns
+    -------
+    dict:
+        Map of extensions to the driver.
+    """
+    return _raster_driver_extensions()
+
+
+def driver_from_extension(path):
+    """
+    Attempt to auto-detect driver based on the extension.
+
+    Parameters
+    ----------
+    path: str or pathlike object
+        The path to the dataset to write with.
+
+    Returns
+    -------
+    str:
+        The name of the driver for the extension.
+    """
+    try:
+        # in case the path is a file handle
+        # or a partsed path
+        path = path.name
+    except AttributeError:
+        pass
+
+    # dynamic driver extension lists added in GDAL 2
+    if GDALVersion().runtime() < GDALVersion.parse('2.0'):
+        # basic list for GDAL 1
+        driver_extensions = {
+            'tif': 'GTiff',
+            'tiff': 'GTiff',
+            'png': 'PNG',
+            'jpg': 'JPEG',
+            'jpeg': 'JPEG',
+        }
+    else:
+        driver_extensions = raster_driver_extensions()
+
+    try:
+        return driver_extensions[os.path.splitext(path)[-1].lstrip(".").lower()]
+    except KeyError:
+        raise ValueError("Unable to detect driver. Please specify driver.")
 
 
 def is_blacklisted(name, mode):

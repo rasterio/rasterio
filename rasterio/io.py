@@ -85,7 +85,7 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, filename=None, ext=''):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
         """Create a new file in memory
 
         Parameters
@@ -102,7 +102,7 @@ class MemoryFile(MemoryFileBase):
         MemoryFile
         """
         super(MemoryFile, self).__init__(
-            file_or_bytes=file_or_bytes, filename=filename, ext=ext)
+            file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
@@ -121,16 +121,16 @@ class MemoryFile(MemoryFileBase):
         Other parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        vsi_path = UnparsedPath(self.name)
+        mempath = UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        if self.exists():
-            log.debug("VSI path: {}".format(vsi_path.path))
-            return DatasetReader(vsi_path, driver=driver, sharing=sharing, **kwargs)
+        if len(self) > 0:
+            log.debug("VSI path: {}".format(mempath.path))
+            return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
-            return writer(vsi_path, 'w+', driver=driver, width=width,
+            return writer(mempath, 'w+', driver=driver, width=width,
                           height=height, count=count, crs=crs,
                           transform=transform, dtype=dtype,
                           nodata=nodata, sharing=sharing, **kwargs)
@@ -141,8 +141,8 @@ class MemoryFile(MemoryFileBase):
         return self
 
     def __exit__(self, *args, **kwargs):
-        self._env.__exit__()
         self.close()
+        self._env.__exit__()
 
 
 class ZipMemoryFile(MemoryFile):
@@ -172,11 +172,11 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        vsi_path = UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
+        zippath = UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        return DatasetReader(vsi_path, driver=driver, sharing=sharing, **kwargs)
+        return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
 
 
 def get_writer_for_driver(driver):
@@ -191,7 +191,8 @@ def get_writer_for_driver(driver):
     return cls
 
 
-def get_writer_for_path(path):
+def get_writer_for_path(path, driver=None):
     """Return the writer class appropriate for the existing dataset."""
-    driver = get_dataset_driver(path)
+    if not driver:
+        driver = get_dataset_driver(path)
     return get_writer_for_driver(driver)

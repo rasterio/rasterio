@@ -36,6 +36,7 @@ def mock_debian(tmpdir):
     tmpdir.ensure("share/gdal/2.3/header.dxf")
     tmpdir.ensure("share/gdal/2.4/header.dxf")
     tmpdir.ensure("share/gdal/3.0/header.dxf")
+    tmpdir.ensure("share/gdal/3.1/header.dxf")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 

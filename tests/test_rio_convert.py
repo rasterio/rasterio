@@ -1,13 +1,12 @@
-import sys
 import os
-import logging
+
+from click.testing import CliRunner
 import numpy as np
+import pytest
 
 import rasterio
 from rasterio.rio.main import main_group
 
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
 
@@ -16,16 +15,40 @@ def bbox(*args):
     return ' '.join([str(x) for x in args])
 
 
-def test_clip_bounds(runner, tmpdir):
+@pytest.mark.parametrize("bounds", [bbox(*TEST_BBOX)])
+def test_clip_bounds(runner, tmpdir, bounds):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+        main_group, ["clip", "tests/data/shade.tif", output, "--bounds", bounds]
+    )
     assert result.exit_code == 0
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
         assert out.shape == (419, 173)
+
+
+@pytest.mark.parametrize("bounds", [bbox(*TEST_BBOX)])
+def test_clip_bounds_with_complement(runner, tmpdir, bounds):
+    output = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "clip",
+            "tests/data/shade.tif",
+            output,
+            "--bounds",
+            bounds,
+            "--with-complement",
+        ],
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    with rasterio.open(output) as out:
+        assert out.shape == (419, 1047)
+        data = out.read()
+        assert (data[420:, :] == 255).all()
 
 
 def test_clip_bounds_geographic(runner, tmpdir):
@@ -105,9 +128,16 @@ def test_clip_overwrite_with_option(runner, tmpdir):
     assert result.exit_code == 0
 
     result = runner.invoke(
-        main_group, [
-        'clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX),
-        '--overwrite'])
+        main_group,
+        [
+            "clip",
+            "tests/data/shade.tif",
+            output,
+            "--bounds",
+            bbox(*TEST_BBOX),
+            "--overwrite",
+        ],
+    )
     assert result.exit_code == 0
 
 
@@ -131,6 +161,23 @@ def test_format_short(tmpdir, runner):
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.driver == 'JPEG'
+
+
+@pytest.mark.parametrize("extension, driver", [
+    ('TIF', 'GTiff'),
+    ('tiff', 'GTiff'),
+    ('png', 'PNG'),
+    ('jpg', 'JPEG'),
+    ('jpeg', 'JPEG'),
+])
+def test_autodetect_format(tmpdir, runner, extension, driver):
+    outputname = str(tmpdir.join("test.{}".format(extension)))
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.driver == driver
 
 
 def test_output_opt(tmpdir, runner):
@@ -248,3 +295,20 @@ def test_convert_overwrite_with_option(runner, tmpdir):
         'convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG',
         '--overwrite'])
     assert result.exit_code == 0
+
+
+def test_convert_no_input(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(main_group, ["convert", "-o", outputname, "-f", "JPEG"])
+    assert result.exit_code == 2
+
+
+def test_convert_no_input_overwrite(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group, ["convert", "--overwrite", outputname, "-f", "JPEG"]
+    )
+    assert result.exit_code == 2
+    assert "Insufficient inputs" in result.output

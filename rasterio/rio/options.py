@@ -365,3 +365,7 @@ sequence_opt = click.option(
     help="Write a LF-delimited sequence of texts containing individual "
          "objects (the default) or write a single JSON text containing a "
          "feature collection object.")
+
+format_opt = click.option(
+    '-f', '--format', '--driver', 'driver',
+    help="Output format driver")

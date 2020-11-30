@@ -164,6 +164,57 @@ the output dataset's transform matrix and, thereby, its spatial extent.
 
 .. image:: https://farm8.staticflickr.com/7399/16390100651_54f01b8601_b_d.jpg)
 
+Reprojecting with other georeferencing metadata
+------------------------------------------------
+
+Most geospatial datasets have a geotransform which can be used to reproject a dataset 
+from one coordinate reference system to another. Datasets may also be
+georeferenced by alternative metadata, namely Ground Control Points (gcps) or
+Rational Polynomial Coefficients (rpcs). For details on gcps and rpcs, see
+:doc:`georeferencing`. A common scenario is using gcps or rpcs to geocode
+(orthorectify) datasets, resampling and reorienting them to a coordinate
+reference system with a newly computed geotransform.
+
+.. code-block:: python
+
+    import rasterio
+    from rasterio.warp import reproject
+    from rasterio.enums import Resampling
+
+    with rasterio.open('RGB.byte.tif') as source:
+        print(source.rpcs)
+        src_crs = "EPSG:4326"  # This is the crs of the rpcs
+        
+        # Optional keyword arguments to be passed to GDAL transformer
+        # https://gdal.org/api/gdal_alg.html?highlight=gdalcreategenimgprojtransformer2#_CPPv432GDALCreateGenImgProjTransformer212GDALDatasetH12GDALDatasetHPPc
+        kwargs = {
+            'RPC_DEM': '/path/to/dem.tif'
+        }
+
+        # Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)
+        destination = np.zeros((1024, 1024), dtype=np.uint8)
+        dst_crs = "EPSG:3857"
+
+        _, dst_transform = reproject(
+            source,
+            destination,
+            rpcs=source.rpcs,
+            src_crs=src_crs,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest,
+            **kwargs
+        )
+
+        assert destination.any()
+
+.. note::
+    When reprojecting a dataset with gcps or rpcs, the src_crs parameter should
+    be supplied with the coordinate reference system that the gcps or rpcs are
+    referenced against. By definition rpcs are always referenced against WGS84
+    ellipsoid with geographic coordinates (EPSG:4326).
+
+
+
 References
 ----------
 

@@ -48,15 +48,40 @@ def test_bounds_z():
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
+@pytest.mark.parametrize('geometry', [
+    {'type': 'Polygon'},
+    {'type': 'Polygon', 'not_coordinates': []},
+    {'type': 'bogus', 'not_coordinates': []},
+    {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'not_coordinates': [[-10, -20], [10, 20]]},
+        ]
+    }
+])
+def test_bounds_invalid_obj(geometry):
+    with pytest.raises(ValueError, match="geometry must be a GeoJSON-like geometry, GeometryCollection, or FeatureCollection"):
+        bounds(geometry)
 
-def test_bounds_invalid_obj():
-    with pytest.raises(KeyError):
-        bounds({'type': 'bogus', 'not_coordinates': []})
 
-
-def test_feature_collection(basic_featurecollection):
+def test_bounds_feature_collection(basic_featurecollection):
     fc = basic_featurecollection
     assert bounds(fc) == bounds(fc['features'][0]) == (2, 2, 4.25, 4.25)
+
+
+def test_bounds_geometry_collection():
+    gc = {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'coordinates': [[-10, -20], [10, 20]]},
+            {'type': 'Polygon', 'coordinates': [[[5, 5], [25, 50], [25, 5]]]}
+        ]
+    }
+
+    assert bounds(gc) == (-10, -20, 25, 50)
+    assert bounds(MockGeoInterface(gc)) == (-10, -20, 25, 50)
 
 
 def test_bounds_existing_bbox(basic_featurecollection):
@@ -461,6 +486,30 @@ def test_rasterize_geomcollection_no_hole():
 
     assert np.array_equal(
         rasterize([geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_multipolygon_no_hole():
+    """
+    Make sure that bug reported in
+    https://github.com/mapbox/rasterio/issues/1253
+    does not recur.  MultiPolygons are flattened to individual parts,
+    and should result in no holes where parts overlap.
+    """
+
+    poly1 = (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)
+    poly2 = (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)
+
+    polys = [{'type': 'Polygon', 'coordinates': poly1},
+             {'type': 'Polygon', 'coordinates': poly2}]
+
+    multipoly = {'type': 'MultiPolygon', 'coordinates': [poly1, poly2]}
+
+    expected = rasterize(polys, out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(
+        rasterize([multipoly], out_shape=DEFAULT_SHAPE),
         expected
     )
 

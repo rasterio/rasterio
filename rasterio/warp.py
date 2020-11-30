@@ -12,7 +12,7 @@ from rasterio._base import _transform
 from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion, ensure_env, require_gdal_version
-from rasterio.errors import GDALBehaviorChangeException
+from rasterio.errors import GDALBehaviorChangeException, TransformError
 from rasterio.transform import array_bounds
 
 # Gauss (7) is not supported for warp
@@ -49,9 +49,16 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     out: tuple of array_like, (xs, ys, [zs])
         Tuple of x, y, and optionally z vectors, transformed into the target
         coordinate reference system.
-    """
 
-    return _transform(src_crs, dst_crs, xs, ys, zs)
+    """
+    if len(xs) != len(ys):
+        raise TransformError("xs and ys arrays must be the same length")
+    elif zs is not None and len(xs) != len(zs):
+        raise TransformError("zs, xs, and ys arrays must be the same length")
+    if len(xs) == 0:
+        return ([], [], []) if zs is not None else ([], [])
+    else:
+        return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
 @ensure_env
@@ -172,7 +179,7 @@ def transform_bounds(
 
 @ensure_env
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
-def reproject(source, destination=None, src_transform=None, gcps=None,
+def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,
               resampling=Resampling.nearest, num_threads=1,
@@ -208,7 +215,11 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
         defined together with gcps.
     gcps: sequence of GroundControlPoint, optional
         Ground control points for the source. An error will be raised
-        if this parameter is defined together with src_transform.
+        if this parameter is defined together with src_transform or rpcs.
+    rpcs: RPC or dict, optional
+        Rational polynomial coefficients for the source. An error will
+        be raised if this parameter is defined together with src_transform
+        or gcps.
     src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -278,9 +289,9 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
     """
 
     # Only one type of georeferencing is permitted.
-    if src_transform and gcps:
-        raise ValueError("src_transform and gcps parameters may not"
-                         "be used together.")
+    if (src_transform and gcps) or (src_transform and rpcs) or (gcps and rpcs):
+        raise ValueError("src_transform, gcps, and rpcs are mutually "
+                         "exclusive parameters and may not be used together.")
 
     # Guard against invalid or unsupported resampling algorithms.
     try:
@@ -300,21 +311,31 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
 
     # calculate the destination transform if not provided
     if dst_transform is None and (destination is None or isinstance(destination, np.ndarray)):
+        src_bounds = tuple([None] * 4)
         if isinstance(source, np.ndarray):
             if source.ndim == 3:
                 src_count, src_height, src_width = source.shape
             else:
                 src_count = 1
                 src_height, src_width = source.shape
-            src_bounds = array_bounds(src_height, src_width, src_transform)
+            
+            # try to compute src_bounds if we don't have gcps
+            if not (gcps or rpcs):
+                src_bounds = array_bounds(src_height, src_width, src_transform)
         else:
             src_rdr, src_bidx, _, src_shape = source
-            src_bounds = src_rdr.bounds
+
+            # dataset.bounds will return raster extents in pixel coordinates
+            # if dataset does not have geotransform, which is not useful here.
+            if not (src_rdr.transform.is_identity and src_rdr.crs is None):
+                src_bounds = src_rdr.bounds
+
             src_crs = src_rdr.crs
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
             src_count = len(src_bidx)
             src_height, src_width = src_shape
+            gcps = src_rdr.gcps[0] if src_rdr.gcps[0] else None
 
         dst_height = None
         dst_width = None
@@ -330,7 +351,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=src_crs, dst_crs=dst_crs, width=src_width, height=src_height,
             left=left, bottom=bottom, right=right, top=top,
-            gcps=gcps, dst_width=dst_width, dst_height=dst_height,
+            gcps=gcps, rpcs=rpcs, dst_width=dst_width, dst_height=dst_height,
             resolution=dst_resolution)
 
         if destination is None:
@@ -339,7 +360,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
 
     # Call the function in our extension module.
     _reproject(
-        source, destination, src_transform=src_transform, gcps=gcps,
+        source, destination, src_transform=src_transform, gcps=gcps, rpcs=rpcs,
         src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
         dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
         src_alpha=src_alpha, resampling=resampling,
@@ -394,7 +415,7 @@ def aligned_target(transform, width, height, resolution):
 @ensure_env
 def calculate_default_transform(
         src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
-        top=None, gcps=None, resolution=None, dst_width=None, dst_height=None):
+        top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None, **kwargs):
     """Output dimensions and transform for a reprojection.
 
     Source and destination coordinate reference systems and output
@@ -423,12 +444,17 @@ def calculate_default_transform(
     gcps: sequence of GroundControlPoint, optional
         Instead of a bounding box for the source, a sequence of ground
         control points may be provided.
+    rpcs: RPC or dict, optional
+        Instead of a bounding box for the source, rational polynomial
+        coefficients may be provided.
     resolution: tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference
         system.
     dst_width, dst_height: int, optional
         Output file size in pixels and lines. Cannot be used together
         with resolution.
+    kwargs:  dict, optional
+        Additional arguments passed to transformation function.
 
     Returns
     -------
@@ -449,11 +475,18 @@ def calculate_default_transform(
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
                          "be used together.")
+    if any(x is not None for x in (left, bottom, right, top)) and rpcs:
+        raise ValueError("Bounding values and rational polynomial coefficients may not"
+                         "be used together.")
 
-    if any(x is None for x in (left, bottom, right, top)) and not gcps:
-        raise ValueError("Either four bounding values or ground control points"
-                         "must be specified")
+    if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
+        raise ValueError("Either four bounding values, ground control points,"
+                         " or rational polynomial coefficients must be specified")
     
+    if gcps and rpcs:
+        raise ValueError("ground control points and rational polynomial",
+                         " coefficients may not be used together.")
+
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
                          "or none of them.")
@@ -467,7 +500,8 @@ def calculate_default_transform(
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps, rpcs, **kwargs
+    )
 
     # If resolution is specified, Keep upper-left anchored
     # adjust the transform resolutions

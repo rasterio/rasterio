@@ -20,12 +20,12 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
-from rasterio.drivers import is_blacklisted
+from rasterio.drivers import driver_from_extension, is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env_with_credentials, Env
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, DriverCapabilityError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -39,7 +39,6 @@ import rasterio._err
 import rasterio.coords
 import rasterio.enums
 import rasterio.path
-
 
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.2dev"
@@ -86,9 +85,12 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         sequentially until a match is found. When multiple drivers are
         available for a format such as JPEG2000, one of them can be
         selected by using this keyword argument.
-    width, height : int, optional
-        The numbers of rows and columns of the raster dataset. Required
-        in 'w' or 'w+' modes, they are ignored in 'r' or 'r+' modes.
+    width : int, optional
+        The number of columns of the raster dataset. Required in 'w' or
+        'w+' modes, it is ignored in 'r' or 'r+' modes.
+    height : int, optional
+        The number of rows of the raster dataset. Required in 'w' or
+        'w+' modes, it is ignored in 'r' or 'r+' modes.
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
@@ -217,18 +219,28 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # None.
         if mode == 'r':
             s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
+        elif mode == "r+":
+            s = get_writer_for_path(path, driver=driver)(
+                path, mode, driver=driver, sharing=sharing, **kwargs
+            )
         elif mode.startswith("w"):
-            s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                              width=width, height=height,
-                                              count=count, crs=crs,
-                                              transform=transform,
-                                              dtype=dtype, nodata=nodata,
-                                              sharing=sharing,
-                                              **kwargs)
+            if not driver:
+                driver = driver_from_extension(path)
+            writer = get_writer_for_driver(driver)
+            if writer is not None:
+                s = writer(path, mode, driver=driver,
+                           width=width, height=height,
+                           count=count, crs=crs,
+                           transform=transform,
+                           dtype=dtype, nodata=nodata,
+                           sharing=sharing,
+                           **kwargs)
+            else:
+                raise DriverCapabilityError(
+                    "Writer does not exist for driver: %s" % str(driver)
+                )
         else:
-            raise ValueError(
+            raise DriverCapabilityError(
                 "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
         return s
 

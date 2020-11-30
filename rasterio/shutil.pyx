@@ -12,10 +12,11 @@ except ImportError:  # pragma: no cover
 
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio.drivers import driver_from_extension
 from rasterio.env import ensure_env_with_credentials
 from rasterio._err import CPLE_OpenFailedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
-from rasterio.path import parse_path, vsi_path
+from rasterio.path import parse_path
 
 
 log = logging.getLogger(__name__)
@@ -34,8 +35,8 @@ def exists(path):
 
     cdef GDALDatasetH h_dataset = NULL
 
-    gdal_path = vsi_path(parse_path(path))
-    b_path = gdal_path.encode('utf-8')
+    vsipath = parse_path(path).as_vsi()
+    b_path = vsipath.encode('utf-8')
     cdef char* c_path = b_path
 
     with nogil:
@@ -53,7 +54,7 @@ def exists(path):
 
 
 @ensure_env_with_credentials
-def copy(src, dst, driver='GTiff', strict=True, **creation_options):
+def copy(src, dst, driver=None, strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination
     with driver specific creation options.
@@ -95,11 +96,6 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         log.debug("Option %r:%r", kb, vb)
 
     c_strictness = strict
-    driverb = driver.encode('utf-8')
-    drv = GDALGetDriverByName(driverb)
-
-    if drv == NULL:
-        raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
 
     # Convert src and dst Paths to strings.
     if isinstance(src, Path):
@@ -107,10 +103,19 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     if isinstance(dst, Path):
         dst = str(dst)
 
+    if driver is None:
+        driver = driver_from_extension(dst)
+
+    driverb = driver.encode('utf-8')
+    drv = GDALGetDriverByName(driverb)
+
+    if drv == NULL:
+        raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
+
     # Open a new GDAL dataset if src is a string.
     if isinstance(src, str):
 
-        if vsi_path(parse_path(src)) == vsi_path(parse_path(dst)):
+        if parse_path(src).as_vsi() == parse_path(dst).as_vsi():
             raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
 
         src = src.encode('utf-8')
@@ -123,7 +128,7 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     # Try to use the existing GDAL dataset handle otherwise.
     else:
 
-        if src.name == vsi_path(parse_path(dst)):
+        if src.name == parse_path(dst).as_vsi():
             raise RasterioIOError("{} and {} identify the same dataset.".format(src.name, dst))
 
         src_dataset = (<DatasetReaderBase?>src).handle()
@@ -177,13 +182,13 @@ def copyfiles(src, dst):
 
     src_path = parse_path(src)
     dst_path = parse_path(dst)
-    if vsi_path(src_path) == vsi_path(dst_path):
+    if src_path.as_vsi() == dst_path.as_vsi():
         raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
 
     # VFS paths probabaly don't work, but its hard to be completely certain
     # so just attempt to use them.
-    gdal_src_path = vsi_path(src_path)
-    gdal_dst_path = vsi_path(dst_path)
+    gdal_src_path = src_path.as_vsi()
+    gdal_dst_path = dst_path.as_vsi()
     b_gdal_src_path = gdal_src_path.encode('utf-8')
     b_gdal_dst_path = gdal_dst_path.encode('utf-8')
     cdef char* c_gdal_src_path = b_gdal_src_path
@@ -223,7 +228,7 @@ def delete(path, driver=None):
     cdef GDALDatasetH h_dataset = NULL
     cdef GDALDriverH h_driver = NULL
 
-    gdal_path = vsi_path(parse_path(path))
+    gdal_path = parse_path(path).as_vsi()
     b_path = gdal_path.encode('utf-8')
     cdef char* c_path = b_path
 

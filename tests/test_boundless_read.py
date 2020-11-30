@@ -8,7 +8,7 @@ import pytest
 import rasterio
 from rasterio.windows import Window
 
-from .conftest import requires_gdal21
+from .conftest import requires_gdal21, gdal_version
 
 
 @requires_gdal21(reason="Pixel equality tests require float windows and GDAL 2.1")
@@ -72,6 +72,7 @@ def test_boundless_mask_not_all_valid():
     assert masked.mask[-1, :].all()
 
 
+@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_fill_value():
     """Confirm resolution of issue #1471"""
     with rasterio.open("tests/data/red.tif") as src:
@@ -102,6 +103,7 @@ def test_boundless_mask_special():
     assert not mask[-1, :].any()
 
 
+@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:
@@ -109,9 +111,23 @@ def test_boundless_fill_value_overview_masks():
     assert (data[:, 0] == 5).all()
 
 
+@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_masked_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:
         data = src.read(1, masked=True, boundless=True, window=Window(-300, -335, 1000, 1000), fill_value=5, out_shape=(512, 512))
     assert data.fill_value == 5
     assert data.mask[:, 0].all()
+
+
+@pytest.mark.xfail(
+    gdal_version.major == 1,
+    reason="GDAL versions < 2 do not support OVERVIEW_LEVEL open option",
+)
+def test_boundless_open_options():
+    """Open options are taken into account"""
+    with rasterio.open("tests/data/cogeo.tif", overview_level=1) as src:
+        data1 = src.read(1, boundless=True)
+    with rasterio.open("tests/data/cogeo.tif", overview_level=2) as src:
+        data2 = src.read(1, boundless=True)
+    assert not numpy.array_equal(data1, data2)

@@ -1,6 +1,5 @@
 """Rasterio input/output."""
 
-
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
@@ -32,7 +31,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.path import parse_path, UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -66,28 +65,28 @@ def _delete_dataset_if_exists(path):
     """
 
     cdef GDALDatasetH h_dataset = NULL
-    cdef const char *c_path = NULL
-
-    b_path = path.encode('utf-8')
-    c_path = b_path
-
-    with silence_errors():
-        with nogil:
-            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+    cdef GDALDriverH h_driver = NULL
+    cdef const char *path_c = NULL
 
     try:
-        h_dataset = exc_wrap_pointer(h_dataset)
+        h_dataset = open_dataset(path, 0x40, None, None, None)
 
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError) as exc:
         log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+            "Skipped delete for overwrite. Dataset does not exist: %r", path)
 
     else:
         h_driver = GDALGetDatasetDriver(h_dataset)
+        GDALClose(h_dataset)
+        h_dataset = NULL
 
         if h_driver != NULL:
+            path_b = path.encode("utf-8")
+            path_c = path_b
             with nogil:
-                GDALDeleteDataset(h_driver, c_path)
+                err = GDALDeleteDataset(h_driver, path_c)
+            exc_wrap_int(err)
+
 
     finally:
         if h_dataset != NULL:
@@ -211,7 +210,9 @@ cdef class DatasetReaderBase(DatasetBase):
             are not cached.
 
         fill_value : scalar
-            Fill value applied in the `boundless=True` case only.
+            Fill value applied in the `boundless=True` case only. Like
+            the fill_value of numpy.ma.MaskedArray, should be value
+            valid for the dataset's data type.
 
         Returns
         -------
@@ -835,10 +836,10 @@ def silence_errors():
         CPLPopErrorHandler()
 
 
-cdef class MemoryFileBase(object):
+cdef class MemoryFileBase:
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None, filename=None, ext=''):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
         """A file in an in-memory filesystem.
 
         Parameters
@@ -850,8 +851,9 @@ cdef class MemoryFileBase(object):
         ext : str
             A file extension for the in-memory file under /vsimem. Ignored if
             filename was provided.
+
         """
-        cdef VSILFILE *vsi_handle = NULL
+        cdef VSILFILE *fp = NULL
 
         if file_or_bytes:
             if hasattr(file_or_bytes, 'read'):
@@ -865,33 +867,37 @@ cdef class MemoryFileBase(object):
         else:
             initial_bytes = b''
 
+        # Make an in-memory directory specific to this dataset to help organize
+        # auxiliary files.
+        self._dirname = dirname or str(uuid4())
+        VSIMkdir("/vsimem/{0}".format(self._dirname).encode("utf-8"), 0666)
+
         if filename:
             # GDAL's SRTMHGT driver requires the filename to be "correct" (match
             # the bounds being written)
-            self.name = '/vsimem/{0}'.format(filename)
+            self.name = "/vsimem/{0}/{1}".format(self._dirname, filename)
         else:
             # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = '/vsimem/{0}.{1}'.format(uuid4(), ext.lstrip('.'))
+            self.name = "/vsimem/{0}/{0}.{1}".format(self._dirname, ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
-        self._pos = 0
-        self.closed = False
 
         self._initial_bytes = initial_bytes
         cdef unsigned char *buffer = self._initial_bytes
 
         if self._initial_bytes:
+            self._vsif = VSIFileFromMemBuffer(
+               self._path, buffer, len(self._initial_bytes), 0)
+            self.mode = "r"
 
-            vsi_handle = VSIFileFromMemBuffer(
-                self._path, buffer, len(self._initial_bytes), 0)
+        else:
+            self._vsif = VSIFOpenL(self._path, "w+")
+            self.mode = "w+"
 
-            if vsi_handle == NULL:
-                raise IOError(
-                    "Failed to create in-memory file using initial bytes.")
+        if self._vsif == NULL:
+            raise IOError("Failed to open in-memory file.")
 
-            if VSIFCloseL(vsi_handle) != 0:
-                raise IOError(
-                    "Failed to properly close in-memory file.")
+        self.closed = False
 
     def exists(self):
         """Test if the in-memory file exists.
@@ -900,18 +906,10 @@ cdef class MemoryFileBase(object):
         -------
         bool
             True if the in-memory file exists.
+
         """
-        cdef VSILFILE *fp = NULL
-        cdef const char *cypath = self._path
-
-        with nogil:
-            fp = VSIFOpenL(cypath, 'r')
-
-        if fp != NULL:
-            VSIFCloseL(fp)
-            return True
-        else:
-            return False
+        cdef VSIStatBufL st_buf
+        return VSIStatL(self._path, &st_buf) == 0
 
     def __len__(self):
         """Length of the file's buffer in number of bytes.
@@ -921,91 +919,6 @@ cdef class MemoryFileBase(object):
         int
         """
         return self.getbuffer().size
-
-    def close(self):
-        """Close MemoryFile and release allocated memory."""
-        VSIUnlink(self._path)
-        self._pos = 0
-        self._initial_bytes = None
-        self.closed = True
-
-    def read(self, size=-1):
-        """Read size bytes from MemoryFile."""
-        cdef VSILFILE *fp = NULL
-        # Return no bytes immediately if the position is at or past the
-        # end of the file.
-        length = len(self)
-
-        if self._pos >= length:
-            self._pos = length
-            return b''
-
-        if size == -1:
-            size = length - self._pos
-        else:
-            size = min(size, length - self._pos)
-
-        cdef unsigned char *buffer = <unsigned char *>CPLMalloc(size)
-        cdef bytes result
-
-        fp = VSIFOpenL(self._path, 'r')
-
-        try:
-            fp = exc_wrap_vsilfile(fp)
-            if VSIFSeekL(fp, self._pos, 0) < 0:
-                raise IOError(
-                    "Failed to seek to offset %s in %s.",
-                    self._pos, self.name)
-
-            objects_read = VSIFReadL(buffer, 1, size, fp)
-            result = <bytes>buffer[:objects_read]
-
-        finally:
-            VSIFCloseL(fp)
-            CPLFree(buffer)
-
-        self._pos += len(result)
-        return result
-
-    def seek(self, offset, whence=0):
-        """Seek to position in MemoryFile."""
-        if whence == 0:
-            pos = offset
-        elif whence == 1:
-            pos = self._pos + offset
-        elif whence == 2:
-            pos = len(self) - offset
-        if pos < 0:
-            raise ValueError("negative seek position: {}".format(pos))
-        if pos > len(self):
-            raise ValueError("seek position past end of file: {}".format(pos))
-        self._pos = pos
-        return self._pos
-
-    def tell(self):
-        """Tell current position in MemoryFile."""
-        return self._pos
-
-    def write(self, data):
-        """Write data bytes to MemoryFile"""
-        cdef VSILFILE *fp = NULL
-        cdef const unsigned char *view = <bytes>data
-        n = len(data)
-
-        if not self.exists():
-            fp = exc_wrap_vsilfile(VSIFOpenL(self._path, 'w'))
-        else:
-            fp = exc_wrap_vsilfile(VSIFOpenL(self._path, 'r+'))
-            if VSIFSeekL(fp, self._pos, 0) < 0:
-                raise IOError(
-                    "Failed to seek to offset %s in %s.", self._pos, self.name)
-
-        result = VSIFWriteL(view, 1, n, fp)
-        VSIFFlushL(fp)
-        VSIFCloseL(fp)
-
-        self._pos += result
-        return result
 
     def getbuffer(self):
         """Return a view on bytes of the file."""
@@ -1021,6 +934,52 @@ cdef class MemoryFileBase(object):
             buff_view = <np.uint8_t[:buffer_len]>buffer
         return buff_view
 
+    def close(self):
+        if self._vsif != NULL:
+            VSIFCloseL(self._vsif)
+        self._vsif = NULL
+        _delete_dataset_if_exists(self.name)
+        VSIRmdir(self._dirname.encode("utf-8"))
+        self.closed = True
+
+    def seek(self, offset, whence=0):
+        return VSIFSeekL(self._vsif, offset, whence)
+
+    def tell(self):
+        if self._vsif != NULL:
+            return VSIFTellL(self._vsif)
+        else:
+            return 0
+
+    def read(self, size=-1):
+        """Read size bytes from MemoryFile."""
+        cdef bytes result
+        cdef unsigned char *buffer = NULL
+        cdef vsi_l_offset buffer_len = 0
+
+        if size < 0:
+            buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
+            size = buffer_len
+
+        buffer = <unsigned char *>CPLMalloc(size)
+
+        try:
+            objects_read = VSIFReadL(buffer, 1, size, self._vsif)
+            result = <bytes>buffer[:objects_read]
+
+        finally:
+            CPLFree(buffer)
+
+        return result
+
+    def write(self, data):
+        """Write data bytes to MemoryFile"""
+        cdef const unsigned char *view = <bytes>data
+        n = len(data)
+        result = VSIFWriteL(view, 1, n, self._vsif)
+        VSIFFlushL(self._vsif)
+        return result
+
 
 cdef class DatasetWriterBase(DatasetReaderBase):
     """Read-write access to raster data and metadata
@@ -1028,7 +987,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1114,7 +1073,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Make and store a GDAL dataset handle.
         filename = path.name
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
         fname = name_b
 
@@ -1136,7 +1095,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if k.lower() in ['affine']:
                 continue
 
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
 
             if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
                 continue
@@ -1233,7 +1192,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if transform is not None:
             self._transform = transform.to_gdal()
         self._gcps = None
+        self._rpcs = None
         self._init_gcps = gcps
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -1248,6 +1209,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self.crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
@@ -1270,16 +1233,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             self.closed and 'closed' or 'open',
             self.name,
             self.mode)
-
-    def start(self):
-        pass
-
-    def stop(self):
-        """Ends the dataset's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
@@ -1705,6 +1658,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached value.
         self._gcps = None
 
+    def _set_rpcs(self, rpcs):
+        if hasattr(rpcs, 'to_gdal'):
+            rpcs = rpcs.to_gdal()
+        self.update_tags(ns='RPC', **rpcs)
+        self._rpcs = None
 
 cdef class InMemoryRaster:
     """
@@ -1728,7 +1686,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
     def __cinit__(self, image=None, dtype='uint8', count=1, width=None,
-                  height=None, transform=None, gcps=None, crs=None):
+                  height=None, transform=None, gcps=None, rpcs=None, crs=None):
         """
         Create in-memory raster dataset, and fill its bands with the
         arrays in image.
@@ -1746,6 +1704,8 @@ cdef class InMemoryRaster:
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
+        cdef char **options = NULL
+        cdef char **papszMD = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1773,10 +1733,13 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
+        if dtype == 'int8':
+            options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
         datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
-                       count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
+                       count, <GDALDataType>dtypes.dtype_rev[dtype], options))
 
         if transform is not None:
             self.transform = transform
@@ -1815,6 +1778,21 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+        elif rpcs:
+            try:
+                if hasattr(rpcs, 'to_gdal'):
+                    rpcs = rpcs.to_gdal()
+                for key, val in rpcs.items():
+                    key = key.upper().encode('utf-8')
+                    val = str(val).encode('utf-8')
+                    papszMD = CSLSetNameValue(
+                        papszMD, <const char *>key, <const char *>val)
+                exc_wrap_int(GDALSetMetadata(self._hds, papszMD, "RPC"))
+            finally:
+                CSLDestroy(papszMD)
+
+        if options != NULL:
+            CSLDestroy(options)
 
         self._image = None
         if image is not None:
@@ -1892,7 +1870,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1934,7 +1912,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `False`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1994,6 +1972,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self._transform = transform.to_gdal()
         self._gcps = None
         self._init_gcps = gcps
+        self._rpcs = None
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -2005,7 +1985,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")
@@ -2015,6 +1995,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
+                if self._init_dtype == 'int8':
+                    options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
                 tp = self._init_dtype.type
                 if tp not in dtypes.dtype_rev:
                     raise ValueError(
@@ -2026,7 +2009,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             self._hds = exc_wrap_pointer(
                 GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, NULL))
+                           self._count, gdal_dtype, options))
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -2039,6 +2022,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self._crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         elif self.mode == 'r+':
             try:
@@ -2097,7 +2082,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
             key_c = key_b
@@ -2117,8 +2102,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if temp != NULL:
                 GDALClose(temp)
             if self._hds != NULL:
-                GDALClose(self._hds)
-                self._hds = NULL
+                refcount = GDALDereferenceDataset(self._hds)
+                if refcount == 0:
+                    GDALClose(self._hds)
+            self._hds = NULL
 
 
 def virtual_file_to_buffer(filename):

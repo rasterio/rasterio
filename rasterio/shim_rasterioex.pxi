@@ -3,6 +3,7 @@
 
 from rasterio import dtypes
 from rasterio.enums import Resampling
+from rasterio.errors import ResamplingAlgorithmError
 
 cimport numpy as np
 
@@ -32,8 +33,8 @@ cdef extern from "gdal.h" nogil:
     cdef CPLErr GDALDatasetRasterIOEx(GDALDatasetH hDS, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, int nBandCount, int *panBandCount, GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace, GDALRasterIOExtraArg *psExtraArg)
 
 
-cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
-                 float width, float height, object data, int resampling=0) except -1:
+cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
+                 double width, double height, object data, int resampling=0) except -1:
     """Read or write a region of data for the band.
 
     Implicit are
@@ -43,7 +44,11 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     # GDAL handles all the buffering indexing, so a typed memoryview,
     # as in previous versions, isn't needed.
     cdef void *buf = <void *>np.PyArray_DATA(data)
@@ -78,8 +83,8 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
     return exc_wrap_int(retval)
 
 
-cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
+cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
                        Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple bands.
 
@@ -90,7 +95,11 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
@@ -136,8 +145,8 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
         CPLFree(bandmap)
 
 
-cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
+cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
                        Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple band masks.
 
@@ -148,7 +157,11 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     cdef int i = 0
     cdef int j = 0
     cdef int retval = 3
