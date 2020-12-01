@@ -322,6 +322,7 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
+    cdef bint bUseApproxTransformer = True
 
     # Validate nodata values immediately.
     if src_nodata is not None:
@@ -473,6 +474,9 @@ def _reproject(
         if key == b"RPC_DEM":
             # don't .upper() since might be a path
             val = str(val).encode('utf-8')
+            
+            if rpcs:
+                bUseApproxTransformer = False
         else:
             val = str(val).upper().encode('utf-8')
         imgProjOptions = CSLSetNameValue(
@@ -483,16 +487,24 @@ def _reproject(
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(
                 src_dataset, dst_dataset, imgProjOptions))
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateApproxTransformer(
-                GDALGenImgProjTransform, hTransformArg, tolerance))
-        pfnTransformer = GDALApproxTransform
-        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+        if bUseApproxTransformer:
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateApproxTransformer(
+                    GDALGenImgProjTransform, hTransformArg, tolerance))
+            pfnTransformer = GDALApproxTransform
+            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+            log.debug("Created approximate transformer")
+        else:
+            pfnTransformer = GDALGenImgProjTransform
+            log.debug("Created exact transformer")
 
         log.debug("Created transformer and options.")
 
     except:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         CPLFree(imgProjOptions)
         if src_mem is not None:
             src_mem.close()
@@ -565,7 +577,10 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
         if mem_raster is not None:
