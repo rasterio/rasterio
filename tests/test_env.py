@@ -19,7 +19,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession
+from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession, AzureSession
 
 from .conftest import requires_gdal21
 
@@ -843,6 +843,28 @@ def test_swift_session_credentials(gdalenv):
         s.credentialize()
         assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
         assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_azure_session_credentials(gdalenv):
+    """Create an Env with azure session."""
+    azure_session = AzureSession(
+        azure_storage_account='foo',
+        azure_storage_access_key='bar'
+    )
+    with rasterio.env.Env(session=azure_session) as s:
+        s.credentialize()
+        assert getenv()['AZURE_STORAGE_ACCOUNT'] == 'foo'
+        assert getenv()['AZURE_STORAGE_ACCESS_KEY'] == 'bar'
+
+
+def test_azure_session_credentials_connection_string(gdalenv):
+    """Create an Env with azure session."""
+    azure_session = AzureSession(
+        azure_storage_connection_string='AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY',
+    )
+    with rasterio.env.Env(session=azure_session) as s:
+        s.credentialize()
+        assert getenv()['AZURE_STORAGE_CONNECTION_STRING'] == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
 
 
 def test_swift_session_by_user_key():

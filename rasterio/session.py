@@ -113,6 +113,9 @@ class Session(object):
         elif path.path.startswith("/vsiswift/"):
             return SwiftSession
 
+        elif path.scheme == "az":
+            return AzureSession
+
         # This factory can be extended to other cloud providers here.
         # elif path.scheme == "cumulonimbus":  # for example.
         #     return CumulonimbusSession(*args, **kwargs)
@@ -533,5 +536,68 @@ class SwiftSession(Session):
         Returns
         -------
         dict
+        """
+        return {k.upper(): v for k, v in self.credentials.items()}
+
+
+class AzureSession(Session):
+    """Configures access to secured resources stored in Microsoft Azure Blob Storage.
+    """
+    def __init__(self, azure_storage_connection_string=None,
+                 azure_storage_account=None, azure_storage_access_key=None):
+        """Create new Microsoft Azure Blob Storage session
+
+        Parameters
+        ----------
+        azure_storage_connection_string: string
+            A connection string contains both an account name and a secret key.
+        azure_storage_account: string
+            An account name
+        azure_storage_access_key: string
+            A secret key
+        """
+
+        if azure_storage_connection_string:
+            self._creds = {
+                "azure_storage_connection_string": azure_storage_connection_string
+            }
+        else:
+            self._creds = {
+                "azure_storage_account": azure_storage_account,
+                "azure_storage_access_key": azure_storage_access_key
+            }
+
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return 'AZURE_STORAGE_CONNECTION_STRING' in config or (
+            'AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_KEY' in config
+        )
+
+    @property
+    def credentials(self):
+        """The session credentials as a dict"""
+        return self._creds
+
+    def get_credential_options(self):
+        """Get credentials as GDAL configuration options
+
+        Returns
+        -------
+        dict
+
         """
         return {k.upper(): v for k, v in self.credentials.items()}
