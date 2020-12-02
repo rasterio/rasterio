@@ -1685,7 +1685,14 @@ cdef class InMemoryRaster:
     This class is only intended for internal use within rasterio to support
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
-    def __cinit__(self, image=None, dtype='uint8', count=1, width=None,
+    def __cinit__(self):
+        self._hds = NULL
+        self.band_ids = NULL
+        self._image = None
+        self.crs = None
+        self.transform = None
+
+    def __init__(self, image=None, dtype='uint8', count=1, width=None,
                   height=None, transform=None, gcps=None, rpcs=None, crs=None):
         """
         Create in-memory raster dataset, and fill its bands with the
@@ -1794,7 +1801,6 @@ cdef class InMemoryRaster:
         if options != NULL:
             CSLDestroy(options)
 
-        self._image = None
         if image is not None:
             self.write(image)
 
@@ -1805,7 +1811,9 @@ cdef class InMemoryRaster:
         self.close()
 
     def __dealloc__(self):
-        CPLFree(self.band_ids)
+        if self.band_ids != NULL:
+            CPLFree(self.band_ids)
+            self.band_ids = NULL
 
     cdef GDALDatasetH handle(self) except NULL:
         """Return the object's GDAL dataset handle"""
@@ -1829,7 +1837,7 @@ cdef class InMemoryRaster:
     def close(self):
         if self._hds != NULL:
             GDALClose(self._hds)
-        self._hds = NULL
+            self._hds = NULL
 
     def read(self):
 

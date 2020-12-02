@@ -346,8 +346,8 @@ def _reproject(
             in_transform = in_transform.translation(eps, eps)
         return in_transform
 
-    mem_raster = None
-    src_mem = None
+    cdef InMemoryRaster mem_raster = None
+    cdef InMemoryRaster src_mem = None
 
     try:
 
