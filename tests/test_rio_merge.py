@@ -606,6 +606,19 @@ def test_merge_pathlib_path(tiffs):
     merge(inputs, res=2)
 
 
+def test_merge_output_dataset(tiffs, tmpdir):
+    """Write to an open dataset"""
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    output_file = tmpdir.join("output.tif")
+    merge(inputs, res=2, dst_path=str(output_file), dst_kwds=dict(driver="PNG"))
+
+    with rasterio.open(str(output_file)) as result:
+        assert result.count == 1
+        assert result.driver == "PNG"
+        assert result.height == result.width == 2
+
+
 @fixture(scope='function')
 def test_data_dir_resampling(tmpdir):
     kwargs = {
