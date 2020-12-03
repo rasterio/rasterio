@@ -3,7 +3,6 @@
 
 import click
 
-import rasterio
 from rasterio.enums import Resampling
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
@@ -56,7 +55,7 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
     resampling = Resampling[resampling]
 
     with ctx.obj["env"]:
-        dest, output_transform = merge_tool(
+        merge_tool(
             files,
             bounds=bounds,
             res=res,
@@ -64,28 +63,6 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
             precision=precision,
             indexes=(bidx or None),
             resampling=resampling,
+            dst_path=output,
+            dst_kwds=creation_options,
         )
-
-        with rasterio.open(files[0]) as first:
-            profile = first.profile
-            profile["transform"] = output_transform
-            profile["height"] = dest.shape[1]
-            profile["width"] = dest.shape[2]
-            profile["count"] = dest.shape[0]
-            profile.pop("driver", None)
-            if driver:
-                profile["driver"] = driver
-            if nodata is not None:
-                profile["nodata"] = nodata
-
-            profile.update(**creation_options)
-
-            with rasterio.open(output, "w", **profile) as dst:
-                dst.write(dest)
-
-                # uses the colormap in the first input raster.
-                try:
-                    colormap = first.colormap(1)
-                    dst.write_colormap(1, colormap)
-                except ValueError:
-                    pass

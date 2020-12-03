@@ -41,7 +41,7 @@ import rasterio.enums
 import rasterio.path
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.2dev"
+__version__ = "1.2a1"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its

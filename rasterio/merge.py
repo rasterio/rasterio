@@ -1,18 +1,17 @@
 """Copy valid pixels from input files to an output file."""
 
 from contextlib import contextmanager
-from pathlib import Path
 import logging
 import math
+from pathlib import Path
 import warnings
 
 import numpy as np
 
 import rasterio
-from rasterio import windows
-from rasterio.enums import Resampling
 from rasterio.compat import string_types
 from rasterio.enums import Resampling
+from rasterio import windows
 from rasterio.transform import Affine
 
 
@@ -21,9 +20,20 @@ logger = logging.getLogger(__name__)
 MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
-def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10,
-          indexes=None, output_count=None, resampling=Resampling.nearest,
-          method='first'):
+def merge(
+    datasets,
+    bounds=None,
+    res=None,
+    nodata=None,
+    dtype=None,
+    precision=10,
+    indexes=None,
+    output_count=None,
+    resampling=Resampling.nearest,
+    method="first",
+    dst_path=None,
+    dst_kwds=None,
+):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -90,6 +100,11 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
                 row offset in base array
             coff: int
                 column offset in base array
+    dst_path : str or Pathlike, optional
+        Path of output dataset
+    dst_kwds : dict, optional
+        Dictionary of creation options and other paramters that will be
+        overlaid on the profile of the output dataset.
 
     Returns
     -------
@@ -124,6 +139,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
         dataset_opener = nullcontext
 
     with dataset_opener(datasets[0]) as first:
+        first_profile = first.profile
         first_res = first.res
         nodataval = first.nodatavals[0]
         dt = first.dtypes[0]
@@ -134,6 +150,11 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             src_count = indexes
         else:
             src_count = len(indexes)
+
+        try:
+            first_colormap = first.colormap(1)
+        except ValueError:
+            first_colormap = None
 
     if not output_count:
         output_count = src_count
@@ -179,6 +200,16 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
     if dtype is not None:
         dt = dtype
         logger.debug("Set dtype: %s", dt)
+
+    out_profile = first_profile
+    out_profile.update(**(dst_kwds or {}))
+
+    out_profile["transform"] = output_transform
+    out_profile["height"] = output_height
+    out_profile["width"] = output_width
+    out_profile["count"] = output_count
+    if nodata is not None:
+        out_profile["nodata"] = nodata
 
     # create destination array
     dest = np.zeros((output_count, output_height, output_width), dtype=dt)
@@ -296,4 +327,11 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
         copyto(region, temp, region_nodata, temp_nodata,
                index=idx, roff=roff, coff=coff)
 
-    return dest, output_transform
+    if dst_path is None:
+        return dest, output_transform
+
+    else:
+        with rasterio.open(dst_path, "w", **out_profile) as dst:
+            dst.write(dest)
+            if first_colormap:
+                dst.write_colormap(1, first_colormap)

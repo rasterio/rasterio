@@ -1,8 +1,11 @@
 Changes
 =======
 
-1.2dev
-------
+1.2a1
+-----
+
+- Add dst_path and dst_kwds parameters to rasterio's merge tool to allow
+  results to be written directly to a dataset (#1867).
 
 1.1.8 (2020-10-20)
 ------------------
