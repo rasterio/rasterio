@@ -3,6 +3,7 @@
 
 from rasterio import dtypes
 from rasterio.enums import Resampling
+from rasterio.env import GDALVersion
 from rasterio.errors import ResamplingAlgorithmError
 
 cimport numpy as np
@@ -33,6 +34,24 @@ cdef extern from "gdal.h" nogil:
     cdef CPLErr GDALDatasetRasterIOEx(GDALDatasetH hDS, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, int nBandCount, int *panBandCount, GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace, GDALRasterIOExtraArg *psExtraArg)
 
 
+gdal33_version_checked = False
+gdal33_version_met = False
+
+def validate_resampling(resampling):
+    """Validate that the resampling method is compatible of reads/writes"""
+
+    if resampling == Resampling.rms:
+        global gdal33_version_checked
+        global gdal33_version_met
+        if not gdal33_version_checked:
+            gdal33_version_checked = True
+            gdal33_version_met = GDALVersion.runtime().at_least('3.3')
+        if not gdal33_version_met:
+            raise ResamplingAlgorithmError("{!r} requires GDAL 3.3".format(Resampling(resampling)))
+    elif resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
+
 cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
                  double width, double height, object data, int resampling=0) except -1:
     """Read or write a region of data for the band.
@@ -46,8 +65,7 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     the layout of ndarray views.
 
     """
-    if resampling > 7:
-        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+    validate_resampling(resampling)
 
     # GDAL handles all the buffering indexing, so a typed memoryview,
     # as in previous versions, isn't needed.
@@ -97,8 +115,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     the layout of ndarray views.
 
     """
-    if resampling > 7:
-        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+    validate_resampling(resampling)
 
     cdef int i = 0
     cdef int retval = 3
@@ -159,8 +176,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     the layout of ndarray views.
 
     """
-    if resampling > 7:
-        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+    validate_resampling(resampling)
 
     cdef int i = 0
     cdef int j = 0

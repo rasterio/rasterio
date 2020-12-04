@@ -1116,6 +1116,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
+        Resampling.rms: [439385],
     }
 
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -1206,6 +1207,7 @@ def test_reproject_resampling_alpha(method):
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
+        Resampling.rms: [439385],
     }
 
     with rasterio.open("tests/data/RGBA.byte.tif") as src:

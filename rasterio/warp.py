@@ -20,6 +20,9 @@ SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
 GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
 if GDALVersion.runtime().at_least('2.0'):
     SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
+# rms supported since GDAL 3.3
+if GDALVersion.runtime().at_least('3.3'):
+    SUPPORTED_RESAMPLING.append(Resampling.rms)
 
 
 @ensure_env
