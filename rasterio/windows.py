@@ -268,7 +268,7 @@ def from_bounds(left, bottom, right, top, transform=None,
         Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    height: int, required
+    height: int, optional
         Number of rows of the window.
     width: int, required
         Number of columns of the window.
