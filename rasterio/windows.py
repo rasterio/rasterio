@@ -258,13 +258,20 @@ def from_bounds(left, bottom, right, top, transform=None,
 
     Parameters
     ----------
-    left, bottom, right, top: float
-        Left (west), bottom (south), right (east), and top (north)
-        bounding coordinates.
+    left: float, required
+        Left (west) bounding coordinates
+    bottom: float, required
+        Bottom (south) bounding coordinates
+    right: float, required
+        Right (east) bounding coordinates
+    top: float, required
+        Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    height, width: int, required
-        Number of rows and columns of the window.
+    height: int, required
+        Number of rows of the window.
+    width: int, required
+        Number of columns of the window.
     precision: int, optional
         Number of decimal points of precision when computing inverse
         transform.
