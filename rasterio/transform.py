@@ -1,14 +1,11 @@
 """Geospatial transforms"""
 
-from __future__ import division
-
+from collections.abc import Iterable
 import math
 
 from affine import Affine
 
 from rasterio._transform import _transform_from_gcps
-from rasterio.compat import Iterable
-
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()

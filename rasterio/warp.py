@@ -1,19 +1,17 @@
 """Raster warping and reprojection."""
 
-
-from __future__ import absolute_import, division
-
 from math import ceil, floor
 
+from affine import Affine
 import numpy as np
 import rasterio
-from affine import Affine
+
 from rasterio._base import _transform
-from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion, ensure_env, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException, TransformError
 from rasterio.transform import array_bounds
+from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]

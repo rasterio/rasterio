@@ -5,7 +5,6 @@ import logging
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
-from rasterio.compat import string_types
 from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
@@ -379,7 +378,7 @@ cdef class _CRS(object):
         """
         cdef char *wkt_c = NULL
 
-        if not isinstance(wkt, string_types):
+        if not isinstance(wkt, str):
             raise ValueError("A string is expected")
 
         wkt_b= wkt.encode('utf-8')
@@ -416,7 +415,7 @@ cdef class _CRS(object):
         """
         cdef const char *text_c = NULL
 
-        if not isinstance(text, string_types):
+        if not isinstance(text, str):
             raise ValueError("A string is expected")
 
         text_b = text.encode('utf-8')

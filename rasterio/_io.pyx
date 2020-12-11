@@ -1,8 +1,5 @@
 """Rasterio input/output."""
-
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
-
-from __future__ import absolute_import
 
 include "directives.pxi"
 include "gdal.pxi"
@@ -21,7 +18,6 @@ from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
 from rasterio.crs import CRS
-from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
@@ -43,7 +39,6 @@ from rasterio._base cimport (
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._shim cimport (
     open_dataset, delete_nodata_value, io_band, io_multi_band, io_multi_mask)
-
 
 log = logging.getLogger(__name__)
 
@@ -1052,7 +1047,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
-            if not isinstance(driver, string_types):
+            if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
             try:
                 width = int(width)
@@ -1165,7 +1160,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             # driver may be a string or list of strings. If the
             # former, put it into a list.
-            if isinstance(driver, string_types):
+            if isinstance(driver, str):
                 driver = [driver]
 
             # flags: Update + Raster + Errors
@@ -1431,8 +1426,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             GDALGetMetadata(hobj, domain_c))
 
         for key, value in kwargs.items():
-            key_b = text_type(key).encode('utf-8')
-            value_b = text_type(value).encode('utf-8')
+            key_b = str(key).encode('utf-8')
+            value_b = str(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
             papszStrList = CSLSetNameValue(
@@ -1948,7 +1943,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
-            if not isinstance(driver, string_types):
+            if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
             try:
                 width = int(width)
@@ -2121,7 +2116,7 @@ def virtual_file_to_buffer(filename):
     cdef unsigned char *buff = NULL
     cdef const char *cfilename = NULL
     cdef vsi_l_offset buff_len = 0
-    filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
+    filename_b = filename if not isinstance(filename, str) else filename.encode('utf-8')
     cfilename = filename_b
     buff = VSIGetMemFileBuffer(cfilename, &buff_len, 0)
     n = buff_len

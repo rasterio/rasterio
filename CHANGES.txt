@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.2b1
+-----
+
+- Remove compat module and future namespace imports (#2067).
+
 1.2a1
 -----
 

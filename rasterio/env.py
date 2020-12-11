@@ -2,6 +2,7 @@
 
 import attr
 from functools import wraps, total_ordering
+from inspect import getfullargspec as getargspec
 import logging
 import os
 import re
@@ -11,7 +12,6 @@ import warnings
 from rasterio._env import (
         GDALEnv, get_gdal_config, set_gdal_config,
         GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
-from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
 from rasterio.session import Session, DummySession
@@ -477,7 +477,7 @@ class GDALVersion(object):
             return input
         if isinstance(input, tuple):
             return cls(*input)
-        elif isinstance(input, string_types):
+        elif isinstance(input, str):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
             match = re.search(r'^\d+\.\d+', input)

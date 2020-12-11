@@ -17,8 +17,8 @@ The newer float precision read-write window capabilities of Rasterio
 require instances of Window to be used.
 """
 
-from __future__ import division
 import collections
+from collections.abc import Iterable
 import functools
 import math
 import warnings
@@ -27,7 +27,6 @@ import attr
 from affine import Affine
 import numpy as np
 
-from rasterio.compat import Iterable
 from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
