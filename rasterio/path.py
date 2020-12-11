@@ -1,11 +1,12 @@
 """Dataset paths, identifiers, and filenames"""
 
+import pathlib
 import re
 import sys
+from urllib.parse import urlparse
 
 import attr
 
-from rasterio.compat import pathlib, string_types, urlparse
 from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
@@ -134,7 +135,7 @@ def parse_path(path):
     elif pathlib and isinstance(path, pathlib.PurePath):
         return ParsedPath(path.as_posix(), None, None)
 
-    elif isinstance(path, string_types):
+    elif isinstance(path, str):
 
         if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", path):
             if pathlib:

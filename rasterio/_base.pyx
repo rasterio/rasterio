@@ -2,13 +2,12 @@
 
 """Numpy-free base classes."""
 
-from __future__ import absolute_import
-
 from collections import defaultdict
 import logging
 import math
 import os
 import warnings
+
 from libc.string cimport strncmp
 
 from rasterio._err import (
@@ -17,7 +16,6 @@ from rasterio._err import (
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
-from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.rpc import RPC
 from rasterio import dtypes
@@ -36,7 +34,6 @@ from rasterio.path import parse_path
 from rasterio import windows
 
 include "gdal.pxi"
-
 
 log = logging.getLogger(__name__)
 
@@ -251,7 +248,7 @@ cdef class DatasetBase(object):
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
-            if isinstance(driver, string_types):
+            if isinstance(driver, str):
                 driver = [driver]
 
             # Read-only + Rasters + Sharing + Errors

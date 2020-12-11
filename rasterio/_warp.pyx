@@ -3,6 +3,8 @@
 
 include "gdal.pxi"
 
+from collections import UserDict
+from collections.abc import Mapping
 import logging
 import uuid
 import warnings
@@ -17,7 +19,6 @@ from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
-from rasterio.compat import DICT_TYPES
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import GDALVersion
@@ -107,7 +108,7 @@ def _transform_geom(
 
     factory = new OGRGeometryFactory()
     try:
-        if isinstance(geom, DICT_TYPES) or hasattr(geom, "__geo_interface__"):
+        if isinstance(geom, (dict, Mapping, UserDict)) or hasattr(geom, "__geo_interface__"):
             out_geom = _transform_single_geom(geom, factory, transform, options, precision)
         else:
             out_geom = [

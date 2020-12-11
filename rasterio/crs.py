@@ -10,11 +10,11 @@ used.
 
 """
 
+from collections.abc import Mapping
 import json
 import pickle
 
 from rasterio._crs import _CRS, all_proj_keys, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
-from rasterio.compat import Mapping, string_types
 from rasterio.errors import CRSError
 
 
@@ -492,7 +492,7 @@ class CRS(Mapping):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
             return cls(**value)
-        elif isinstance(value, string_types):
+        elif isinstance(value, str):
             return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))

@@ -9,7 +9,6 @@ import warnings
 import numpy as np
 
 import rasterio
-from rasterio.compat import string_types
 from rasterio.enums import Resampling
 from rasterio import windows
 from rasterio.transform import Affine
@@ -125,7 +124,7 @@ def merge(
                          .format(method, MERGE_METHODS))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], string_types) or isinstance(datasets[0], Path):
+    if isinstance(datasets[0], str) or isinstance(datasets[0], Path):
         dataset_opener = rasterio.open
     else:
 
