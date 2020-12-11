@@ -1,6 +1,6 @@
 """Unittests for $ rio blocks"""
 
-
+from itertools import zip_longest
 import json
 import re
 
@@ -8,7 +8,6 @@ import numpy as np
 
 import rasterio
 from rasterio.warp import transform_bounds
-from rasterio.compat import zip_longest
 from rasterio.rio.main import main_group
 
 
