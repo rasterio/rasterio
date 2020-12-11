@@ -92,7 +92,7 @@ def main_group(
     ctx.obj["verbosity"] = verbosity
     ctx.obj["aws_profile"] = aws_profile
     envopts = {"CPL_DEBUG": (verbosity > 2)}
-    if aws_profile or aws_no_sign_requests:
+    if aws_profile or aws_no_sign_requests or aws_requester_pays:
         ctx.obj["env"] = rasterio.Env(
             session=AWSSession(
                 profile_name=aws_profile,
