@@ -2,9 +2,10 @@ from copy import deepcopy
 import logging
 import sys
 
+from affine import Affine
 import numpy as np
 import pytest
-from affine import Affine
+import shapely.geometry
 
 import rasterio
 from rasterio.enums import MergeAlg
@@ -821,13 +822,7 @@ def test_shapes(basic_image):
     assert value == 1
 
     shape, value = results[1]
-    assert shape == {
-        'coordinates': [
-            [(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)],
-            [(2, 2), (5, 2), (5, 5), (2, 5), (2, 2)]
-        ],
-        'type': 'Polygon'
-    }
+    assert shapely.geometry.shape(shape).area == 91.0
     assert value == 0
 
 
