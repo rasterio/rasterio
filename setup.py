@@ -223,10 +223,8 @@ if "clean" not in sys.argv:
     if gdal_major_version >= 2:
         # GDAL>=2.0 does not require vendorized rasterfill.cpp
         cython_fill = ['rasterio/_fill.pyx']
-        sdist_fill = ['rasterio/_fill.cpp']
     else:
         cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
-        sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
 
     ext_modules = cythonize([
         Extension(
