@@ -397,12 +397,10 @@ setup_args = dict(
         'License :: OSI Approved :: BSD License',
         'Programming Language :: C',
         'Programming Language :: Cython',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion',
         'Topic :: Scientific/Engineering :: GIS'],
@@ -443,7 +441,9 @@ setup_args = dict(
     ext_modules=ext_modules,
     zip_safe=False,
     install_requires=inst_reqs,
-    extras_require=extra_reqs)
+    extras_require=extra_reqs,
+    python_requires=">=3.6",
+)
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}
