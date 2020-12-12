@@ -55,7 +55,9 @@ with open("VERSION.txt", "w") as f:
 try:
     from Cython.Build import cythonize
 except ImportError:
-    cythonize = None
+    raise SystemExit(
+        "ERROR: Cython.Build.cythonize not found. "
+        "Cython is required to build rasterio.")
 
 # By default we'll try to get options via gdal-config. On systems without,
 # options will need to be set in setup.cfg or on the setup command line.
@@ -75,7 +77,7 @@ try:
 
     include_dirs.append(np.get_include())
 except ImportError:
-    sys.exit("ERROR: Numpy and its headers are required to run setup().")
+    raise SystemExit("ERROR: Numpy and its headers are required to run setup().")
 
 if "clean" not in sys.argv:
     try:
@@ -123,7 +125,7 @@ if "clean" not in sys.argv:
                  gdalversion)
 
     if not gdalversion:
-        sys.exit("ERROR: A GDAL API version must be specified. Provide a path "
+        raise SystemExit("ERROR: A GDAL API version must be specified. Provide a path "
                  "to gdal-config using a GDAL_CONFIG environment variable "
                  "or use a GDAL_VERSION environment variable.")
 
@@ -132,7 +134,7 @@ if "clean" not in sys.argv:
     gdal_minor_version = int(gdal_version_parts[1])
 
     if gdal_major_version == 1 and gdal_minor_version < 11:
-        sys.exit("ERROR: GDAL >= 1.11 is required for rasterio. "
+        raise SystemExit("ERROR: GDAL >= 1.11 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -155,31 +157,6 @@ if os.environ.get('PACKAGE_DATA'):
         log.info("Copying proj_data from %s" % projdatadir)
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
-
-# Extend distutil's sdist command to generate 3 C extension sources for
-# the _io module: a version for GDAL < 2, one for 2 <= GDAL < 2.1 and
-# one for GDAL >= 2.1.
-class sdist_multi_gdal(sdist):
-    def run(self):
-        shutil.copy('rasterio/_shim1.pyx', 'rasterio/_shim.pyx')
-        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
-                          '-o', 'rasterio/_shim1.c'])
-        print(_)
-        shutil.copy('rasterio/_shim20.pyx', 'rasterio/_shim.pyx')
-        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
-                          '-o', 'rasterio/_shim20.c'])
-        print(_)
-        shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
-        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
-                          '-o', 'rasterio/_shim21.c'])
-
-        print(_)
-        shutil.copy('rasterio/_shim30.pyx', 'rasterio/_shim.pyx')
-        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
-                          '-o', 'rasterio/_shim30.c'])
-
-        print(_)
-        sdist.run(self)
 
 
 compile_time_env = {
@@ -251,16 +228,6 @@ if "clean" not in sys.argv:
         cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
         sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
 
-
-# When building from a repo, Cython is required.
-if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
-    log.info("MANIFEST.in found, presume a repo, cythonizing...")
-
-    if not cythonize:
-        sys.exit(
-            "ERROR: Cython.Build.cythonize not found. "
-            "Cython is required to build from a repo.")
-
     ext_modules = cythonize([
         Extension(
             'rasterio._base', ['rasterio/_base.pyx'], **ext_options),
@@ -288,34 +255,6 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio._transform', ['rasterio/_transform.pyx'], **ext_options)],
         quiet=True, compile_time_env=compile_time_env, **cythonize_options)
 
-# If there's no manifest template, as in an sdist, we just specify .c files.
-else:
-
-    ext_modules = [
-        Extension(
-            'rasterio._base', ['rasterio/_base.c'], **ext_options),
-        Extension(
-            'rasterio._io', ['rasterio/_io.c'], **ext_options),
-        Extension(
-            'rasterio._features', ['rasterio/_features.c'], **ext_options),
-        Extension(
-            'rasterio._env', ['rasterio/_env.c'], **ext_options),
-        Extension(
-            'rasterio._warp', ['rasterio/_warp.cpp'], **cpp_ext_options),
-        Extension(
-            'rasterio._fill', sdist_fill, **cpp_ext_options),
-        Extension(
-            'rasterio._err', ['rasterio/_err.c'], **ext_options),
-        Extension(
-            'rasterio._example', ['rasterio/_example.c'], **ext_options),
-        Extension(
-            'rasterio._crs', ['rasterio/_crs.c'], **ext_options),
-        Extension(
-            'rasterio.shutil', ['rasterio/shutil.c'], **ext_options),
-        Extension(
-            'rasterio._transform', ['rasterio/_transform.c'], **ext_options),
-         Extension('rasterio._shim', ['rasterio/_shim.c'], **ext_options),
-    ]
 
 
 with open("README.rst", encoding="utf-8") as f:
@@ -352,7 +291,6 @@ extra_reqs = {
 extra_reqs["all"] = list(set(itertools.chain(*extra_reqs.values())))
 
 setup_args = dict(
-    cmdclass={"sdist": sdist_multi_gdal},
     name="rasterio",
     version=version,
     description="Fast and direct raster I/O for use with Numpy and SciPy",
