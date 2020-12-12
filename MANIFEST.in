@@ -1,7 +1,9 @@
 exclude *.rst *.txt *.py
 include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py pyproject.toml
-include rasterio/*.c rasterio/*.cpp
-exclude rasterio/_shim.c
+include rasterio/*.cpp
+include rasterio/*.pyx
+include rasterio/*.pxd
+include rasterio/*.pxi
 recursive-include examples *.py
 recursive-include tests *.py *.rst
 recursive-exclude tests/data *.tif
