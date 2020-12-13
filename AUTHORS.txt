@@ -1,48 +1,65 @@
 Authors
 -------
 
+* Adam J. Stewart
 * Alan D. Snow
 * Aldo Culquicondor
 * Alessandro Amici
-* Alexander
 * Alexander Ivanov
+* Alex Shepherd
+* Alfred-Mountfield
 * Amit Kapadia
 * Andrew Annex
 * Andrew Catellier
+* appanacca
 * Ariel Zerahia
 * AsgerPetersen
+* asmith26
 * Bas Couwenberg
 * Ben Lewis
 * Brendan Ward
 * Caleb Robinson
+* cgohlke
 * Charlie Loyd
 * Chris Holden
 * Chris Holdgraf
 * Christoph Rieke
 * Colin Talbert
 * Damien Ayers
-* Dan "Ducky" Little
 * Dan Baston
+* Dan "Ducky" Little
+* Daniel J. H
 * Darren Weber
 * Denis Rykov
+* derekjanni
+* dnomadb
+* Elliott Sales de Andrade
 * Erik Seglem
 * Etienne B. Racine
 * Even Rouault
+* Felix Divo
 * Filipe
+* firas omrane
+* Florian
 * Frédéric Bonifas
+* Giacomo Vianello
 * Gregory Raevski
+* grovduck
 * Guillaume Lostis
 * Guy Doulberg
+* Ian Schneider
 * Ismail Sunni
 * Jacques Tardie
 * James Hiebert
 * James McBride
 * James Seppi
+* jaredairbusaerial
 * Jeffrey Gerard
 * Jennifer Reiber Kyle
 * Jeremy Hooke
 * Jesse Crocker
 * Johan Van de Wauw
+* Jonas
 * Jonas Sølvsteen
 * Joris Van den Bossche
 * Joshua Arnott
@@ -52,39 +69,39 @@ Authors
 * Kirill Kouzoubov
 * Koshy Thomas
 * Leah Wasser
+* ljburtz
+* Loïc Dutrieux
 * Lukasz
+* Mark Boer
 * Martijn Visser
 * Martin Kaesberger
 * Martin Raspaud
-* Matt Savoie
 * Matthew Perry
+* Matt Savoie
 * Maxim Dubinin
 * Mike Taves
+* morrme
 * Nat Wilson
 * Nick Grue
+* Nikolai Janakiev
+* Norman Barker
 * Pablo Sanfilippo
 * Patrick Young
 * Pratik Yadav
-* RK Aranas
 * Raaj Tilak Sarma
+* RK Aranas
 * Robert Sare
 * Robin Wilson
 * Ryan Grout
 * Sam Murphy
 * Sean Gillies
 * Seth Fitzsimmons
+* Seth Miller
+* sshuair
+* Talbert
 * Trevor R.H. Clarke
 * Tyler Erickson
 * Vincent Sarago
 * Vincent Schut
+* Yann-Sebastien Tremblay-Johnston
 * Yuvi Panda
-* appanacca
-* asmith26
-* cgohlke
-* derekjanni
-* dnomadb
-* firas omrane
-* grovduck
-* jaredairbusaerial
-* morrme
-* sshuair

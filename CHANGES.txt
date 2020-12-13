@@ -1,16 +1,29 @@
 Changes
 =======
 
-1.2b1
------
+1.2b1 (2020-12-13)
+------------------
 
 - Remove compat module and future namespace imports (#2067).
+- A bug in construction of requester pays AWS sessions has been fixed (#2062).
+- Support for the "rms" resampling method in a future version of GDAL has been
+  added (#2056).
 
-1.2a1
------
+1.2a1 (2020-12-03)
+------------------
 
+- Support for Azure Blob Storage using an "az" URI scheme has been added
+  (#1906).
+- Support for RPCs and coordinate transformations and raster warping with RPCs
+  has been added (#1845, #1922, #2029, #2030, #2031).
 - Add dst_path and dst_kwds parameters to rasterio's merge tool to allow
   results to be written directly to a dataset (#1867).
+- Rasterio's merge tool can now accept Paths as input (#2043).
+- A bug in accessing public Alibaba Cloud data has been fixed (#2018).
+- In "w" mode the driver keyword argument of open() may be omitted, in which
+  case the driver will be determined by the file extension of the first
+  positional argument (#2008).
+- The transform_geom has been optimized for sequences of geometries (#1827).
 
 1.1.8 (2020-10-20)
 ------------------
