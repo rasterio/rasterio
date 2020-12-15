@@ -13,8 +13,8 @@ I'm going to use the rasterio interactive inspector in these examples below.
 
 .. code-block:: console
 
-    $ rasterio.insp tests/data/RGB.byte.tif
-    Rasterio 0.6 Interactive Inspector (Python 2.7.5)
+    $ rio insp tests/data/RGB.byte.tif
+    Rasterio 1.1.7 Interactive Inspector (Python 3.7.7)
     Type "src.name", "src.read(1)", or "help(src)" for more information.
     >>> 
 
