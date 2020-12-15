@@ -14,7 +14,7 @@ I'm going to use the rasterio interactive inspector in these examples below.
 .. code-block:: console
 
     $ rio insp tests/data/RGB.byte.tif
-    Rasterio 1.1.7 Interactive Inspector (Python 3.7.7)
+    Rasterio 1.2.0 Interactive Inspector (Python 3.7.8)
     Type "src.name", "src.read(1)", or "help(src)" for more information.
     >>> 
 
@@ -89,4 +89,3 @@ files.
 
 As with image data, tags aren't written to the file on disk until the dataset
 is closed.
-
