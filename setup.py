@@ -220,12 +220,6 @@ if os.environ.get('CYTHON_COVERAGE'):
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
 if "clean" not in sys.argv:
-    if gdal_major_version >= 2:
-        # GDAL>=2.0 does not require vendorized rasterfill.cpp
-        cython_fill = ['rasterio/_fill.pyx']
-    else:
-        cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
-
     ext_modules = cythonize([
         Extension(
             'rasterio._base', ['rasterio/_base.pyx'], **ext_options),
@@ -238,7 +232,7 @@ if "clean" not in sys.argv:
         Extension(
             'rasterio._warp', ['rasterio/_warp.pyx'], **cpp_ext_options),
         Extension(
-            'rasterio._fill', cython_fill, **cpp_ext_options),
+            'rasterio._fill', ['rasterio/_fill.pyx'], **cpp_ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(

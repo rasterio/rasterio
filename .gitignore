@@ -70,8 +70,7 @@ venv2/
 # rasterio
 gdal-config.txt
 VERSION.txt
-rasterio/_fill.cpp
-rasterio/_warp.cpp
+rasterio/*.cpp
 rasterio/*.c
 tests/data/white-gemini-iv.zip
 .hypothesis/
