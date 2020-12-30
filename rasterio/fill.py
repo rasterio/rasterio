@@ -44,7 +44,7 @@ def fillnodata(
         image's mask (see above). If None, the inverse of the image's
         mask will be used if available.
     max_search_distance : float, optional
-        The maxmimum number of pixels to search in all directions to
+        The maximum number of pixels to search in all directions to
         find values to interpolate from. The default is 100.
     smoothing_iterations : integer, optional
         The number of 3x3 smoothing filter passes to run. The default is
