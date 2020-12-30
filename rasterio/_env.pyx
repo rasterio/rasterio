@@ -21,7 +21,6 @@ import threading
 from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
-from rasterio._shim cimport set_proj_search_path
 
 from libc.stdio cimport stderr
 
@@ -422,4 +421,12 @@ cdef class GDALEnv(ConfigEnv):
 
 def set_proj_data_search_path(path):
     """Set PROJ data search path"""
-    set_proj_search_path(path)
+    IF CTE_GDAL_MAJOR_VERSION >= 3:
+        cdef char **paths = NULL
+        cdef const char *path_c = NULL
+        path_b = path.encode("utf-8")
+        path_c = path_b
+        paths = CSLAddString(paths, path_c)
+        OSRSetPROJSearchPaths(paths)
+    ELSE:
+        os.environ["PROJ_LIB"] = path

@@ -17,6 +17,7 @@ import numpy as np
 
 import rasterio
 from rasterio._base import gdal_version
+from rasterio._base cimport open_dataset
 from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
@@ -38,7 +39,6 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
-from rasterio._shim cimport delete_nodata_value, open_dataset
 
 
 log = logging.getLogger(__name__)
@@ -423,10 +423,7 @@ def _reproject(
 
             if dst_alpha:
                 for i in range(destination.shape[0]):
-                    try:
-                        delete_nodata_value(GDALGetRasterBand(dst_dataset, i+1))
-                    except NotImplementedError as exc:
-                        log.warn(str(exc))
+                    GDALDeleteRasterNoDataValue(GDALGetRasterBand(dst_dataset, i+1))
 
                 GDALSetRasterColorInterpretation(GDALGetRasterBand(dst_dataset, dst_alpha), <GDALColorInterp>6)
 
@@ -1052,10 +1049,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         if self.dst_nodata is None:
             for i in self.indexes:
-                try:
-                    delete_nodata_value(self.band(i))
-                except NotImplementedError as exc:
-                    log.warn(str(exc))
+                GDALDeleteRasterNoDataValue(self.band(i))
 
         else:
             for i in self.indexes:

@@ -15,6 +15,7 @@ import warnings
 import numpy as np
 
 from rasterio._base import tastes_like_gdal, gdal_version
+from rasterio._base cimport open_dataset
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
 from rasterio.crs import CRS
@@ -34,16 +35,212 @@ from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
 
+from rasterio import dtypes
+from rasterio.enums import Resampling
+from rasterio.env import GDALVersion
+from rasterio.errors import ResamplingAlgorithmError
 from rasterio._base cimport (
     _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
-from rasterio._shim cimport (
-    open_dataset, delete_nodata_value, io_band, io_multi_band, io_multi_mask)
 
 cimport numpy as np
 
 log = logging.getLogger(__name__)
 
+gdal33_version_checked = False
+gdal33_version_met = False
+
+
+def validate_resampling(resampling):
+    """Validate that the resampling method is compatible of reads/writes"""
+
+    if resampling == Resampling.rms:
+        global gdal33_version_checked
+        global gdal33_version_met
+        if not gdal33_version_checked:
+            gdal33_version_checked = True
+            gdal33_version_met = GDALVersion.runtime().at_least('3.3')
+        if not gdal33_version_met:
+            raise ResamplingAlgorithmError("{!r} requires GDAL 3.3".format(Resampling(resampling)))
+    elif resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
+
+cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
+                 double width, double height, object data, int resampling=0) except -1:
+    """Read or write a region of data for the band.
+
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and `band` differ.
+    2) decimation if `data` and `band` shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+
+    """
+    validate_resampling(resampling)
+
+    # GDAL handles all the buffering indexing, so a typed memoryview,
+    # as in previous versions, isn't needed.
+    cdef void *buf = <void *>np.PyArray_DATA(data)
+    cdef int bufxsize = data.shape[1]
+    cdef int bufysize = data.shape[0]
+    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GSpacing bufpixelspace = data.strides[1]
+    cdef GSpacing buflinespace = data.strides[0]
+
+    cdef int xoff = <int>x0
+    cdef int yoff = <int>y0
+    cdef int xsize = <int>width
+    cdef int ysize = <int>height
+    cdef int retval = 3
+
+    cdef GDALRasterIOExtraArg extras
+    extras.nVersion = 1
+    extras.eResampleAlg = <GDALRIOResampleAlg>resampling
+    extras.bFloatingPointWindowValidity = 1
+    extras.dfXOff = x0
+    extras.dfYOff = y0
+    extras.dfXSize = width
+    extras.dfYSize = height
+    extras.pfnProgress = NULL
+    extras.pProgressData = NULL
+
+    with nogil:
+        retval = GDALRasterIOEx(
+            band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
+            buftype, bufpixelspace, buflinespace, &extras)
+
+    return exc_wrap_int(retval)
+
+
+cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
+                       Py_ssize_t[:] indexes, int resampling=0) except -1:
+    """Read or write a region of data for multiple bands.
+
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and bands differ.
+    2) decimation if `data` and band shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+
+    """
+    validate_resampling(resampling)
+
+    cdef int i = 0
+    cdef int retval = 3
+    cdef int *bandmap = NULL
+    cdef void *buf = <void *>np.PyArray_DATA(data)
+    cdef int bufxsize = data.shape[2]
+    cdef int bufysize = data.shape[1]
+    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GSpacing bufpixelspace = data.strides[2]
+    cdef GSpacing buflinespace = data.strides[1]
+    cdef GSpacing bufbandspace = data.strides[0]
+    cdef int count = len(indexes)
+
+    cdef int xoff = <int>x0
+    cdef int yoff = <int>y0
+    cdef int xsize = <int>width
+    cdef int ysize = <int>height
+
+    cdef GDALRasterIOExtraArg extras
+    extras.nVersion = 1
+    extras.eResampleAlg = <GDALRIOResampleAlg>resampling
+    extras.bFloatingPointWindowValidity = 1
+    extras.dfXOff = x0
+    extras.dfYOff = y0
+    extras.dfXSize = width
+    extras.dfYSize = height
+    extras.pfnProgress = NULL
+    extras.pProgressData = NULL
+
+    bandmap = <int *>CPLMalloc(count*sizeof(int))
+    for i in range(count):
+        bandmap[i] = <int>indexes[i]
+
+    try:
+        with nogil:
+            retval = GDALDatasetRasterIOEx(
+                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
+                bufxsize, bufysize, buftype, count, bandmap,
+                bufpixelspace, buflinespace, bufbandspace, &extras)
+
+        return exc_wrap_int(retval)
+
+    finally:
+        CPLFree(bandmap)
+
+
+cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
+                       Py_ssize_t[:] indexes, int resampling=0) except -1:
+    """Read or write a region of data for multiple band masks.
+
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and bands differ.
+    2) decimation if `data` and band shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+
+    """
+    validate_resampling(resampling)
+
+    cdef int i = 0
+    cdef int j = 0
+    cdef int retval = 3
+    cdef GDALRasterBandH band = NULL
+    cdef GDALRasterBandH hmask = NULL
+    cdef void *buf = NULL
+    cdef int bufxsize = data.shape[2]
+    cdef int bufysize = data.shape[1]
+    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GSpacing bufpixelspace = data.strides[2]
+    cdef GSpacing buflinespace = data.strides[1]
+    cdef int count = len(indexes)
+
+    cdef int xoff = <int>x0
+    cdef int yoff = <int>y0
+    cdef int xsize = <int>width
+    cdef int ysize = <int>height
+
+    cdef GDALRasterIOExtraArg extras
+    extras.nVersion = 1
+    extras.eResampleAlg = <GDALRIOResampleAlg>resampling
+    extras.bFloatingPointWindowValidity = 1
+    extras.dfXOff = x0
+    extras.dfYOff = y0
+    extras.dfXSize = width
+    extras.dfYSize = height
+    extras.pfnProgress = NULL
+    extras.pProgressData = NULL
+
+    for i in range(count):
+        j = <int>indexes[i]
+        band = GDALGetRasterBand(hds, j)
+        if band == NULL:
+            raise ValueError("Null band")
+        hmask = GDALGetMaskBand(band)
+        if hmask == NULL:
+            raise ValueError("Null mask band")
+        buf = <void *>np.PyArray_DATA(data[i])
+        if buf == NULL:
+            raise ValueError("NULL data")
+        with nogil:
+            retval = GDALRasterIOEx(
+                hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
+                bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
+
+            if retval:
+                break
+
+    return exc_wrap_int(retval)
 
 def _delete_dataset_if_exists(path):
 
@@ -1307,12 +1504,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def _set_nodatavals(self, vals):
         cdef GDALRasterBandH band = NULL
         cdef double nodataval
-        cdef int success
+        cdef int success = -1
 
         for i, val in zip(self.indexes, vals):
             band = self.band(i)
             if val is None:
-                success = delete_nodata_value(band)
+                success = GDALDeleteRasterNoDataValue(band)
             else:
                 nodataval = val
                 success = GDALSetRasterNoDataValue(band, nodataval)
@@ -1945,7 +2142,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef char *val_c = NULL
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
-        cdef int success = -1
         cdef const char *drv_name = NULL
         cdef GDALDriverH memdrv = NULL
         cdef GDALDatasetH temp = NULL
@@ -2028,7 +2224,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if self._init_nodata is not None:
                 for i in range(self._count):
                     band = self.band(i+1)
-                    success = GDALSetRasterNoDataValue(
+                    GDALSetRasterNoDataValue(
                         band, self._init_nodata)
             if self._transform:
                 self.write_transform(self._transform)
@@ -2076,7 +2272,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef char *val_c = NULL
         cdef GDALDriverH drv = NULL
         cdef GDALDatasetH temp = NULL
-        cdef int success = -1
         cdef const char *fname = NULL
 
         name_b = self.name.encode('utf-8')

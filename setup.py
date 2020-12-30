@@ -133,8 +133,8 @@ if "clean" not in sys.argv:
     gdal_major_version = int(gdal_version_parts[0])
     gdal_minor_version = int(gdal_version_parts[1])
 
-    if gdal_major_version == 1 and gdal_minor_version < 11:
-        raise SystemExit("ERROR: GDAL >= 1.11 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (2, 3):
+        raise SystemExit("ERROR: GDAL >= 2.3 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -243,8 +243,6 @@ if "clean" not in sys.argv:
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
-        Extension(
-            'rasterio._shim', ['rasterio/_shim.pyx'], **ext_options),
         Extension(
             'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options),
         Extension(

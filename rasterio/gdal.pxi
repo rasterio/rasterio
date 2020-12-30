@@ -39,6 +39,11 @@ cdef extern from "cpl_error.h" nogil:
     void CPLQuietErrorHandler(CPLErr eErrClass, CPLErrorNum nError, const char *pszErrorMsg)
 
 
+cdef extern from "cpl_progress.h":
+
+    ctypedef int (*GDALProgressFunc)(double dfComplete, const char *pszMessage, void *pProgressArg)
+
+
 cdef extern from "cpl_string.h" nogil:
 
     int CSLCount(char **papszStrList)
@@ -121,6 +126,20 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSREPSGTreatsAsNorthingEasting(OGRSpatialReferenceH srs)
     OGRSpatialReferenceH *OSRFindMatches(OGRSpatialReferenceH srs, char **options, int *entries, int **matchConfidence)
     void OSRFreeSRSArray(OGRSpatialReferenceH *srs)
+
+
+IF CTE_GDAL_MAJOR_VERSION >= 3:
+    cdef extern from "ogr_srs_api.h" nogil:
+
+        ctypedef enum OSRAxisMappingStrategy:
+            OAMS_TRADITIONAL_GIS_ORDER
+
+        const char* OSRGetName(OGRSpatialReferenceH hSRS)
+        void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
+        void OSRSetPROJSearchPaths(const char *const *papszPaths)
+ELSE:
+    cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
+
 
 cdef extern from "gdal.h" nogil:
 
@@ -234,6 +253,7 @@ cdef extern from "gdal.h" nogil:
     void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, GDALAccess access) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
     GDALDatasetH GDALOpenShared(const char *filename, GDALAccess access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
     void GDALClose(GDALDatasetH hds)
@@ -255,13 +275,29 @@ cdef extern from "gdal.h" nogil:
     int GDALGetRasterDataType(GDALRasterBandH band)
     double GDALGetRasterNoDataValue(GDALRasterBandH band, int *success)
     int GDALSetRasterNoDataValue(GDALRasterBandH band, double value)
+    int GDALDeleteRasterNoDataValue(GDALRasterBandH hBand)
     int GDALDatasetRasterIO(GDALRasterBandH band, int, int xoff, int yoff,
                             int xsize, int ysize, void *buffer, int width,
                             int height, int, int count, int *bmap, int poff,
                             int loff, int boff)
+    CPLErr GDALDatasetRasterIOEx(GDALDatasetH hDS, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, int nBandCount, int *panBandCount, GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace, GDALRasterIOExtraArg *psExtraArg)
     int GDALRasterIO(GDALRasterBandH band, int, int xoff, int yoff, int xsize,
                      int ysize, void *buffer, int width, int height, int,
                      int poff, int loff)
+
+    ctypedef struct GDALRasterIOExtraArg:
+        int nVersion
+        GDALRIOResampleAlg eResampleAlg
+        GDALProgressFunc pfnProgress
+        void *pProgressData
+        int bFloatingPointWindowValidity
+        double dfXOff
+        double dfYOff
+        double dfXSize
+        double dfYSize
+
+    CPLErr GDALRasterIOEx(GDALRasterBandH hRBand, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, GSpacing nPixelSpace, GSpacing nLineSpace, GDALRasterIOExtraArg *psExtraArg)
+
     int GDALFillRaster(GDALRasterBandH band, double rvalue, double ivalue)
     GDALDatasetH GDALCreate(GDALDriverH driver, const char *path, int width,
                             int height, int nbands, GDALDataType dtype,
