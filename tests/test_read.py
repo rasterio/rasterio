@@ -175,7 +175,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual(a.mask.sum((1, 2)).tolist(), [0, 0, 1])
-            self.assertEqual([md5(x.tostring()).hexdigest() for x in a],
+            self.assertEqual([md5(x.tobytes()).hexdigest() for x in a],
                              ['1df719040daa9dfdb3de96d6748345e8',
                               'ec8fb3659f40c4a209027231bef12bdb',
                               '5a9c12aebc126ec6f27604babd67a4e2'])
@@ -184,7 +184,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
-            self.assertEqual([md5(x.tostring()).hexdigest() for x in a[:]],
+            self.assertEqual([md5(x.tobytes()).hexdigest() for x in a[:]],
                              ['9e3000d60b4b6fb956f10dc57c4dc9b9',
                               '6a675416a32fcb70fbcf601d01aeb6ee',
                               '94fd2733b534376c273a894f36ad4e0b'])
