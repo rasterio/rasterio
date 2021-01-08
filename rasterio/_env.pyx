@@ -1,4 +1,5 @@
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: language_level=3, c_string_type=unicode, c_string_encoding=utf8
+
 """GDAL and OGR driver and configuration management
 
 The main thread always utilizes CPLSetConfigOption. Child threads

@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 """Raster file management."""
 
 include "gdal.pxi"
