@@ -1,5 +1,6 @@
+# cython: language_level=3, boundscheck=False
+
 """Rasterio input/output."""
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 include "directives.pxi"
 include "gdal.pxi"
@@ -32,13 +33,14 @@ from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
-cimport numpy as np
 
 from rasterio._base cimport (
     _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._shim cimport (
     open_dataset, delete_nodata_value, io_band, io_multi_band, io_multi_mask)
+
+cimport numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -252,10 +254,11 @@ cdef class DatasetReaderBase(DatasetBase):
             log.debug("Output nodata value read from file: %r", ndv)
 
             if ndv is not None:
-                if np.dtype(dtype).kind in ('i', 'u'):
+                kind = np.dtype(dtype).kind
+                if chr(kind) in "iu":
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
-                elif np.dtype(dtype).kind in ('f', 'c'):
+                elif chr(kind) in "cf":
                     info = np.finfo(dtype)
                     dt_min, dt_max = info.min, info.max
                 else:

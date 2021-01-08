@@ -1,4 +1,6 @@
+# cython: language_level=3
 # distutils: language = c++
+
 """Raster and vector warping and reprojection."""
 
 include "gdal.pxi"

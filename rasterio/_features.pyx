@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 """Feature extraction"""
 
 include "gdal.pxi"
@@ -8,8 +10,6 @@ import numpy as np
 
 from rasterio import dtypes
 from rasterio.enums import MergeAlg
-
-cimport numpy as np
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, InMemoryRaster, io_auto
@@ -60,9 +60,10 @@ def _shapes(image, mask, connectivity, transform):
     cdef InMemoryRaster mem_ds = None
     cdef InMemoryRaster mask_ds = None
     cdef ShapeIterator shape_iter = None
+    cdef int fieldtp
 
-    cdef bint is_float = np.dtype(image.dtype).kind == 'f'
-    cdef int fieldtp = 2 if is_float else 0
+    is_float = np.dtype(image.dtype).kind == "f"
+    fieldtp = 2 if is_float else 0
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
 

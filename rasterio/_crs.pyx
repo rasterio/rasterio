@@ -1,3 +1,5 @@
+# cython: language_level=3, boundscheck=False
+
 """Coordinate reference systems, class and functions.
 """
 

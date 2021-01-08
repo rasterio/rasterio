@@ -1,4 +1,4 @@
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
+# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 """Numpy-free base classes."""
 
@@ -329,7 +329,7 @@ cdef class DatasetBase(object):
             return CRS.from_wkt(wkt)
         else:
             return None
-    
+
     def _has_gcps_or_rpcs(self):
         """Check if we have gcps or rpcs"""
         cdef int num_gcps
@@ -341,7 +341,7 @@ cdef class DatasetBase(object):
         rpcs = self.tags(ns="RPC")
         if rpcs:
             return True
-        
+
         return False
 
     def read_crs(self):
@@ -1492,7 +1492,7 @@ def _can_create_osr(crs):
 
         # If input was empty, WKT can be too; otherwise the conversion
         # didn't work properly and indicates an error.
-        return wkt != NULL and bool(crs) == (wkt[0] != '\0')
+        return wkt != NULL and bool(crs) == (wkt[0] != 0)
 
     except CRSError:
         return False
