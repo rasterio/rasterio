@@ -1,4 +1,4 @@
-# Definitions for _features.
+# cython: language_level=3
 
 include "gdal.pxi"
 

@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 include "gdal.pxi"
 
 cdef GDALDatasetH open_dataset(object filename, int mode, object allowed_drivers, object open_options, object siblings) except NULL

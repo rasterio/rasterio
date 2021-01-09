@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 from libc.stdio cimport *
 
 cdef extern from "cpl_vsi.h":
