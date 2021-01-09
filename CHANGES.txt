@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.2b2 (2020-01-08)
+------------------
+
+- Use language_level=3 Cython directive for all .pyx sources (#2077).
+- Deprecated usage of numpy.ndarray.tostring() has been changed to use
+  tobytes().
+
 1.2b1 (2020-12-13)
 ------------------
 

@@ -66,7 +66,9 @@ class Env(object):
     is exited, drivers are removed from the registry and other
     configurations are removed.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
 
         with rasterio.Env(GDAL_CACHEMAX=128000000) as env:
             # All drivers are registered, GDAL's raster block cache

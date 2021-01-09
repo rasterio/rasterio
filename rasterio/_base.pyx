@@ -1,4 +1,6 @@
-# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
+# cython: language_level=3, boundscheck=False
+
+""", c_string_type=unicode, c_string_encoding=utf8"""
 
 """Numpy-free base classes."""
 
@@ -33,6 +35,8 @@ from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.path import parse_path
 from rasterio import windows
 
+cimport cython
+
 include "gdal.pxi"
 
 log = logging.getLogger(__name__)
@@ -45,7 +49,7 @@ def check_gdal_version(major, minor):
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    return GDALVersionInfo("RELEASE_NAME")
+    return GDALVersionInfo("RELEASE_NAME").decode("utf-8")
 
 
 cdef const char *get_driver_name(GDALDriverH driver):
@@ -346,10 +350,11 @@ cdef class DatasetBase(object):
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_b = GDALGetProjectionRef(self.handle())
-        wkt = wkt_b
-        if wkt == NULL:
+        cdef const char *wkt_c = GDALGetProjectionRef(self.handle())
+        wkt_b = wkt_c
+        if wkt_b == NULL:
             raise ValueError("Unexpected NULL spatial reference")
+        wkt = wkt_b.decode("utf-8")
         return self._handle_crswkt(wkt)
 
     def read_transform(self):
@@ -1078,6 +1083,7 @@ cdef class DatasetBase(object):
 
         tag_items = []
         for i in range(num_items):
+            log.info("Metadata item: i=%r, metadata[i]=%r", i, metadata[i])
             val = CPLParseNameValue(metadata[i], &key)
             tag_items.append((key[:], val[:]))
             CPLFree(key)
@@ -1336,7 +1342,7 @@ cdef class DatasetBase(object):
         """Rational polynomial coefficients mapping between pixel and geodetic coordinates.
 
         This property is a dict-like object.
-        
+
         rpcs : RPC instance containing coefficients. Empty if dataset does not have any
         metadata in the "RPC" domain.
         """
