@@ -1,9 +1,11 @@
 Changes
 =======
 
-1.2b2 (2020-01-08)
+1.2b2 (2020-01-10)
 ------------------
 
+- Emit a warning to the Python logger when a metadata item can't be decoded to
+  a Python unicode object (#2078).
 - Use language_level=3 Cython directive for all .pyx sources (#2077).
 - Deprecated usage of numpy.ndarray.tostring() has been changed to use
   tobytes().

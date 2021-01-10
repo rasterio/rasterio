@@ -1,6 +1,4 @@
-# cython: language_level=3, boundscheck=False
-
-""", c_string_type=unicode, c_string_encoding=utf8"""
+# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
 
 """Numpy-free base classes."""
 
@@ -49,7 +47,7 @@ def check_gdal_version(major, minor):
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    return GDALVersionInfo("RELEASE_NAME").decode("utf-8")
+    return GDALVersionInfo("RELEASE_NAME")
 
 
 cdef const char *get_driver_name(GDALDriverH driver):
@@ -350,11 +348,9 @@ cdef class DatasetBase(object):
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_c = GDALGetProjectionRef(self.handle())
-        wkt_b = wkt_c
-        if wkt_b == NULL:
+        cdef const char *wkt = GDALGetProjectionRef(self.handle())
+        if wkt == NULL:
             raise ValueError("Unexpected NULL spatial reference")
-        wkt = wkt_b.decode("utf-8")
         return self._handle_crswkt(wkt)
 
     def read_transform(self):
@@ -1066,6 +1062,7 @@ cdef class DatasetBase(object):
         """
         cdef GDALMajorObjectH obj = NULL
         cdef char **metadata = NULL
+        cdef char *item = NULL
         cdef const char *domain = NULL
         cdef char *key = NULL
         cdef char *val = NULL
@@ -1083,10 +1080,15 @@ cdef class DatasetBase(object):
 
         tag_items = []
         for i in range(num_items):
-            log.info("Metadata item: i=%r, metadata[i]=%r", i, metadata[i])
-            val = CPLParseNameValue(metadata[i], &key)
-            tag_items.append((key[:], val[:]))
-            CPLFree(key)
+            item = <char *>metadata[i]
+            try:
+                val = CPLParseNameValue(metadata[i], &key)
+                tag_items.append((key[:], val[:]))
+            except UnicodeDecodeError:
+                item_bytes = <bytes>item
+                log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
+            finally:
+                CPLFree(key)
 
         return dict(tag_items)
 
