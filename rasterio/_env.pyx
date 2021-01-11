@@ -371,6 +371,7 @@ cdef class GDALEnv(ConfigEnv):
 
                     elif PROJDataFinder().search_wheel():
                         path = PROJDataFinder().search_wheel()
+                        log.debug("PROJ data found in wheel, setting to %r.", path)
                         set_proj_data_search_path(path)
 
                     elif PROJDataFinder().has_data():
