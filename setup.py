@@ -366,7 +366,7 @@ setup_args = dict(
     description="Fast and direct raster I/O for use with Numpy and SciPy",
     long_description=readme,
     classifiers=[
-        "Development Status :: 5 - Production",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
