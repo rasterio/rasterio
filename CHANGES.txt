@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.2b3 (2020-01-11)
+------------------
+
+- Search for PROJ data in the module before searching system locations (#2080).
+
 1.2b2 (2020-01-10)
 ------------------
 
