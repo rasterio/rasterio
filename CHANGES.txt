@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.2b4 (2020-01-12)
+------------------
+
+- Remove non-breaking hyphens accidentally added to README, open the file with
+  encoding="utf-8" when reading the description so that future UTF-8 chars
+  don't break package setup.
+
 1.2b3 (2020-01-11)
 ------------------
 
