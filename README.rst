@@ -229,8 +229,8 @@ this from the downloads folder, adjusting for your Python version.
 .. code-block:: console
 
     $ pip install -U pip
-    $ pip install GDAL‑3.1.4‑cp39‑cp39‑win_amd64.whl
-    $ pip install rasterio‑1.1.8‑cp39‑cp39‑win_amd64.whl
+    $ pip install GDAL-3.1.4-cp39-cp39‑win_amd64.whl
+    $ pip install rasterio‑1.1.8-cp39-cp39-win_amd64.whl
 
 You can also install rasterio with conda using Anaconda's conda-forge channel.
 

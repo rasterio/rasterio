@@ -326,7 +326,7 @@ else:
             Extension("rasterio._shim", ["rasterio/_shim1.c"], **ext_options)
         )
 
-with open("README.rst") as f:
+with open("README.rst", encoding="utf-8") as f:
     readme = f.read()
 
 # Runtime requirements.
