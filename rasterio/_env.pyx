@@ -369,6 +369,11 @@ cdef class GDALEnv(ConfigEnv):
                         path = os.environ["PROJ_LIB"]
                         set_proj_data_search_path(path)
 
+                    elif PROJDataFinder().search_wheel():
+                        path = PROJDataFinder().search_wheel()
+                        log.debug("PROJ data found in wheel, setting to %r.", path)
+                        set_proj_data_search_path(path)
+
                     elif PROJDataFinder().has_data():
                         log.debug("PROJ data files are available at built-in paths")
 
