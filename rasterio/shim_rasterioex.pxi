@@ -34,13 +34,23 @@ cdef extern from "gdal.h" nogil:
     cdef CPLErr GDALDatasetRasterIOEx(GDALDatasetH hDS, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, int nBandCount, int *panBandCount, GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace, GDALRasterIOExtraArg *psExtraArg)
 
 
+gdal31_version_checked = False
+gdal31_version_met = False
 gdal33_version_checked = False
 gdal33_version_met = False
 
 def validate_resampling(resampling):
     """Validate that the resampling method is compatible of reads/writes"""
 
-    if resampling == Resampling.rms:
+    if resampling == Resampling.sum:
+        global gdal31_version_checked
+        global gdal31_version_met
+        if not gdal31_version_checked:
+            gdal31_version_checked = True
+            gdal31_version_met = GDALVersion.runtime().at_least('3.1')
+        if not gdal31_version_met:
+            raise ResamplingAlgorithmError("{!r} requires GDAL 3.1".format(Resampling(resampling)))
+    elif resampling == Resampling.rms:
         global gdal33_version_checked
         global gdal33_version_met
         if not gdal33_version_checked:
