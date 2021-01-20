@@ -1,9 +1,11 @@
 Changes
 =======
 
-1.2b4 (2020-01-12)
+1.2b4 (2020-01-20)
 ------------------
 
+- The CRS definition saved in RGB.byte.tif has been updated so that it is
+  identified as precisely EPSG:32618 by GDAL 3.2.1 (#2083).
 - Remove non-breaking hyphens accidentally added to README, open the file with
   encoding="utf-8" when reading the description so that future UTF-8 chars
   don't break package setup.
