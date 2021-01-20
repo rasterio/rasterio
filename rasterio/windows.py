@@ -192,7 +192,7 @@ def union(*windows):
     Window
     """
     stacked = np.dstack([toranges(w) for w in windows])
-    if all(isinstance(item, int) for w in windows for item in w):
+    if all(isinstance(item, int) for w in windows for item in w.flatten()):
         stacked = stacked.astype(int)
     return Window.from_slices(
         (stacked[0, 0].min(), stacked[0, 1].max()),
@@ -222,7 +222,7 @@ def intersection(*windows):
         raise WindowError("windows do not intersect")
 
     stacked = np.dstack([toranges(w) for w in windows])
-    if all(isinstance(item, int) for w in windows for item in w):
+    if all(isinstance(item, int) for w in windows for item in w.flatten()):
         stacked = stacked.astype(int)
 
     return Window.from_slices(
