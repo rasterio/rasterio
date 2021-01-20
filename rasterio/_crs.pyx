@@ -233,22 +233,27 @@ cdef class _CRS(object):
 
         """
         cdef OGRSpatialReferenceH osr = NULL
+
         code = None
         name = None
+
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
             exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+
             if OSRAutoIdentifyEPSG(osr) == 0:
                 c_code = OSRGetAuthorityCode(osr, NULL)
                 c_name = OSRGetAuthorityName(osr, NULL)
                 if c_code != NULL and c_name != NULL:
                     code = c_code.decode('utf-8')
                     name = c_name.decode('utf-8')
+
         finally:
             _safe_osr_release(osr)
 
         if None not in (name, code):
             return (name, code)
+
         return None
 
     @staticmethod
