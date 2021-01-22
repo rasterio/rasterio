@@ -1,7 +1,13 @@
 Changes
 =======
 
-1.2b4 (2020-01-20)
+1.2.0 (2021-01-25)
+------------------
+
+- Ensure WarpedVRT dataset objects are closed properly when exiting contexts
+  (#2093).
+
+1.2b4 (2021-01-20)
 ------------------
 
 - The CRS definition saved in RGB.byte.tif has been updated so that it is
@@ -10,12 +16,12 @@ Changes
   encoding="utf-8" when reading the description so that future UTF-8 chars
   don't break package setup.
 
-1.2b3 (2020-01-11)
+1.2b3 (2021-01-11)
 ------------------
 
 - Search for PROJ data in the module before searching system locations (#2080).
 
-1.2b2 (2020-01-10)
+1.2b2 (2021-01-10)
 ------------------
 
 - Emit a warning to the Python logger when a metadata item can't be decoded to
