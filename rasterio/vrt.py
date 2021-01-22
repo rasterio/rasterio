@@ -124,6 +124,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
 
     def close(self):
         self.stop()
+        self._closed = True
 
 
 def _boundless_vrt_doc(
