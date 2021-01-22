@@ -608,3 +608,11 @@ def test_vrt_mem_src_kept_alive(path_rgb_byte_tif):
 
     assert (vrt.read() != 0).any()
     vrt.close()
+
+
+def test_warped_vrt_is_closed(path_rgb_byte_tif):
+    """A VirtualVRT should be set as closed on exit."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with WarpedVRT(src, crs=DST_CRS) as vrt:
+            assert not vrt.closed
+        assert vrt.closed
