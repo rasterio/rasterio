@@ -122,10 +122,6 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     def __del__(self):
         self.close()
 
-    def close(self):
-        self.stop()
-        self._closed = True
-
 
 def _boundless_vrt_doc(
         src_dataset, nodata=None, background=None, hidenodata=False,
