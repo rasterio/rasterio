@@ -4,6 +4,22 @@ Changes
 1.2.0 (2021-01-25)
 ------------------
 
+Note well: Python versions before 3.6 are no longer supported by this project.
+
+New features:
+
+- Binary wheels on PyPI include PROJ 7.2.1 and GDAL 3.2.1.
+- Support for Azure Blob Storage using an "az" URI scheme.
+- Support for RPCs and coordinate transformations and raster warping with RPCs.
+- dst_path and dst_kwds parameters for rasterio's merge tool allow results to
+  be written directly to a dataset.
+- In "w" mode the driver keyword argument of open() may be omitted.
+- transform_geom() has been optimized for sequences of geometries.
+
+Bug fixes since 1.2b4:
+
+- Ensure that error handling environment is closed only after its dataset
+  object is closed, preventing confusing error messages (#2088).
 - Ensure WarpedVRT dataset objects are closed properly when exiting contexts
   (#2093).
 

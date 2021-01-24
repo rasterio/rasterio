@@ -391,8 +391,8 @@ cdef class DatasetBase(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self._env.__exit__()
         self.close()
+        self._env.__exit__()
 
     def __dealloc__(self):
         if self._hds != NULL:

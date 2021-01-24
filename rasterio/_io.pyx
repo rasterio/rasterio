@@ -24,8 +24,9 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
+from rasterio.dtypes import is_ndarray
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, UnparsedPath
@@ -1318,8 +1319,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
 
-    def write(self, src, indexes=None, window=None):
-        """Write the src array into indexed bands of the dataset.
+    def write(self, arr, indexes=None, window=None):
+        """Write the arr array into indexed bands of the dataset.
 
         If `indexes` is a list, the src must be a 3D array of
         matching shape. If an int, the src must be a 2D array.
@@ -1331,16 +1332,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if self._hds == NULL:
             raise ValueError("can't write to closed raster file")
+        if not is_ndarray(arr):
+            raise InvalidArrayError("Positional argument arr must be an array-like object")
+
+        arr = np.array(arr, copy=False)
 
         if indexes is None:
             indexes = self.indexes
+
         elif isinstance(indexes, int):
             indexes = [indexes]
-            src = np.array([src])
-        if len(src.shape) != 3 or src.shape[0] != len(indexes):
+            arr = np.stack((arr,))
+
+        if len(arr.shape) != 3 or arr.shape[0] != len(indexes):
             raise ValueError(
                 "Source shape {} is inconsistent with given indexes {}"
-                .format(src.shape, len(indexes)))
+                .format(arr.shape, len(indexes)))
 
         check_dtypes = set()
         # Check each index before processing 3D array
@@ -1356,13 +1363,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
 
-        if src is not None and src.dtype != dtype:
+        if arr is not None and arr.dtype != dtype:
             raise ValueError(
                 "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (src.dtype, dtype))
+                "the file's dtype '%s'" % (arr.dtype, dtype))
 
         # Require C-continguous arrays (see #108).
-        src = np.require(src, dtype=dtype, requirements='C')
+        arr = np.require(arr, dtype=dtype, requirements='C')
 
         # Prepare the IO window.
         if window:
@@ -1381,7 +1388,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
-            io_multi_band(self._hds, 1, xoff, yoff, width, height, src, indexes_arr)
+            io_multi_band(self._hds, 1, xoff, yoff, width, height, arr, indexes_arr)
         except CPLE_BaseError as cplerr:
             raise RasterioIOError("Read or write failed. {}".format(cplerr))
 

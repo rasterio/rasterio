@@ -1,4 +1,3 @@
-import logging
 import re
 import subprocess
 import sys
@@ -12,9 +11,6 @@ from rasterio.drivers import blacklist
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, DriverRegistrationError
 from rasterio._base import driver_supports_mode
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_validate_dtype_None(tmpdir):
@@ -385,3 +381,24 @@ def test_write__autodetect_driver(tmpdir, extension, driver):
     name = str(tmpdir.join("test.{}".format(extension)))
     with rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8') as rds:
         assert rds.driver == driver
+
+
+@pytest.mark.parametrize("driver", ["PNG", "JPEG"])
+def test_issue2088(tmpdir, capsys, driver):
+    """Write a PNG or JPEG without error messages"""
+    with rasterio.open(
+        str(tmpdir.join("test")),
+        "w",
+        driver=driver,
+        dtype="uint8",
+        count=1,
+        height=256,
+        width=256,
+        transform=affine.Affine.identity(),
+    ) as src:
+        data = np.ones((256, 256), dtype=np.uint8)
+        src.write(data, 1)
+
+    captured = capsys.readouterr()
+    assert "ERROR 4" not in captured.err
+    assert "ERROR 4" not in captured.out
