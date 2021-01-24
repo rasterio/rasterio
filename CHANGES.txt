@@ -18,6 +18,8 @@ New features:
 
 Bug fixes since 1.2b4:
 
+- Allow WarpedVRT to default to using a source dataset's GCPs for
+  georeferencing (#2086).
 - Ensure that error handling environment is closed only after its dataset
   object is closed, preventing confusing error messages (#2088).
 - Ensure WarpedVRT dataset objects are closed properly when exiting contexts

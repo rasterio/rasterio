@@ -889,8 +889,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         # Convert CRSes to C WKT strings.
         try:
-            osr = _osr_from_crs(self.src_crs)
-            OSRExportToWkt(osr, &src_crs_wkt)
+            if not self.src_crs:
+                src_crs_wkt = NULL
+            else:
+                osr = _osr_from_crs(self.src_crs)
+                OSRExportToWkt(osr, &src_crs_wkt)
         finally:
             if osr != NULL:
                 OSRRelease(osr)
