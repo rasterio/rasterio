@@ -18,6 +18,7 @@ New features:
 
 Bug fixes since 1.2b4:
 
+- Fix dataset constructor so that tiled=False does the right thing (#2085).
 - Allow WarpedVRT to default to using a source dataset's GCPs for
   georeferencing (#2086).
 - Ensure that error handling environment is closed only after its dataset

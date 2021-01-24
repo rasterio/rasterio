@@ -143,6 +143,18 @@ def test_clip_overwrite_with_option(runner, tmpdir):
 
 # Tests: format and type conversion, --format and --dtype
 
+
+def test_tiled(tmpdir, runner):
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group,
+        ["convert", "tests/data/RGB.byte.tif", outputname, "--co", "tiled=false"],
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert not src.is_tiled
+
+
 def test_format(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
     result = runner.invoke(

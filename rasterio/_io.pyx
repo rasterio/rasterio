@@ -1080,6 +1080,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # "tiled" affects the meaning of blocksize, so we need it
         # before iterating.
         tiled = kwargs.pop("tiled", False) or kwargs.pop("TILED", False)
+        if isinstance(tiled, str):
+            tiled = (tiled.lower() in ("true", "yes"))
 
         if tiled:
             blockxsize = kwargs.get("blockxsize", None)

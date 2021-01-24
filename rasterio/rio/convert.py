@@ -73,6 +73,7 @@ def convert(
 
             profile.update(**creation_options)
 
+            # "tiled" is special
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
                 data = src.read()
