@@ -5,46 +5,40 @@ Authors
 * Alan D. Snow
 * Aldo Culquicondor
 * Alessandro Amici
-* Alexander Ivanov
 * Alex Shepherd
+* Alexander
+* Alexander Ivanov
 * Alfred-Mountfield
 * Amit Kapadia
 * Andrew Annex
 * Andrew Catellier
-* appanacca
 * Ariel Zerahia
 * AsgerPetersen
-* asmith26
 * Bas Couwenberg
 * Ben Lewis
 * Brendan Ward
 * Caleb Robinson
-* cgohlke
 * Charlie Loyd
 * Chris Holden
 * Chris Holdgraf
 * Christoph Rieke
 * Colin Talbert
 * Damien Ayers
-* Dan Baston
 * Dan "Ducky" Little
+* Dan Baston
 * Daniel J. H
 * Darren Weber
 * Denis Rykov
-* derekjanni
-* dnomadb
 * Elliott Sales de Andrade
 * Erik Seglem
 * Etienne B. Racine
 * Even Rouault
 * Felix Divo
-* Filipe
-* firas omrane
+* Filipe Fernandes
 * Florian
 * Frédéric Bonifas
 * Giacomo Vianello
 * Gregory Raevski
-* grovduck
 * Guillaume Lostis
 * Guy Doulberg
 * Ian Schneider
@@ -53,13 +47,11 @@ Authors
 * James Hiebert
 * James McBride
 * James Seppi
-* jaredairbusaerial
 * Jeffrey Gerard
 * Jennifer Reiber Kyle
 * Jeremy Hooke
 * Jesse Crocker
 * Johan Van de Wauw
-* Jonas
 * Jonas Sølvsteen
 * Joris Van den Bossche
 * Joshua Arnott
@@ -68,19 +60,18 @@ Authors
 * Kevin Wurster
 * Kirill Kouzoubov
 * Koshy Thomas
+* Kyle Barron
 * Leah Wasser
-* ljburtz
 * Loïc Dutrieux
 * Lukasz
 * Mark Boer
 * Martijn Visser
 * Martin Kaesberger
 * Martin Raspaud
-* Matthew Perry
 * Matt Savoie
+* Matthew Perry
 * Maxim Dubinin
 * Mike Taves
-* morrme
 * Nat Wilson
 * Nick Grue
 * Nikolai Janakiev
@@ -88,8 +79,8 @@ Authors
 * Pablo Sanfilippo
 * Patrick Young
 * Pratik Yadav
-* Raaj Tilak Sarma
 * RK Aranas
+* Raaj Tilak Sarma
 * Robert Sare
 * Robin Wilson
 * Ryan Grout
@@ -97,11 +88,22 @@ Authors
 * Sean Gillies
 * Seth Fitzsimmons
 * Seth Miller
-* sshuair
-* Talbert
+* Tim Gates
 * Trevor R.H. Clarke
 * Tyler Erickson
 * Vincent Sarago
 * Vincent Schut
 * Yann-Sebastien Tremblay-Johnston
 * Yuvi Panda
+* appanacca
+* asmith26
+* cgohlke
+* derekjanni
+* dnomadb
+* firas omrane
+* grovduck
+* jaredairbusaerial
+* ljburtz
+* morrme
+* ngrue
+* sshuair
