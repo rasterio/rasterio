@@ -475,10 +475,10 @@ def calculate_default_transform(
     """
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
-                         "be used together.")
+                         " be used together.")
     if any(x is not None for x in (left, bottom, right, top)) and rpcs:
         raise ValueError("Bounding values and rational polynomial coefficients may not"
-                         "be used together.")
+                         " be used together.")
 
     if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
         raise ValueError("Either four bounding values, ground control points,"
