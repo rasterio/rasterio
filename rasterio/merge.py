@@ -253,7 +253,8 @@ def merge(
     elif method == 'min':
         def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.minimum(old_data[mask], new_data[mask])
+            old_masked = old_data[mask]
+            np.minimum(old_masked, new_data[mask], old_masked)
 
             mask = np.logical_and(old_nodata, ~new_nodata)
             old_data[mask] = new_data[mask]
@@ -261,7 +262,8 @@ def merge(
     elif method == 'max':
         def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.maximum(old_data[mask], new_data[mask])
+            old_masked = old_data[mask]
+            np.maximum(old_masked, new_data[mask], old_masked)
 
             mask = np.logical_and(old_nodata, ~new_nodata)
             old_data[mask] = new_data[mask]
