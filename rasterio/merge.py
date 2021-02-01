@@ -220,11 +220,11 @@ def merge(
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range
         inrange = False
-        if np.dtype(dtype).kind in ('i', 'u'):
-            info = np.iinfo(dtype)
+        if np.dtype(dt).kind in ('i', 'u'):
+            info = np.iinfo(dt)
             inrange = (info.min <= nodataval <= info.max)
-        elif np.dtype(dtype).kind == 'f':
-            info = np.finfo(dtype)
+        elif np.dtype(dt).kind == 'f':
+            info = np.finfo(dt)
             if np.isnan(nodataval):
                 inrange = True
             else:
@@ -236,7 +236,7 @@ def merge(
                 "Input file's nodata value, %s, is beyond the valid "
                 "range of its data type, %s. Consider overriding it "
                 "using the --nodata option for better results." % (
-                    nodataval, dtype))
+                    nodataval, dt))
     else:
         nodataval = 0
 
