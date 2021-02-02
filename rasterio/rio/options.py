@@ -319,7 +319,7 @@ creation_options = click.option(
     metavar='NAME=VALUE',
     multiple=True,
     callback=_cb_key_val,
-    help="Driver specific creation options."
+    help="Driver specific creation options. "
          "See the documentation for the selected output driver for "
          "more information.")
 
