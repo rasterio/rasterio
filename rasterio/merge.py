@@ -242,31 +242,39 @@ def merge(
 
     if method == 'first':
         def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
+            mask = np.empty_like(new_nodata, dtype='bool')
+            np.logical_not(new_nodata, out=mask)
+            np.logical_and(old_nodata, mask, out=mask)
+            np.copyto(old_data, new_data, where=mask)
 
     elif method == 'last':
         def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = ~new_nodata
-            old_data[mask] = new_data[mask]
+            np.copyto(old_data, new_data, where=mask)
 
     elif method == 'min':
         def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_masked = old_data[mask]
-            np.minimum(old_masked, new_data[mask], old_masked)
+            mask = np.empty_like(new_nodata, dtype='bool')
+            np.logical_or(old_nodata, new_nodata, out=mask)
+            np.logical_not(mask, out=mask)
 
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
+            np.minimum(old_data, new_data, out=old_data, where=mask)
+
+            np.logical_not(new_nodata, out=mask)
+            np.logical_and(old_data, mask, out=mask)
+            np.copyto(old_data, new_data, where=mask)
 
     elif method == 'max':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_masked = old_data[mask]
-            np.maximum(old_masked, new_data[mask], old_masked)
+        def copyto1(old_data, new_data, old_nodata, new_nodata, **kwargs):
+            mask = np.empty_like(new_nodata, dtype='bool')
+            np.logical_or(old_nodata, new_nodata, out=mask)
+            np.logical_not(mask, out=mask)
+            
+            np.maximum(old_data, new_data, out=old_data, where=mask)
 
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
+            np.logical_not(new_nodata, out=mask)
+            np.logical_and(old_data, mask, out=mask)
+            np.copyto(old_data, new_data, where=mask)
 
     elif callable(method):
         copyto = method
