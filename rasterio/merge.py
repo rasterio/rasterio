@@ -265,7 +265,7 @@ def merge(
             np.copyto(old_data, new_data, where=mask)
 
     elif method == 'max':
-        def copyto1(old_data, new_data, old_nodata, new_nodata, **kwargs):
+        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.empty_like(new_nodata, dtype='bool')
             np.logical_or(old_nodata, new_nodata, out=mask)
             np.logical_not(mask, out=mask)
