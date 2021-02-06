@@ -325,10 +325,9 @@ def merge(
         region = dest[:, roff:roff + trows, coff:coff + tcols]
         if np.isnan(nodataval):
             region_nodata = np.isnan(region)
-            temp_nodata = np.isnan(temp)
         else:
             region_nodata = region == nodataval
-            temp_nodata = temp.mask
+        temp_nodata = np.ma.getmaskarray(temp)
 
         copyto(region, temp, region_nodata, temp_nodata,
                index=idx, roff=roff, coff=coff)
