@@ -220,10 +220,10 @@ def merge(
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range
         inrange = False
-        if np.dtype(dt).kind in ('i', 'u'):
+        if np.issubdtype(dt, np.integer):
             info = np.iinfo(dt)
             inrange = (info.min <= nodataval <= info.max)
-        elif np.dtype(dt).kind == 'f':
+        elif np.issubdtype(dt, np.floating):
             info = np.finfo(dt)
             if np.isnan(nodataval):
                 inrange = True
