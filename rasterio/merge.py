@@ -142,6 +142,7 @@ def merge(
                 row offset in base array
             coff: int
                 column offset in base array
+
     dst_path : str or Pathlike, optional
         Path of output dataset
     dst_kwds : dict, optional
@@ -168,7 +169,7 @@ def merge(
         copyto = method
     else:
         raise ValueError('Unknown method {0}, must be one of {1} or callable'
-                         .format(method, MERGE_METHODS))
+                         .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
     if isinstance(datasets[0], str) or isinstance(datasets[0], Path):
