@@ -273,7 +273,7 @@ def merge(
             inrange = (info.min <= nodataval <= info.max)
         elif np.dtype(dtype).kind == 'f':
             info = np.finfo(dtype)
-            if np.isnan(nodataval):
+            if math.isnan(nodataval):
                 inrange = True
             else:
                 inrange = (info.min <= nodataval <= info.max)
@@ -332,7 +332,8 @@ def merge(
             int(round(dst_window.row_off)), int(round(dst_window.col_off)))
 
         region = dest[:, roff:roff + trows, coff:coff + tcols]
-        if np.isnan(nodataval):
+
+        if math.isnan(nodataval):
             region_nodata = np.isnan(region)
         else:
             region_nodata = region == nodataval
