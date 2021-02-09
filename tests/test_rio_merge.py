@@ -481,7 +481,7 @@ def test_merge_rgb(tmpdir, runner):
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
-        assert [src.checksum(i) for i in src.indexes] == [33219, 35315, 45188]
+        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
 
 
 def test_merge_tiny_intres(tiffs):
