@@ -669,16 +669,17 @@ class Window(object):
         -------
         Window
         """
-        operator = getattr(math, op, None)
-        if not operator:
-            raise WindowError("operator must be 'ceil' or 'floor'")
+        if op not in {'ceil', 'floor'}:
+            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+
+        operator = getattr(math, op)
+        if pixel_precision is None:
+            return Window(self.col_off, self.row_off,
+                          operator(self.width), operator(self.height))
         else:
-            return Window(
-                self.col_off, self.row_off,
-                operator(round(self.width, pixel_precision) if
-                         pixel_precision is not None else self.width),
-                operator(round(self.height, pixel_precision) if
-                         pixel_precision is not None else self.height))
+            return Window(self.col_off, self.row_off,
+                          operator(round(self.width, pixel_precision)),
+                          operator(round(self.height, pixel_precision)))
 
     round_shape = round_lengths
 
@@ -699,16 +700,17 @@ class Window(object):
         -------
         Window
         """
-        operator = getattr(math, op, None)
-        if not operator:
-            raise WindowError("operator must be 'ceil' or 'floor'")
+        if op not in {'ceil', 'floor'}:
+            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+
+        operator = getattr(math, op)
+        if pixel_precision is None:
+            return Window(operator(self.col_off), operator(self.row_off),
+                          self.width, self.height)
         else:
-            return Window(
-                operator(round(self.col_off, pixel_precision) if
-                         pixel_precision is not None else self.col_off),
-                operator(round(self.row_off, pixel_precision) if
-                         pixel_precision is not None else self.row_off),
-                self.width, self.height)
+            return Window(operator(round(self.col_off, pixel_precision)),
+                          operator(round(self.row_off, pixel_precision)),
+                          self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""
