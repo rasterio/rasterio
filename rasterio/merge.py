@@ -281,8 +281,8 @@ def merge(
             dest.fill(nodataval)
         else:
             warnings.warn(
-                "Input file's nodata value, %s, is beyond the valid "
-                "range of its data type, %s. Consider overriding it "
+                "The nodata value, %s, is beyond the valid "
+                "range of the chosen data type, %s. Consider overriding it "
                 "using the --nodata option for better results." % (
                     nodataval, dt))
     else:
