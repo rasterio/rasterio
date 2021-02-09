@@ -16,7 +16,50 @@ from rasterio.transform import Affine
 
 logger = logging.getLogger(__name__)
 
-MERGE_METHODS = ('first', 'last', 'min', 'max')
+
+def copy_first(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_nodata, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+def copy_last(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_not(new_nodata, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+def copy_min(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_or(old_nodata, new_nodata, out=mask)
+    np.logical_not(mask, out=mask)
+
+    np.minimum(old_data, new_data, out=old_data, where=mask)
+
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_data, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+def copy_max(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_or(old_nodata, new_nodata, out=mask)
+    np.logical_not(mask, out=mask)
+
+    np.maximum(old_data, new_data, out=old_data, where=mask)
+
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_data, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+MERGE_METHODS = {
+    'first': copy_first,
+    'last': copy_last,
+    'min': copy_min,
+    'max': copy_max
+}
 
 
 def merge(
@@ -99,6 +142,7 @@ def merge(
                 row offset in base array
             coff: int
                 column offset in base array
+
     dst_path : str or Pathlike, optional
         Path of output dataset
     dst_kwds : dict, optional
@@ -119,9 +163,13 @@ def merge(
                 coordinate system
 
     """
-    if method not in MERGE_METHODS and not callable(method):
+    if method in MERGE_METHODS:
+        copyto = MERGE_METHODS[method]
+    elif callable(method):
+        copyto = method
+    else:
         raise ValueError('Unknown method {0}, must be one of {1} or callable'
-                         .format(method, MERGE_METHODS))
+                         .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
     if isinstance(datasets[0], str) or isinstance(datasets[0], Path):
@@ -225,7 +273,7 @@ def merge(
             inrange = (info.min <= nodataval <= info.max)
         elif np.issubdtype(dt, np.floating):
             info = np.finfo(dt)
-            if np.isnan(nodataval):
+            if math.isnan(nodataval):
                 inrange = True
             else:
                 inrange = (info.min <= nodataval <= info.max)
@@ -239,38 +287,6 @@ def merge(
                     nodataval, dt))
     else:
         nodataval = 0
-
-    if method == 'first':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif method == 'last':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = ~new_nodata
-            old_data[mask] = new_data[mask]
-
-    elif method == 'min':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.minimum(old_data[mask], new_data[mask])
-
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif method == 'max':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.maximum(old_data[mask], new_data[mask])
-
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif callable(method):
-        copyto = method
-
-    else:
-        raise ValueError(method)
 
     for idx, dataset in enumerate(datasets):
         with dataset_opener(dataset) as src:
@@ -316,12 +332,12 @@ def merge(
             int(round(dst_window.row_off)), int(round(dst_window.col_off)))
 
         region = dest[:, roff:roff + trows, coff:coff + tcols]
-        if np.isnan(nodataval):
+
+        if math.isnan(nodataval):
             region_nodata = np.isnan(region)
-            temp_nodata = np.isnan(temp)
         else:
             region_nodata = region == nodataval
-            temp_nodata = temp.mask
+        temp_nodata = np.ma.getmaskarray(temp)
 
         copyto(region, temp, region_nodata, temp_nodata,
                index=idx, roff=roff, coff=coff)
