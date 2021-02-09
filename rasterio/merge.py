@@ -272,10 +272,10 @@ def merge(
             info = np.iinfo(dt)
             inrange = (info.min <= nodataval <= info.max)
         elif np.issubdtype(dt, np.floating):
-            info = np.finfo(dt)
             if math.isnan(nodataval):
                 inrange = True
             else:
+                info = np.finfo(dt)
                 inrange = (info.min <= nodataval <= info.max)
         if inrange:
             dest.fill(nodataval)
