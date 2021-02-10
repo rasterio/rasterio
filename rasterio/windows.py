@@ -271,9 +271,9 @@ def from_bounds(left, bottom, right, top, transform=None,
         Number of rows of the window.
     width: int, required
         Number of columns of the window.
-    precision: int, optional
-        Number of decimal points of precision when computing inverse
-        transform.
+    precision: int or float, optional
+        An integer number of decimal points of precision when computing
+        inverse transform, or an absolute float precision.
 
     Returns
     -------
@@ -680,6 +680,7 @@ class Window(object):
                 operator(round(self.height, pixel_precision) if
                          pixel_precision is not None else self.height))
 
+    # TODO: deprecate round_shape at 1.3.0, with a warning.
     round_shape = round_lengths
 
     def round_offsets(self, op='floor', pixel_precision=None):

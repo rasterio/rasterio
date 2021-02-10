@@ -21,9 +21,12 @@ from rasterio.rio.helpers import resolve_inout
 @options.nodata_opt
 @options.bidx_mult_opt
 @options.overwrite_opt
-@click.option('--precision', type=int, default=10,
-              help="Number of decimal places of precision in alignment of "
-                   "pixels")
+@click.option(
+    "--precision",
+    type=int,
+    default=None,
+    help="Number of decimal places of precision in alignment of pixels",
+)
 @options.creation_options
 @click.pass_context
 def merge(ctx, files, output, driver, bounds, res, resampling,
