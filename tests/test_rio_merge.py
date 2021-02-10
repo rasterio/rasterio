@@ -465,6 +465,19 @@ def test_merge_tiny_res_bounds(tiffs, runner):
         assert data[0, 1, 1] == 0
 
 
+def test_merge_out_of_range_nodata(tiffs):
+    inputs = [
+        'tests/data/rgb1.tif',
+        'tests/data/rgb2.tif',
+        'tests/data/rgb3.tif',
+        'tests/data/rgb4.tif']
+    datasets = [rasterio.open(x) for x in inputs]
+    assert datasets[1].dtypes[0] == 'uint8'
+
+    with pytest.warns(UserWarning):
+        rv, transform = merge(datasets, nodata=9999)
+    assert not (rv == np.uint8(9999)).any()
+
 @pytest.mark.xfail(
     gdal_version.major == 1,
     reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
