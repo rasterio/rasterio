@@ -208,8 +208,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
-    precision : int, optional
-        Decimal places of precision in indexing, as in `round()`.
+    precision : int or float, optional
+        An integer number of decimal points of precision when computing
+        inverse transform, or an absolute float precision.
 
     Returns
     -------
@@ -224,8 +225,17 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     if not isinstance(ys, Iterable):
         ys = [ys]
 
-    eps = sys.float_info.epsilon
-    
+    if precision is None:
+        eps = sys.float_info.epsilon
+    elif isinstance(precision, int):
+        eps = 10.0 ** -precision
+    else:
+        eps = precision
+
+    # If op rounds up, switch the sign of eps.
+    if op(0.1) >= 1:
+        eps = -eps
+
     invtransform = ~transform
 
     rows = []

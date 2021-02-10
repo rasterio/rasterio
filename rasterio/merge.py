@@ -68,7 +68,7 @@ def merge(
     res=None,
     nodata=None,
     dtype=None,
-    precision=10,
+    precision=None,
     indexes=None,
     output_count=None,
     resampling=Resampling.nearest,
