@@ -1,11 +1,12 @@
 """Dataset paths, identifiers, and filenames"""
 
+import pathlib
 import re
 import sys
+from urllib.parse import urlparse
 
 import attr
 
-from rasterio.compat import pathlib, string_types, urlparse
 from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
@@ -21,12 +22,13 @@ SCHEMES = {
     'file': 'file',
     'oss': 'oss',
     'gs': 'gs',
+    'az': 'az',
 }
 
 CURLSCHEMES = set([k for k, v in SCHEMES.items() if v == 'curl'])
 
 # TODO: extend for other cloud plaforms.
-REMOTESCHEMES = set([k for k, v in SCHEMES.items() if v in ('curl', 's3', 'oss', 'gs',)])
+REMOTESCHEMES = set([k for k, v in SCHEMES.items() if v in ('curl', 's3', 'oss', 'gs', 'az',)])
 
 
 class Path(object):
@@ -133,7 +135,7 @@ def parse_path(path):
     elif pathlib and isinstance(path, pathlib.PurePath):
         return ParsedPath(path.as_posix(), None, None)
 
-    elif isinstance(path, string_types):
+    elif isinstance(path, str):
 
         if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", path):
             if pathlib:

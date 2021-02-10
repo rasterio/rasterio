@@ -1,6 +1,6 @@
-"""Rasterio shims for GDAL 2.0"""
+# cython: language_level=3, boundscheck=False
 
-# cython: boundscheck=False
+"""Rasterio shims for GDAL 2.0"""
 
 # The baseline GDAL API.
 include "gdal.pxi"

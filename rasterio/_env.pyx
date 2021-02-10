@@ -1,4 +1,5 @@
-# cython: c_string_type=unicode, c_string_encoding=utf8
+# cython: language_level=3, c_string_type=unicode, c_string_encoding=utf8
+
 """GDAL and OGR driver and configuration management
 
 The main thread always utilizes CPLSetConfigOption. Child threads
@@ -366,6 +367,11 @@ cdef class GDALEnv(ConfigEnv):
                     if 'PROJ_LIB' in os.environ:
                         log.debug("PROJ_LIB found in environment: %r.", os.environ['PROJ_LIB'])
                         path = os.environ["PROJ_LIB"]
+                        set_proj_data_search_path(path)
+
+                    elif PROJDataFinder().search_wheel():
+                        path = PROJDataFinder().search_wheel()
+                        log.debug("PROJ data found in wheel, setting to %r.", path)
                         set_proj_data_search_path(path)
 
                     elif PROJDataFinder().has_data():

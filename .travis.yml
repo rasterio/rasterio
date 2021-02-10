@@ -25,14 +25,6 @@ jobs:
       env:
         GDALVERSION="2.4.4"
         PROJVERSION="4.9.3"
-    - python: "3.8"
-      env:
-        GDALVERSION="2.4.4"
-        PROJVERSION="4.9.3"
-    - python: "3.6"
-      env:
-        GDALVERSION="3.0.4"
-        PROJVERSION="6.2.1"
     - python: "3.7"
       env:
         GDALVERSION="3.0.4"
@@ -41,14 +33,26 @@ jobs:
       env:
         GDALVERSION="3.0.4"
         PROJVERSION="6.2.1"
+    - python: "3.7"
+      env:
+        GDALVERSION="3.1.4"
+        PROJVERSION="6.2.1"
+    - python: "3.8"
+      env:
+        GDALVERSION="3.1.4"
+        PROJVERSION="6.2.1"
+    - python: "3.8"
+      env:
+        GDALVERSION="3.2.1"
+        PROJVERSION="7.2.1"
     - python: "3.8"
       env:
         GDALVERSION="master"
-        PROJVERSION="6.2.1"
+        PROJVERSION="7.2.1"
   allow_failures:
     - env:
         GDALVERSION="master"
-        PROJVERSION="6.2.1"
+        PROJVERSION="7.2.1"
 
 addons:
   apt:
@@ -73,7 +77,7 @@ install:
   - "if [ \"$GDALVERSION\" == \"master\" -o $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "python -m pip wheel -r requirements-dev.txt"
   - "python -m pip install -r requirements-dev.txt"
-  - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config python -m pip install --no-deps --force-reinstall --no-use-pep517 -e ."
+  - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]"
   - "python -m pip install coveralls>=1.1"
   - "rio --version"
   - "rio --gdal-version"

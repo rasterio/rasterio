@@ -12,6 +12,7 @@ from pytest import fixture
 import pytest
 
 import rasterio
+from rasterio import Path
 from rasterio.enums import Resampling
 from rasterio.merge import merge
 from rasterio.rio.main import main_group
@@ -452,17 +453,30 @@ def test_merge_tiny_res_bounds(tiffs, runner):
     assert result.exit_code == 0
 
     # Output should be
-    # [[[0  90]
+    # [[[120  90]
     #   [0   0]]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
         print(data)
-        assert data[0, 0, 0] == 0
+        assert data[0, 0, 0] == 120
         assert data[0, 0, 1] == 90
         assert data[0, 1, 0] == 0
         assert data[0, 1, 1] == 0
 
+
+def test_merge_out_of_range_nodata(tiffs):
+    inputs = [
+        'tests/data/rgb1.tif',
+        'tests/data/rgb2.tif',
+        'tests/data/rgb3.tif',
+        'tests/data/rgb4.tif']
+    datasets = [rasterio.open(x) for x in inputs]
+    assert datasets[1].dtypes[0] == 'uint8'
+
+    with pytest.warns(UserWarning):
+        rv, transform = merge(datasets, nodata=9999)
+    assert not (rv == np.uint8(9999)).any()
 
 @pytest.mark.xfail(
     gdal_version.major == 1,
@@ -480,7 +494,7 @@ def test_merge_rgb(tmpdir, runner):
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
-        assert [src.checksum(i) for i in src.indexes] == [33219, 35315, 45188]
+        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
 
 
 def test_merge_tiny_intres(tiffs):
@@ -597,6 +611,25 @@ def test_merge_filenames(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     merge(inputs, res=2)
+
+
+def test_merge_pathlib_path(tiffs):
+    inputs = [Path(x) for x in tiffs.listdir()]
+    inputs.sort()
+    merge(inputs, res=2)
+
+
+def test_merge_output_dataset(tiffs, tmpdir):
+    """Write to an open dataset"""
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    output_file = tmpdir.join("output.tif")
+    merge(inputs, res=2, dst_path=str(output_file), dst_kwds=dict(driver="PNG"))
+
+    with rasterio.open(str(output_file)) as result:
+        assert result.count == 1
+        assert result.driver == "PNG"
+        assert result.height == result.width == 2
 
 
 @fixture(scope='function')

@@ -2,6 +2,7 @@
 
 import attr
 from functools import wraps, total_ordering
+from inspect import getfullargspec as getargspec
 import logging
 import os
 import re
@@ -11,7 +12,6 @@ import warnings
 from rasterio._env import (
         GDALEnv, get_gdal_config, set_gdal_config,
         GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
-from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
 from rasterio.session import Session, DummySession
@@ -66,7 +66,9 @@ class Env(object):
     is exited, drivers are removed from the registry and other
     configurations are removed.
 
-    Example:
+    Example
+    -------
+    .. code-block:: python
 
         with rasterio.Env(GDAL_CACHEMAX=128000000) as env:
             # All drivers are registered, GDAL's raster block cache
@@ -477,7 +479,7 @@ class GDALVersion(object):
             return input
         if isinstance(input, tuple):
             return cls(*input)
-        elif isinstance(input, string_types):
+        elif isinstance(input, str):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
             match = re.search(r'^\d+\.\d+', input)
@@ -635,6 +637,11 @@ if 'GDAL_DATA' not in os.environ:
 
 if "PROJ_LIB" in os.environ:
     path = os.environ["PROJ_LIB"]
+    set_proj_data_search_path(path)
+
+elif PROJDataFinder().search_wheel():
+    path = PROJDataFinder().search_wheel()
+    log.debug("PROJ data found in wheel, setting to %r.", path)
     set_proj_data_search_path(path)
 
 # See https://github.com/mapbox/rasterio/issues/1631.

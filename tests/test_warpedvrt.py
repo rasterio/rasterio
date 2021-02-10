@@ -1,6 +1,5 @@
 """Tests for :py:class:`rasterio.warp.WarpedVRT`."""
 
-
 from __future__ import division
 import logging
 
@@ -150,20 +149,6 @@ def test_warped_vrt_source(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         vrt = WarpedVRT(src, crs=DST_CRS)
         assert vrt.src_dataset == src
-
-
-def test_warped_vrt_set_src_crs(path_rgb_byte_tif, tmpdir):
-    """A VirtualVRT without CRS works only with parameter src_crs"""
-    path_crs_unset = str(tmpdir.join("rgb_byte_crs_unset.tif"))
-    _copy_update_profile(path_rgb_byte_tif, path_crs_unset, crs=None)
-    with rasterio.open(path_rgb_byte_tif) as src:
-        original_crs = src.crs
-    with rasterio.open(path_crs_unset) as src:
-        with pytest.raises(Exception):
-            with WarpedVRT(src, crs=DST_CRS) as vrt:
-                pass
-        with WarpedVRT(src, src_crs=original_crs, crs=DST_CRS) as vrt:
-            assert vrt.src_crs == original_crs
 
 
 def test_warped_vrt_set_src_crs_default(path_rgb_byte_tif, tmpdir):
@@ -608,3 +593,18 @@ def test_vrt_mem_src_kept_alive(path_rgb_byte_tif):
 
     assert (vrt.read() != 0).any()
     vrt.close()
+
+
+def test_warped_vrt_is_closed(path_rgb_byte_tif):
+    """A VirtualVRT should be set as closed on exit."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with WarpedVRT(src, crs=DST_CRS) as vrt:
+            assert not vrt.closed
+        assert vrt.closed
+
+
+def test_issue2086():
+    """Create a WarpedVRT from a dataset with GCPs"""
+    with rasterio.open("tests/data/white-gemini-iv.vrt") as src:
+        with WarpedVRT(src, crs=DST_CRS) as vrt:
+            assert vrt.shape == (1031, 1146)

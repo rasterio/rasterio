@@ -3,26 +3,79 @@
 from contextlib import contextmanager
 import logging
 import math
+from pathlib import Path
 import warnings
 
 import numpy as np
 
 import rasterio
+from rasterio.enums import Resampling
 from rasterio import windows
-from rasterio.enums import Resampling
-from rasterio.compat import string_types
-from rasterio.enums import Resampling
 from rasterio.transform import Affine
 
 
 logger = logging.getLogger(__name__)
 
-MERGE_METHODS = ('first', 'last', 'min', 'max')
+
+def copy_first(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_nodata, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
 
 
-def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10,
-          indexes=None, output_count=None, resampling=Resampling.nearest,
-          method='first'):
+def copy_last(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_not(new_nodata, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+def copy_min(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_or(old_nodata, new_nodata, out=mask)
+    np.logical_not(mask, out=mask)
+
+    np.minimum(old_data, new_data, out=old_data, where=mask)
+
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_data, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+def copy_max(old_data, new_data, old_nodata, new_nodata, **kwargs):
+    mask = np.empty_like(old_data, dtype='bool')
+    np.logical_or(old_nodata, new_nodata, out=mask)
+    np.logical_not(mask, out=mask)
+
+    np.maximum(old_data, new_data, out=old_data, where=mask)
+
+    np.logical_not(new_nodata, out=mask)
+    np.logical_and(old_data, mask, out=mask)
+    np.copyto(old_data, new_data, where=mask)
+
+
+MERGE_METHODS = {
+    'first': copy_first,
+    'last': copy_last,
+    'min': copy_min,
+    'max': copy_max
+}
+
+
+def merge(
+    datasets,
+    bounds=None,
+    res=None,
+    nodata=None,
+    dtype=None,
+    precision=None,
+    indexes=None,
+    output_count=None,
+    resampling=Resampling.nearest,
+    method="first",
+    dst_path=None,
+    dst_kwds=None,
+):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -38,7 +91,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode or filenames
+    datasets : list of dataset objects opened in 'r' mode, filenames or pathlib.Path objects
         source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
@@ -90,6 +143,12 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             coff: int
                 column offset in base array
 
+    dst_path : str or Pathlike, optional
+        Path of output dataset
+    dst_kwds : dict, optional
+        Dictionary of creation options and other paramters that will be
+        overlaid on the profile of the output dataset.
+
     Returns
     -------
     tuple
@@ -104,12 +163,16 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
                 coordinate system
 
     """
-    if method not in MERGE_METHODS and not callable(method):
+    if method in MERGE_METHODS:
+        copyto = MERGE_METHODS[method]
+    elif callable(method):
+        copyto = method
+    else:
         raise ValueError('Unknown method {0}, must be one of {1} or callable'
-                         .format(method, MERGE_METHODS))
+                         .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], string_types):
+    if isinstance(datasets[0], str) or isinstance(datasets[0], Path):
         dataset_opener = rasterio.open
     else:
 
@@ -123,6 +186,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
         dataset_opener = nullcontext
 
     with dataset_opener(datasets[0]) as first:
+        first_profile = first.profile
         first_res = first.res
         nodataval = first.nodatavals[0]
         dt = first.dtypes[0]
@@ -133,6 +197,11 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             src_count = indexes
         else:
             src_count = len(indexes)
+
+        try:
+            first_colormap = first.colormap(1)
+        except ValueError:
+            first_colormap = None
 
     if not output_count:
         output_count = src_count
@@ -179,6 +248,16 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
         dt = dtype
         logger.debug("Set dtype: %s", dt)
 
+    out_profile = first_profile
+    out_profile.update(**(dst_kwds or {}))
+
+    out_profile["transform"] = output_transform
+    out_profile["height"] = output_height
+    out_profile["width"] = output_width
+    out_profile["count"] = output_count
+    if nodata is not None:
+        out_profile["nodata"] = nodata
+
     # create destination array
     dest = np.zeros((output_count, output_height, output_width), dtype=dt)
 
@@ -189,57 +268,25 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range
         inrange = False
-        if np.dtype(dtype).kind in ('i', 'u'):
-            info = np.iinfo(dtype)
+        if np.issubdtype(dt, np.integer):
+            info = np.iinfo(dt)
             inrange = (info.min <= nodataval <= info.max)
-        elif np.dtype(dtype).kind == 'f':
-            info = np.finfo(dtype)
-            if np.isnan(nodataval):
+        elif np.issubdtype(dt, np.floating):
+            if math.isnan(nodataval):
                 inrange = True
             else:
+                info = np.finfo(dt)
                 inrange = (info.min <= nodataval <= info.max)
         if inrange:
             dest.fill(nodataval)
         else:
             warnings.warn(
-                "Input file's nodata value, %s, is beyond the valid "
-                "range of its data type, %s. Consider overriding it "
+                "The nodata value, %s, is beyond the valid "
+                "range of the chosen data type, %s. Consider overriding it "
                 "using the --nodata option for better results." % (
-                    nodataval, dtype))
+                    nodataval, dt))
     else:
         nodataval = 0
-
-    if method == 'first':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif method == 'last':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = ~new_nodata
-            old_data[mask] = new_data[mask]
-
-    elif method == 'min':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.minimum(old_data[mask], new_data[mask])
-
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif method == 'max':
-        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
-            mask = np.logical_and(~old_nodata, ~new_nodata)
-            old_data[mask] = np.maximum(old_data[mask], new_data[mask])
-
-            mask = np.logical_and(old_nodata, ~new_nodata)
-            old_data[mask] = new_data[mask]
-
-    elif callable(method):
-        copyto = method
-
-    else:
-        raise ValueError(method)
 
     for idx, dataset in enumerate(datasets):
         with dataset_opener(dataset) as src:
@@ -261,15 +308,15 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             )
             logger.debug("Src %s window: %r", src.name, src_window)
 
-            src_window = src_window.round_shape()
-
             # 3. Compute the destination window
             dst_window = windows.from_bounds(
                 int_w, int_s, int_e, int_n, output_transform, precision=precision
             )
 
             # 4. Read data in source window into temp
-            trows, tcols = (int(round(dst_window.height)), int(round(dst_window.width)))
+            src_window = src_window.round_shape(pixel_precision=0)
+            dst_window = dst_window.round_shape(pixel_precision=0)
+            trows, tcols = dst_window.height, dst_window.width
             temp_shape = (src_count, trows, tcols)
             temp = src.read(
                 out_shape=temp_shape,
@@ -281,18 +328,24 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             )
 
         # 5. Copy elements of temp into dest
-        roff, coff = (
-            int(round(dst_window.row_off)), int(round(dst_window.col_off)))
-
+        dst_window = dst_window.round_offsets(pixel_precision=0)
+        roff, coff = dst_window.row_off, dst_window.col_off
         region = dest[:, roff:roff + trows, coff:coff + tcols]
-        if np.isnan(nodataval):
+
+        if math.isnan(nodataval):
             region_nodata = np.isnan(region)
-            temp_nodata = np.isnan(temp)
         else:
             region_nodata = region == nodataval
-            temp_nodata = temp.mask
+        temp_nodata = np.ma.getmaskarray(temp)
 
         copyto(region, temp, region_nodata, temp_nodata,
                index=idx, roff=roff, coff=coff)
 
-    return dest, output_transform
+    if dst_path is None:
+        return dest, output_transform
+
+    else:
+        with rasterio.open(dst_path, "w", **out_profile) as dst:
+            dst.write(dest)
+            if first_colormap:
+                dst.write_colormap(1, first_colormap)

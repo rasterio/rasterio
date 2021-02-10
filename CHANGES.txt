@@ -1,8 +1,82 @@
 Changes
 =======
 
-1.2dev
-------
+1.2.1 (TBD)
+-----------
+
+- Fix an off-by-one error in the merge tool (#2106, #2109).
+
+1.2.0 (2021-01-25)
+------------------
+
+Note well: Python versions before 3.6 are no longer supported by this project.
+
+New features:
+
+- Binary wheels on PyPI include PROJ 7.2.1 and GDAL 3.2.1.
+- Support for Azure Blob Storage using an "az" URI scheme.
+- Support for RPCs and coordinate transformations and raster warping with RPCs.
+- dst_path and dst_kwds parameters for rasterio's merge tool allow results to
+  be written directly to a dataset.
+- In "w" mode the driver keyword argument of open() may be omitted.
+- transform_geom() has been optimized for sequences of geometries.
+
+Bug fixes since 1.2b4:
+
+- Fix dataset constructor so that tiled=False does the right thing (#2085).
+- Allow WarpedVRT to default to using a source dataset's GCPs for
+  georeferencing (#2086).
+- Ensure that error handling environment is closed only after its dataset
+  object is closed, preventing confusing error messages (#2088).
+- Ensure WarpedVRT dataset objects are closed properly when exiting contexts
+  (#2093).
+
+1.2b4 (2021-01-20)
+------------------
+
+- The CRS definition saved in RGB.byte.tif has been updated so that it is
+  identified as precisely EPSG:32618 by GDAL 3.2.1 (#2083).
+- Remove non-breaking hyphens accidentally added to README, open the file with
+  encoding="utf-8" when reading the description so that future UTF-8 chars
+  don't break package setup.
+
+1.2b3 (2021-01-11)
+------------------
+
+- Search for PROJ data in the module before searching system locations (#2080).
+
+1.2b2 (2021-01-10)
+------------------
+
+- Emit a warning to the Python logger when a metadata item can't be decoded to
+  a Python unicode object (#2078).
+- Use language_level=3 Cython directive for all .pyx sources (#2077).
+- Deprecated usage of numpy.ndarray.tostring() has been changed to use
+  tobytes().
+
+1.2b1 (2020-12-13)
+------------------
+
+- Remove compat module and future namespace imports (#2067).
+- A bug in construction of requester pays AWS sessions has been fixed (#2062).
+- Support for the "rms" resampling method in a future version of GDAL has been
+  added (#2056).
+
+1.2a1 (2020-12-03)
+------------------
+
+- Support for Azure Blob Storage using an "az" URI scheme has been added
+  (#1906).
+- Support for RPCs and coordinate transformations and raster warping with RPCs
+  has been added (#1845, #1922, #2029, #2030, #2031).
+- Add dst_path and dst_kwds parameters to rasterio's merge tool to allow
+  results to be written directly to a dataset (#1867).
+- Rasterio's merge tool can now accept Paths as input (#2043).
+- A bug in accessing public Alibaba Cloud data has been fixed (#2018).
+- In "w" mode the driver keyword argument of open() may be omitted, in which
+  case the driver will be determined by the file extension of the first
+  positional argument (#2008).
+- The transform_geom has been optimized for sequences of geometries (#1827).
 
 1.1.8 (2020-10-20)
 ------------------

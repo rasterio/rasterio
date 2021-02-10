@@ -8,6 +8,7 @@ numpydoc
 packaging
 pytest~=4.6.0
 pytest-cov>=2.2.0
+shapely
 sphinx
 sphinx-rtd-theme
 wheel

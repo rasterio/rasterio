@@ -1,25 +1,26 @@
 """Raster warping and reprojection."""
 
-
-from __future__ import absolute_import, division
-
 from math import ceil, floor
 
+from affine import Affine
 import numpy as np
 import rasterio
-from affine import Affine
+
 from rasterio._base import _transform
-from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion, ensure_env, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException, TransformError
 from rasterio.transform import array_bounds
+from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
 GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
 if GDALVersion.runtime().at_least('2.0'):
     SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
+# rms supported since GDAL 3.3
+if GDALVersion.runtime().at_least('3.3'):
+    SUPPORTED_RESAMPLING.append(Resampling.rms)
 
 
 @ensure_env
@@ -474,10 +475,10 @@ def calculate_default_transform(
     """
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
-                         "be used together.")
+                         " be used together.")
     if any(x is not None for x in (left, bottom, right, top)) and rpcs:
         raise ValueError("Bounding values and rational polynomial coefficients may not"
-                         "be used together.")
+                         " be used together.")
 
     if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
         raise ValueError("Either four bounding values, ground control points,"

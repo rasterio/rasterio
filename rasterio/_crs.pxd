@@ -1,4 +1,4 @@
-# _CRS class definition
+# cython: language_level=3
 
 include "gdal.pxi"
 

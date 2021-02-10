@@ -5,7 +5,6 @@ import sys
 import pytest
 
 import rasterio
-import rasterio.compat
 from rasterio.errors import PathError
 from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
 
@@ -39,7 +38,7 @@ def test_parsed_path_remote(scheme):
 @pytest.mark.parametrize("uri", ["/test.tif", "file:///test.tif"])
 def test_parsed_path_not_remote(uri):
     """Check for paths that are not remote"""
-    assert False == ParsedPath.from_uri(uri).is_remote
+    assert not ParsedPath.from_uri(uri).is_remote
 
 
 @pytest.mark.parametrize('scheme', [None, '', 'zip', 'tar', 'file', 'zip+file'])
@@ -53,7 +52,7 @@ def test_parsed_path_file_local(scheme):
 )
 def test_parsed_path_not_local(uri):
     """Check for paths that are not local"""
-    assert False == ParsedPath.from_uri(uri).is_local
+    assert not ParsedPath.from_uri(uri).is_local
 
 
 def test_parse_path_zip():

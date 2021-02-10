@@ -1,3 +1,7 @@
+---
+name: Report
+about: Create a report to help us improve
+---
 <!--
 
 WELCOME ABOARD!

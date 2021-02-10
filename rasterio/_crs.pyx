@@ -1,3 +1,5 @@
+# cython: language_level=3, boundscheck=False
+
 """Coordinate reference systems, class and functions.
 """
 
@@ -5,7 +7,6 @@ import logging
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
-from rasterio.compat import string_types
 from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
@@ -232,22 +233,27 @@ cdef class _CRS(object):
 
         """
         cdef OGRSpatialReferenceH osr = NULL
+
         code = None
         name = None
+
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
             exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+
             if OSRAutoIdentifyEPSG(osr) == 0:
                 c_code = OSRGetAuthorityCode(osr, NULL)
                 c_name = OSRGetAuthorityName(osr, NULL)
                 if c_code != NULL and c_name != NULL:
                     code = c_code.decode('utf-8')
                     name = c_name.decode('utf-8')
+
         finally:
             _safe_osr_release(osr)
 
         if None not in (name, code):
             return (name, code)
+
         return None
 
     @staticmethod
@@ -379,7 +385,7 @@ cdef class _CRS(object):
         """
         cdef char *wkt_c = NULL
 
-        if not isinstance(wkt, string_types):
+        if not isinstance(wkt, str):
             raise ValueError("A string is expected")
 
         wkt_b= wkt.encode('utf-8')
@@ -416,7 +422,7 @@ cdef class _CRS(object):
         """
         cdef const char *text_c = NULL
 
-        if not isinstance(text, string_types):
+        if not isinstance(text, str):
             raise ValueError("A string is expected")
 
         text_b = text.encode('utf-8')

@@ -1,8 +1,10 @@
 """Tests of overview counting and creation."""
+import math
 
+import numpy as np
 import pytest
 
-from .conftest import requires_gdal2
+from .conftest import requires_gdal2, requires_gdal33
 
 import rasterio
 from rasterio.enums import Resampling
@@ -104,3 +106,34 @@ def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
     with rasterio.open(dst_file, overview_level=1) as src:
         data = src.read()
         assert data.any()
+
+
+@requires_gdal33
+def test_ignore_overviews(data):
+    """open dataset with OVERVIEW_LEVEL=-1, overviews should be ignored"""
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        src.build_overviews([2], resampling=Resampling.nearest)
+
+    with rasterio.open(inputfile, OVERVIEW_LEVEL=-1) as src:
+        assert src.overviews(1) == []
+        assert src.overviews(2) == []
+        assert src.overviews(3) == []
+
+
+@requires_gdal33
+def test_decimated_no_use_overview(red_green):
+    """Force ignore existing overviews when performing decimated read"""
+    # Corrupt overview of red file
+    green_ovr = red_green.join("green.tif.ovr")
+    green_ovr.rename(red_green.join("red.tif.ovr"))
+    assert not green_ovr.exists()
+    # Read the corrupted red overview
+    with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
+        ovr_data = ovr.read()
+        ovr_shape = ovr_data.shape
+        assert (ovr_data[1] == 204).all()
+    # Perform decimated read and ensure no use of file overview (different from corrupted)
+    with rasterio.open(str(red_green.join("red.tif")), OVERVIEW_LEVEL=-1) as src:
+        decimated_data = src.read(out_shape=ovr_shape)
+        assert not np.array_equal(ovr_data, decimated_data)

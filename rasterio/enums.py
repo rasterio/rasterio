@@ -37,6 +37,8 @@ class Resampling(IntEnum):
     'nearest', 'bilinear', 'cubic', 'cubic_spline', 'lanczos',
     'average', 'mode' are always available (GDAL >= 1.10).
 
+    'rms' is only supported in GDAL >= 3.3.
+
     Note: 'gauss' is not available to the functions in rio.warp.
     """
     nearest = 0
@@ -52,6 +54,7 @@ class Resampling(IntEnum):
     med = 10
     q1 = 11
     q3 = 12
+    rms = 14
 
 
 class Compression(Enum):

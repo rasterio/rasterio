@@ -1,14 +1,12 @@
 """Geospatial transforms"""
 
-from __future__ import division
-
+from collections.abc import Iterable
 import math
+import sys
 
 from affine import Affine
 
 from rasterio._transform import _transform_from_gcps
-from rasterio.compat import Iterable
-
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -210,8 +208,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
-    precision : int, optional
-        Decimal places of precision in indexing, as in `round()`.
+    precision : int or float, optional
+        An integer number of decimal points of precision when computing
+        inverse transform, or an absolute float precision.
 
     Returns
     -------
@@ -221,19 +220,21 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         list of column indices
     """
 
-    single_x = False
-    single_y = False
     if not isinstance(xs, Iterable):
         xs = [xs]
-        single_x = True
     if not isinstance(ys, Iterable):
         ys = [ys]
-        single_y = True
 
     if precision is None:
-        eps = 0.0
+        eps = sys.float_info.epsilon
+    elif isinstance(precision, int):
+        eps = 10.0 ** -precision
     else:
-        eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+        eps = precision
+
+    # If op rounds up, switch the sign of eps.
+    if op(0.1) >= 1:
+        eps = -eps
 
     invtransform = ~transform
 
@@ -244,9 +245,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if single_x:
+    if len(xs) == 1:
         cols = cols[0]
-    if single_y:
+    if len(ys) == 1:
         rows = rows[0]
 
     return rows, cols

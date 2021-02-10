@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 """Rasterio shim for GDAL 1.x"""
 
 include "directives.pxi"

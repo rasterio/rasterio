@@ -7,6 +7,10 @@ class RasterioError(Exception):
     """Root exception class"""
 
 
+class InvalidArrayError(RasterioError):
+    """Raised when methods are passed invalid arrays"""
+
+
 class WindowError(RasterioError):
     """Raised when errors occur during window operations"""
 

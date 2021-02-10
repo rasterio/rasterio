@@ -1,8 +1,12 @@
+# cython: language_level=3
 # distutils: language = c++
+
 """Raster and vector warping and reprojection."""
 
 include "gdal.pxi"
 
+from collections import UserDict
+from collections.abc import Mapping
 import logging
 import uuid
 import warnings
@@ -17,7 +21,6 @@ from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
-from rasterio.compat import DICT_TYPES
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import GDALVersion
@@ -107,7 +110,7 @@ def _transform_geom(
 
     factory = new OGRGeometryFactory()
     try:
-        if isinstance(geom, DICT_TYPES) or hasattr(geom, "__geo_interface__"):
+        if isinstance(geom, (dict, Mapping, UserDict)) or hasattr(geom, "__geo_interface__"):
             out_geom = _transform_single_geom(geom, factory, transform, options, precision)
         else:
             out_geom = [
@@ -322,6 +325,7 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
+    cdef bint bUseApproxTransformer = True
 
     # Validate nodata values immediately.
     if src_nodata is not None:
@@ -345,8 +349,8 @@ def _reproject(
             in_transform = in_transform.translation(eps, eps)
         return in_transform
 
-    mem_raster = None
-    src_mem = None
+    cdef InMemoryRaster mem_raster = None
+    cdef InMemoryRaster src_mem = None
 
     try:
 
@@ -473,6 +477,9 @@ def _reproject(
         if key == b"RPC_DEM":
             # don't .upper() since might be a path
             val = str(val).encode('utf-8')
+            
+            if rpcs:
+                bUseApproxTransformer = False
         else:
             val = str(val).upper().encode('utf-8')
         imgProjOptions = CSLSetNameValue(
@@ -483,16 +490,24 @@ def _reproject(
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(
                 src_dataset, dst_dataset, imgProjOptions))
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateApproxTransformer(
-                GDALGenImgProjTransform, hTransformArg, tolerance))
-        pfnTransformer = GDALApproxTransform
-        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+        if bUseApproxTransformer:
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateApproxTransformer(
+                    GDALGenImgProjTransform, hTransformArg, tolerance))
+            pfnTransformer = GDALApproxTransform
+            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+            log.debug("Created approximate transformer")
+        else:
+            pfnTransformer = GDALGenImgProjTransform
+            log.debug("Created exact transformer")
 
         log.debug("Created transformer and options.")
 
     except:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         CPLFree(imgProjOptions)
         if src_mem is not None:
             src_mem.close()
@@ -565,7 +580,10 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-        GDALDestroyApproxTransformer(hTransformArg)
+        if bUseApproxTransformer:
+            GDALDestroyApproxTransformer(hTransformArg)
+        else:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
         if mem_raster is not None:
@@ -871,8 +889,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         # Convert CRSes to C WKT strings.
         try:
-            osr = _osr_from_crs(self.src_crs)
-            OSRExportToWkt(osr, &src_crs_wkt)
+            if not self.src_crs:
+                src_crs_wkt = NULL
+            else:
+                osr = _osr_from_crs(self.src_crs)
+                OSRExportToWkt(osr, &src_crs_wkt)
         finally:
             if osr != NULL:
                 OSRRelease(osr)

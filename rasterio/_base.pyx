@@ -1,14 +1,13 @@
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
+# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
 
 """Numpy-free base classes."""
-
-from __future__ import absolute_import
 
 from collections import defaultdict
 import logging
 import math
 import os
 import warnings
+
 from libc.string cimport strncmp
 
 from rasterio._err import (
@@ -17,7 +16,6 @@ from rasterio._err import (
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
-from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.rpc import RPC
 from rasterio import dtypes
@@ -35,8 +33,9 @@ from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.path import parse_path
 from rasterio import windows
 
-include "gdal.pxi"
+cimport cython
 
+include "gdal.pxi"
 
 log = logging.getLogger(__name__)
 
@@ -251,7 +250,7 @@ cdef class DatasetBase(object):
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
-            if isinstance(driver, string_types):
+            if isinstance(driver, str):
                 driver = [driver]
 
             # Read-only + Rasters + Sharing + Errors
@@ -333,10 +332,23 @@ cdef class DatasetBase(object):
         else:
             return None
 
+    def _has_gcps_or_rpcs(self):
+        """Check if we have gcps or rpcs"""
+        cdef int num_gcps
+
+        num_gcps = GDALGetGCPCount(self.handle())
+        if num_gcps:
+            return True
+
+        rpcs = self.tags(ns="RPC")
+        if rpcs:
+            return True
+
+        return False
+
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_b = GDALGetProjectionRef(self.handle())
-        wkt = wkt_b
+        cdef const char *wkt = GDALGetProjectionRef(self.handle())
         if wkt == NULL:
             raise ValueError("Unexpected NULL spatial reference")
         return self._handle_crswkt(wkt)
@@ -348,9 +360,10 @@ cdef class DatasetBase(object):
         if self._hds == NULL:
             raise ValueError("Null dataset")
         err = GDALGetGeoTransform(self._hds, gt)
-        if err == GDALError.failure:
+        if err == GDALError.failure and not self._has_gcps_or_rpcs():
             warnings.warn(
-                "Dataset has no geotransform set. The identity matrix may be returned.",
+                ("Dataset has no geotransform, gcps, or rpcs. "
+                "The identity matrix be returned."),
                 NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
@@ -378,8 +391,8 @@ cdef class DatasetBase(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self._env.__exit__()
         self.close()
+        self._env.__exit__()
 
     def __dealloc__(self):
         if self._hds != NULL:
@@ -1049,6 +1062,7 @@ cdef class DatasetBase(object):
         """
         cdef GDALMajorObjectH obj = NULL
         cdef char **metadata = NULL
+        cdef char *item = NULL
         cdef const char *domain = NULL
         cdef char *key = NULL
         cdef char *val = NULL
@@ -1066,9 +1080,15 @@ cdef class DatasetBase(object):
 
         tag_items = []
         for i in range(num_items):
-            val = CPLParseNameValue(metadata[i], &key)
-            tag_items.append((key[:], val[:]))
-            CPLFree(key)
+            item = <char *>metadata[i]
+            try:
+                val = CPLParseNameValue(metadata[i], &key)
+                tag_items.append((key[:], val[:]))
+            except UnicodeDecodeError:
+                item_bytes = <bytes>item
+                log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
+            finally:
+                CPLFree(key)
 
         return dict(tag_items)
 
@@ -1324,7 +1344,7 @@ cdef class DatasetBase(object):
         """Rational polynomial coefficients mapping between pixel and geodetic coordinates.
 
         This property is a dict-like object.
-        
+
         rpcs : RPC instance containing coefficients. Empty if dataset does not have any
         metadata in the "RPC" domain.
         """
@@ -1480,7 +1500,7 @@ def _can_create_osr(crs):
 
         # If input was empty, WKT can be too; otherwise the conversion
         # didn't work properly and indicates an error.
-        return wkt != NULL and bool(crs) == (wkt[0] != '\0')
+        return wkt != NULL and bool(crs) == (wkt[0] != 0)
 
     except CRSError:
         return False

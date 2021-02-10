@@ -17,29 +17,14 @@ import os
 import platform
 import pprint
 import shutil
-import subprocess
+from subprocess import check_output
 import sys
 
 from setuptools import setup
 from setuptools.extension import Extension
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
-
-
-def check_output(cmd):
-    # since subprocess.check_output doesn't exist in 2.6
-    # we wrap it here.
-    try:
-        out = subprocess.check_output(cmd)
-        return out.decode('utf')
-    except AttributeError:
-        # For some reasone check_output doesn't exist
-        # So fall back on Popen
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        return out
 
 
 def copy_data_tree(datadir, destdir):
@@ -51,11 +36,11 @@ def copy_data_tree(datadir, destdir):
 
 
 # python -W all setup.py ...
-if 'all' in sys.warnoptions:
+if "all" in sys.warnoptions:
     log.level = logging.DEBUG
 
 # Parse the version from the rasterio module.
-with open('rasterio/__init__.py') as f:
+with open("rasterio/__init__.py") as f:
     for line in f:
         if line.find("__version__") >= 0:
             version = line.split("=")[1].strip()
@@ -63,7 +48,7 @@ with open('rasterio/__init__.py') as f:
             version = version.strip("'")
             continue
 
-with open('VERSION.txt', 'w') as f:
+with open("VERSION.txt", "w") as f:
     f.write(version)
 
 # Use Cython if available.
@@ -87,6 +72,7 @@ sdist_fill = []
 
 try:
     import numpy as np
+
     include_dirs.append(np.get_include())
 except ImportError:
     sys.exit("ERROR: Numpy and its headers are required to run setup().")
@@ -95,7 +81,7 @@ if "clean" not in sys.argv:
     try:
         gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
         for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
-            gdal_output[i] = check_output([gdal_config, flag]).strip()
+            gdal_output[i] = check_output([gdal_config, flag]).decode("utf-8").strip()
 
         for item in gdal_output[0].split():
             if item.startswith("-I"):
@@ -122,7 +108,6 @@ if "clean" not in sys.argv:
                      "in the README.")
         else:
             log.warning("Failed to get options via gdal-config: %s", str(e))
-
 
     # Get GDAL API version from environment variable.
     if 'GDAL_VERSION' in os.environ:
@@ -310,44 +295,38 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
 else:
 
     ext_modules = [
-        Extension(
-            'rasterio._base', ['rasterio/_base.c'], **ext_options),
-        Extension(
-            'rasterio._io', ['rasterio/_io.c'], **ext_options),
-        Extension(
-            'rasterio._features', ['rasterio/_features.c'], **ext_options),
-        Extension(
-            'rasterio._env', ['rasterio/_env.c'], **ext_options),
-        Extension(
-            'rasterio._warp', ['rasterio/_warp.cpp'], **cpp_ext_options),
-        Extension(
-            'rasterio._fill', sdist_fill, **cpp_ext_options),
-        Extension(
-            'rasterio._err', ['rasterio/_err.c'], **ext_options),
-        Extension(
-            'rasterio._example', ['rasterio/_example.c'], **ext_options),
-        Extension(
-            'rasterio._crs', ['rasterio/_crs.c'], **ext_options),
-        Extension(
-            'rasterio.shutil', ['rasterio/shutil.c'], **ext_options),
-        Extension(
-            'rasterio._transform', ['rasterio/_transform.c'], **ext_options)]
+        Extension("rasterio._base", ["rasterio/_base.c"], **ext_options),
+        Extension("rasterio._io", ["rasterio/_io.c"], **ext_options),
+        Extension("rasterio._features", ["rasterio/_features.c"], **ext_options),
+        Extension("rasterio._env", ["rasterio/_env.c"], **ext_options),
+        Extension("rasterio._warp", ["rasterio/_warp.cpp"], **cpp_ext_options),
+        Extension("rasterio._fill", sdist_fill, **cpp_ext_options),
+        Extension("rasterio._err", ["rasterio/_err.c"], **ext_options),
+        Extension("rasterio._example", ["rasterio/_example.c"], **ext_options),
+        Extension("rasterio._crs", ["rasterio/_crs.c"], **ext_options),
+        Extension("rasterio.shutil", ["rasterio/shutil.c"], **ext_options),
+        Extension("rasterio._transform", ["rasterio/_transform.c"], **ext_options),
+    ]
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
     if gdal_major_version == 3 and gdal_minor_version >= 0:
         ext_modules.append(
-            Extension('rasterio._shim', ['rasterio/_shim30.c'], **ext_options))
+            Extension("rasterio._shim", ["rasterio/_shim30.c"], **ext_options)
+        )
     elif gdal_major_version == 2 and gdal_minor_version >= 1:
         ext_modules.append(
-            Extension('rasterio._shim', ['rasterio/_shim21.c'], **ext_options))
+            Extension("rasterio._shim", ["rasterio/_shim21.c"], **ext_options)
+        )
     elif gdal_major_version == 2 and gdal_minor_version == 0:
         ext_modules.append(
-            Extension('rasterio._shim', ['rasterio/_shim20.c'], **ext_options))
+            Extension("rasterio._shim", ["rasterio/_shim20.c"], **ext_options)
+        )
     elif gdal_major_version == 1:
         ext_modules.append(
-            Extension('rasterio._shim', ['rasterio/_shim1.c'], **ext_options))
+            Extension("rasterio._shim", ["rasterio/_shim1.c"], **ext_options)
+        )
 
-with open('README.rst') as f:
+with open("README.rst", encoding="utf-8") as f:
     readme = f.read()
 
 # Runtime requirements.
@@ -360,7 +339,6 @@ inst_reqs = [
     "numpy",
     "snuggs>=1.4.1",
     "click-plugins",
-    'enum34 ; python_version < "3.4"',
 ]
 
 extra_reqs = {
@@ -369,50 +347,48 @@ extra_reqs = {
     "plot": ["matplotlib"],
     "s3": ["boto3>=1.2.4"],
     "test": [
-        "pytest>=2.8.2",
-        "pytest-cov>=2.2.0",
         "boto3>=1.2.4",
-        "packaging",
         "hypothesis",
-        'futures;python_version<"3.2"',
-        'mock;python_version<"3.2"',
+        "packaging",
+        "pytest-cov>=2.2.0",
+        "pytest>=2.8.2",
+        "shapely",
     ],
 }
 
 # Add all extra requirements
-extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
+extra_reqs["all"] = list(set(itertools.chain(*extra_reqs.values())))
 
 setup_args = dict(
-    cmdclass={'sdist': sdist_multi_gdal},
-    name='rasterio',
+    cmdclass={"sdist": sdist_multi_gdal},
+    name="rasterio",
     version=version,
     description="Fast and direct raster I/O for use with Numpy and SciPy",
     long_description=readme,
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Information Technology',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: C',
-        'Programming Language :: Cython',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
-        'Topic :: Multimedia :: Graphics :: Graphics Conversion',
-        'Topic :: Scientific/Engineering :: GIS'],
-    keywords='raster gdal',
-    author='Sean Gillies',
-    author_email='sean@mapbox.com',
-    url='https://github.com/mapbox/rasterio',
-    license='BSD',
-    package_dir={'': '.'},
-    packages=['rasterio', 'rasterio.rio'],
-    entry_points='''
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: BSD License",
+        "Programming Language :: C",
+        "Programming Language :: Cython",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3",
+        "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+        "Topic :: Scientific/Engineering :: GIS",
+    ],
+    keywords="raster gdal",
+    author="Sean Gillies",
+    author_email="sean@mapbox.com",
+    url="https://github.com/mapbox/rasterio",
+    license="BSD",
+    package_dir={"": "."},
+    packages=["rasterio", "rasterio.rio"],
+    entry_points="""
         [console_scripts]
         rio=rasterio.rio.main:main_group
 
@@ -437,12 +413,14 @@ setup_args = dict(
         stack=rasterio.rio.stack:stack
         transform=rasterio.rio.transform:transform
         warp=rasterio.rio.warp:warp
-    ''',
+    """,
     include_package_data=True,
     ext_modules=ext_modules,
     zip_safe=False,
     install_requires=inst_reqs,
-    extras_require=extra_reqs)
+    extras_require=extra_reqs,
+    python_requires=">=3.6",
+)
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}

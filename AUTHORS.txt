@@ -1,11 +1,14 @@
 Authors
 -------
 
+* Adam J. Stewart
 * Alan D. Snow
 * Aldo Culquicondor
 * Alessandro Amici
+* Alex Shepherd
 * Alexander
 * Alexander Ivanov
+* Alfred-Mountfield
 * Amit Kapadia
 * Andrew Annex
 * Andrew Catellier
@@ -23,16 +26,22 @@ Authors
 * Damien Ayers
 * Dan "Ducky" Little
 * Dan Baston
+* Daniel J. H
 * Darren Weber
 * Denis Rykov
+* Elliott Sales de Andrade
 * Erik Seglem
 * Etienne B. Racine
 * Even Rouault
-* Filipe
+* Felix Divo
+* Filipe Fernandes
+* Florian
 * Frédéric Bonifas
+* Giacomo Vianello
 * Gregory Raevski
 * Guillaume Lostis
 * Guy Doulberg
+* Ian Schneider
 * Ismail Sunni
 * Jacques Tardie
 * James Hiebert
@@ -51,8 +60,11 @@ Authors
 * Kevin Wurster
 * Kirill Kouzoubov
 * Koshy Thomas
+* Kyle Barron
 * Leah Wasser
+* Loïc Dutrieux
 * Lukasz
+* Mark Boer
 * Martijn Visser
 * Martin Kaesberger
 * Martin Raspaud
@@ -62,6 +74,8 @@ Authors
 * Mike Taves
 * Nat Wilson
 * Nick Grue
+* Nikolai Janakiev
+* Norman Barker
 * Pablo Sanfilippo
 * Patrick Young
 * Pratik Yadav
@@ -73,10 +87,13 @@ Authors
 * Sam Murphy
 * Sean Gillies
 * Seth Fitzsimmons
+* Seth Miller
+* Tim Gates
 * Trevor R.H. Clarke
 * Tyler Erickson
 * Vincent Sarago
 * Vincent Schut
+* Yann-Sebastien Tremblay-Johnston
 * Yuvi Panda
 * appanacca
 * asmith26
@@ -86,5 +103,7 @@ Authors
 * firas omrane
 * grovduck
 * jaredairbusaerial
+* ljburtz
 * morrme
+* ngrue
 * sshuair

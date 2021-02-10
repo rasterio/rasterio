@@ -1,6 +1,6 @@
-"""Rasterio shims for GDAL 3.x"""
+# cython: language_level=3, boundscheck=False
 
-# cython: boundscheck=False
+"""Rasterio shims for GDAL 3.x"""
 
 include "directives.pxi"
 

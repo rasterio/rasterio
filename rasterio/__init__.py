@@ -1,23 +1,10 @@
 """Rasterio"""
 
-from __future__ import absolute_import
-
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
-
-try:
-    from pathlib import Path
-except ImportError:  # pragma: no cover
-    class Path:
-        pass
-
-try:
-    from logging import NullHandler
-except ImportError:  # pragma: no cover
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
+from logging import NullHandler
+from pathlib import Path
 
 from rasterio._base import gdal_version
 from rasterio.drivers import driver_from_extension, is_blacklisted
@@ -26,7 +13,6 @@ from rasterio.dtypes import (
     complex_, check_dtype)
 from rasterio.env import ensure_env_with_credentials, Env
 from rasterio.errors import RasterioIOError, DriverCapabilityError
-from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
 from rasterio.profiles import default_gtiff_profile
@@ -41,7 +27,7 @@ import rasterio.enums
 import rasterio.path
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.2dev"
+__version__ = "1.2.1dev"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -153,12 +139,12 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     ...     dataset.write(...)
     """
 
-    if not isinstance(fp, string_types):
+    if not isinstance(fp, str):
         if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, Path)):
             raise TypeError("invalid path or file: {0!r}".format(fp))
-    if mode and not isinstance(mode, string_types):
+    if mode and not isinstance(mode, str):
         raise TypeError("invalid mode: {0!r}".format(mode))
-    if driver and not isinstance(driver, string_types):
+    if driver and not isinstance(driver, str):
         raise TypeError("invalid driver: {0!r}".format(driver))
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))

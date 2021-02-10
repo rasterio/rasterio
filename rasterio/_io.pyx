@@ -1,8 +1,6 @@
+# cython: language_level=3, boundscheck=False
+
 """Rasterio input/output."""
-
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
-
-from __future__ import absolute_import
 
 include "directives.pxi"
 include "gdal.pxi"
@@ -21,14 +19,14 @@ from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
 from rasterio.crs import CRS
-from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
+from rasterio.dtypes import is_ndarray
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, UnparsedPath
@@ -36,7 +34,6 @@ from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
-cimport numpy as np
 
 from rasterio._base cimport (
     _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
@@ -44,6 +41,7 @@ from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._shim cimport (
     open_dataset, delete_nodata_value, io_band, io_multi_band, io_multi_mask)
 
+cimport numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -257,10 +255,11 @@ cdef class DatasetReaderBase(DatasetBase):
             log.debug("Output nodata value read from file: %r", ndv)
 
             if ndv is not None:
-                if np.dtype(dtype).kind in ('i', 'u'):
+                kind = np.dtype(dtype).kind
+                if chr(kind) in "iu":
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
-                elif np.dtype(dtype).kind in ('f', 'c'):
+                elif chr(kind) in "cf":
                     info = np.finfo(dtype)
                     dt_min, dt_max = info.min, info.max
                 else:
@@ -1052,7 +1051,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
-            if not isinstance(driver, string_types):
+            if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
             try:
                 width = int(width)
@@ -1081,6 +1080,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # "tiled" affects the meaning of blocksize, so we need it
         # before iterating.
         tiled = kwargs.pop("tiled", False) or kwargs.pop("TILED", False)
+        if isinstance(tiled, str):
+            tiled = (tiled.lower() in ("true", "yes"))
 
         if tiled:
             blockxsize = kwargs.get("blockxsize", None)
@@ -1165,7 +1166,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             # driver may be a string or list of strings. If the
             # former, put it into a list.
-            if isinstance(driver, string_types):
+            if isinstance(driver, str):
                 driver = [driver]
 
             # flags: Update + Raster + Errors
@@ -1320,8 +1321,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
 
-    def write(self, src, indexes=None, window=None):
-        """Write the src array into indexed bands of the dataset.
+    def write(self, arr, indexes=None, window=None):
+        """Write the arr array into indexed bands of the dataset.
 
         If `indexes` is a list, the src must be a 3D array of
         matching shape. If an int, the src must be a 2D array.
@@ -1333,16 +1334,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if self._hds == NULL:
             raise ValueError("can't write to closed raster file")
+        if not is_ndarray(arr):
+            raise InvalidArrayError("Positional argument arr must be an array-like object")
+
+        arr = np.array(arr, copy=False)
 
         if indexes is None:
             indexes = self.indexes
+
         elif isinstance(indexes, int):
             indexes = [indexes]
-            src = np.array([src])
-        if len(src.shape) != 3 or src.shape[0] != len(indexes):
+            arr = np.stack((arr,))
+
+        if len(arr.shape) != 3 or arr.shape[0] != len(indexes):
             raise ValueError(
                 "Source shape {} is inconsistent with given indexes {}"
-                .format(src.shape, len(indexes)))
+                .format(arr.shape, len(indexes)))
 
         check_dtypes = set()
         # Check each index before processing 3D array
@@ -1358,13 +1365,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
 
-        if src is not None and src.dtype != dtype:
+        if arr is not None and arr.dtype != dtype:
             raise ValueError(
                 "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (src.dtype, dtype))
+                "the file's dtype '%s'" % (arr.dtype, dtype))
 
         # Require C-continguous arrays (see #108).
-        src = np.require(src, dtype=dtype, requirements='C')
+        arr = np.require(arr, dtype=dtype, requirements='C')
 
         # Prepare the IO window.
         if window:
@@ -1383,7 +1390,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
-            io_multi_band(self._hds, 1, xoff, yoff, width, height, src, indexes_arr)
+            io_multi_band(self._hds, 1, xoff, yoff, width, height, arr, indexes_arr)
         except CPLE_BaseError as cplerr:
             raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
@@ -1431,8 +1438,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             GDALGetMetadata(hobj, domain_c))
 
         for key, value in kwargs.items():
-            key_b = text_type(key).encode('utf-8')
-            value_b = text_type(value).encode('utf-8')
+            key_b = str(key).encode('utf-8')
+            value_b = str(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
             papszStrList = CSLSetNameValue(
@@ -1685,7 +1692,14 @@ cdef class InMemoryRaster:
     This class is only intended for internal use within rasterio to support
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
-    def __cinit__(self, image=None, dtype='uint8', count=1, width=None,
+    def __cinit__(self):
+        self._hds = NULL
+        self.band_ids = NULL
+        self._image = None
+        self.crs = None
+        self.transform = None
+
+    def __init__(self, image=None, dtype='uint8', count=1, width=None,
                   height=None, transform=None, gcps=None, rpcs=None, crs=None):
         """
         Create in-memory raster dataset, and fill its bands with the
@@ -1794,7 +1808,6 @@ cdef class InMemoryRaster:
         if options != NULL:
             CSLDestroy(options)
 
-        self._image = None
         if image is not None:
             self.write(image)
 
@@ -1805,7 +1818,9 @@ cdef class InMemoryRaster:
         self.close()
 
     def __dealloc__(self):
-        CPLFree(self.band_ids)
+        if self.band_ids != NULL:
+            CPLFree(self.band_ids)
+            self.band_ids = NULL
 
     cdef GDALDatasetH handle(self) except NULL:
         """Return the object's GDAL dataset handle"""
@@ -1829,7 +1844,7 @@ cdef class InMemoryRaster:
     def close(self):
         if self._hds != NULL:
             GDALClose(self._hds)
-        self._hds = NULL
+            self._hds = NULL
 
     def read(self):
 
@@ -1940,7 +1955,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
-            if not isinstance(driver, string_types):
+            if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
             try:
                 width = int(width)
@@ -2113,7 +2128,7 @@ def virtual_file_to_buffer(filename):
     cdef unsigned char *buff = NULL
     cdef const char *cfilename = NULL
     cdef vsi_l_offset buff_len = 0
-    filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
+    filename_b = filename if not isinstance(filename, str) else filename.encode('utf-8')
     cfilename = filename_b
     buff = VSIGetMemFileBuffer(cfilename, &buff_len, 0)
     n = buff_len

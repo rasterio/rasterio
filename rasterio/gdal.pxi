@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 # GDAL API definitions.
 
 from libc.stdio cimport FILE
@@ -117,6 +119,8 @@ cdef extern from "ogr_srs_api.h" nogil:
     double OSRGetLinearUnits(OGRSpatialReferenceH srs, char **ppszName)
     int OSREPSGTreatsAsLatLong(OGRSpatialReferenceH srs)
     int OSREPSGTreatsAsNorthingEasting(OGRSpatialReferenceH srs)
+    OGRSpatialReferenceH *OSRFindMatches(OGRSpatialReferenceH srs, char **options, int *entries, int **matchConfidence)
+    void OSRFreeSRSArray(OGRSpatialReferenceH *srs)
 
 cdef extern from "gdal.h" nogil:
 

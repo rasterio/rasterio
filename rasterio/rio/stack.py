@@ -1,12 +1,12 @@
 """$ rio stack"""
 
-
+from collections.abc import Iterable
+from itertools import zip_longest
 import logging
 
 import click
 
 import rasterio
-from rasterio.compat import Iterable, zip_longest
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 

@@ -17,8 +17,8 @@ The newer float precision read-write window capabilities of Rasterio
 require instances of Window to be used.
 """
 
-from __future__ import division
 import collections
+from collections.abc import Iterable
 import functools
 import math
 import warnings
@@ -27,7 +27,6 @@ import attr
 from affine import Affine
 import numpy as np
 
-from rasterio.compat import Iterable
 from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
@@ -258,16 +257,23 @@ def from_bounds(left, bottom, right, top, transform=None,
 
     Parameters
     ----------
-    left, bottom, right, top: float
-        Left (west), bottom (south), right (east), and top (north)
-        bounding coordinates.
+    left: float, required
+        Left (west) bounding coordinates
+    bottom: float, required
+        Bottom (south) bounding coordinates
+    right: float, required
+        Right (east) bounding coordinates
+    top: float, required
+        Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    height, width: int, required
-        Number of rows and columns of the window.
-    precision: int, optional
-        Number of decimal points of precision when computing inverse
-        transform.
+    height: int, required
+        Number of rows of the window.
+    width: int, required
+        Number of columns of the window.
+    precision: int or float, optional
+        An integer number of decimal points of precision when computing
+        inverse transform, or an absolute float precision.
 
     Returns
     -------
@@ -663,17 +669,19 @@ class Window(object):
         -------
         Window
         """
-        operator = getattr(math, op, None)
-        if not operator:
-            raise WindowError("operator must be 'ceil' or 'floor'")
-        else:
-            return Window(
-                self.col_off, self.row_off,
-                operator(round(self.width, pixel_precision) if
-                         pixel_precision is not None else self.width),
-                operator(round(self.height, pixel_precision) if
-                         pixel_precision is not None else self.height))
+        if op not in {'ceil', 'floor'}:
+            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
 
+        operator = getattr(math, op)
+        if pixel_precision is None:
+            return Window(self.col_off, self.row_off,
+                          operator(self.width), operator(self.height))
+        else:
+            return Window(self.col_off, self.row_off,
+                          operator(round(self.width, pixel_precision)),
+                          operator(round(self.height, pixel_precision)))
+
+    # TODO: deprecate round_shape at 1.3.0, with a warning.
     round_shape = round_lengths
 
     def round_offsets(self, op='floor', pixel_precision=None):
@@ -693,16 +701,17 @@ class Window(object):
         -------
         Window
         """
-        operator = getattr(math, op, None)
-        if not operator:
-            raise WindowError("operator must be 'ceil' or 'floor'")
+        if op not in {'ceil', 'floor'}:
+            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+
+        operator = getattr(math, op)
+        if pixel_precision is None:
+            return Window(operator(self.col_off), operator(self.row_off),
+                          self.width, self.height)
         else:
-            return Window(
-                operator(round(self.col_off, pixel_precision) if
-                         pixel_precision is not None else self.col_off),
-                operator(round(self.row_off, pixel_precision) if
-                         pixel_precision is not None else self.row_off),
-                self.width, self.height)
+            return Window(operator(round(self.col_off, pixel_precision)),
+                          operator(round(self.row_off, pixel_precision)),
+                          self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""
