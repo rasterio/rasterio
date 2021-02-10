@@ -226,11 +226,14 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         ys = [ys]
 
     if precision is None:
-        eps = sys.float_info.epsilon * (1.0 - 2.0 * op(0.1))
+        eps = sys.float_info.epsilon
     elif isinstance(precision, int):
-        eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+        eps = 10.0 ** -precision
     else:
         eps = precision
+
+    if op(0.1) > 0.1:
+        eps = -eps
 
     invtransform = ~transform
 
