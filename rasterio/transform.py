@@ -232,7 +232,8 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     else:
         eps = precision
 
-    if op(0.1) > 0.1:
+    # If op rounds up, switch the sign of eps.
+    if op(0.1) >= 1:
         eps = -eps
 
     invtransform = ~transform
