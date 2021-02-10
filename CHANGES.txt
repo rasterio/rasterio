@@ -4,7 +4,7 @@ Changes
 1.2.1 (TBD)
 -----------
 
-- Fix an off-by-one error in the merge tool (#2106, #).
+- Fix an off-by-one error in the merge tool (#2106, #2109).
 
 1.2.0 (2021-01-25)
 ------------------
