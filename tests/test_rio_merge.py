@@ -453,13 +453,13 @@ def test_merge_tiny_res_bounds(tiffs, runner):
     assert result.exit_code == 0
 
     # Output should be
-    # [[[0  90]
+    # [[[120  90]
     #   [0   0]]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
         print(data)
-        assert data[0, 0, 0] == 0
+        assert data[0, 0, 0] == 120
         assert data[0, 0, 1] == 90
         assert data[0, 1, 0] == 0
         assert data[0, 1, 1] == 0
@@ -481,7 +481,7 @@ def test_merge_rgb(tmpdir, runner):
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
-        assert [src.checksum(i) for i in src.indexes] == [33219, 35315, 45188]
+        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
 
 
 def test_merge_tiny_intres(tiffs):

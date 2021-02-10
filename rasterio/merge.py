@@ -308,15 +308,15 @@ def merge(
             )
             logger.debug("Src %s window: %r", src.name, src_window)
 
-            src_window = src_window.round_shape()
-
             # 3. Compute the destination window
             dst_window = windows.from_bounds(
                 int_w, int_s, int_e, int_n, output_transform, precision=precision
             )
 
             # 4. Read data in source window into temp
-            trows, tcols = (int(round(dst_window.height)), int(round(dst_window.width)))
+            src_window = src_window.round_shape(pixel_precision=0)
+            dst_window = dst_window.round_shape(pixel_precision=0)
+            trows, tcols = dst_window.height, dst_window.width
             temp_shape = (src_count, trows, tcols)
             temp = src.read(
                 out_shape=temp_shape,
@@ -328,9 +328,8 @@ def merge(
             )
 
         # 5. Copy elements of temp into dest
-        roff, coff = (
-            int(round(dst_window.row_off)), int(round(dst_window.col_off)))
-
+        dst_window = dst_window.round_offsets(pixel_precision=0)
+        roff, coff = dst_window.row_off, dst_window.col_off
         region = dest[:, roff:roff + trows, coff:coff + tcols]
 
         if math.isnan(nodataval):

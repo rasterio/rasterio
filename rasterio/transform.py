@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 import math
+import sys
 
 from affine import Affine
 
@@ -218,20 +219,13 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         list of column indices
     """
 
-    single_x = False
-    single_y = False
     if not isinstance(xs, Iterable):
         xs = [xs]
-        single_x = True
     if not isinstance(ys, Iterable):
         ys = [ys]
-        single_y = True
 
-    if precision is None:
-        eps = 0.0
-    else:
-        eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
-
+    eps = sys.float_info.epsilon
+    
     invtransform = ~transform
 
     rows = []
@@ -241,9 +235,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if single_x:
+    if len(xs) == 1:
         cols = cols[0]
-    if single_y:
+    if len(ys) == 1:
         rows = rows[0]
 
     return rows, cols
