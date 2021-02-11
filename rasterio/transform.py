@@ -233,11 +233,8 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if len(xs) == 1:
-        cols = cols[0]
-    if len(ys) == 1:
-        rows = rows[0]
-
+    if len(cols) == 1:
+        return rows[0], cols[0]
     return rows, cols
 
 
