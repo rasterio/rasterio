@@ -185,17 +185,14 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
                     ctxkwds[name or '_i%d' % (i + 1)] = src.read(masked=masked, window=window)
 
                 res = snuggs.eval(command, **ctxkwds)
+                results = res.astype(dtype, copy=False)
 
-                if len(res.shape) == 3:
-                    results = type(res).astype(res, dtype, copy=False)
-                else:
-                    results = np.asanyarray(
-                        [type(res).astype(res, dtype, copy=False)])
-
-                if (isinstance(results, np.ma.core.MaskedArray) and (
-                        tuple(LooseVersion(np.__version__).version) < (1, 9) or
-                        tuple(LooseVersion(np.__version__).version) > (1, 10))):
+                if isinstance(results, np.ma.core.MaskedArray):
                     results = results.filled(float(kwargs['nodata']))
+                    if len(results.shape) == 2:
+                        results = np.ma.asanyarray([results])
+                elif len(results.shape) == 2:
+                    results = np.asanyarray([results])
 
                 # The first iteration is only to get sample results and from them
                 # compute some properties of the output dataset.
