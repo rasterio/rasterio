@@ -11,7 +11,7 @@ from rasterio.enums import Resampling
 from rasterio.errors import ResamplingAlgorithmError
 from rasterio.windows import Window
 
-from .conftest import requires_gdal2, requires_gdal31, requires_gdal33
+from .conftest import requires_gdal2, requires_gdal33
 
 
 # Rasterio's test dataset is 718 rows by 791 columns.
@@ -96,18 +96,6 @@ def test_resampling_alg_error():
     with pytest.raises(ResamplingAlgorithmError):
         with rasterio.open("tests/data/RGB.byte.tif") as src:
             src.read(1, out_shape=(1, 10, 10), resampling=Resampling.max)
-
-
-@requires_gdal31
-def test_resampling_sum():
-    """Test Resampling.sum method"""
-    with rasterio.open('tests/data/float.tif') as s:
-        out_shape = (2, 2)
-        weighted_sum = s.read(1, out_shape=out_shape, resampling=Resampling.sum)
-        expected = np.array([
-            [2.025, 1.395],
-            [0.205, -1.995]], dtype=np.float32)
-        assert (weighted_sum == expected).all()  # all True.
 
 
 @requires_gdal33
