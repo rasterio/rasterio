@@ -154,7 +154,7 @@ def xy(transform, rows, cols, offset='center'):
         cols = [cols]
     if not isinstance(rows, Iterable):
         rows = [rows]
-        
+
     if offset == 'center':
         coff, roff = (0.5, 0.5)
     elif offset == 'ul':
@@ -239,11 +239,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if len(xs) == 1:
-        cols = cols[0]
-    if len(ys) == 1:
-        rows = rows[0]
-
+    if len(cols) == 1:
+        # rows and cols will always have the same length
+        return rows[0], cols[0]
     return rows, cols
 
 
