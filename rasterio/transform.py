@@ -150,15 +150,10 @@ def xy(transform, rows, cols, offset='center'):
     ys : list
         y coordinates in coordinate reference system
     """
-
-    single_col = False
-    single_row = False
     if not isinstance(cols, Iterable):
         cols = [cols]
-        single_col = True
     if not isinstance(rows, Iterable):
         rows = [rows]
-        single_row = True
 
     if offset == 'center':
         coff, roff = (0.5, 0.5)
@@ -173,18 +168,11 @@ def xy(transform, rows, cols, offset='center'):
     else:
         raise ValueError("Invalid offset")
 
-    xs = []
-    ys = []
-    for col, row in zip(cols, rows):
-        x, y = transform * transform.translation(coff, roff) * (col, row)
-        xs.append(x)
-        ys.append(y)
+    T = transform * transform.translation(coff, roff)
+    xs, ys = zip(*(T * pt for pt in zip(cols, rows)))
 
-    if single_row:
-        ys = ys[0]
-    if single_col:
-        xs = xs[0]
-
+    if len(xs) == 1:
+        return xs[0], ys[0]
     return xs, ys
 
 
