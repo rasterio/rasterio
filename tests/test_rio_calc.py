@@ -180,3 +180,26 @@ def test_chunk_output(width, height, count, itemsize, mem_limit):
     num_windows_cols = max([j for ((i, j), w) in work_windows]) + 1
     assert sum((w.width for ij, w in work_windows)) == width * num_windows_rows
     assert sum((w.height for ij, w in work_windows)) == height * num_windows_cols
+
+
+def test_bool(tmpdir, runner):
+    """Check on issue #2401"""
+    outfile = str(tmpdir.join("out.tif"))
+    result = runner.invoke(
+        main_group,
+        ["calc"]
+        + [
+            "(>= (read 1 1) 127)",
+            "-t",
+            "uint8",
+            "--masked",
+            "--profile",
+            "nodata=255",
+            "tests/data/RGB.byte.tif",
+            outfile,
+        ],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outfile) as src:
+        assert (src.read() == 255).any()
