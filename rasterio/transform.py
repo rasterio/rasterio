@@ -226,12 +226,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     invtransform = ~transform
 
-    rows = []
-    cols = []
-    for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y - eps)
-        cols.append(op(fcol))
-        rows.append(op(frow))
+    cols, rows = zip(*(invtransform * (x + eps, y - eps) for x, y in zip(xs, ys)))
+    cols = list(map(op, cols))
+    rows = list(map(op, rows))
 
     if len(cols) == 1:
         return rows[0], cols[0]
