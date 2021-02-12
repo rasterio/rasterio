@@ -249,3 +249,123 @@ def from_gcps(gcps):
 
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
+
+
+def affine_to_ndarray(transform):
+    return np.fromiter(transform, dtype='float64').reshape(3, 3)
+
+def translate_ndarray(transform, xoff, yoff):
+    tmp = transform.copy()
+    tmp[:, 2] = transform @ np.array([xoff, yoff, 1])
+    return tmp
+
+def np_rowcol(transform, xs, ys, op='floor', precision=None):
+    """
+    Returns the rows and cols of the pixels containing (x, y) given a
+    coordinate reference system.
+
+    Use an epsilon, magnitude determined by the precision parameter
+    and sign determined by the op function:
+        positive for floor, negative for ceil.
+
+    Parameters
+    ----------
+    transform : ndarray
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    xs : Sequence
+        x values in coordinate reference system
+    ys : Sequence
+        y values in coordinate reference system
+    op : function (one of 'floor', 'ceil', 'round')
+        Function to convert fractional pixels to whole numbers (floor, ceiling,
+        round)
+    precision : int or float, optional
+        An integer number of decimal points of precision when computing
+        inverse transform, or an absolute float precision.
+
+    Returns
+    -------
+    rows : ndarray of ints
+        array of row indices
+    cols : ndarray of ints
+        array of column indices
+    """
+    if len(xs) != len(ys):
+        raise ValueError("xs and ys must be the same length.")
+
+    if precision is None:
+        eps = np.finfo('float64').eps
+    elif isinstance(precision, int):
+        eps = 10.0 ** -precision
+    else:
+        eps = precision
+
+    if op in {'floor', 'ceil', 'round'}:
+        operator = getattr(np, op)
+    else:
+        raise ValueError("Invalid op")
+
+    # If op rounds up, switch the sign of eps.
+    if operator(0.1) >= 1:
+        eps = -eps
+
+    invtransform = np.linalg.inv(transform)
+    coords = np.empty((3, len(xs)), dtype='float64')
+    coords[0] = xs
+    coords[0] += eps
+    coords[1] = ys
+    coords[1] -= eps
+    coords[2] = 1
+
+    np.matmul(invtransform, coords, out=coords)
+    operator(coords, out=coords)
+
+    return coords[1], coords[0]
+
+def np_xy(transform, rows, cols, offset='center'):
+    """Returns the x and y coordinates of pixels at `rows` and `cols`.
+    The pixel's center is returned by default, but a corner can be returned
+    by setting `offset` to one of `ul, ur, ll, lr`.
+
+    Parameters
+    ----------
+    transform : ndarray
+        Transformation from pixel coordinates to coordinate reference system.
+    rows : Sequence
+        Pixel rows.
+    cols : Sequence
+        Pixel columns.
+    offset : str, optional
+        Determines if the returned coordinates are for the center of the
+        pixel or for a corner.
+
+    Returns
+    -------
+    xs : ndarray
+        x coordinates in coordinate reference system
+    ys : ndarray
+        y coordinates in coordinate reference system
+    """
+    if len(cols) != len(rows):
+        raise ValueError
+
+    if offset == 'center':
+        coff, roff = (0.5, 0.5)
+    elif offset == 'ul':
+        coff, roff = (0, 0)
+    elif offset == 'ur':
+        coff, roff = (1, 0)
+    elif offset == 'll':
+        coff, roff = (0, 1)
+    elif offset == 'lr':
+        coff, roff = (1, 1)
+    else:
+        raise ValueError("Invalid offset")
+
+    coords = np.empty((3, len(cols)), dtype='float64')
+    coords[0] = rows
+    coords[1] = cols
+    coords[2] = 1
+
+    np.matmul(translate_ndarray(transform, coff, roff), coords, out=coords)
+    return coords[0], coords[1]
