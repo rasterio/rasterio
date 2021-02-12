@@ -252,14 +252,41 @@ def from_gcps(gcps):
 
 
 def affine_to_ndarray(transform):
+    """
+    Create ndarray of Affine object
+
+    Parameters
+    ----------
+    transform: ndarray (Affine)
+
+    Returns
+    -------
+    - : ndarray (3x3)
+        The equivalent ndarray
+    """
     return np.fromiter(transform, dtype='float64').reshape(3, 3)
 
-def translate_ndarray(transform, xoff, yoff):
-    tmp = transform.copy()
-    tmp[:, 2] = transform @ np.array([xoff, yoff, 1])
-    return tmp
 
-def np_rowcol(transform, xs, ys, op='floor', precision=None):
+def translate_ndarray(transform, xoff, yoff):
+    """
+    Translate ndarray representing an affine transformation
+
+    Parameters
+    ----------
+    transform: ndarray (3x3)
+    xoff: number
+    yoff: number
+
+    Returns
+    -------
+    translated: ndarray
+        A transform with the translation applied.
+    """
+    translated = transform.copy()
+    translated[:, 2] = transform @ np.array([xoff, yoff, 1])
+    return translated
+
+def rowcol_np(transform, xs, ys, op='floor', precision=None):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -267,6 +294,9 @@ def np_rowcol(transform, xs, ys, op='floor', precision=None):
     Use an epsilon, magnitude determined by the precision parameter
     and sign determined by the op function:
         positive for floor, negative for ceil.
+
+    This numpy based version is optimized for applying the transform
+    on many points.
 
     Parameters
     ----------
@@ -322,10 +352,13 @@ def np_rowcol(transform, xs, ys, op='floor', precision=None):
 
     return coords[1], coords[0]
 
-def np_xy(transform, rows, cols, offset='center'):
+def xy_np(transform, rows, cols, offset='center'):
     """Returns the x and y coordinates of pixels at `rows` and `cols`.
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
+
+    This numpy based version is optimized for applying the transform
+    on many points.
 
     Parameters
     ----------
