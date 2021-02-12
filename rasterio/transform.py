@@ -5,6 +5,7 @@ import math
 import sys
 
 from affine import Affine
+import numpy as np
 
 from rasterio._transform import _transform_from_gcps
 
@@ -402,3 +403,39 @@ def xy_np(transform, rows, cols, offset='center'):
 
     np.matmul(translate_ndarray(transform, coff, roff), coords, out=coords)
     return coords[0], coords[1]
+
+def array_bounds_ndarray(height, width, transform):
+    """Return the bounds of an array given height, width, and a transform.
+
+    Return the `west, south, east, north` bounds of an array given
+    its height, width, and an affine transform.
+    """
+    w, n = transform[:2, 2]
+    e, s = transform @ np.array([width, height])
+    return w, s, e, n
+
+def from_bounds_ndarray(west, south, east, north, width, height):
+    """Return an Affine transformation given bounds, width and height.
+
+    Return an Affine transformation for a georeferenced raster given
+    its bounds `west`, `south`, `east`, `north` and its `width` and
+    `height` in number of pixels.
+    """
+    transform = np.eye(3, 3, dtype='float64')
+    transform[:2, 2] = west, north
+    transform[0, 0] = (east - west) / width
+    transform[1, 1] = (south - north) / height
+    return transform
+
+def from_origin_ndarray(west, north, xsize, ysize):
+    """Return an Affine transformation given upper left and pixel sizes.
+
+    Return an Affine transformation for a georeferenced raster given
+    the coordinates of its upper left corner `west`, `north` and pixel
+    sizes `xsize`, `ysize`.
+    """
+    transform = np.eye(3, 3, dtype='float64')
+    transform[:2, 2] = west, north
+    transform[0, 0] = xsize
+    transform[1, 1] = -ysize
+    return transform
