@@ -1116,6 +1116,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
+        Resampling.sum: [439118],
         Resampling.rms: [439385],
     }
 
@@ -1207,6 +1208,7 @@ def test_reproject_resampling_alpha(method):
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
+        Resampling.sum: [439118],
         Resampling.rms: [439385],
     }
 
