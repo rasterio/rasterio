@@ -150,15 +150,10 @@ def xy(transform, rows, cols, offset='center'):
     ys : list
         y coordinates in coordinate reference system
     """
-
-    single_col = False
-    single_row = False
     if not isinstance(cols, Iterable):
         cols = [cols]
-        single_col = True
     if not isinstance(rows, Iterable):
         rows = [rows]
-        single_row = True
 
     if offset == 'center':
         coff, roff = (0.5, 0.5)
@@ -175,16 +170,15 @@ def xy(transform, rows, cols, offset='center'):
 
     xs = []
     ys = []
-    for col, row in zip(cols, rows):
-        x, y = transform * transform.translation(coff, roff) * (col, row)
+    T = transform * transform.translation(coff, roff)
+    for pt in zip(cols, rows):
+        x, y = T * pt
         xs.append(x)
         ys.append(y)
 
-    if single_row:
-        ys = ys[0]
-    if single_col:
-        xs = xs[0]
-
+    if len(xs) == 1:
+        # xs and ys will always have the same length
+        return xs[0], ys[0]
     return xs, ys
 
 
@@ -245,11 +239,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if len(xs) == 1:
-        cols = cols[0]
-    if len(ys) == 1:
-        rows = rows[0]
-
+    if len(cols) == 1:
+        # rows and cols will always have the same length
+        return rows[0], cols[0]
     return rows, cols
 
 
