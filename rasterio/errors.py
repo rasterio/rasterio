@@ -67,6 +67,10 @@ class ShapeSkipWarning(UserWarning):
     """Warn that an invalid or empty shape in a collection has been skipped"""
 
 
+class RotatedDatasetWarning(UserWarning):
+    """Warn that a dataset is rotated."""
+
+
 class GDALBehaviorChangeException(RuntimeError):
     """Raised when GDAL's behavior differs from the given arguments.  For
     example, antimeridian cutting is always on as of GDAL 2.2.0.  Users

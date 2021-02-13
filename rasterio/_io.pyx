@@ -24,7 +24,8 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
+    RotatedDatasetWarning
 )
 from rasterio.dtypes import is_ndarray
 from rasterio.sample import sample_gen
@@ -225,6 +226,14 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if self.mode == "w":
             raise UnsupportedOperation("not readable")
+
+        rotated = self.transform.b != 0 or self.transform.d != 0
+        if rotated:
+            warnings.warn(
+                "The dataset is rotated, but the image you get isn't. "
+                "You must use the warping algorithm to apply the rotation.",
+                RotatedDatasetWarning
+            )
 
         return2d = False
         if indexes is None:
