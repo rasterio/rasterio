@@ -95,6 +95,10 @@ def clip(
         input = files[0]
 
         with rasterio.open(input) as src:
+            rotated = src.transform.b != 0 or src.transform.d != 0
+            if rotated:
+                raise click.BadParameter('rotated raster cannot be clipped')
+
             if bounds:
                 if projection == 'geographic':
                     bounds = transform_bounds(CRS.from_epsg(4326), src.crs, *bounds)
