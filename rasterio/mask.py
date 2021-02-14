@@ -3,7 +3,7 @@
 import logging
 import warnings
 
-import numpy as np
+import numpy
 
 from rasterio.errors import WindowError
 from rasterio.features import geometry_mask, geometry_window
@@ -76,12 +76,8 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         pad_x = 0
         pad_y = 0
 
-    north_up = dataset.transform.e <= 0
-    rotated = dataset.transform.b != 0 or dataset.transform.d != 0
-
     try:
-        window = geometry_window(dataset, shapes, north_up=north_up, rotated=rotated,
-                                 pad_x=pad_x, pad_y=pad_y)
+        window = geometry_window(dataset, shapes, pad_x=pad_x, pad_y=pad_y)
 
     except WindowError:
         # If shapes do not overlap raster, raise Exception or UserWarning
@@ -93,7 +89,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                           'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
-        mask = np.ones(shape=dataset.shape[-2:], dtype='bool') * (not invert)
+        mask = numpy.ones(shape=dataset.shape[-2:], dtype="bool") * (not invert)
         return mask, dataset.transform, None
 
     if crop:
