@@ -1,6 +1,6 @@
 from copy import deepcopy
-import logging
-import sys
+import math
+from unittest import mock
 
 from affine import Affine
 import numpy as np
@@ -48,6 +48,7 @@ def test_bounds_z():
     g = {'type': 'Point', 'coordinates': [10, 10, 10]}
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
+
 
 @pytest.mark.parametrize('geometry', [
     {'type': 'Polygon'},
@@ -155,23 +156,16 @@ def test_geometry_mask_no_transform(basic_geometry):
             transform=None)
 
 
-def test_geometry_window(basic_image_file, basic_geometry):
+def test_geometry_window_no_pad(basic_image_file, basic_geometry):
     with rasterio.open(basic_image_file) as src:
-        window = geometry_window(src, [basic_geometry], north_up=False)
+        window = geometry_window(src, [basic_geometry, basic_geometry])
         assert window.flatten() == (2, 2, 3, 3)
 
 
 def test_geometry_window_geo_interface(basic_image_file, basic_geometry):
     with rasterio.open(basic_image_file) as src:
-        window = geometry_window(src, [MockGeoInterface(basic_geometry)],
-                                 north_up=False)
+        window = geometry_window(src, [MockGeoInterface(basic_geometry)])
         assert window.flatten() == (2, 2, 3, 3)
-
-
-def test_geometry_window_rotation(rotated_image_file, rotation_geometry):
-    with rasterio.open(rotated_image_file) as src:
-        window = geometry_window(src, [rotation_geometry], rotated=True)
-        assert window.flatten() == (898, 439, 467, 399)
 
 
 def test_geometry_window_pixel_precision(basic_image_file):
@@ -187,8 +181,7 @@ def test_geometry_window_pixel_precision(basic_image_file):
     }
 
     with rasterio.open(basic_image_file) as src:
-        window = geometry_window(src, [geom2], north_up=False,
-                                 pixel_precision=6)
+        window = geometry_window(src, [geom2], pixel_precision=6)
         assert window.flatten() == (1, 2, 4, 3)
 
 
@@ -205,15 +198,48 @@ def test_geometry_window_north_up(path_rgb_byte_tif):
     }
 
     with rasterio.open(path_rgb_byte_tif) as src:
-        window = geometry_window(src, [geometry], north_up=True)
-
+        window = geometry_window(src, [geometry])
     assert window.flatten() == (326, 256, 168, 167)
 
 
+def test_geometry_window_rotated_boundless():
+    """Get the right boundless window for a rotated dataset"""
+    sqrt2 = math.sqrt(2.0)
+    dataset = mock.MagicMock()
+    dataset.transform = (
+        Affine.rotation(-45.0)
+        * Affine.translation(-sqrt2, sqrt2)
+        * Affine.scale(sqrt2 / 2.0, -sqrt2 / 2.0)
+    )
+    dataset.height = 4.0
+    dataset.width = 4.0
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [(-2.0, -2.0), (-2.0, 2.0), (2.0, 2.0), (2.0, -2.0), (-2.0, -2.0),]
+        ],
+    }
+
+    win = geometry_window(dataset, [geometry, geometry], boundless=True)
+    assert win.col_off == pytest.approx(-2.0)
+    assert win.row_off == pytest.approx(-2.0)
+    assert win.width == pytest.approx(2.0 * dataset.width)
+    assert win.height == pytest.approx(2.0 * dataset.height)
+
+
 def test_geometry_window_pad(basic_image_file, basic_geometry):
+    # Note: this dataset's geotransform is not a geographic one.
+    # x increases with col, but y also increases with row.
+    # It's flipped, not rotated like a south-up world map.
     with rasterio.open(basic_image_file) as src:
-        window = geometry_window(src, [basic_geometry], north_up=False,
-                                 pad_x=0.5, pad_y=0.5)
+        transform = src.transform
+        dataset = mock.MagicMock()
+        dataset.res = src.res
+        dataset.transform = src.transform
+        dataset.height = src.height
+        dataset.width = src.width
+        window = geometry_window(dataset, [basic_geometry], pad_x=0.5, pad_y=0.5)
 
     assert window.flatten() == (1, 1, 4, 4)
 
@@ -231,8 +257,7 @@ def test_geometry_window_large_shapes(basic_image_file):
     }
 
     with rasterio.open(basic_image_file) as src:
-        window = geometry_window(src, [geometry], north_up=False)
-
+        window = geometry_window(src, [geometry])
         assert window.flatten() == (0, 0, src.height, src.width)
 
 
