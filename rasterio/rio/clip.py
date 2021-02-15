@@ -67,10 +67,6 @@ def clip(
 ):
     """Clips a raster using projected or geographic bounds.
 
-    \b
-      $ rio clip input.tif output.tif --bounds xmin ymin xmax ymax
-      $ rio clip input.tif output.tif --like template.tif
-
     The values of --bounds are presumed to be from the coordinate
     reference system of the input dataset unless the --geographic option
     is used, in which case the values may be longitude and latitude
@@ -78,13 +74,18 @@ def clip(
     plain text "west south east north" representations of a bounding box
     are acceptable.
 
-    If using --like, bounds will automatically be transformed to match the
-    coordinate reference system of the input.
+    If using --like, bounds will automatically be transformed to match
+    the coordinate reference system of the input.
 
-    It can also be combined to read bounds of a feature dataset using Fiona:
+    Datasets with non-rectilinear geo transforms (i.e. with rotation
+    and/or shear) may not be cropped using this command. They must be
+    processed with rio-warp.
 
-    \b
-      $ rio clip input.tif output.tif --bounds $(fio info features.shp --bounds)
+    Examples
+    --------
+    $ rio clip input.tif output.tif --bounds xmin ymin xmax ymax
+
+    $ rio clip input.tif output.tif --like template.tif
 
     """
     from rasterio.warp import transform_bounds
@@ -95,9 +96,10 @@ def clip(
         input = files[0]
 
         with rasterio.open(input) as src:
-            rotated = src.transform.b != 0 or src.transform.d != 0
-            if rotated:
-                raise click.BadParameter('rotated raster cannot be clipped')
+            if not src.transform.is_rectilinear:
+                raise click.BadParameter(
+                    "Non-rectilinear rasters (i.e. with rotation or shear) cannot be clipped"
+                )
 
             if bounds:
                 if projection == 'geographic':
