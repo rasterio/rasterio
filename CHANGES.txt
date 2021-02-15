@@ -5,7 +5,7 @@ Changes
 -----------
 
 - Support geotransforms with rotation in Window.from_bounds and
-  feature.geometry_window so that rotated rasters may be clipped (#2112).
+  feature.geometry_window (#2112).
 - Fix an off-by-one error in the merge tool (#2106, #2109).
 
 1.2.0 (2021-01-25)
