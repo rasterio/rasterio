@@ -4,6 +4,9 @@ Changes
 1.2.1 (TBD)
 -----------
 
+- The rio-clip command only works on rasters with rectilinear geo transforms.
+  This is noted in the command's help and an error will be raised if the
+  requirement is not met (#2115).
 - Support geotransforms with rotation in Window.from_bounds and
   feature.geometry_window (#2112).
 - Fix an off-by-one error in the merge tool (#2106, #2109).
