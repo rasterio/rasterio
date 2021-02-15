@@ -235,7 +235,7 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     rows = []
     cols = []
     for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y - eps)
+        fcol, frow = invtransform * (x + eps, y + eps)
         cols.append(op(fcol))
         rows.append(op(frow))
 

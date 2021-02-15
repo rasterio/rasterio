@@ -1,7 +1,8 @@
+from collections import namedtuple
 import logging
+import math
 import sys
 
-from collections import namedtuple
 import numpy as np
 import pytest
 from affine import Affine
@@ -585,3 +586,23 @@ def test_from_bounds_requires_transform():
     """Test fix for issue 1857"""
     with pytest.raises(WindowError):
         from_bounds(-105, 40, -100, 45, height=100, width=100)
+
+
+def test_from_bounds_rotation():
+    """Get correct window when transform is rotated"""
+    sqrt2 = math.sqrt(2.0)
+    # An 8 unit square rotated cw 45 degrees around (0, 0).
+    height = 4
+    width = 4
+    transform = (
+        Affine.rotation(-45.0)
+        * Affine.translation(-sqrt2, sqrt2)
+        * Affine.scale(sqrt2 / 2.0, -sqrt2 / 2.0)
+    )
+    win = from_bounds(
+        -2.0, -2.0, 2.0, 2.0, transform=transform, height=height, width=width,
+    )
+    assert win.col_off == pytest.approx(-2.0)
+    assert win.row_off == pytest.approx(-2.0)
+    assert win.width == pytest.approx(2.0 * width)
+    assert win.height == pytest.approx(2.0 * height)
