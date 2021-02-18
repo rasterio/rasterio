@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.3.0 (TBD)
+-----------
+
+- Building from source now requires Cython (#2016).
+
 1.2.1 (TBD)
 -----------
 
