@@ -544,7 +544,8 @@ class AzureSession(Session):
     """Configures access to secured resources stored in Microsoft Azure Blob Storage.
     """
     def __init__(self, azure_storage_connection_string=None,
-                 azure_storage_account=None, azure_storage_access_key=None):
+                 azure_storage_account=None, azure_storage_access_key=None,
+                 azure_unsigned=False):
         """Create new Microsoft Azure Blob Storage session
 
         Parameters
@@ -555,16 +556,24 @@ class AzureSession(Session):
             An account name
         azure_storage_access_key: string
             A secret key
+        azure_unsigned : bool, optional (default: False)
+            If True, requests will be unsigned.
         """
+
+        self.unsigned = bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
 
         if azure_storage_connection_string:
             self._creds = {
                 "azure_storage_connection_string": azure_storage_connection_string
             }
-        else:
+        elif not self.unsigned:
             self._creds = {
                 "azure_storage_account": azure_storage_account,
                 "azure_storage_access_key": azure_storage_access_key
+            }
+        else:
+            self._creds = {
+                "azure_storage_account": azure_storage_account
             }
 
     @classmethod
@@ -583,8 +592,10 @@ class AzureSession(Session):
         bool
 
         """
-        return 'AZURE_STORAGE_CONNECTION_STRING' in config or (
-            'AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_KEY' in config
+        return (
+            'AZURE_STORAGE_CONNECTION_STRING' in config
+            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_KEY' in config)
+            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_NO_SIGN_REQUEST' in config)
         )
 
     @property
@@ -600,4 +611,10 @@ class AzureSession(Session):
         dict
 
         """
-        return {k.upper(): v for k, v in self.credentials.items()}
+        if self.unsigned:
+            return {
+                'AZURE_NO_SIGN_REQUEST': 'YES',
+                'AZURE_STORAGE_ACCOUNT': self.credentials['azure_storage_account']
+            }
+        else:
+            return {k.upper(): v for k, v in self.credentials.items()}
