@@ -14,7 +14,6 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
-from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.control import GroundControlPoint
 from rasterio.rpc import RPC
@@ -173,6 +172,55 @@ cdef _band_dtype(GDALRasterBandH band):
             return 'uint8'
 
     return dtypes.dtype_fwd[gdal_dtype]
+
+
+cdef GDALDatasetH open_dataset(
+        object filename, int flags, object allowed_drivers,
+        object open_options, object siblings) except NULL:
+    """Open a dataset and return a handle"""
+
+    cdef GDALDatasetH hds = NULL
+    cdef const char *fname = NULL
+    cdef char **drivers = NULL
+    cdef char **options = NULL
+
+    filename = filename.encode('utf-8')
+    fname = filename
+
+    # Construct a null terminated C list of driver
+    # names for GDALOpenEx.
+    if allowed_drivers:
+        for name in allowed_drivers:
+            name = name.encode('utf-8')
+            drivers = CSLAddString(drivers, <const char *>name)
+
+    if open_options:
+        for k, v in open_options.items():
+            k = k.upper().encode('utf-8')
+
+            # Normalize values consistent with code in _env module.
+            if isinstance(v, bool):
+                v = ('ON' if v else 'OFF').encode('utf-8')
+            else:
+                v = str(v).encode('utf-8')
+
+            options = CSLAddNameValue(options, <const char *>k, <const char *>v)
+
+    # Support for sibling files is not yet implemented.
+    if siblings:
+        raise NotImplementedError(
+            "Sibling files are not implemented")
+
+    # Ensure raster flags
+    flags = flags | 0x02
+
+    with nogil:
+        hds = GDALOpenEx(fname, flags, drivers, options, NULL)
+    try:
+        return exc_wrap_pointer(hds)
+    finally:
+            CSLDestroy(drivers)
+            CSLDestroy(options)
 
 
 cdef class DatasetBase(object):
@@ -1508,3 +1556,17 @@ def _can_create_osr(crs):
     finally:
         _safe_osr_release(osr)
         CPLFree(wkt)
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    IF CTE_GDAL_MAJOR_VERSION >= 3:
+        return OSRGetName(hSrs)
+    ELSE:
+        return ''
+
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    IF CTE_GDAL_MAJOR_VERSION >= 3:
+        OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)
+    ELSE:
+        pass

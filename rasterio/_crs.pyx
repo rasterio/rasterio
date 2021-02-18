@@ -10,15 +10,11 @@ from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
 from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
-from rasterio._base cimport _safe_osr_release
+from rasterio._base cimport _safe_osr_release, osr_get_name, osr_set_traditional_axis_mapping_strategy
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
-from rasterio._shim cimport osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 
 log = logging.getLogger(__name__)
-
-
-cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
 
 
 def gdal_version():

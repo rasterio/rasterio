@@ -36,3 +36,6 @@ cdef class DatasetBase:
 cdef const char *get_driver_name(GDALDriverH driver)
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL
 cdef _safe_osr_release(OGRSpatialReferenceH srs)
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs)
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs)
+cdef GDALDatasetH open_dataset(object filename, int mode, object allowed_drivers, object open_options, object siblings) except NULL
