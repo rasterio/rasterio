@@ -561,6 +561,7 @@ class AzureSession(Session):
         """
 
         self.unsigned = bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
+        self.storage_account = os.getenv("AZURE_STORAGE_ACCOUNT", azure_storage_account)
 
         if azure_storage_connection_string:
             self._creds = {
@@ -568,12 +569,12 @@ class AzureSession(Session):
             }
         elif not self.unsigned:
             self._creds = {
-                "azure_storage_account": azure_storage_account,
+                "azure_storage_account": self.storage_account,
                 "azure_storage_access_key": azure_storage_access_key
             }
         else:
             self._creds = {
-                "azure_storage_account": azure_storage_account
+                "azure_storage_account": self.storage_account
             }
 
     @classmethod
@@ -614,7 +615,7 @@ class AzureSession(Session):
         if self.unsigned:
             return {
                 'AZURE_NO_SIGN_REQUEST': 'YES',
-                'AZURE_STORAGE_ACCOUNT': self.credentials['azure_storage_account']
+                'AZURE_STORAGE_ACCOUNT': self.storage_account
             }
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
