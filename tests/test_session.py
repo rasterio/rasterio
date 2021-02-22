@@ -277,3 +277,16 @@ def test_session_factory_az_kwargs_connection_string():
     sesh = Session.from_path("az://lol/wut", azure_storage_connection_string='AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY')
     assert isinstance(sesh, AzureSession)
     assert sesh.get_credential_options()['AZURE_STORAGE_CONNECTION_STRING'] == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
+
+
+def test_azure_no_sign_request(monkeypatch):
+    """If AZURE_NO_SIGN_REQUEST is set do not default to azure_unsigned=False"""
+    monkeypatch.setenv('AZURE_NO_SIGN_REQUEST', 'YES')
+    assert AzureSession().unsigned
+
+
+def test_azure_session_class_unsigned():
+    """AzureSession works"""
+    sesh = AzureSession(azure_unsigned=True, azure_storage_account='naipblobs')
+    assert sesh.get_credential_options()['AZURE_NO_SIGN_REQUEST'] == 'YES'
+    assert sesh.get_credential_options()['AZURE_STORAGE_ACCOUNT'] == 'naipblobs'
