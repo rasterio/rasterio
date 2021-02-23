@@ -10,9 +10,10 @@ import pytest
 import rasterio
 from rasterio._crs import _CRS
 from rasterio.env import env_ctx_if_needed, Env
+from rasterio.enums import WktVersion
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3
+from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3, requires_gdal3
 
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -132,6 +133,29 @@ def test_from_esri_wkt_fix_datum(projection_string):
 def test_to_esri_wkt_fix_datum():
     """Morph to Esri form"""
     assert 'DATUM["D_North_American_1983"' in _CRS.from_dict(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)
+
+
+@requires_gdal3
+@pytest.mark.parametrize("version", ["WKT2_2019", WktVersion.WKT2_2019])
+def test_to_wkt__version(version):
+    assert _CRS.from_epsg(4326).to_wkt(version=version).startswith('GEOGCRS["WGS 84",DATUM')
+
+
+@requires_gdal3
+def test_to_wkt__env_version():
+    with Env(OSR_WKT_FORMAT="WKT2_2018"):
+        assert _CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",DATUM')
+
+
+@requires_gdal3
+def test_to_wkt__version_invalid():
+    with pytest.raises(ValueError):
+        _CRS.from_epsg(4326).to_wkt(version="INVALID")
+
+@requires_gdal_lt_3
+def test_to_wkt__version__warning_gdal2():
+    with pytest.warns(UserWarning):
+        _CRS.from_epsg(4326).to_wkt(version=WktVersion.WKT2_2019)
 
 
 def test_compound_crs():

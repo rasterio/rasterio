@@ -12,6 +12,7 @@ import pytest
 import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS, epsg_treats_as_latlong, epsg_treats_as_northingeasting
+from rasterio.enums import WktVersion
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
@@ -371,6 +372,29 @@ def test_from_esri_wkt_fix_datum(projection_string):
 def test_to_esri_wkt_fix_datum():
     """Morph to Esri form"""
     assert 'DATUM["D_North_American_1983"' in CRS(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)
+
+
+@requires_gdal3
+@pytest.mark.parametrize("version", ["WKT2_2019", WktVersion.WKT2_2019])
+def test_to_wkt__version(version):
+    assert CRS.from_epsg(4326).to_wkt(version=version).startswith('GEOGCRS["WGS 84",DATUM')
+
+
+@requires_gdal3
+def test_to_wkt__env_version():
+    with Env(OSR_WKT_FORMAT="WKT2_2018"):
+        assert CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",DATUM')
+
+
+@requires_gdal3
+def test_to_wkt__version_invalid():
+    with pytest.raises(ValueError):
+        CRS.from_epsg(4326).to_wkt(version="INVALID")
+
+@requires_gdal_lt_3
+def test_to_wkt__version__warning_gdal2():
+    with pytest.warns(UserWarning):
+        CRS.from_epsg(4326).to_wkt(version=WktVersion.WKT2_2019)
 
 
 def test_compound_crs():
