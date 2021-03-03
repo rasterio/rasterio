@@ -5,7 +5,7 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-from .conftest import requires_gdal21, requires_gdal23
+from .conftest import requires_gdal21, requires_gdal23, requires_gdal32
 
 
 with rasterio.Env() as env:
@@ -422,4 +422,14 @@ def test_info_no_credentials(tmpdir, monkeypatch, runner):
 def test_info_aws_unsigned(runner):
     """Unsigned access to public dataset works (see #1637)"""
     result = runner.invoke(main_group, ['--aws-no-sign-requests', 'info', 's3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'])
+    assert result.exit_code == 0
+
+
+@requires_gdal32(reason="Unsigned Azure requests require GDAL ~= 3.2")
+@pytest.mark.network
+def test_info_azure_unsigned(monkeypatch, runner):
+    """Unsigned access to public dataset works"""
+    monkeypatch.setenv('AZURE_NO_SIGN_REQUEST', 'YES')
+    monkeypatch.setenv('AZURE_STORAGE_ACCOUNT', 'naipblobs')
+    result = runner.invoke(main_group, ['info', 'az://naip/v002/md/2017/md_100cm_2017/39077/m_3907744_ne_18_1_20170628.tif'])
     assert result.exit_code == 0

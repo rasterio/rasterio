@@ -21,17 +21,13 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
-import warnings
 
-import attr
 from affine import Affine
+import attr
 import numpy as np
 
 from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
-
-
-PIXEL_PRECISION = 6
 
 
 class WindowMethodsMixin(object):
@@ -68,7 +64,6 @@ class WindowMethodsMixin(object):
         window: Window
         """
         transform = guard_transform(self.transform)
-
         return from_bounds(
             left, bottom, right, top, transform=transform,
             height=self.height, width=self.width, precision=precision)
@@ -251,8 +246,9 @@ def intersect(*windows):
     return True
 
 
-def from_bounds(left, bottom, right, top, transform=None,
-                height=None, width=None, precision=None):
+def from_bounds(
+    left, bottom, right, top, transform=None, height=None, width=None, precision=None
+):
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
@@ -289,15 +285,22 @@ def from_bounds(left, bottom, right, top, transform=None,
     if not isinstance(transform, Affine):  # TODO: RPCs?
         raise WindowError("A transform object is required to calculate the window")
 
-    row_start, col_start = rowcol(
-        transform, left, top, op=float, precision=precision)
+    rows, cols = rowcol(
+        transform,
+        [left, right, right, left],
+        [top, top, bottom, bottom],
+        op=float,
+        precision=precision,
+    )
+    row_start, row_stop = min(rows), max(rows)
+    col_start, col_stop = min(cols), max(cols)
 
-    row_stop, col_stop = rowcol(
-        transform, right, bottom, op=float, precision=precision)
-
-    return Window.from_slices(
-        (row_start, row_stop), (col_start, col_stop), height=height,
-        width=width, boundless=True)
+    return Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=max(col_stop - col_start, 0.0),
+        height=max(row_stop - row_start, 0.0),
+    )
 
 
 def transform(window, transform):

@@ -146,9 +146,11 @@ def test_merge_error(test_data_dir_1, runner):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
-    result = runner.invoke(
-        main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
-    assert result.exit_code
+    with pytest.warns(UserWarning):
+        result = runner.invoke(
+            main_group, ["merge"] + inputs + [outputname] + ["--nodata", "-1"]
+        )
+        assert result.exit_code
 
 
 def test_merge_bidx(test_data_dir_3, runner):
