@@ -6,7 +6,9 @@ import sys
 
 from affine import Affine
 
-from rasterio._transform import _transform_from_gcps
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio._transform import _transform_from_gcps
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()

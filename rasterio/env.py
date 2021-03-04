@@ -9,12 +9,14 @@ import re
 import threading
 import warnings
 
-from rasterio._env import (
-        GDALEnv, get_gdal_config, set_gdal_config,
-        GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
-from rasterio.errors import (
-    EnvError, GDALVersionError, RasterioDeprecationWarning)
-from rasterio.session import Session, DummySession
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio._env import (
+            GDALEnv, get_gdal_config, set_gdal_config,
+            GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
+    from rasterio.errors import (
+        EnvError, GDALVersionError, RasterioDeprecationWarning)
+    from rasterio.session import Session, DummySession
 
 
 class ThreadEnv(threading.local):

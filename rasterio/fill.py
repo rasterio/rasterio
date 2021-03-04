@@ -1,9 +1,12 @@
 """Fill holes in raster dataset by interpolation from the edges."""
 
-import rasterio
-from rasterio._fill import _fillnodata
-from rasterio.env import ensure_env
-from rasterio import dtypes
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+
+    import rasterio
+    from rasterio._fill import _fillnodata
+    from rasterio.env import ensure_env
+    from rasterio import dtypes
 
 from numpy.ma import MaskedArray
 
