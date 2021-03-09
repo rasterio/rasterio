@@ -116,6 +116,12 @@ def test_session_factory_s3():
     assert isinstance(sesh, AWSSession)
 
 
+def test_session_factory_s3_presigned_url():
+    """Get a DummySession for presigned URLs"""
+    sesh = Session.from_path("https://fancy-cloud.com/lolwut?X-Amz-Signature=foo")
+    assert isinstance(sesh, DummySession)
+
+
 def test_session_factory_s3_no_boto3(monkeypatch):
     """Get an AWSSession for s3:// paths"""
     pytest.importorskip("boto3")
