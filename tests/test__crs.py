@@ -138,7 +138,7 @@ def test_to_esri_wkt_fix_datum():
 @requires_gdal3
 @pytest.mark.parametrize("version", ["WKT2_2019", WktVersion.WKT2_2019])
 def test_to_wkt__version(version):
-    assert _CRS.from_epsg(4326).to_wkt(version=version).startswith('GEOGCRS["WGS 84",DATUM')
+    assert _CRS.from_epsg(4326).to_wkt(version=version).startswith('GEOGCRS["WGS 84",')
 
 
 @requires_gdal3
