@@ -144,7 +144,7 @@ def test_to_wkt__version(version):
 @requires_gdal3
 def test_to_wkt__env_version():
     with Env(OSR_WKT_FORMAT="WKT2_2018"):
-        assert _CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",DATUM')
+        assert _CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",')
 
 
 @requires_gdal3
