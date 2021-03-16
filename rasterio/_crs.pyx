@@ -179,7 +179,7 @@ cdef class _CRS(object):
         ----------
         morph_to_esri_dialect : bool, optional
             Whether or not to morph to the Esri dialect of WKT
-            Only works for GDAL 2.
+            Only applies to GDAL versions < 3. This parameter will be removed in a future version of rasterio.
         version : WktVersion or str, optional
             The version of the WKT output.
             Only works with GDAL 3+. Default is WKT1_GDAL.
