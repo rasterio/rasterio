@@ -4,10 +4,12 @@
 """
 
 import logging
+import warnings
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
 from rasterio.errors import CRSError
+from rasterio.enums import WktVersion
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release, osr_get_name, osr_set_traditional_axis_mapping_strategy
@@ -168,13 +170,19 @@ cdef class _CRS(object):
                 _safe_osr_release(osr_s)
                 _safe_osr_release(osr_o)
 
-    def to_wkt(self, morph_to_esri_dialect=False):
+    def to_wkt(self, morph_to_esri_dialect=False, version=None):
         """An OGC WKT representation of the CRS
+
+         .. versionadded:: 1.3.0 version
 
         Parameters
         ----------
         morph_to_esri_dialect : bool, optional
             Whether or not to morph to the Esri dialect of WKT
+            Only applies to GDAL versions < 3. This parameter will be removed in a future version of rasterio.
+        version : WktVersion or str, optional
+            The version of the WKT output.
+            Only works with GDAL 3+. Default is WKT1_GDAL.
 
         Returns
         -------
@@ -182,12 +190,30 @@ cdef class _CRS(object):
 
         """
         cdef char *conv_wkt = NULL
+        IF CTE_GDAL_MAJOR_VERSION >= 3:
+            cdef const char* options_wkt[2]
+            options_wkt[0] = NULL
+            options_wkt[1] = NULL
 
         try:
             if osr_get_name(self._osr) != NULL:
-                if morph_to_esri_dialect and not gdal_version().startswith("3"):
-                    exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
-                exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
+                IF CTE_GDAL_MAJOR_VERSION >= 3:
+                    if morph_to_esri_dialect:
+                        warnings.warn(
+                            "'morph_to_esri_dialect' ignored with GDAL 3+. "
+                            "Use 'version=WktVersion.WKT1_ESRI' instead."
+                        )
+                    if version:
+                        version = WktVersion(version).value
+                        wkt_format = "FORMAT={}".format(version).encode("utf-8")
+                        options_wkt[0] = wkt_format
+                    exc_wrap_ogrerr(OSRExportToWktEx(self._osr, &conv_wkt, options_wkt))
+                ELSE:
+                    if version is not None:
+                        warnings.warn("'version' requires GDAL 3+")
+                    if morph_to_esri_dialect:
+                        exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
+                    exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
 
         except CPLE_BaseError as exc:
             raise CRSError("Cannot convert to WKT. {}".format(exc))
