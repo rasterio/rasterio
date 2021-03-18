@@ -5,6 +5,7 @@ Changes
 -----------
 
 - Building from source now requires Cython (#2016).
+- Add version to CRS.to_wkt() for WKT2 support (#2122).
 
 1.2.1 (TBD)
 -----------
