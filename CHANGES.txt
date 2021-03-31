@@ -5,9 +5,10 @@ Changes
 -----------
 
 - Building from source now requires Cython (#2016).
-- add GDAL DLL directory to DLL search path on Windows and Python >= 3.8. 
+- Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8. 
   DLLs will be loaded from .libs (for wheels) or from directories in PATH 
   environment variable.
+- Add version to CRS.to_wkt() for WKT2 support (#2122).
 
 1.2.1 (2021-03-03)
 ------------------

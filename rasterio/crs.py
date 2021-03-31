@@ -117,20 +117,26 @@ class CRS(Mapping):
         """
         return ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items()])
 
-    def to_wkt(self, morph_to_esri_dialect=False):
+    def to_wkt(self, morph_to_esri_dialect=False, version=None):
         """Convert CRS to its OGC WKT representation
+
+         .. versionadded:: 1.3.0 version
 
         Parameters
         ----------
         morph_to_esri_dialect : bool, optional
-            Whether or not to morph to the Esri dialect of WKT
+            Whether or not to morph to the Esri dialect of WKT.
+            Only works for GDAL 2.
+        version : WktVersion or str, optional
+            The version of the WKT output.
+            Only works with GDAL 3+. Default is WKT1_GDAL.
 
         Returns
         -------
         str
 
         """
-        return self._crs.to_wkt(morph_to_esri_dialect=morph_to_esri_dialect)
+        return self._crs.to_wkt(morph_to_esri_dialect=morph_to_esri_dialect, version=version)
 
     @property
     def wkt(self):
