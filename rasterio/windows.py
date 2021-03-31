@@ -26,8 +26,10 @@ from affine import Affine
 import attr
 import numpy as np
 
-from rasterio.errors import WindowError
-from rasterio.transform import rowcol, guard_transform
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio.errors import WindowError
+    from rasterio.transform import rowcol, guard_transform
 
 
 class WindowMethodsMixin(object):

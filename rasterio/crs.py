@@ -14,8 +14,10 @@ from collections.abc import Mapping
 import json
 import pickle
 
-from rasterio._crs import _CRS, all_proj_keys, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
-from rasterio.errors import CRSError
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio._crs import _CRS, all_proj_keys, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
+    from rasterio.errors import CRSError
 
 
 class CRS(Mapping):

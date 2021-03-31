@@ -5,8 +5,10 @@ import warnings
 
 import numpy
 
-from rasterio.errors import WindowError
-from rasterio.features import geometry_mask, geometry_window
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio.errors import WindowError
+    from rasterio.features import geometry_mask, geometry_window
 
 
 logger = logging.getLogger(__name__)
