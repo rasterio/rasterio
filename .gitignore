@@ -71,6 +71,7 @@ venv2/
 gdal-config.txt
 VERSION.txt
 rasterio/*.cpp
+!rasterio/_pyvsi_handle.cpp
 rasterio/*.c
 tests/data/white-gemini-iv.zip
 .hypothesis/

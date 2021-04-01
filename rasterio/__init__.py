@@ -16,7 +16,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import ensure_env_with_credentials, Env
     from rasterio.errors import RasterioIOError, DriverCapabilityError
     from rasterio.io import (
-        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
+        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile, PythonVSIFile)
     from rasterio.profiles import default_gtiff_profile
     from rasterio.transform import Affine, guard_transform
     from rasterio.path import parse_path
@@ -166,7 +166,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            memfile = MemoryFile(fp.read())
+            print("Handling file object in rasterio")
+            # memfile = MemoryFile(fp)
+            memfile = PythonVSIFile(fp)
             dataset = memfile.open(driver=driver, sharing=sharing)
             try:
                 yield dataset

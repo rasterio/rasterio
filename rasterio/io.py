@@ -12,6 +12,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._io import (
         DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
         MemoryFileBase)
+    from rasterio._pyvsi import PyVSIFileBase
     from rasterio.windows import WindowMethodsMixin
     from rasterio.env import ensure_env, env_ctx_if_needed
     from rasterio.transform import TransformMethodsMixin
@@ -104,6 +105,67 @@ class MemoryFile(MemoryFileBase):
         MemoryFile
         """
         super(MemoryFile, self).__init__(
+            file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)
+
+    @ensure_env
+    def open(self, driver=None, width=None, height=None, count=None, crs=None,
+             transform=None, dtype=None, nodata=None, sharing=False, **kwargs):
+        """Open the file and return a Rasterio dataset object.
+
+        If data has already been written, the file is opened in 'r'
+        mode. Otherwise, the file is opened in 'w' mode.
+
+        Parameters
+        ----------
+        Note well that there is no `path` parameter: a `MemoryFile`
+        contains a single dataset and there is no need to specify a
+        path.
+
+        Other parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
+        """
+        mempath = UnparsedPath(self.name)
+
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+        if len(self) > 0:
+            log.debug("VSI path: {}".format(mempath.path))
+            return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+        else:
+            writer = get_writer_for_driver(driver)
+            return writer(mempath, 'w+', driver=driver, width=width,
+                          height=height, count=count, crs=crs,
+                          transform=transform, dtype=dtype,
+                          nodata=nodata, sharing=sharing, **kwargs)
+
+    def __enter__(self):
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
+        self._env.__exit__()
+
+
+class PythonVSIFile(PyVSIFileBase):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
+        """Create a new file in memory
+
+        Parameters
+        ----------
+        file_or_bytes : file-like object or bytes, optional
+            File or bytes holding initial data.
+        filename : str, optional
+            An optional filename. A unique one will otherwise be generated.
+        ext : str, optional
+            An optional extension.
+
+        Returns
+        -------
+        MemoryFile
+        """
+        super(PythonVSIFile, self).__init__(
             file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)
 
     @ensure_env
