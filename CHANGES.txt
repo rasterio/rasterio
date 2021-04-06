@@ -5,6 +5,8 @@ Changes
 -----------
 
 - A regression in the merge tool's min and max methods has been fixed (#2145).
+- windows.from_bounds raises WindowError when the given bounds and transform are
+  inconsistent with each other (#2138).
 - Support for GDAL's "sum" resampling algorith has been added (#2137).
 - Cython and numpy versions are pinned in pyproject.toml. Numpy versions
   correspond to scipy's oldest supported versions for Python versions 3.6-3.10.
