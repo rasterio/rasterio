@@ -4,6 +4,7 @@ Changes
 1.2.2 (TBD)
 -----------
 
+- Remove boundless keyword argument from WarpedVRT method signatures (#2084).
 - Implement the advertised intent of warp.reproject's src_crs parameter. It can
   override the source's crs (#2036).
 - A regression in the merge tool's min and max methods has been fixed (#2145).
