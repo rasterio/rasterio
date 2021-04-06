@@ -17,41 +17,37 @@ from rasterio.transform import Affine
 logger = logging.getLogger(__name__)
 
 
-def copy_first(old_data, new_data, old_nodata, new_nodata, **kwargs):
-    mask = np.empty_like(old_data, dtype='bool')
-    np.logical_not(new_nodata, out=mask)
-    np.logical_and(old_nodata, mask, out=mask)
-    np.copyto(old_data, new_data, where=mask)
+def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
+    mask = np.empty_like(merged_mask, dtype="bool")
+    np.logical_not(new_mask, out=mask)
+    np.logical_and(merged_mask, mask, out=mask)
+    np.copyto(merged_data, new_data, where=mask)
 
 
-def copy_last(old_data, new_data, old_nodata, new_nodata, **kwargs):
-    mask = np.empty_like(old_data, dtype='bool')
-    np.logical_not(new_nodata, out=mask)
-    np.copyto(old_data, new_data, where=mask)
+def copy_last(merged_data, new_data, merged_mask, new_mask, **kwargs):
+    mask = np.empty_like(merged_mask, dtype="bool")
+    np.logical_not(new_mask, out=mask)
+    np.copyto(merged_data, new_data, where=mask)
 
 
-def copy_min(old_data, new_data, old_nodata, new_nodata, **kwargs):
-    mask = np.empty_like(old_data, dtype='bool')
-    np.logical_or(old_nodata, new_nodata, out=mask)
+def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
+    mask = np.empty_like(merged_mask, dtype="bool")
+    np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
-
-    np.minimum(old_data, new_data, out=old_data, where=mask)
-
-    np.logical_not(new_nodata, out=mask)
-    np.logical_and(old_data, mask, out=mask)
-    np.copyto(old_data, new_data, where=mask)
+    np.minimum(merged_data, new_data, out=merged_data, where=mask)
+    np.logical_not(new_mask, out=mask)
+    np.logical_and(merged_mask, mask, out=mask)
+    np.copyto(merged_data, new_data, where=mask)
 
 
-def copy_max(old_data, new_data, old_nodata, new_nodata, **kwargs):
-    mask = np.empty_like(old_data, dtype='bool')
-    np.logical_or(old_nodata, new_nodata, out=mask)
+def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
+    mask = np.empty_like(merged_mask, dtype="bool")
+    np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
-
-    np.maximum(old_data, new_data, out=old_data, where=mask)
-
-    np.logical_not(new_nodata, out=mask)
-    np.logical_and(old_data, mask, out=mask)
-    np.copyto(old_data, new_data, where=mask)
+    np.maximum(merged_data, new_data, out=merged_data, where=mask)
+    np.logical_not(new_mask, out=mask)
+    np.logical_and(merged_mask, mask, out=mask)
+    np.copyto(merged_data, new_data, where=mask)
 
 
 MERGE_METHODS = {
@@ -124,18 +120,18 @@ def merge(
             max: pixel-wise max of existing and new
         or custom callable with signature:
 
-        def function(old_data, new_data, old_nodata, new_nodata, index=None, roff=None, coff=None):
+        def function(merged_data, new_data, merged_mask, new_mask, index=None, roff=None, coff=None):
 
             Parameters
             ----------
-            old_data : array_like
+            merged_data : array_like
                 array to update with new_data
             new_data : array_like
                 data to merge
-                same shape as old_data
-            old_nodata, new_data : array_like
-                boolean masks where old/new data is nodata
-                same shape as old_data
+                same shape as merged_data
+            merged_mask, new_mask : array_like
+                boolean masks where merged/new data pixels are invalid
+                same shape as merged_data
             index: int
                 index of the current dataset within the merged dataset collection
             roff: int
@@ -333,13 +329,13 @@ def merge(
         region = dest[:, roff:roff + trows, coff:coff + tcols]
 
         if math.isnan(nodataval):
-            region_nodata = np.isnan(region)
+            region_mask = np.isnan(region)
         else:
-            region_nodata = region == nodataval
-        temp_nodata = np.ma.getmaskarray(temp)
+            region_mask = region == nodataval
 
-        copyto(region, temp, region_nodata, temp_nodata,
-               index=idx, roff=roff, coff=coff)
+        temp_mask = np.ma.getmask(temp)
+
+        copyto(region, temp, region_mask, temp_mask, index=idx, roff=roff, coff=coff)
 
     if dst_path is None:
         return dest, output_transform
