@@ -4,6 +4,8 @@ Changes
 1.2.2 (TBD)
 -----------
 
+- Add a --nodata option to rio-clip to help support the relative complement use
+  case (#2084).
 - Remove boundless keyword argument from WarpedVRT method signatures (#2084).
 - Implement the advertised intent of warp.reproject's src_crs parameter. It can
   override the source's crs (#2036).
