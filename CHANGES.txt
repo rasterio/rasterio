@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.2.2 (TBD)
------------
+1.2.2 (2021-04-06)
+------------------
 
 - Add a --nodata option to rio-clip to help support the relative complement use
   case (#2087).
