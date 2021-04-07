@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.2.3 (TBD)
+-----------
+
+- Search for GDAL data in installed packages is done before searching in
+  built-in locations when entering an Env, as is already done when importing
+  rasterio.env.
+
 1.2.2 (2021-04-06)
 ------------------
 
