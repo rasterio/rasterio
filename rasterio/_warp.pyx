@@ -474,7 +474,7 @@ def _reproject(
         if key == b"RPC_DEM":
             # don't .upper() since might be a path
             val = str(val).encode('utf-8')
-            
+
             if rpcs:
                 bUseApproxTransformer = False
         else:
@@ -1071,9 +1071,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         """The dataset's coordinate reference system"""
         return self.dst_crs
 
-    def read(self, indexes=None, out=None, window=None, masked=False,
-            out_shape=None, boundless=False, resampling=Resampling.nearest,
-            fill_value=None, out_dtype=None):
+    def read(self, indexes=None, out=None, window=None, masked=False, out_shape=None, resampling=Resampling.nearest, fill_value=None, out_dtype=None, **kwargs):
         """Read a dataset's raw pixels as an N-d array
 
         This data is read from the dataset's band cache, which means
@@ -1124,11 +1122,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             regular array. Masks will be exactly the inverse of the
             GDAL RFC 15 conforming arrays returned by read_masks().
 
-        boundless : bool, optional (default `False`)
-            If `True`, windows that extend beyond the dataset's extent
-            are permitted and partially or completely filled arrays will
-            be returned as appropriate.
-
         resampling : Resampling
             By default, pixel values are read raw or interpolated using
             a nearest neighbor algorithm from the band cache. Other
@@ -1137,6 +1130,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         fill_value : scalar
             Fill value applied in the `boundless=True` case only.
+
+        kwargs : dict
+            This is only for backwards compatibility. No keyword arguments
+            are supported other than the ones named above.
 
         Returns
         -------
@@ -1147,15 +1144,14 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         preferentially used by callers.
 
         """
-        if boundless:
+        if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
             return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
 
-    def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
-                   boundless=False, resampling=Resampling.nearest):
+    def read_masks(self, indexes=None, out=None, out_shape=None, window=None, resampling=Resampling.nearest, **kwargs):
         """Read raster band masks as a multidimensional array"""
-        if boundless:
+        if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
             return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)

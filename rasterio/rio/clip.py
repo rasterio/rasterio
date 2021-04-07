@@ -43,6 +43,7 @@ projection_projected_opt = click.option(
     type=click.Path(exists=True),
     help='Raster dataset to use as a template for bounds')
 @options.format_opt
+@options.nodata_opt
 @projection_geographic_opt
 @projection_projected_opt
 @options.overwrite_opt
@@ -60,6 +61,7 @@ def clip(
     bounds,
     like,
     driver,
+    nodata,
     projection,
     overwrite,
     creation_options,
@@ -140,13 +142,18 @@ def clip(
             width = int(out_window.width)
 
             out_kwargs = src.profile
-            out_kwargs.pop("driver", None)
+
             if driver:
                 out_kwargs["driver"] = driver
+
+            if nodata is not None:
+                out_kwargs["nodata"] = nodata
+
             out_kwargs.update({
                 'height': height,
                 'width': width,
                 'transform': src.window_transform(out_window)})
+
             out_kwargs.update(**creation_options)
 
             if "blockxsize" in out_kwargs and int(out_kwargs["blockxsize"]) > width:
@@ -166,5 +173,6 @@ def clip(
                         window=out_window,
                         out_shape=(src.count, height, width),
                         boundless=True,
+                        masked=True,
                     )
                 )

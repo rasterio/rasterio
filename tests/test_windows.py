@@ -606,3 +606,12 @@ def test_from_bounds_rotation():
     assert win.row_off == pytest.approx(-2.0)
     assert win.width == pytest.approx(2.0 * width)
     assert win.height == pytest.approx(2.0 * height)
+
+
+def test_issue_2138():
+    """WindowError is raised if bounds and transform are inconsistent"""
+    w, s, e, n = 1.0, 45.7, 1.2, 45.9
+    a = 0.001
+    transform = Affine.translation(w, n) * Affine.scale(a, -a)
+    with pytest.raises(WindowError):
+        from_bounds(w, n, e, s, transform)

@@ -322,7 +322,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
             else:
                 src_count = 1
                 src_height, src_width = source.shape
-            
+
             # try to compute src_bounds if we don't have gcps
             if not (gcps or rpcs):
                 src_bounds = array_bounds(src_height, src_width, src_transform)
@@ -334,9 +334,11 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
             if not (src_rdr.transform.is_identity and src_rdr.crs is None):
                 src_bounds = src_rdr.bounds
 
-            src_crs = src_rdr.crs
+            src_crs = src_crs or src_rdr.crs
+
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
+
             src_count = len(src_bidx)
             src_height, src_width = src_shape
             gcps = src_rdr.gcps[0] if src_rdr.gcps[0] else None

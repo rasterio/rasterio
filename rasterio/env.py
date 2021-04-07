@@ -621,7 +621,7 @@ if 'GDAL_DATA' not in os.environ:
     path = GDALDataFinder().search_wheel()
 
     if path:
-        os.environ['GDAL_DATA'] = path
+        set_gdal_config("GDAL_DATA", path)
         log.debug("GDAL data found in package, GDAL_DATA set to %r.", path)
 
     # See https://github.com/mapbox/rasterio/issues/1631.
@@ -632,7 +632,7 @@ if 'GDAL_DATA' not in os.environ:
         path = GDALDataFinder().search()
 
         if path:
-            os.environ['GDAL_DATA'] = path
+            set_gdal_config("GDAL_DATA", path)
             log.debug("GDAL_DATA not found in environment, set to %r.", path)
 
 if "PROJ_LIB" in os.environ:

@@ -145,3 +145,31 @@ def test_clip_rotated(runner, tmpdir):
         main_group, ['clip', 'tests/data/rotated.tif', output])
     assert result.exit_code == 2
     assert 'Non-rectilinear' in result.output
+
+
+@pytest.mark.parametrize("bounds", [bbox(31.0, -1.0, 33.0, 1.0)])
+def test_clip_bounds_with_complement_nodata(runner, tmpdir, bounds):
+    """Show fix of #2084"""
+    output = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "clip",
+            "tests/data/green.tif",
+            output,
+            "--bounds",
+            bounds,
+            "--with-complement",
+            "--nodata",
+            "0",
+        ],
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    with rasterio.open(output) as out:
+        assert out.shape == (4, 4)
+        data = out.read(masked=True)
+        assert not data.mask[:, 2:, :2].any()
+        assert data.mask[:, :2, :].all()
+        assert data.mask[:, :, 2:].all()
