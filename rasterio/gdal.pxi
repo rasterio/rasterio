@@ -137,6 +137,8 @@ IF CTE_GDAL_MAJOR_VERSION >= 3:
         const char* OSRGetName(OGRSpatialReferenceH hSRS)
         void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
         void OSRSetPROJSearchPaths(const char *const *papszPaths)
+        OGRErr OSRExportToWktEx(OGRSpatialReferenceH, char ** ppszResult,
+                                const char* const* papszOptions)
 ELSE:
     cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
 

@@ -8,10 +8,12 @@ import warnings
 
 import numpy as np
 
-import rasterio
-from rasterio.enums import Resampling
-from rasterio import windows
-from rasterio.transform import Affine
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    import rasterio
+    from rasterio.enums import Resampling
+    from rasterio import windows
+    from rasterio.transform import Affine
 
 
 logger = logging.getLogger(__name__)

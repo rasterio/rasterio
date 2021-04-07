@@ -2,8 +2,10 @@
 
 import numpy
 
-from rasterio.enums import MaskFlags
-from rasterio.windows import Window
+import rasterio._loading
+with rasterio._loading.add_gdal_dll_directories():
+    from rasterio.enums import MaskFlags
+    from rasterio.windows import Window
 
 
 def sample_gen(dataset, xy, indexes=None, masked=False):
