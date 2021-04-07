@@ -5,8 +5,8 @@ Changes
 -----------
 
 - Building from source now requires Cython (#2016).
-- Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8. 
-  DLLs will be loaded from .libs (for wheels) or from directories in PATH 
+- Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.
+  DLLs will be loaded from .libs (for wheels) or from directories in PATH
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
@@ -26,7 +26,6 @@ Changes
   correspond to scipy's oldest supported versions for Python versions 3.6-3.10.
 - GDAL data path is configured in env.py with set_gdal_config (#2139).
 - AWS sessions are not created for pre-signed URLs (#2133).
->>>>>>> maint-1.2
 
 1.2.1 (2021-03-03)
 ------------------
