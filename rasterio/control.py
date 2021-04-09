@@ -3,7 +3,7 @@
 import uuid
 
 
-class GroundControlPoint(object):
+class GroundControlPoint:
     """A mapping of row, col image coordinates to x, y, z."""
 
     def __init__(self, row=None, col=None, x=None, y=None, z=None,

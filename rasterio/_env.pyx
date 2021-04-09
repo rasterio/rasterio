@@ -176,7 +176,7 @@ cpdef del_gdal_config(key):
         CPLSetThreadLocalConfigOption(<const char *>key, NULL)
 
 
-cdef class ConfigEnv(object):
+cdef class ConfigEnv:
     """Configuration option management"""
 
     def __init__(self, **options):
@@ -199,7 +199,7 @@ cdef class ConfigEnv(object):
         return {k: get_gdal_config(k) for k in self.options}
 
 
-class GDALDataFinder(object):
+class GDALDataFinder:
     """Finds GDAL data files
 
     Note: this is not part of the public API in 1.0.x.
@@ -273,7 +273,7 @@ def catch_errors():
         CPLPopErrorHandler()
 
 
-class PROJDataFinder(object):
+class PROJDataFinder:
     """Finds PROJ data files
 
     Note: this is not part of the public API in 1.0.x.

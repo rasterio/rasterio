@@ -17,7 +17,7 @@ from rasterio.warp import transform_bounds
 logger = logging.getLogger(__name__)
 
 
-class _Collection(object):
+class _Collection:
 
     """For use with `rasterio.rio.helpers.write_features()`."""
 

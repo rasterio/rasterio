@@ -58,7 +58,7 @@ reproj_expected = (
 )
 
 
-class ReprojectParams(object):
+class ReprojectParams:
     """Class to assist testing reprojection by encapsulating parameters."""
 
     def __init__(self, left, bottom, right, top, width, height, src_crs, dst_crs):

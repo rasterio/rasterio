@@ -57,7 +57,7 @@ from rasterio.path import parse_path, ParsedPath, UnparsedPath
 logger = logging.getLogger(__name__)
 
 
-class IgnoreOptionMarker(object):
+class IgnoreOptionMarker:
     """A marker for an option that is to be ignored.
 
     For use in the case where `None` is a meaningful option value,

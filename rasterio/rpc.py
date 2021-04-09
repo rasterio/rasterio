@@ -3,7 +3,7 @@ from collections import OrderedDict
 from collections.abc import Iterable
 
 @attr.s(slots=True)
-class RPC(object):
+class RPC:
     """Rational Polynomial Coefficients used to map (x, y, z) <-> (row, col) coordinates.
     
     This class contains a mapping between various RPC attributes and values. 

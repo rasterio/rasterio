@@ -1,6 +1,6 @@
 # cython: language_level=3
 
-cdef class ConfigEnv(object):
+cdef class ConfigEnv:
     cdef public object options
 
 

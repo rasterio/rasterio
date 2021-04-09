@@ -31,7 +31,7 @@ CURLSCHEMES = set([k for k, v in SCHEMES.items() if v == 'curl'])
 REMOTESCHEMES = set([k for k, v in SCHEMES.items() if v in ('curl', 's3', 'oss', 'gs', 'az',)])
 
 
-class Path(object):
+class Path:
     """Base class for dataset paths"""
 
     def as_vsi(self):
