@@ -70,6 +70,58 @@ cdef extern from "cpl_vsi.h" nogil:
     ctypedef int vsi_l_offset
     ctypedef FILE VSILFILE
     ctypedef stat VSIStatBufL
+    ctypedef enum VSIRangeStatus:
+        VSI_RANGE_STATUS_UNKNOWN,
+        VSI_RANGE_STATUS_DATA,
+        VSI_RANGE_STATUS_HOLE,
+
+    # GDAL Plugin System (GDAL 3.0+)
+    # Filesystem functions
+    ctypedef int (*VSIFilesystemPluginStatCallback)(void*, const char*, VSIStatBufL*, int)  # Optional
+    ctypedef int (*VSIFilesystemPluginUnlinkCallback)(void*, const char*)  # Optional
+    ctypedef int (*VSIFilesystemPluginRenameCallback)(void*, const char*, const char*)  # Optional
+    ctypedef int (*VSIFilesystemPluginMkdirCallback)(void*, const char*, long)  # Optional
+    ctypedef int (*VSIFilesystemPluginRmdirCallback)(void*, const char*)  # Optional
+    ctypedef char** (*VSIFilesystemPluginReadDirCallback)(void*, const char*, int)  # Optional
+    ctypedef char** (*VSIFilesystemPluginSiblingFilesCallback)(void*, const char*)  # Optional (GDAL 3.2+)
+    ctypedef void* (*VSIFilesystemPluginOpenCallback)(void*, const char*, const char*)
+    # File functions
+    ctypedef vsi_l_offset (*VSIFilesystemPluginTellCallback)(void*)
+    ctypedef int (*VSIFilesystemPluginSeekCallback)(void*, vsi_l_offset, int)
+    ctypedef size_t (*VSIFilesystemPluginReadCallback)(void*, void*, size_t, size_t)
+    ctypedef int (*VSIFilesystemPluginReadMultiRangeCallback)(void*, int, void**, const vsi_l_offset*, const size_t*)  # Optional
+    ctypedef VSIRangeStatus (*VSIFilesystemPluginGetRangeStatusCallback)(void*, vsi_l_offset, vsi_l_offset)  # Optional
+    ctypedef int (*VSIFilesystemPluginEofCallback)(void*)  # Mandatory?
+    ctypedef size_t (*VSIFilesystemPluginWriteCallback)(void*, const void*, size_t, size_t)
+    ctypedef int (*VSIFilesystemPluginFlushCallback)(void*)  # Optional
+    ctypedef int (*VSIFilesystemPluginTruncateCallback)(void*, vsi_l_offset)
+    ctypedef int (*VSIFilesystemPluginCloseCallback)(void*)  # Optional
+    # Plugin function container struct
+    struct VSIFilesystemPluginCallbacksStruct:
+        void *pUserData
+        VSIFilesystemPluginStatCallback stat
+        VSIFilesystemPluginUnlinkCallback unlink
+        VSIFilesystemPluginRenameCallback rename
+        VSIFilesystemPluginMkdirCallback mkdir
+        VSIFilesystemPluginRmdirCallback rmdir
+        VSIFilesystemPluginReadDirCallback read_dir
+        VSIFilesystemPluginOpenCallback open
+        VSIFilesystemPluginTellCallback tell
+        VSIFilesystemPluginSeekCallback seek
+        VSIFilesystemPluginReadCallback read
+        VSIFilesystemPluginReadMultiRangeCallback read_multi_range
+        VSIFilesystemPluginGetRangeStatusCallback get_range_status
+        VSIFilesystemPluginEofCallback eof
+        VSIFilesystemPluginWriteCallback write
+        VSIFilesystemPluginFlushCallback flush
+        VSIFilesystemPluginTruncateCallback truncate
+        VSIFilesystemPluginCloseCallback close
+        size_t nBufferSize
+        size_t nCacheSize
+        VSIFilesystemPluginSiblingFilesCallback sibling_files
+
+    int VSIInstallPluginHandler(const char*, const VSIFilesystemPluginCallbacksStruct*)
+    void VSIFreeFilesystemPluginCallbacksStruct(VSIFilesystemPluginCallbacksStruct*)
 
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
