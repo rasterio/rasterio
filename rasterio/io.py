@@ -163,7 +163,7 @@ class PythonVSIFile(PyVSIFileBase):
 
         Returns
         -------
-        MemoryFile
+        PythonVSIFile
         """
         super(PythonVSIFile, self).__init__(
             file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)

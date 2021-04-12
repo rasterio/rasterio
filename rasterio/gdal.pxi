@@ -97,7 +97,7 @@ cdef extern from "cpl_vsi.h" nogil:
     ctypedef int (*VSIFilesystemPluginTruncateCallback)(void*, vsi_l_offset)
     ctypedef int (*VSIFilesystemPluginCloseCallback)(void*)  # Optional
     # Plugin function container struct
-    struct VSIFilesystemPluginCallbacksStruct:
+    ctypedef struct VSIFilesystemPluginCallbacksStruct:
         void *pUserData
         VSIFilesystemPluginStatCallback stat
         VSIFilesystemPluginUnlinkCallback unlink
@@ -121,6 +121,7 @@ cdef extern from "cpl_vsi.h" nogil:
         VSIFilesystemPluginSiblingFilesCallback sibling_files
 
     int VSIInstallPluginHandler(const char*, const VSIFilesystemPluginCallbacksStruct*)
+    VSIFilesystemPluginCallbacksStruct* VSIAllocFilesystemPluginCallbacksStruct()
     void VSIFreeFilesystemPluginCallbacksStruct(VSIFilesystemPluginCallbacksStruct*)
 
     unsigned char *VSIGetMemFileBuffer(const char *path,

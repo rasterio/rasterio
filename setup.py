@@ -226,7 +226,7 @@ if "clean" not in sys.argv:
         Extension(
             'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
         Extension(
-            'rasterio._pyvsi', ['rasterio/_pyvsi.pyx', 'rasterio/_pyvsi_handle.cpp'],
+            'rasterio._pyvsi', ['rasterio/_pyvsi.pyx'],
             language="c++",
             **ext_options),
         Extension(

@@ -3,8 +3,6 @@ include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py pypr
 include rasterio/*.pyx
 include rasterio/*.pxd
 include rasterio/*.pxi
-include rasterio/_pyvsi_handle.cpp
-include rasterio/_pyvsi_handle.h
 recursive-include examples *.py
 recursive-include tests *.py *.rst
 recursive-exclude tests/data *.tif
