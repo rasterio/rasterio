@@ -12,7 +12,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.features import dataset_features
 
 
-class JSONSequenceTool(object):
+class JSONSequenceTool:
     """Extracts data from a dataset file and saves a JSON sequence
     """
 

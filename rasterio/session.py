@@ -17,7 +17,7 @@ except ImportError:
     boto3 = None
 
 
-class Session(object):
+class Session:
     """Base for classes that configure access to secured resources.
 
     Attributes

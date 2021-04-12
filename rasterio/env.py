@@ -54,7 +54,7 @@ local = ThreadEnv()
 log = logging.getLogger(__name__)
 
 
-class Env(object):
+class Env:
     """Abstraction for GDAL and AWS configuration
 
     The GDAL library is stateful: it has a registry of format drivers,
@@ -351,7 +351,7 @@ def delenv():
     local._env = None
 
 
-class NullContextManager(object):
+class NullContextManager:
 
     def __init__(self):
         pass
@@ -441,7 +441,7 @@ def ensure_env_with_credentials(f):
 
 @attr.s(slots=True)
 @total_ordering
-class GDALVersion(object):
+class GDALVersion:
     """Convenience class for obtaining GDAL major and minor version components
     and comparing between versions.  This is highly simplistic and assumes a
     very normal numbering scheme for versions and ignores everything except

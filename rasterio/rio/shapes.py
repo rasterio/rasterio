@@ -111,7 +111,7 @@ def shapes(
 
 
 def feature_gen(src, env, *args, **kwargs):
-    class Collection(object):
+    class Collection:
 
         def __init__(self, env):
             self.bboxes = []

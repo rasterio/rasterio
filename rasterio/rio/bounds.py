@@ -55,7 +55,7 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     stdout = click.get_text_stream('stdout')
 
     # This is the generator for (feature, bbox) pairs.
-    class Collection(object):
+    class Collection:
 
         def __init__(self, env):
             self._xs = []

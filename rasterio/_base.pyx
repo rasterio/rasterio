@@ -223,7 +223,7 @@ cdef GDALDatasetH open_dataset(
             CSLDestroy(options)
 
 
-cdef class DatasetBase(object):
+cdef class DatasetBase:
     """Dataset base class
 
     Attributes

@@ -46,7 +46,7 @@ ESRI_PROJECTION_STRING = (
     'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
 
 
-class CustomCRS(object):
+class CustomCRS:
     def to_wkt(self):
         return CRS.from_epsg(4326).to_wkt()
 
