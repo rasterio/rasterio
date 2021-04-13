@@ -166,8 +166,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            print("Handling file object in rasterio")
-            # memfile = MemoryFile(fp)
             memfile = PythonVSIFile(fp)
             dataset = memfile.open(driver=driver, sharing=sharing)
             try:

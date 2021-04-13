@@ -1,56 +1,47 @@
 # cython: language_level=3, boundscheck=False
-"""Bridge between Python file-like objects and GDAL VSI."""
+"""Bridge between Python file-like objects and GDAL VSI.
+
+https://gdal.org/api/cpl.html#structVSIFilesystemPluginCallbacksStruct
+"""
 
 include "gdal.pxi"
 
-from collections import Counter
-from contextlib import contextmanager
 import logging
-import os
-import sys
 from uuid import uuid4
-import warnings
 
-import numpy as np
-
-from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._base cimport open_dataset
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
-from rasterio.crs import CRS
-from rasterio import dtypes
-from rasterio.enums import ColorInterp, MaskFlags, Resampling
-from rasterio.errors import (
-    CRSError, DriverRegistrationError, RasterioIOError,
-    NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
-)
-from rasterio.dtypes import is_ndarray
-from rasterio.sample import sample_gen
-from rasterio.transform import Affine
-from rasterio.path import parse_path, UnparsedPath
-from rasterio.vrt import _boundless_vrt_doc
-from rasterio.windows import Window, intersection
 
 from libc.stdio cimport printf
 from libc.string cimport memcpy
 
-from rasterio import dtypes
-from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
-from rasterio.errors import ResamplingAlgorithmError
-from rasterio._base cimport (
-_osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
-
-cimport numpy as np
-cimport cpython.ref as cpy_ref
 
 log = logging.getLogger(__name__)
 
 gdal33_version_checked = False
 gdal33_version_met = False
 
+
+# NOTE: This has to be defined outside of gdal.pxi or other C extensions will
+# try to compile C++ only code included in this header.
+cdef extern from "cpl_vsi_virtual.h":
+    cdef cppclass VSIFileManager:
+        @staticmethod
+        void* GetHandler(const char*)
+
+
+# Prefix for all in-memory paths used by GDAL's VSI system
+# Except for errors and log messages this shouldn't really be seen by the user
+cdef str FILESYSTEM_PREFIX = "/vsipythonfilelike/"
+cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
+# This is global state for the Python filesystem plugin. It currently only
+# contains path -> PyVSIFileBase (or subclass) instances. This is used by
+# the plugin to determine what "files" exist on "disk".
+# Currently the only way to "create" a file in the filesystem is to add
+# an entry to this dictionary. GDAL will then Open the path later.
+cdef _FILESYSTEM_INFO = {}
 
 def _delete_dataset_if_exists(path):
 
@@ -129,30 +120,45 @@ cdef char** siblings_files(void *pUserData, const char *pszDirname) with gil:
     printf("siblings_files\n")
 
 
-cdef void* open(void *pUserData, const char *pszDirname, const char *pszAccess) with gil:
-    # Mandatory
-    print("open")
+cdef void* open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
+    """Access existing open file-like object in the virtual filesystem.
+    
+    This function is mandatory in the GDAL Filesystem Plugin API.
+    
+    """
+    cdef object file_wrapper
+
+    if pszAccess != b"r" and pszAccess != b"rb":
+        log.error("PyVSI is currently a read-only interface.")
+        return NULL
+
     if pUserData is NULL:
-        print("User data is NULL")
-    else:
-        print("User data is not NULL")
-        #file_wrapper = <object>pUserData
-        #print(file_wrapper._file_obj)
-    return <void *>pUserData
+        log.error("PyVSI filesystem accessed with uninitialized filesystem info.")
+        return NULL
+    cdef dict filesystem_info = <object>pUserData
+
+    try:
+        file_wrapper = filesystem_info[pszFilename]
+    except KeyError:
+        log.error("File-like object not found in virtual filesystem: %s", pszFilename)
+        return NULL
+
+    if not hasattr(file_wrapper, "_file_obj"):
+        log.error("Unexpected file object found in PyVSI filesystem.")
+        return NULL
+    return <void *>file_wrapper
 
 ## File functions
 
 
 cdef vsi_l_offset tell(void *pFile) with gil:
-    print("tell")
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
-    pos = file_obj.tell()
+    cdef int pos = file_obj.tell()
     return <vsi_l_offset>pos
 
 
 cdef int seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
-    print("seek")
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     # TODO: Add "seekable" check?
@@ -161,7 +167,6 @@ cdef int seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil
 
 
 cdef size_t read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
-    print("read")
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     cdef bytes python_data = file_obj.read(nSize * nCount)
@@ -190,9 +195,9 @@ cdef size_t write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount)
     print("write")
 
 
-cdef int flash(void *pFile) with gil:
+cdef int flush(void *pFile) with gil:
     # Optional
-    print("flash")
+    print("flush")
 
 
 cdef int truncate(void *pFile, vsi_l_offset nNewSize) with gil:
@@ -207,9 +212,13 @@ cdef int close(void *pFile) except -1 with gil:
 
 
 cdef int install_rasterio_pyvsi_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
-    # TODO:
-    cdef int install_status = VSIInstallPluginHandler("/vsipythonfilelike/", callbacks_struct)
-    return install_status
+    """Install handlers for python file-like objects if it isn't already installed."""
+    cdef int install_status
+    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
+        log.debug("Installing PyVSI filesystem handler plugin...")
+        install_status = VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
+        return install_status
+    return 0
 
 
 cdef class PyVSIFileBase:
@@ -218,16 +227,13 @@ cdef class PyVSIFileBase:
 
     def __cinit__(self, file_or_bytes, *args, **kwargs):
         self._vsif = VSIAllocFilesystemPluginCallbacksStruct()
-        # XXX: Should we inc ref?
-        # self._vsif.pUserData = NULL
-        self._vsif.pUserData = <void*>self
+        # pUserData will be set later
         self._vsif.open = <VSIFilesystemPluginOpenCallback>open
 
         self._vsif.tell = <VSIFilesystemPluginTellCallback>tell
         self._vsif.seek = <VSIFilesystemPluginSeekCallback>seek
         self._vsif.read = <VSIFilesystemPluginReadCallback>read
-        self._vsif.read_multi_range = <VSIFilesystemPluginReadMultiRangeCallback>read_multi_range
-        self._vsif.eof = <VSIFilesystemPluginEofCallback>eof
+        # self._vsif.eof = <VSIFilesystemPluginEofCallback>eof
         self._vsif.close = <VSIFilesystemPluginCloseCallback>close
 
     def __dealloc__(self):
@@ -250,54 +256,30 @@ cdef class PyVSIFileBase:
             filename was provided.
 
         """
-        # if file_or_bytes:
-        #     if hasattr(file_or_bytes, 'read'):
-        #         initial_bytes = file_or_bytes.read()
-        #     elif isinstance(file_or_bytes, bytes):
-        #         initial_bytes = file_or_bytes
-        #     else:
-        #         raise TypeError(
-        #             "Constructor argument must be a file opened in binary "
-        #             "mode or bytes.")
-        # else:
-        #     initial_bytes = b''
+        if isinstance(file_or_bytes, (bytes, str)) or not hasattr(file_or_bytes, "read"):
+            raise TypeError("PyVSIFile expects file-like objects only.")
 
         # Make an in-memory directory specific to this dataset to help organize
         # auxiliary files.
+        # XXX: Do we really need directories?
         self._dirname = dirname or str(uuid4())
-        # VSIMkdir("/vsimem/{0}".format(self._dirname).encode("utf-8"), 0666)
 
         if filename:
             # GDAL's SRTMHGT driver requires the filename to be "correct" (match
             # the bounds being written)
-            self.name = "/vsipythonfilelike/{0}/{1}".format(self._dirname, filename)
+            self.name = "{0}{1}/{2}".format(FILESYSTEM_PREFIX, self._dirname, filename)
         else:
             # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = "/vsipythonfilelike/{0}/{0}.{1}".format(self._dirname, ext.lstrip('.'))
+            self.name = "{0}{1}/{1}.{2}".format(FILESYSTEM_PREFIX, self._dirname, ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
-
-        # self._initial_bytes = initial_bytes
-        # cdef unsigned char *buffer = self._initial_bytes
-
-        # self._vsif = VSIFileFromMemBuffer(
-        #     self._path, buffer, len(self._initial_bytes), 0)
-        # self._vsif = PythonVSIVirtualHandleWrapper(<cpy_ref.PyObject*>file_or_bytes)
-        # vsifile_handle = CreatePyVSIInMem(self._path, self._vsif)
-        # print("VSIFile handle: ", vsifile_handle == NULL)
         self._file_obj = file_or_bytes
         self.mode = "r"
-
-        # else:
-        #     self._vsif = VSIFOpenL(self._path, "w+")
-        #     self.mode = "w+"
-
-        # if self._vsif == NULL:
-        #     raise IOError("Failed to open in-memory file.")
-
         self.closed = False
 
         # TODO: Error checking
+        _FILESYSTEM_INFO[self._path[len(FILESYSTEM_PREFIX):]] = self
+        self._vsif.pUserData = <void*>_FILESYSTEM_INFO
         install_rasterio_pyvsi_plugin(self._vsif)
 
     def exists(self):
@@ -326,22 +308,6 @@ cdef class PyVSIFileBase:
         except AttributeError:
             # FIXME: What should this actually do?
             return 0
-        # return self.getbuffer().size
-
-    # def getbuffer(self):
-    #     """Return a view on bytes of the file."""
-    #     print("getbuffer")
-    #     cdef unsigned char *buffer = NULL
-    #     cdef vsi_l_offset buffer_len = 0
-    #     cdef np.uint8_t [:] buff_view
-    #
-    #     buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
-    #
-    #     if buffer == NULL or buffer_len == 0:
-    #         buff_view = np.array([], dtype='uint8')
-    #     else:
-    #         buff_view = <np.uint8_t[:buffer_len]>buffer
-    #     return buff_view
 
     def close(self):
         print("Python close")
@@ -354,49 +320,9 @@ cdef class PyVSIFileBase:
         self.closed = True
 
     def seek(self, offset, whence=0):
-        print("python seek: ", offset, whence)
-        return VSIFSeekL(<VSILFILE *>self._vsif, offset, whence)
+        print("python seek")
+        return self._file_obj.seek(offset, whence)
 
     def tell(self):
-        print("python tell:", self._vsif != NULL)
-        if self._vsif != NULL:
-            return VSIFTellL(<VSILFILE *>self._vsif)
-        else:
-            return 0
-
-    def read(self, size=-1):
-        """Read size bytes from MemoryFile."""
-        print("python read:", size)
-        cdef bytes result
-        cdef unsigned char *buffer = NULL
-        cdef vsi_l_offset buffer_len = 0
-
-        if size < 0:
-            buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
-            size = buffer_len
-
-        buffer = <unsigned char *>CPLMalloc(size)
-
-        try:
-            objects_read = VSIFReadL(buffer, 1, size, <VSILFILE *>self._vsif)
-            result = <bytes>buffer[:objects_read]
-
-        finally:
-            CPLFree(buffer)
-
-        return result
-
-    def write(self, data):
-        """Write data bytes to MemoryFile"""
-        print("python write")
-        cdef const unsigned char *view = <bytes>data
-        n = len(data)
-        result = VSIFWriteL(view, 1, n, <VSILFILE *>self._vsif)
-        VSIFFlushL(<VSILFILE *>self._vsif)
-        return result
-
-cdef public api void cy_call_print(object self):
-    try:
-        print(self)
-    except Exception:
-        print("ERROR")
+        print("python tell")
+        return self._file_obj.tell()
