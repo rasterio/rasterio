@@ -608,10 +608,26 @@ def test_from_bounds_rotation():
     assert win.height == pytest.approx(2.0 * height)
 
 
-def test_issue_2138():
+@pytest.mark.parametrize(
+    "sy,left,bottom,right,top",
+    [(-0.001, 1.0, 45.7, 1.2, 45.9), (0.001, 1.0, 45.9, 1.2, 45.7)],
+)
+def test_issue_2138(sy, left, bottom, right, top):
     """WindowError is raised if bounds and transform are inconsistent"""
-    w, s, e, n = 1.0, 45.7, 1.2, 45.9
-    a = 0.001
-    transform = Affine.translation(w, n) * Affine.scale(a, -a)
+    transform = Affine.translation(left, top) * Affine.scale(0.001, sy)
     with pytest.raises(WindowError):
-        from_bounds(w, n, e, s, transform)
+        from_bounds(left, top, right, bottom, transform)
+
+
+@pytest.mark.parametrize("sx", [-1.0, 1.0])
+def test_zero_width(sx):
+    """Permit a zero width window"""
+    transform = Affine.translation(0, 45.0) * Affine.scale(sx, -1.0)
+    assert from_bounds(0.0, 44.0, 0.0, 45.0, transform).width == 0
+
+
+@pytest.mark.parametrize("sy", [-1.0, 1.0])
+def test_zero_height(sy):
+    """Permit a zero height window"""
+    transform = Affine.translation(0, 45.0) * Affine.scale(1.0, sy)
+    assert from_bounds(0.0, 44.0, 1.0, 44.0, transform).height == 0
