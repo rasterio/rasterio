@@ -207,7 +207,8 @@ cdef int truncate(void *pFile, vsi_l_offset nNewSize) with gil:
 cdef int close(void *pFile) except -1 with gil:
     # Optional
     print("close")
-    # XXX: We probably shouldn't close the file object for the user
+    cdef object file_wrapper = <object>pFile
+    del _FILESYSTEM_INFO[file_wrapper._pyvsi_path]
     return 0
 
 
@@ -273,12 +274,13 @@ cdef class PyVSIFileBase:
             self.name = "{0}{1}/{1}.{2}".format(FILESYSTEM_PREFIX, self._dirname, ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
+        self._pyvsi_path = self._path[len(FILESYSTEM_PREFIX):]
         self._file_obj = file_or_bytes
         self.mode = "r"
         self.closed = False
 
         # TODO: Error checking
-        _FILESYSTEM_INFO[self._path[len(FILESYSTEM_PREFIX):]] = self
+        _FILESYSTEM_INFO[self._pyvsi_path] = self
         self._vsif.pUserData = <void*>_FILESYSTEM_INFO
         install_rasterio_pyvsi_plugin(self._vsif)
 
@@ -311,10 +313,11 @@ cdef class PyVSIFileBase:
 
     def close(self):
         print("Python close")
-        if hasattr(self, '_vsif') and self._vsif is not NULL:
-            print("vsif is not Null")
-            VSIFCloseL(<VSILFILE *>self._vsif)
-        self._vsif = NULL
+        # FIXME: _vsif is now the actual filesystem, this should deal with the file
+        # if hasattr(self, '_vsif') and self._vsif is not NULL:
+        #     print("vsif is not Null")
+        #     VSIFCloseL(<VSILFILE *>self._vsif)
+        # self._vsif = NULL
         # _delete_dataset_if_exists(self.name)
         # VSIRmdir(self._dirname.encode("utf-8"))
         self.closed = True
