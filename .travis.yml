@@ -43,7 +43,7 @@ jobs:
         PROJVERSION="6.2.1"
     - python: "3.8"
       env:
-        GDALVERSION="3.2.1"
+        GDALVERSION="3.2.2"
         PROJVERSION="7.2.1"
     - python: "3.8"
       env:
