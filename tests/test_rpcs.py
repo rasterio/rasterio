@@ -156,9 +156,12 @@ def test_rpcs_write_read_rpcs(tmpdir):
         assert isinstance(rpcs, RPC)
         expected = TEST_RPCS_FROM_GDAL
 
-        # GDAL doesn't include these metadata items on write
+        # GDAL < 3.3 does not ensure ERR_BIAS and ERR_RAND are written out
+        # so we wont either
         expected.pop('ERR_BIAS')
         expected.pop('ERR_RAND')
+        rpcs.err_bias = None
+        rpcs.err_rand = None
         
         assert sorted(rpcs.to_gdal().keys()) == sorted(expected.keys())
         

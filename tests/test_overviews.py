@@ -108,24 +108,15 @@ def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
         assert data.any()
 
 
+@pytest.mark.parametrize("ovr_levels", [[2], [3], [2, 4, 8]])
 @requires_gdal33
-def test_build_overviews_rms(data):
-    """Make sure RMS resampling works with gdal3.3."""
+def test_ignore_overviews(data, ovr_levels):
+    """open dataset with OVERVIEW_LEVEL=NONE, overviews should be ignored"""
     inputfile = str(data.join('RGB.byte.tif'))
-    with rasterio.open(inputfile, 'r+') as src:
-        overview_factors = [2, 4]
-        src.build_overviews(overview_factors, resampling=OverviewResampling.rms)
-        assert src.overviews(1) == [2, 4]
-        assert src.overviews(2) == [2, 4]
-        assert src.overviews(3) == [2, 4]
 
-
-@requires_gdal33
-def test_ignore_overviews(data):
-    """open dataset with OVERVIEW_LEVEL=-1, overviews should be ignored"""
-    inputfile = str(data.join('RGB.byte.tif'))
+    # Add overview levels to the fixture.
     with rasterio.open(inputfile, 'r+') as src:
-        src.build_overviews([2], resampling=OverviewResampling.nearest)
+        src.build_overviews(ovr_levels, resampling=Resampling.nearest)
 
     with rasterio.open(inputfile, OVERVIEW_LEVEL=-1) as src:
         assert src.overviews(1) == []
@@ -136,16 +127,32 @@ def test_ignore_overviews(data):
 @requires_gdal33
 def test_decimated_no_use_overview(red_green):
     """Force ignore existing overviews when performing decimated read"""
-    # Corrupt overview of red file
+    # Corrupt overview of red file by replacing red.tif.ovr with
+    # green.tif.ovr.  We have a GDAL overview reading bug if green
+    # pixels appear in a decimated read.
     green_ovr = red_green.join("green.tif.ovr")
-    green_ovr.rename(red_green.join("red.tif.ovr"))
+    green_ovr.move(red_green.join("red.tif.ovr"))
     assert not green_ovr.exists()
-    # Read the corrupted red overview
+
+    # Read the corrupted red overview.
     with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
-        ovr_data = ovr.read()
+        ovr_data = ovr.read(2)
         ovr_shape = ovr_data.shape
-        assert (ovr_data[1] == 204).all()
-    # Perform decimated read and ensure no use of file overview (different from corrupted)
-    with rasterio.open(str(red_green.join("red.tif")), OVERVIEW_LEVEL=-1) as src:
-        decimated_data = src.read(out_shape=ovr_shape)
+        assert (ovr_data == 204).all()  # Green pixels in band 2
+
+    # Perform decimated read and ensure no use of file overview
+    # (different from corrupted).
+    with rasterio.open(str(red_green.join("red.tif")), OVERVIEW_LEVEL="NONE") as src:
+        decimated_data = src.read(2, out_shape=ovr_shape)
         assert not np.array_equal(ovr_data, decimated_data)
+
+
+def test_build_overviews_rms(data):
+    """Make sure RMS resampling works with gdal3.3."""
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        overview_factors = [2, 4]
+        src.build_overviews(overview_factors, resampling=OverviewResampling.rms)
+        assert src.overviews(1) == [2, 4]
+        assert src.overviews(2) == [2, 4]
+        assert src.overviews(3) == [2, 4]
