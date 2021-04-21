@@ -4,6 +4,8 @@ Changes
 1.2.3 (TBD)
 -----------
 
+- The restriction on resampling methods available to overviews has been made
+  more clear with the addition of an OverviewResampling enum (#2157).
 - Fix a regression introduced in 1.2.2: from_bounds() can again return Windows
   of zero height or width.
 - Search for GDAL data in installed packages is done before searching in
