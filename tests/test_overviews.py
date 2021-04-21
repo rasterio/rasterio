@@ -7,7 +7,7 @@ import pytest
 from .conftest import requires_gdal2, requires_gdal33
 
 import rasterio
-from rasterio.enums import Resampling
+from rasterio.enums import OverviewResampling, Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import OverviewCreationError
 
@@ -24,7 +24,7 @@ def test_build_overviews_one(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2]
-        src.build_overviews(overview_factors, resampling=Resampling.nearest)
+        src.build_overviews(overview_factors, resampling=OverviewResampling.nearest)
         assert src.overviews(1) == [2]
         assert src.overviews(2) == [2]
         assert src.overviews(3) == [2]
@@ -34,7 +34,7 @@ def test_build_overviews_two(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]
-        src.build_overviews(overview_factors, resampling=Resampling.nearest)
+        src.build_overviews(overview_factors, resampling=OverviewResampling.nearest)
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
@@ -48,7 +48,7 @@ def test_build_overviews_bilinear(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]
-        src.build_overviews(overview_factors, resampling=Resampling.bilinear)
+        src.build_overviews(overview_factors, resampling=OverviewResampling.bilinear)
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
@@ -58,7 +58,7 @@ def test_build_overviews_average(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]
-        src.build_overviews(overview_factors, resampling=Resampling.average)
+        src.build_overviews(overview_factors, resampling=OverviewResampling.average)
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
@@ -68,7 +68,7 @@ def test_build_overviews_gauss(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]
-        src.build_overviews(overview_factors, resampling=Resampling.gauss)
+        src.build_overviews(overview_factors, resampling=OverviewResampling.gauss)
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
@@ -89,7 +89,7 @@ def test_issue1333(data):
         with rasterio.open(inputfile, 'r+') as src:
             overview_factors = [1024, 2048]
             src.build_overviews(
-                overview_factors, resampling=Resampling.average)
+                overview_factors, resampling=OverviewResampling.average)
 
 
 @requires_gdal2
@@ -101,7 +101,7 @@ def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
             dst.write(src.read())
             overview_factors = [2, 4]
             dst.build_overviews(
-                overview_factors, resampling=Resampling.nearest)
+                overview_factors, resampling=OverviewResampling.nearest)
 
     with rasterio.open(dst_file, overview_level=1) as src:
         data = src.read()
@@ -145,3 +145,15 @@ def test_decimated_no_use_overview(red_green):
     with rasterio.open(str(red_green.join("red.tif")), OVERVIEW_LEVEL="NONE") as src:
         decimated_data = src.read(2, out_shape=ovr_shape)
         assert not np.array_equal(ovr_data, decimated_data)
+
+
+@requires_gdal33
+def test_build_overviews_rms(data):
+    """Make sure RMS resampling works with gdal3.3."""
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        overview_factors = [2, 4]
+        src.build_overviews(overview_factors, resampling=OverviewResampling.rms)
+        assert src.overviews(1) == [2, 4]
+        assert src.overviews(2) == [2, 4]
+        assert src.overviews(3) == [2, 4]
