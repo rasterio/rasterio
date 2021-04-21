@@ -1,5 +1,7 @@
 """Enum tests"""
 
+import pytest
+
 from rasterio import enums
 
 
@@ -13,7 +15,7 @@ def test_gray_gray():
     assert enums.ColorInterp.gray.name == "gray"
 
 
-def test_resampling():
+@pytest.mark.parametrize("resamp", enums.OverviewResampling)
+def test_resampling(resamp):
     """Make sure that resampling value are the same."""
-    for v in enums.OverviewResampling:
-        assert v.value == enums.Resampling[v.name].value
+    assert resamp.value == enums.Resampling[resamp.name].value

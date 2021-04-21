@@ -147,6 +147,7 @@ def test_decimated_no_use_overview(red_green):
         assert not np.array_equal(ovr_data, decimated_data)
 
 
+@requires_gdal33
 def test_build_overviews_rms(data):
     """Make sure RMS resampling works with gdal3.3."""
     inputfile = str(data.join('RGB.byte.tif'))
