@@ -2,7 +2,40 @@
 # distutils: language = c++
 """Bridge between Python file-like objects and GDAL VSI.
 
+The functionality provided in this interface is made possible thanks to GDAL's
+Plugin infrastructure. You can find more information about this below and in
+GDAL's documentation here:
+
 https://gdal.org/api/cpl.html#structVSIFilesystemPluginCallbacksStruct
+
+.. note::
+
+    Parts of GDAL's plugin interface use C++ features/definitions. For
+    that reason this module must be compiled as C++.
+
+The high-level idea of the plugin interface is to define a series of callbacks
+for the operations GDAL may need to perform. There are two types of operations:
+filesystem and file. The filesystem operations cover things like opening a file,
+making directories, renaming files, etc. The file operations involve things like
+reading from the file, seeking to a specific position, and getting the current
+position in the file.
+
+Filesystem Handling
+*******************
+
+This plugin currently only defines the "open" callback. The other features are
+either not needed or have usable default implementations.
+
+The entire filesystem's state is stored in a global dictionary mapping
+in-memory GDAL filenames to :class:`~rasterio._pyvsi.PyVSIFileBase` objects.
+
+File Handling
+*************
+
+This plugin implements the bare minimum for reading from an open file-like
+object. It does this by mapping GDAL's function calls (ex. read, seek) to
+the corresponding method call on the file-like object.
+
 """
 
 include "gdal.pxi"
