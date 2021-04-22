@@ -338,7 +338,11 @@ cdef class PyVSIFileBase:
         -------
         int
         """
-        print("__len__")
+        try:
+            return len(self._file_obj)
+        except (TypeError, AttributeError):
+            pass
+
         try:
             return self._file_obj.size
         except AttributeError:
