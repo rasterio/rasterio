@@ -91,37 +91,37 @@ cdef int pyvsi_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStat
     printf("stat\n")
 
 
-cdef int unlink(void *pUserData, const char *pszFilename) with gil:
+cdef int pyvsi_unlink(void *pUserData, const char *pszFilename) with gil:
     # Optional
     printf("unlink\n")
 
 
-cdef int rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
+cdef int pyvsi_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
     # Optional
     printf("rename\n")
 
 
-cdef int mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
+cdef int pyvsi_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
     # Optional
     printf("mkdir\n")
 
 
-cdef int rmdir(void *pUserData, const char *pszDirname) with gil:
+cdef int pyvsi_rmdir(void *pUserData, const char *pszDirname) with gil:
     # Optional
     printf("rmdir\n")
 
 
-cdef char** read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
+cdef char** pyvsi_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
     # Optional
     printf("read_dir\n")
 
 
-cdef char** siblings_files(void *pUserData, const char *pszDirname) with gil:
+cdef char** pyvsi_siblings_files(void *pUserData, const char *pszDirname) with gil:
     # Optional (GDAL 3.2+)
     printf("siblings_files\n")
 
 
-cdef void* open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
+cdef void* pyvsi_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
     """Access existing open file-like object in the virtual filesystem.
     
     This function is mandatory in the GDAL Filesystem Plugin API.
@@ -152,14 +152,14 @@ cdef void* open(void *pUserData, const char *pszFilename, const char *pszAccess)
 ## File functions
 
 
-cdef vsi_l_offset tell(void *pFile) with gil:
+cdef vsi_l_offset pyvsi_tell(void *pFile) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     cdef int pos = file_obj.tell()
     return <vsi_l_offset>pos
 
 
-cdef int seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
+cdef int pyvsi_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     # TODO: Add "seekable" check?
@@ -167,7 +167,7 @@ cdef int seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil
     return 0
 
 
-cdef size_t read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
+cdef size_t pyvsi_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     cdef bytes python_data = file_obj.read(nSize * nCount)
@@ -177,35 +177,35 @@ cdef size_t read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with g
     return <size_t>(num_bytes / nSize)
 
 
-cdef int read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
+cdef int pyvsi_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
     # Optional
     print("read_multi_range")
 
 
-cdef VSIRangeStatus get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
+cdef VSIRangeStatus pyvsi_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
     # Optional
     print("get_range_status")
 
 
-cdef int eof(void *pFile) with gil:
+cdef int pyvsi_eof(void *pFile) with gil:
     # Mandatory?
     print("eof")
 
 
-cdef size_t write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
+cdef size_t pyvsi_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
     print("write")
 
 
-cdef int flush(void *pFile) with gil:
+cdef int pyvsi_flush(void *pFile) with gil:
     # Optional
     print("flush")
 
 
-cdef int truncate(void *pFile, vsi_l_offset nNewSize) with gil:
+cdef int pyvsi_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
     print("truncate")
 
 
-cdef int close(void *pFile) except -1 with gil:
+cdef int pyvsi_close(void *pFile) except -1 with gil:
     # Optional
     print("close")
     cdef object file_wrapper = <object>pFile
@@ -230,13 +230,13 @@ cdef class PyVSIFileBase:
     def __cinit__(self, file_or_bytes, *args, **kwargs):
         self._vsif = VSIAllocFilesystemPluginCallbacksStruct()
         # pUserData will be set later
-        self._vsif.open = <VSIFilesystemPluginOpenCallback>open
+        self._vsif.open = <VSIFilesystemPluginOpenCallback>pyvsi_open
 
-        self._vsif.tell = <VSIFilesystemPluginTellCallback>tell
-        self._vsif.seek = <VSIFilesystemPluginSeekCallback>seek
-        self._vsif.read = <VSIFilesystemPluginReadCallback>read
-        # self._vsif.eof = <VSIFilesystemPluginEofCallback>eof
-        self._vsif.close = <VSIFilesystemPluginCloseCallback>close
+        self._vsif.tell = <VSIFilesystemPluginTellCallback>pyvsi_tell
+        self._vsif.seek = <VSIFilesystemPluginSeekCallback>pyvsi_seek
+        self._vsif.read = <VSIFilesystemPluginReadCallback>pyvsi_read
+        # self._vsif.eof = <VSIFilesystemPluginEofCallback>pyvsi_eof
+        self._vsif.close = <VSIFilesystemPluginCloseCallback>pyvsi_close
 
     def __dealloc__(self):
         if self._vsif is not NULL:
