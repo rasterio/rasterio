@@ -1,4 +1,5 @@
 # cython: language_level=3, boundscheck=False
+# distutils: language = c++
 """Bridge between Python file-like objects and GDAL VSI.
 
 https://gdal.org/api/cpl.html#structVSIFilesystemPluginCallbacksStruct
