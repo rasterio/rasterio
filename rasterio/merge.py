@@ -321,7 +321,7 @@ def merge(
             if roff == rstop or coff == cstop:
                 continue
 
-            # 6. Read data in source window into temp
+            # 5. Read data in source window into temp
             temp_shape = (src_count, trows, tcols)
             temp = src.read(
                 out_shape=temp_shape,
@@ -332,7 +332,7 @@ def merge(
                 resampling=resampling,
             )
 
-        # 7. Copy elements of temp into dest
+        # 6. Copy elements of temp into dest
         region = dest[:, roff:rstop, coff:cstop]
 
         if math.isnan(nodataval):
