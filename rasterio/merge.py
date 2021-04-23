@@ -309,10 +309,19 @@ def merge(
                 int_w, int_s, int_e, int_n, output_transform, precision=precision
             )
 
-            # 4. Read data in source window into temp
             src_window = src_window.round_shape(pixel_precision=0)
             dst_window = dst_window.round_shape(pixel_precision=0)
+
+            # 4. Check to see if source overlaps destination
+            dst_window = dst_window.round_offsets(pixel_precision=0)
             trows, tcols = dst_window.height, dst_window.width
+            roff, coff = dst_window.row_off, dst_window.col_off
+            rstop = roff + trows
+            cstop = coff + tcols
+            if roff == rstop or coff == cstop:
+                continue
+
+            # 6. Read data in source window into temp
             temp_shape = (src_count, trows, tcols)
             temp = src.read(
                 out_shape=temp_shape,
@@ -323,10 +332,8 @@ def merge(
                 resampling=resampling,
             )
 
-        # 5. Copy elements of temp into dest
-        dst_window = dst_window.round_offsets(pixel_precision=0)
-        roff, coff = dst_window.row_off, dst_window.col_off
-        region = dest[:, roff:roff + trows, coff:coff + tcols]
+        # 7. Copy elements of temp into dest
+        region = dest[:, roff:rstop, coff:cstop]
 
         if math.isnan(nodataval):
             region_mask = np.isnan(region)
