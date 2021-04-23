@@ -311,18 +311,23 @@ def merge(
 
             src_window = src_window.round_shape(pixel_precision=0)
             dst_window = dst_window.round_shape(pixel_precision=0)
+            srows, scols = src_window.height, src_window.width
+            drows, dcols = dst_window.height, dst_window.width
 
             # 4. Check to see if source overlaps destination
             dst_window = dst_window.round_offsets(pixel_precision=0)
-            trows, tcols = dst_window.height, dst_window.width
             roff, coff = dst_window.row_off, dst_window.col_off
-            rstop = roff + trows
-            cstop = coff + tcols
+            rstop = roff + drows
+            cstop = coff + dcols
             if roff == rstop or coff == cstop:
                 continue
 
+            if srows != drows or scols != dcols:
+                logger.debug("Resampling [%s] (%d, %d) -> (%d, %d)",
+                             resampling, srows, scols, drows, dcols)
+
             # 5. Read data in source window into temp
-            temp_shape = (src_count, trows, tcols)
+            temp_shape = (src_count, drows, dcols)
             temp = src.read(
                 out_shape=temp_shape,
                 window=src_window,
