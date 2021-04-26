@@ -1,5 +1,4 @@
 """Tests of overview counting and creation."""
-import math
 
 import numpy as np
 import pytest
@@ -7,7 +6,8 @@ import pytest
 from .conftest import requires_gdal2, requires_gdal33
 
 import rasterio
-from rasterio.enums import OverviewResampling, Resampling
+from rasterio.enums import _OverviewResampling as OverviewResampling
+from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import OverviewCreationError
 

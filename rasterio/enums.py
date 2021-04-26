@@ -60,7 +60,7 @@ class Resampling(IntEnum):
     rms = 14
 
 
-class OverviewResampling(IntEnum):
+class _OverviewResampling(IntEnum):
     """Available Overview resampling algorithms.
 
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
@@ -123,6 +123,7 @@ class PhotometricInterp(Enum):
     cielab = 'CIELAB'
     icclab = 'ICCLAB'
     itulab = 'ITULAB'
+
 
 class MergeAlg(Enum):
     """Available rasterization algorithms"""

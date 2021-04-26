@@ -6,12 +6,13 @@ Changes
 
 - Use numpy.isclose instead of equals when merging float data (fixes #2163).
 - The restriction on resampling methods available to overviews has been made
-  more clear with the addition of an OverviewResampling enum (#2157).
+  more clear with the addition of a not-yet-public _OverviewResampling enum
+  (#2157).
 - Fix a regression introduced in 1.2.2: from_bounds() can again return Windows
   of zero height or width.
 - Search for GDAL data in installed packages is done before searching in
   built-in locations when entering an Env, as is already done when importing
-  rasterio.env.
+rasterio.env.
 
 1.2.2 (2021-04-06)
 ------------------
