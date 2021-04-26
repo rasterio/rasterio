@@ -51,3 +51,11 @@ def test_merge_method(test_data_dir_overlapping, method, value):
         datasets, output_count=output_count, method=method, dtype=numpy.uint64
     )
     numpy.testing.assert_array_equal(arr[:, 5:10, 5:10], value)
+
+
+def test_issue2163():
+    """Demonstrate fix for issue 2163"""
+    with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
+        data = src.read()
+        result, transform = merge([src])
+        assert numpy.allclose(data, result)

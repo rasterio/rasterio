@@ -330,6 +330,8 @@ def merge(
 
         if math.isnan(nodataval):
             region_mask = np.isnan(region)
+        elif np.issubdtype(region.dtype, np.floating):
+            region_mask = np.isclose(region, nodataval)
         else:
             region_mask = region == nodataval
 
