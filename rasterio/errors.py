@@ -38,7 +38,7 @@ class FileOverwriteError(FileError):
 
     def __init__(self, message):
         """Raise FileOverwriteError with message as hint."""
-        super(FileOverwriteError, self).__init__('', hint=message)
+        super().__init__('', hint=message)
 
 
 class RasterioIOError(IOError):

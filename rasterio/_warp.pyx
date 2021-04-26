@@ -1153,14 +1153,14 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
-            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
+            return super().read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
 
     def read_masks(self, indexes=None, out=None, out_shape=None, window=None, resampling=Resampling.nearest, **kwargs):
         """Read raster band masks as a multidimensional array"""
         if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
-            return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
+            return super().read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
 
 
 def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None):
