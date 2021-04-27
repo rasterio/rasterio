@@ -21,7 +21,6 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
-import itertools
 
 from affine import Affine
 import attr
