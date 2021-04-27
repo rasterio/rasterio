@@ -151,43 +151,43 @@ def test_window_union():
 
 def test_window_intersection():
     assert windows.intersection(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5))
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5))
     ) == windows.Window.from_slices((2, 4), (3, 5))
 
     assert windows.intersection(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5)),
-        ((3, 6), (0, 6))
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5)),
+        windows.Window.from_slices((3, 6), (0, 6))
     ) == windows.Window.from_slices((3, 4), (3, 5))
 
 
 def test_window_intersection_disjunct():
     with pytest.raises(WindowError):
         windows.intersection(
-            ((0, 6), (3, 6)),
-            ((100, 200), (0, 12)),
-            ((7, 12), (7, 12)))
+            windows.Window.from_slices((0, 6), (3, 6)),
+            windows.Window.from_slices((100, 200), (0, 12)),
+            windows.Window.from_slices((7, 12), (7, 12)))
 
         # touch, no overlap on edge of open interval
         assert windows.intersection(
-            ((0, 6), (3, 6)),
-            ((6, 10), (1, 5)))
+            windows.Window.from_slices((0, 6), (3, 6)),
+            windows.Window.from_slices((6, 10), (1, 5)))
 
 
 def test_windows_intersect():
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5))) is True
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5))) is True
 
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5)),
-        ((3, 6), (0, 6))) is True
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5)),
+        windows.Window.from_slices((3, 6), (0, 6))) is True
 
     assert windows.intersect(
-        ((0, 2), (0, 2)),
-        ((1, 4), (1, 4))) is True
+        windows.Window.from_slices((0, 2), (0, 2)),
+        windows.Window.from_slices((1, 4), (1, 4))) is True
 
 
 def test_3x3matrix():
@@ -207,46 +207,47 @@ def test_3x3matrix():
     pairs = ((0, 2), (2, 4), (4, 6))
     arrangement = product(pairs, pairs)
     for wins in combinations(arrangement, 2):
-        assert not windows.intersect(*wins)
+        _wins = [windows.Window.from_slices(*w) for w in wins]
+        assert not windows.intersect(_wins)
         with pytest.raises(WindowError):
-            windows.intersection(*wins)
+            windows.intersection(_wins)
 
 
 def test_windows_intersect_disjunct():
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((10, 20), (0, 6))) is False
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((10, 20), (0, 6))) is False
 
     # polygons touch at point
     assert windows.intersect(
-        ((0, 2), (1, 3)),
-        ((2, 4), (3, 5))) is False
+        windows.Window.from_slices((0, 2), (1, 3)),
+        windows.Window.from_slices((2, 4), (3, 5))) is False
 
     # polygons touch at point, rev order
     assert windows.intersect(
-        ((2, 4), (3, 5)),
-        ((0, 2), (1, 3))) is False
+        windows.Window.from_slices((2, 4), (3, 5)),
+        windows.Window.from_slices((0, 2), (1, 3))) is False
 
     # polygons touch at line
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((6, 10), (1, 5))) is False
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((6, 10), (1, 5))) is False
 
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5)),
-        ((5, 6), (0, 6))) is False
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5)),
+        windows.Window.from_slices((5, 6), (0, 6))) is False
 
     assert windows.intersect(
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 3)),
-        ((3, 6), (4, 6))) is False
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 3)),
+        windows.Window.from_slices((3, 6), (4, 6))) is False
 
 
 def test_iter_args_winfuncs():
     wins = [
-        ((0, 6), (3, 6)),
-        ((2, 4), (1, 5))]
+        windows.Window.from_slices((0, 6), (3, 6)),
+        windows.Window.from_slices((2, 4), (1, 5))]
 
     assert windows.intersect(*wins) == windows.intersect(wins)
     assert windows.intersection(*wins) == windows.intersection(wins)
