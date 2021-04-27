@@ -43,20 +43,36 @@ class Resampling(IntEnum):
 
     Note: 'gauss' is not available to the functions in rio.warp.
     """
+    
+    #: Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality).
     nearest = 0
+    #: Bilinear resampling.
     bilinear = 1
+    #: Cubic resampling.
     cubic = 2
+    #: Cubic spline resampling.
     cubic_spline = 3
+    #: Lanczos windowed sinc resampling.
     lanczos = 4
+    #: Average resampling, computes the weighted average of all non-NODATA contributing pixels.
     average = 5
+    #: Mode resampling, selects the value which appears most often of all the sampled points.
     mode = 6
+    #: Gaussian resampling, not available to the functions in rio.warp.
     gauss = 7
+    #: Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.2)
     max = 8
+    #: Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.2)
     min = 9
+    #: Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.2)
     med = 10
+    #: Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.2)
     q1 = 11
+    #: Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.2)
     q3 = 12
+    #: Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.3)
     sum = 13
+    #: RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)
     rms = 14
 
 
