@@ -175,6 +175,18 @@ def get_data_window(arr, nodata=None):
     return Window.from_slices(row_range, col_range)
 
 
+def _compute_union(w1, w2):
+    """Compute the union of two windows"""
+    col_off = min(w1.col_off, w2.col_off)
+    row_off = min(w1.row_off, w2.row_off)
+    width = max(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
+    height = max(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    return col_off, row_off, width, height
+
+def _union(w1, w2):
+    coeffs = _compute_union(w1, w2)
+    return Window(*coeffs)
+
 @iter_args
 def union(*windows):
     """
@@ -189,15 +201,7 @@ def union(*windows):
     -------
     Window
     """
-    stacked = np.dstack([toranges(w) for w in windows])
-    row_start, row_stop = stacked[0, 0].min(), stacked[0, 1].max()
-    col_start, col_stop = stacked[1, 0].min(), stacked[1, 1].max()
-    return Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=col_stop - col_start,
-        height=row_stop - row_start,
-    )
+    return functools.reduce(_union, windows)
 
 
 @iter_args
