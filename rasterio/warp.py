@@ -257,8 +257,10 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
         Index of a band to use as the alpha band when warping.
     dst_alpha : int, optional
         Index of a band to use as the alpha band when warping.
-    resampling: int
-        Resampling method to use.  One of the following:
+    resampling: rasterio.enums.Resampling
+        Resampling method to use.  
+        Default is :attr:`rasterio.enums.Resampling.nearest`.
+        One of the following:
             Resampling.nearest,
             Resampling.bilinear,
             Resampling.cubic,
