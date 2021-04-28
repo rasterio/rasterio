@@ -36,7 +36,7 @@ class Resampling(IntEnum):
         Bilinear resampling.
     cubic
         Cubic resampling.
-    cubic_sp
+    cubic_spline
         Cubic spline resampling.
     lanczos
         Lanczos windowed sinc resampling.
