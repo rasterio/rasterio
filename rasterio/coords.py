@@ -45,9 +45,9 @@ def disjoint_bounds(bounds1, bounds2):
     """
     try:
         intersect_bounds(bounds1, bounds2)
-        return True
-    except BoundsError:
         return False
+    except BoundsError:
+        return True
 
 
 def reorient_bounds(bounds):
