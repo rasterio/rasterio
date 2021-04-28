@@ -339,6 +339,7 @@ inst_reqs = [
     "numpy",
     "snuggs>=1.4.1",
     "click-plugins",
+    "setuptools",
 ]
 
 extra_reqs = {

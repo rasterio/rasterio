@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.2.4 (TBD)
+-----------
+
+- Setuptools has been added as an explicit installation requirement.
+
 1.2.3 (2021-04-26)
 ------------------
 
