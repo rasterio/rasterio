@@ -12,6 +12,7 @@ import rasterio
 from rasterio.enums import Resampling
 from rasterio import windows
 from rasterio.transform import Affine
+from rasterio.coords import BoundsError, intersect_bounds
 
 
 logger = logging.getLogger(__name__)
@@ -291,22 +292,20 @@ def merge(
             # problem. Making it more efficient is a TODO.
 
             # 1. Compute spatial intersection of destination and source
-            src_w, src_s, src_e, src_n = src.bounds
-
-            int_w = src_w if src_w > dst_w else dst_w
-            int_s = src_s if src_s > dst_s else dst_s
-            int_e = src_e if src_e < dst_e else dst_e
-            int_n = src_n if src_n < dst_n else dst_n
+            try:
+                spatial_intersect = intersect_bounds(src.bounds, (dst_w, dst_s, dst_e, dst_n))
+            except BoundsError:
+                continue
 
             # 2. Compute the source window
             src_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, src.transform, precision=precision
+                *spatial_intersect, src.transform, precision=precision
             )
             logger.debug("Src %s window: %r", src.name, src_window)
 
             # 3. Compute the destination window
             dst_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, output_transform, precision=precision
+                *spatial_intersect, output_transform, precision=precision
             )
 
             src_window = src_window.round_shape(pixel_precision=0)
