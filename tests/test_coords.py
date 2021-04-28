@@ -1,7 +1,8 @@
+import pytest
 import numpy as np
 
 import rasterio
-from rasterio.coords import BoundingBox, disjoint_bounds
+from rasterio.coords import BoundingBox, BoundsError, disjoint_bounds, intersect_bounds
 
 
 def test_bounds():
@@ -39,3 +40,15 @@ def test_disjoint_bounds_issue1459_south_up():
     a = BoundingBox(left=0.0, bottom=1.0, right=1.0, top=0.0)
     b = BoundingBox(left=0.0, bottom=2.0, right=1.0, top=1.01)
     assert disjoint_bounds(a, b)
+
+def test_bounds_intersect_disjoint():
+    a = BoundingBox(left=0.0, bottom=1.0, right=1.0, top=0.0)
+    b = BoundingBox(left=2.0, bottom=3.0, right=4.0, top=0.0)
+    with pytest.raises(BoundsError):
+        intersect_bounds(a, b)
+
+def test_bounds_intersect():
+    a = BoundingBox(left=0.0, bottom=2.0, right=2.0, top=0.0)
+    b = BoundingBox(left=1.5, bottom=1.5, right=4.0, top=1.0)
+    intersection = BoundingBox(left=1.5, bottom=1.0, right=2.0, top=1.5)
+    assert intersect_bounds(a, b) == intersection
