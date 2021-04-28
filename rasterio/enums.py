@@ -60,7 +60,9 @@ class Resampling(IntEnum):
         Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)
     rms
         RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)
-   
+    
+    Notes
+    ----------
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
     'lanczos', 'average', 'mode', and 'gauss', are available for making
     dataset overviews.
