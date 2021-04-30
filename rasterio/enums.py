@@ -27,7 +27,42 @@ class ColorInterp(IntEnum):
 
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
-
+    
+    Attributes
+    ----------
+    nearest
+        Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality).
+    bilinear
+        Bilinear resampling.
+    cubic
+        Cubic resampling.
+    cubic_spline
+        Cubic spline resampling.
+    lanczos
+        Lanczos windowed sinc resampling.
+    average
+        Average resampling, computes the weighted average of all non-NODATA contributing pixels.
+    mode
+        Mode resampling, selects the value which appears most often of all the sampled points.
+    gauss
+        Gaussian resampling, Note: not available to the functions in rio.warp.
+    max
+        Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.0)
+    min
+        Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.0)
+    med
+        Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.0)
+    q1
+        Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)
+    q3
+        Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)
+    sum
+        Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)
+    rms
+        RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)
+    
+    Notes
+    ----------
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
     'lanczos', 'average', 'mode', and 'gauss', are available for making
     dataset overviews.
