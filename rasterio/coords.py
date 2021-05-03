@@ -1,6 +1,6 @@
 """Bounding box tuple, and disjoint operator."""
 
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 
 BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
 BoundingBox.__doc__ = \
