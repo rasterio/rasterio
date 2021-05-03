@@ -46,8 +46,8 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([0, 1], dtype=np.uint)) == uint8
     assert get_minimum_dtype(np.array([0, 1000], dtype=np.uint)) == uint16
     assert get_minimum_dtype(np.array([0, 100000], dtype=np.uint)) == uint32
-    assert get_minimum_dtype(np.array([-1, 0, 1], dtype=np.int)) == int16
-    assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=np.int)) == int32
+    assert get_minimum_dtype(np.array([-1, 0, 1], dtype=int)) == int16
+    assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
     assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
 
 
