@@ -287,10 +287,10 @@ def from_bounds(
     if not isinstance(transform, Affine):  # TODO: RPCs?
         raise WindowError("A transform object is required to calculate the window")
 
-    if (right - left) / transform.a <= 0:
+    if (right - left) / transform.a < 0:
         raise WindowError("Bounds and transform are inconsistent")
 
-    if (bottom - top) / transform.e <= 0:
+    if (bottom - top) / transform.e < 0:
         raise WindowError("Bounds and transform are inconsistent")
 
     rows, cols = rowcol(

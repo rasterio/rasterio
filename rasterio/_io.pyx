@@ -1798,7 +1798,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 4: 'LANCZOS',
                 5: 'AVERAGE',
                 6: 'MODE',
-                7: 'GAUSS'}
+                7: 'GAUSS',
+                14: 'RMS',
+            }
             resampling_alg = resampling_map[Resampling(resampling.value)]
 
         except (KeyError, ValueError):

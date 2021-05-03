@@ -623,19 +623,19 @@ if 'GDAL_DATA' not in os.environ:
     path = GDALDataFinder().search_wheel()
 
     if path:
+        log.debug("GDAL data found in package: path=%r.", path)
         set_gdal_config("GDAL_DATA", path)
-        log.debug("GDAL data found in package, GDAL_DATA set to %r.", path)
 
     # See https://github.com/mapbox/rasterio/issues/1631.
     elif GDALDataFinder().find_file("header.dxf"):
-        log.debug("GDAL data files are available at built-in paths")
+        log.debug("GDAL data files are available at built-in paths.")
 
     else:
         path = GDALDataFinder().search()
 
         if path:
             set_gdal_config("GDAL_DATA", path)
-            log.debug("GDAL_DATA not found in environment, set to %r.", path)
+            log.debug("GDAL data found in other locations: path=%r.", path)
 
 if "PROJ_LIB" in os.environ:
     path = os.environ["PROJ_LIB"]
@@ -643,16 +643,16 @@ if "PROJ_LIB" in os.environ:
 
 elif PROJDataFinder().search_wheel():
     path = PROJDataFinder().search_wheel()
-    log.debug("PROJ data found in wheel, setting to %r.", path)
+    log.debug("PROJ data found in package: path=%r.", path)
     set_proj_data_search_path(path)
 
 # See https://github.com/mapbox/rasterio/issues/1631.
 elif PROJDataFinder().has_data():
-    log.debug("PROJ data files are available at built-in paths")
+    log.debug("PROJ data files are available at built-in paths.")
 
 else:
     path = PROJDataFinder().search()
 
     if path:
-        log.debug("PROJ data not found in environment, setting to %r.", path)
+        log.debug("PROJ data found in other locations: path=%r.", path)
         set_proj_data_search_path(path)
