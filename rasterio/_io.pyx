@@ -1573,7 +1573,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 GDALFillRaster(mask, 255, 0)
             elif mask_array is False:
                 GDALFillRaster(mask, 0, 0)
-            elif mask_array.dtype == bool :
+            elif mask_array.dtype == bool:
                 array = 255 * mask_array.astype(np.uint8)
                 io_band(mask, 1, xoff, yoff, width, height, array)
             else:
