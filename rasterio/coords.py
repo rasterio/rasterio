@@ -1,11 +1,9 @@
 """Bounding box tuple, and disjoint operator."""
 
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 
-_BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
-
-
-class BoundingBox(_BoundingBox):
+BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
+BoundingBox.__doc__ = \
     """Bounding box named tuple, defining extent in cartesian coordinates.
 
     .. code::
@@ -23,10 +21,6 @@ class BoundingBox(_BoundingBox):
     top :
         Top coordinate
     """
-
-    def _asdict(self):
-        return OrderedDict(zip(self._fields, self))
-
 
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint.
