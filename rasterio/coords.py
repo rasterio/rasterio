@@ -80,8 +80,8 @@ def intersect_bounds(bounds1, bounds2):
     bounds2 = reorient_bounds(bounds2)
 
     int_w = max(bounds1[0], bounds2[0])
-    int_e = min(bounds1[2], bounds2[2])
     int_s = max(bounds1[1], bounds2[1])
+    int_e = min(bounds1[2], bounds2[2])
     int_n = min(bounds1[3], bounds2[3])
 
     if int_w < int_e and int_s < int_n:
