@@ -137,3 +137,91 @@ def _transform_from_gcps(gcps):
 
     return [gt[i] for i in range(6)]
 
+cdef class _RPCTransformer:
+
+    def __dealloc__(self):
+        if self._transform != NULL:
+            if self._bUseApproxTransformer:
+                GDALDestroyApproxTransformer(self._transform)
+            else:
+                GDALDestroyRPCTransformer(self._transform)
+    
+    def __init__(self, rpcs, src_crs, dst_crs, **kwargs):
+        cdef char **papszMD = NULL
+        cdef char **options = NULL
+        cdef int bReversed = 0
+        cdef double dfPixErrThreshold = 0.1  # GDAL default
+        cdef GDALRPCInfo rpcinfo
+        cdef void *_transform = NULL
+        self._transform = NULL
+        self._bUseApproxTransformer = False
+        
+        if hasattr(rpcs, 'to_gdal'):
+            rpcs = rpcs.to_gdal()
+        for key, val in rpcs.items():
+            key = key.upper().encode('utf-8')
+            val = str(val).encode('utf-8')
+            papszMD = CSLSetNameValue(
+                papszMD, <const char *>key, <const char *>val)
+
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            val = str(val).encode('utf-8')
+            options = CSLSetNameValue(
+                options, <const char *>key, <const char *>val)
+
+        try:
+            GDALExtractRPCInfo(papszMD, &rpcinfo)
+            _transform = exc_wrap_pointer(GDALCreateRPCTransformer(&rpcinfo, bReversed, dfPixErrThreshold, options))
+            self._transform = _transform
+        finally:
+            CSLDestroy(options)
+            CSLDestroy(papszMD)
+    
+    def test(self, xs, ys, zs, transform_direction=1):
+        cdef int i
+        cdef double *x = NULL
+        cdef double *y = NULL
+        cdef double *z = NULL
+        cdef int bDstToSrc = transform_direction
+        cdef int src_count
+        cdef int *panSuccess = NULL
+
+        n = len(xs)
+        x = <double *>CPLMalloc(n * sizeof(double))
+        y = <double *>CPLMalloc(n * sizeof(double))
+        z = <double *>CPLMalloc(n * sizeof(double))
+        panSuccess = <int *>CPLMalloc(n * sizeof(int))
+        
+        for i in range(n):
+            x[i] = xs[i]
+            y[i] = ys[i]
+            z[i] = zs[i]
+        
+        try:
+            err = GDALRPCTransform(self._transform, bDstToSrc, n, x, y, z, panSuccess)
+            if err == GDALError.failure:
+                warnings.warn(
+                "Could not transform points using RPCs.",
+                RPCTransformWarning)
+            res_xs = [0] * n
+            res_ys = [0] * n
+            res_zs = [0] * n
+            checked = False
+            for i in range(n):
+                # GDALRPCTransformer may return a success overall despite individual points failing. Warn once.
+                if not panSuccess[i] and not checked:
+                    warnings.warn(
+                    "One or more points could not be transformed using RPCs.",
+                    RPCTransformWarning)
+                    checked = True
+                res_xs[i] = x[i]
+                res_ys[i] = y[i]
+                res_zs[i] = z[i]
+        finally:
+            CPLFree(x)
+            CPLFree(y)
+            CPLFree(z)
+            CPLFree(panSuccess)
+
+        return (res_xs, res_ys)
