@@ -22,6 +22,11 @@ BoundingBox.__doc__ = \
         Top coordinate
     """
 
+
+class BoundsError(Exception):
+    pass
+
+
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint.
 
@@ -45,15 +50,13 @@ def disjoint_bounds(bounds1, bounds2):
         return False
 
 
-def reorient_bound(bound):
+def reorient_bounds(bounds):
     def order(a, b):
         if b < a:
             return b, a
         return a, b
 
-    l, b, r, t = bound
-    if l < r and b < t:
-        return BoundingBox(*bound)
+    l, b, r, t = bounds
     l, r = order(l, r)
     b, t = order(b, t)
     return BoundingBox(l, b, r, t)
@@ -73,8 +76,8 @@ def intersect_bounds(bounds1, bounds2):
     -------
     BoundingBox
     """
-    bounds1 = reorient_bound(bounds1)
-    bounds2 = reorient_bound(bounds2)
+    bounds1 = reorient_bounds(bounds1)
+    bounds2 = reorient_bounds(bounds2)
 
     int_w = max(bounds1[0], bounds2[0])
     int_e = min(bounds1[2], bounds2[2])
