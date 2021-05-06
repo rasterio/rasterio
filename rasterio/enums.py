@@ -2,6 +2,10 @@
 
 from enum import Enum, IntEnum
 
+class TransformDirection(IntEnum):
+    """Coordinate transform direction"""
+    reverse = 0
+    forward = 1
 
 class ColorInterp(IntEnum):
     """Raster band color interpretation."""

@@ -138,23 +138,26 @@ def _transform_from_gcps(gcps):
     return [gt[i] for i in range(6)]
 
 cdef class _RPCTransformer:
+    cdef void *_transformer
+    cdef bint _bUseApproxTransformer
+
+    def __cinit__(self):
+        self._transformer = NULL
+        self._bUseApproxTransformer = False
 
     def __dealloc__(self):
-        if self._transform != NULL:
+        if self._transformer != NULL:
             if self._bUseApproxTransformer:
-                GDALDestroyApproxTransformer(self._transform)
+                GDALDestroyApproxTransformer(self._transformer)
             else:
-                GDALDestroyRPCTransformer(self._transform)
+                GDALDestroyRPCTransformer(self._transformer)
     
-    def __init__(self, rpcs, src_crs, dst_crs, **kwargs):
+    def __init__(self, rpcs, **kwargs):
         cdef char **papszMD = NULL
         cdef char **options = NULL
         cdef int bReversed = 0
         cdef double dfPixErrThreshold = 0.1  # GDAL default
         cdef GDALRPCInfo rpcinfo
-        cdef void *_transform = NULL
-        self._transform = NULL
-        self._bUseApproxTransformer = False
         
         if hasattr(rpcs, 'to_gdal'):
             rpcs = rpcs.to_gdal()
@@ -172,13 +175,12 @@ cdef class _RPCTransformer:
 
         try:
             GDALExtractRPCInfo(papszMD, &rpcinfo)
-            _transform = exc_wrap_pointer(GDALCreateRPCTransformer(&rpcinfo, bReversed, dfPixErrThreshold, options))
-            self._transform = _transform
+            self._transformer = exc_wrap_pointer(GDALCreateRPCTransformer(&rpcinfo, bReversed, dfPixErrThreshold, options))
         finally:
             CSLDestroy(options)
             CSLDestroy(papszMD)
     
-    def test(self, xs, ys, zs, transform_direction=1):
+    def _transform(self, xs, ys, zs, transform_direction):
         cdef int i
         cdef double *x = NULL
         cdef double *y = NULL
@@ -199,7 +201,7 @@ cdef class _RPCTransformer:
             z[i] = zs[i]
         
         try:
-            err = GDALRPCTransform(self._transform, bDstToSrc, n, x, y, z, panSuccess)
+            err = GDALRPCTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
             if err == GDALError.failure:
                 warnings.warn(
                 "Could not transform points using RPCs.",

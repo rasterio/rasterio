@@ -8,7 +8,8 @@ from affine import Affine
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._transform import _transform_from_gcps
+    from rasterio._transform import _transform_from_gcps, _RPCTransformer
+    from rasterio.enums import TransformDirection
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -261,3 +262,41 @@ def from_gcps(gcps):
 
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
+
+class RPCTransformer(_RPCTransformer):
+    def __init__(self, rpcs, **kwargs):
+        super().__init__(rpcs, **kwargs)
+
+    def rowcol(self, xs, ys, zs=None, **kwargs):
+        """Returns rows and cols"""
+        if not isinstance(xs, Iterable):
+            xs = [xs]
+        if not isinstance(ys, Iterable):
+            ys = [ys]
+        if zs is None:
+            zs = [0] * len(xs)
+        if len(set((len(xs), len(ys), len(zs)))) > 1:
+            raise ValueError("Input coordinate arrays should be of equal length")
+
+        new_rows, new_cols =  self._transform(xs, ys, zs, transform_direction=TransformDirection.forward)
+        
+        if len(new_rows) == 1:
+            return (new_rows[0], new_cols[0])
+        return (new_rows, new_cols)
+    
+    def xy(self, rows, cols, zs=None, **kwargs):
+        """Returns geographic coordinates"""
+        if not isinstance(rows, Iterable):
+            rows = [rows]
+        if not isinstance(cols, Iterable):
+            cols = [cols]
+        if zs is None:
+            zs = [0] * len(rows)
+        if len(set((len(rows), len(cols), len(zs)))) > 1:
+            raise ValueError("Input coordinate arrays should be of equal length")
+
+        new_ys, new_xs =  self._transform(rows, cols, zs, transform_direction=TransformDirection.reverse)
+
+        if len(new_ys) == 1:
+            return (new_ys[0], new_xs[0])
+        return (new_ys, new_xs)
