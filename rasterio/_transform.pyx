@@ -243,6 +243,10 @@ cdef class RPCTransformerBase:
         Returns
         -------
         tuple of list
+    
+        Notes
+        -----
+        When RPC_DEM option is used, height (zs) values in _transform are ignored by GDAL and instead sampled from a DEM
 
         """
         if self._transformer == NULL:

@@ -270,7 +270,7 @@ def from_gcps(gcps):
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
-class GDALTransformerBase:
+class TransformerBase:
     """
     Generic GDAL transformer base class
     """
@@ -285,16 +285,7 @@ class GDALTransformerBase:
     def __exit__(self, type, value, traceback):
         self.close()
         self._env.__exit__()
-
-
-class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
-    def __init__(self, rpcs, **kwargs):
-        super().__init__(rpcs, **kwargs)
-
-    def __repr__(self):
-        return "<{} RPCTransformer>".format(
-            self.closed and 'closed' or 'open')
-
+    
     def rowcol(self, xs, ys, zs=None):
         """
         Returns rows and cols coordinates given geographic coordinates
@@ -304,8 +295,7 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
         xs, ys : float or list of float
             Geographic coordinates
         zs : float or list of float, optional
-            Geodetic height above the WGS84 elipsoid. If not passed a height
-            of 0.0 will be assumed for all xs, ys points.
+            Geodetic height
 
         Raises
         ------
@@ -315,11 +305,6 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
         Returns
         -------
             tuple of float or list of float
-
-        Notes
-        -----
-        Height (zs) values are ignored by GDAL and instead sampled from a DEM when
-        RPC_DEM is passed as a kwarg when creating an RPCTransformer instance.
         """
         if not isinstance(xs, Iterable):
             xs = [xs]
@@ -345,9 +330,7 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
         rows, cols : float or list of float
             Image pixel coordinates
         zs : float or list of float, optional
-            Geodetic height above the WGS84 elipsoid. If not passed a height
-            of 0.0 will be assumed for all xs, ys points.
-
+            Geodetic height
         Raises
         ------
         ValueError
@@ -356,11 +339,6 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
         Returns
         -------
             tuple of float or list of float
-
-        Notes
-        -----
-        Height (zs) values are ignored by GDAL and instead sampled from a DEM when
-        RPC_DEM is passed as a kwarg when creating an RPCTransformer instance
         """
 
         if not isinstance(rows, Iterable):
@@ -376,7 +354,27 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
 
         if len(new_ys) == 1:
             return (new_ys[0], new_xs[0])
+        
         return (new_ys, new_xs)
+
+
+class AffineTransformer(TransformerBase):
+    def __init__(self, affine_transform):
+        pass
+
+    def close(self):
+        pass
+    
+    def _transform(xs, ys, zs, transform_direction):
+        
+
+class RPCTransformer(RPCTransformerBase, TransformerBase):
+    def __init__(self, rpcs, **kwargs):
+        super().__init__(rpcs, **kwargs)
+
+    def __repr__(self):
+        return "<{} RPCTransformer>".format(
+            self.closed and 'closed' or 'open')
 
     @classmethod
     def from_dataset(cls, dataset, **kwargs):
@@ -394,45 +392,13 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
         return cls(dataset.rpcs, **kwargs)
 
 
-class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
+class GCPTransformer(GCPTransformerBase, TransformerBase):
     def __init__(self, gcps):
         super().__init__(gcps)
 
     def __repr__(self):
         return "<{} GCPTransformer>".format(
             self.closed and 'closed' or 'open')
-
-    def rowcol(self, xs, ys, zs=None):
-        if not isinstance(xs, Iterable):
-            xs = [xs]
-        if not isinstance(ys, Iterable):
-            ys = [ys]
-        if zs is None:
-            zs = [0] * len(xs)
-        if len(set((len(xs), len(ys), len(zs)))) > 1:
-            raise ValueError("Input coordinate arrays should be of equal length")
-
-        new_rows, new_cols =  self._transform(xs, ys, zs, transform_direction=TransformDirection.forward)
-
-        if len(new_rows) == 1:
-            return (new_rows[0], new_cols[0])
-        return (new_rows, new_cols)
-
-    def xy(self, rows, cols, zs=None):
-        if not isinstance(rows, Iterable):
-            rows = [rows]
-        if not isinstance(cols, Iterable):
-            cols = [cols]
-        if zs is None:
-            zs = [0] * len(rows)
-        if len(set((len(rows), len(cols), len(zs)))) > 1:
-            raise ValueError("Input coordinate arrays should be of equal length")
-
-        new_ys, new_xs =  self._transform(rows, cols, zs, transform_direction=TransformDirection.reverse)
-
-        if len(new_ys) == 1:
-            return (new_ys[0], new_xs[0])
-        return (new_ys, new_xs)
 
     @classmethod
     def from_dataset(cls, dataset):
