@@ -402,7 +402,7 @@ class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
         return "<{} GCPTransformer>".format(
             self.closed and 'closed' or 'open')
 
-    def rowcols(self, xs, ys, zs=None):
+    def rowcol(self, xs, ys, zs=None):
         if not isinstance(xs, Iterable):
             xs = [xs]
         if not isinstance(ys, Iterable):
