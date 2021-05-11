@@ -175,7 +175,7 @@ def get_data_window(arr, nodata=None):
 
 
 @iter_args
-def union(*windows):
+def union(*windows, boundless=False):
     """
     Union windows and return the outermost extent they cover.
 
@@ -183,6 +183,8 @@ def union(*windows):
     ----------
     windows: sequence
         One or more Windows.
+    boundless: bool
+        Whether the inputs are bounded (default) or not.
 
     Returns
     -------
@@ -191,7 +193,9 @@ def union(*windows):
     stacked = np.dstack([toranges(w) for w in windows])
     return Window.from_slices(
         (stacked[0, 0].min(), stacked[0, 1].max()),
-        (stacked[1, 0].min(), stacked[1, 1]. max()))
+        (stacked[1, 0].min(), stacked[1, 1]. max()),
+        boundless=boundless
+    )
 
 
 @iter_args
