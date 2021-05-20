@@ -21,13 +21,13 @@ def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
     mask = np.empty_like(merged_mask, dtype="bool")
     np.logical_not(new_mask, out=mask)
     np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask)
+    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
 
 
 def copy_last(merged_data, new_data, merged_mask, new_mask, **kwargs):
     mask = np.empty_like(merged_mask, dtype="bool")
     np.logical_not(new_mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask)
+    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
 
 
 def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
@@ -37,7 +37,7 @@ def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
     np.minimum(merged_data, new_data, out=merged_data, where=mask)
     np.logical_not(new_mask, out=mask)
     np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask)
+    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
 
 
 def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
@@ -47,7 +47,7 @@ def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
     np.maximum(merged_data, new_data, out=merged_data, where=mask)
     np.logical_not(new_mask, out=mask)
     np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask)
+    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
 
 
 MERGE_METHODS = {
