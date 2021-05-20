@@ -9,6 +9,7 @@ import warnings
 import numpy as np
 
 import rasterio
+from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
 from rasterio import windows
 from rasterio.transform import Affine
@@ -290,6 +291,10 @@ def merge(
             # This approach uses the maximum amount of memory to solve the
             # problem. Making it more efficient is a TODO.
 
+            if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
+                logger.debug("Skipping source: src=%r, window=%r", src)
+                continue
+
             # 1. Compute spatial intersection of destination and source
             src_w, src_s, src_e, src_n = src.bounds
 
@@ -302,7 +307,6 @@ def merge(
             src_window = windows.from_bounds(
                 int_w, int_s, int_e, int_n, src.transform, precision=precision
             )
-            logger.debug("Src %s window: %r", src.name, src_window)
 
             # 3. Compute the destination window
             dst_window = windows.from_bounds(

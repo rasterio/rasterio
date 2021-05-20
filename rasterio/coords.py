@@ -37,6 +37,7 @@ def disjoint_bounds(bounds1, bounds2):
     boolean
     ``True`` if bounds are disjoint,
     ``False`` if bounds overlap
+
     """
     bounds1_north_up = bounds1[3] > bounds1[1]
     bounds2_north_up = bounds2[3] > bounds2[1]

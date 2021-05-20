@@ -4,8 +4,9 @@ Changes
 1.2.4 (TBD)
 -----------
 
-- The merge tool allows unsafe casting again, restoring behavior of version
-  1.2.0 (#2179).
+- Skip merge sources which do not overlap the destination.
+- Allow unsafe casting in the merge tool, restoring behavior of version 1.2.0
+  (#2179).
 - Remove a workaround for an old Python 3.4 bug from the BoundingBox
   implementation (#2172).
 - Add setuptools as an explicit installation requirement.
