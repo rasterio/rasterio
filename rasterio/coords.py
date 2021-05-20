@@ -76,8 +76,6 @@ def intersect_bounds(bounds1, bounds2):
     -------
     BoundingBox
     """
-    bounds1 = reorient_bounds(bounds1)
-    bounds2 = reorient_bounds(bounds2)
 
     int_w = max(bounds1[0], bounds2[0])
     int_s = max(bounds1[1], bounds2[1])
