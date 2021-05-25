@@ -501,7 +501,9 @@ cdef class DatasetBase(object):
                 # to check that the return value is within the range of the
                 # data type. If so, the band has a nodata value. If not,
                 # there's no nodata value.
-                if (success == 0 or
+                if dtype not in dtypes.dtype_ranges:
+                    pass
+                elif (success == 0 or
                         val < dtypes.dtype_ranges[dtype][0] or
                         val > dtypes.dtype_ranges[dtype][1]):
                     val = None

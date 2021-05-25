@@ -1056,19 +1056,21 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             try:
                 width = int(width)
                 height = int(height)
-            except:
+            except TypeError:
                 raise TypeError("Integer width and height are required.")
             try:
                 count = int(count)
-            except:
+            except TypeError:
                 raise TypeError("Integer band count is required.")
-            try:
-                assert dtype is not None
-                _ = np.dtype(dtype)
-            except:
-                raise TypeError("A valid dtype is required.")
 
-        self._init_dtype = np.dtype(dtype).name
+            if isinstance(dtype, str) and dtype.startswith("complex_int"):
+                self._init_dtype = dtype
+            else:
+                try:
+                    assert dtype is not None
+                    self._init_dtype = np.dtype(dtype).name
+                except Exception:
+                    raise TypeError("A valid dtype is required.")
 
         # Make and store a GDAL dataset handle.
         filename = path.name
@@ -1147,7 +1149,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             if nodata is not None:
 
-                if not in_dtype_range(nodata, dtype):
+                if isinstance(dtype, str) and dtype.startswith("complex_int"):
+                    pass
+                elif not in_dtype_range(nodata, dtype):
                     raise ValueError(
                         "Given nodata value, %s, is beyond the valid "
                         "range of its data type, %s." % (
@@ -1365,10 +1369,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
 
-        if arr is not None and arr.dtype != dtype:
-            raise ValueError(
-                "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (arr.dtype, dtype))
+        # if arr is not None and arr.dtype != dtype:
+        #     raise ValueError(
+        #         "the array's dtype '%s' does not match "
+        #         "the file's dtype '%s'" % (arr.dtype, dtype))
 
         # Require C-continguous arrays (see #108).
         arr = np.require(arr, dtype=dtype, requirements='C')
@@ -1968,10 +1972,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 count = int(count)
             except:
                 raise TypeError("Integer band count is required.")
+
             try:
                 assert dtype is not None
                 _ = np.dtype(dtype)
-            except:
+            except Exception:
                 raise TypeError("A valid dtype is required.")
 
         self._init_dtype = np.dtype(dtype).name

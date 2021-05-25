@@ -3,7 +3,17 @@ import pytest
 
 import rasterio
 from rasterio import (
-    ubyte, uint8, uint16, uint32, int16, int32, float32, float64, complex_)
+    ubyte,
+    uint8,
+    uint16,
+    uint32,
+    int16,
+    int32,
+    float32,
+    float64,
+    complex_,
+    complex_int16,
+)
 from rasterio.dtypes import (
     _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
     validate_dtype
@@ -28,10 +38,19 @@ def test_check_dtype_invalid():
     assert not check_dtype('foo')
 
 
-def test_gdal_name():
-    assert _gdal_typename(ubyte) == 'Byte'
-    assert _gdal_typename(np.uint8) == 'Byte'
-    assert _gdal_typename(np.uint16) == 'UInt16'
+@pytest.mark.parametrize(
+    ("dtype", "name"),
+    [
+        (ubyte, "Byte"),
+        (np.uint8, "Byte"),
+        (np.uint16, "UInt16"),
+        ("uint8", "Byte"),
+        ("complex_int16", "CInt16"),
+        (complex_int16, "CInt16"),
+    ],
+)
+def test_gdal_name(dtype, name):
+    assert _gdal_typename(dtype) == name
 
 
 def test_get_minimum_dtype():
