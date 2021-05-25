@@ -26,7 +26,7 @@ from rasterio.errors import (
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
-from rasterio.dtypes import is_ndarray
+from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, UnparsedPath
@@ -104,7 +104,7 @@ cdef bint in_dtype_range(value, dtype):
         105: np.iinfo,
         117: np.iinfo}
 
-    key = np.dtype(dtype).kind
+    key = _getnpdtype(dtype).kind
     if np.isnan(value):
         return key in ('c', 'f', 99, 102)
 
@@ -241,12 +241,14 @@ cdef class DatasetReaderBase(DatasetBase):
 
         check_dtypes = set()
         nodatavals = []
+
         # Check each index before processing 3D array
         for bidx in indexes:
+
             if bidx not in self.indexes:
                 raise IndexError("band index {} out of range (not in {})".format(bidx, self.indexes))
-            idx = self.indexes.index(bidx)
 
+            idx = self.indexes.index(bidx)
             dtype = self.dtypes[idx]
             check_dtypes.add(dtype)
 
@@ -254,16 +256,18 @@ cdef class DatasetReaderBase(DatasetBase):
 
             log.debug("Output nodata value read from file: %r", ndv)
 
-            if ndv is not None:
-                kind = np.dtype(dtype).kind
-                if chr(kind) in "iu":
+            if ndv is not None and not _is_complex_int(dtype):
+                kind = _getnpdtype(dtype).kind
+
+                if kind in "iu":
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
-                elif chr(kind) in "cf":
+                elif kind in "cf":
                     info = np.finfo(dtype)
                     dt_min, dt_max = info.min, info.max
                 else:
                     dt_min, dt_max = False, True
+
                 if ndv < dt_min:
                     ndv = dt_min
                 elif ndv > dt_max:
@@ -283,6 +287,9 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if out_dtype is not None:
             dtype = out_dtype
+
+        # Ensure we have a numpy dtype.
+        dtype = _getnpdtype(dtype)
 
         # Get the natural shape of the read window, boundless or not.
         # The window can have float values. In this case, we round up
@@ -555,7 +562,7 @@ cdef class DatasetReaderBase(DatasetBase):
             out = np.zeros(out_shape, 'uint8')
 
         if out is not None:
-            if out.dtype != np.dtype(dtype):
+            if out.dtype != _getnpdtype(dtype):
                 raise ValueError(
                     "the out array's dtype '%s' does not match '%s'"
                     % (out.dtype, dtype))
@@ -1063,12 +1070,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             except TypeError:
                 raise TypeError("Integer band count is required.")
 
-            if isinstance(dtype, str) and dtype.startswith("complex_int"):
+            if _is_complex_int(dtype):
                 self._init_dtype = dtype
             else:
                 try:
                     assert dtype is not None
-                    self._init_dtype = np.dtype(dtype).name
+                    self._init_dtype = _getnpdtype(dtype).name
                 except Exception:
                     raise TypeError("A valid dtype is required.")
 
@@ -1149,7 +1156,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             if nodata is not None:
 
-                if isinstance(dtype, str) and dtype.startswith("complex_int"):
+                if _is_complex_int(dtype):
                     pass
                 elif not in_dtype_range(nodata, dtype):
                     raise ValueError(
@@ -1369,10 +1376,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
 
-        # if arr is not None and arr.dtype != dtype:
-        #     raise ValueError(
-        #         "the array's dtype '%s' does not match "
-        #         "the file's dtype '%s'" % (arr.dtype, dtype))
+        dtype = _getnpdtype(dtype)
 
         # Require C-continguous arrays (see #108).
         arr = np.require(arr, dtype=dtype, requirements='C')
@@ -1975,11 +1979,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             try:
                 assert dtype is not None
-                _ = np.dtype(dtype)
+                _ = _getnpdtype(dtype)
             except Exception:
                 raise TypeError("A valid dtype is required.")
 
-        self._init_dtype = np.dtype(dtype).name
+        self._init_dtype = _getnpdtype(dtype).name
 
         self.name = path.name
         self.mode = mode

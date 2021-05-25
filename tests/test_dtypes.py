@@ -15,8 +15,14 @@ from rasterio import (
     complex_int16,
 )
 from rasterio.dtypes import (
-    _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
-    validate_dtype
+    _gdal_typename,
+    is_ndarray,
+    check_dtype,
+    get_minimum_dtype,
+    can_cast_dtype,
+    validate_dtype,
+    _is_complex_int,
+    _getnpdtype,
 )
 
 
@@ -108,3 +114,17 @@ def test_complex(tmpdir):
         arr2 = src.read(1)
 
     assert np.array_equal(arr1, arr2)
+
+
+def test_is_complex_int():
+    assert _is_complex_int("complex_int16")
+
+
+def test_not_is_complex_int():
+    assert not _is_complex_int("complex")
+
+
+def test_get_npdtype():
+    npdtype = _getnpdtype("complex_int16")
+    assert npdtype == np.complex64
+    assert npdtype.kind == "c"

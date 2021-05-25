@@ -4,10 +4,6 @@ Since 0.13 we are not importing numpy here and data types are strings.
 Happily strings can be used throughout Numpy and so existing code will
 not break.
 
-Within Rasterio, to test data types, we use Numpy's dtype() factory to
-do something like this:
-
-    if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
 """
 
 bool_ = 'bool'
@@ -34,7 +30,7 @@ dtype_fwd = {
     5: int32,  # GDT_Int32
     6: float32,  # GDT_Float32
     7: float64,  # GDT_Float64
-    8: complex64,  # GDT_CInt16
+    8: complex_int16,  # GDT_CInt16
     9: complex64,  # GDT_CInt32
     10: complex64,  # GDT_CFloat32
     11: complex128,  # GDT_CFloat64
@@ -157,7 +153,7 @@ def can_cast_dtype(values, dtype):
     if not is_ndarray(values):
         values = np.array(values)
 
-    if values.dtype.name == np.dtype(dtype).name:
+    if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
     elif values.dtype.kind == 'f':
@@ -188,3 +184,15 @@ def validate_dtype(values, valid_dtypes):
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)
+
+
+def _is_complex_int(dtype):
+    return isinstance(dtype, str) and dtype.startswith("complex_int")
+
+
+def _getnpdtype(dtype):
+    import numpy as np
+    if _is_complex_int(dtype):
+        return np.dtype("complex64")
+    else:
+        return np.dtype(dtype)

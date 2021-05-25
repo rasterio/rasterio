@@ -172,6 +172,7 @@ cdef _band_dtype(GDALRasterBandH band):
         else:
             return 'uint8'
 
+
     return dtypes.dtype_fwd[gdal_dtype]
 
 
