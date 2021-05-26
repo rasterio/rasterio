@@ -1339,7 +1339,7 @@ def test_target_aligned_pixels():
         source = src.read(1)
         profile = src.profile
 
-    dst_crs = CRS.from_proj4("+proj=cea")
+    dst_crs = "EPSG:3857"
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
         # Calculate the ideal dimensions and transformation in the new crs
@@ -1348,7 +1348,7 @@ def test_target_aligned_pixels():
         )
 
         dst_affine, dst_width, dst_height = aligned_target(
-            dst_affine, dst_width, dst_height, 5000.0
+            dst_affine, dst_width, dst_height, 10000.0
         )
 
         profile["height"] = dst_height
