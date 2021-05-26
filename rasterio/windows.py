@@ -187,9 +187,14 @@ def union(*windows):
     Window
     """
     stacked = np.dstack([toranges(w) for w in windows])
-    return Window.from_slices(
-        (stacked[0, 0].min(), stacked[0, 1].max()),
-        (stacked[1, 0].min(), stacked[1, 1]. max()))
+    row_start, row_stop = stacked[0, 0].min(), stacked[0, 1].max()
+    col_start, col_stop = stacked[1, 0].min(), stacked[1, 1].max()
+    return Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=col_stop - col_start,
+        height=row_stop - row_start,
+    )
 
 
 @iter_args
@@ -211,9 +216,14 @@ def intersection(*windows):
         raise WindowError("windows do not intersect")
 
     stacked = np.dstack([toranges(w) for w in windows])
-    return Window.from_slices(
-        (stacked[0, 0].max(), stacked[0, 1].min()),
-        (stacked[1, 0].max(), stacked[1, 1]. min()))
+    row_start, row_stop = stacked[0, 0].max(), stacked[0, 1].min()
+    col_start, col_stop = stacked[1, 0].max(), stacked[1, 1].min()
+    return Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=col_stop - col_start,
+        height=row_stop - row_start,
+    )
 
 
 @iter_args

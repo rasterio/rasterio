@@ -1,4 +1,3 @@
-from collections import namedtuple
 import logging
 import math
 import sys
@@ -10,7 +9,7 @@ from hypothesis import given, assume, settings, HealthCheck
 from hypothesis.strategies import floats, integers
 
 import rasterio
-from rasterio.errors import RasterioDeprecationWarning, WindowError
+from rasterio.errors import WindowError
 from rasterio.windows import (
     crop, from_bounds, bounds, transform, evaluate, window_index, shape,
     Window, intersect, intersection, get_data_window, union,
@@ -631,3 +630,27 @@ def test_zero_height(sy):
     """Permit a zero height window"""
     transform = Affine.translation(0, 45.0) * Affine.scale(1.0, sy)
     assert from_bounds(0.0, 44.0, 1.0, 44.0, transform).height == 0
+
+
+def test_union_boundless_left():
+    """Windows entirely to the left of a dataset form a proper union"""
+    uw = union(
+        Window(col_off=-10, row_off=0, width=2, height=2),
+        Window(col_off=-8.5, row_off=0, width=2.5, height=2),
+    )
+    assert uw.col_off == -10
+    assert uw.width == 4
+    assert uw.height == 2
+    assert uw.row_off == 0
+
+
+def test_union_boundless_above():
+    """Windows entirely above a dataset form a proper union"""
+    uw = union(
+        Window(col_off=0, row_off=-10, width=2, height=2),
+        Window(col_off=0, row_off=-8.5, width=2, height=2.5),
+    )
+    assert uw.row_off == -10
+    assert uw.height == 4
+    assert uw.width == 2
+    assert uw.col_off == 0
