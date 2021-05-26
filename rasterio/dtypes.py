@@ -4,10 +4,6 @@ Since 0.13 we are not importing numpy here and data types are strings.
 Happily strings can be used throughout Numpy and so existing code will
 not break.
 
-Within Rasterio, to test data types, we use Numpy's dtype() factory to
-do something like this:
-
-    if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
 """
 
 bool_ = 'bool'
@@ -23,26 +19,29 @@ complex_ = 'complex'
 complex64 = 'complex64'
 complex128 = 'complex128'
 
-# Not supported:
-#  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11
+complex_int16 = "complex_int16"
 
 dtype_fwd = {
-    0: None,            # GDT_Unknown
-    1: ubyte,           # GDT_Byte
-    2: uint16,          # GDT_UInt16
-    3: int16,           # GDT_Int16
-    4: uint32,          # GDT_UInt32
-    5: int32,           # GDT_Int32
-    6: float32,         # GDT_Float32
-    7: float64,         # GDT_Float64
-    8: complex_,        # GDT_CInt16
-    9: complex_,        # GDT_CInt32
-    10: complex64,      # GDT_CFloat32
-    11: complex128}    # GDT_CFloat64
+    0: None,  # GDT_Unknown
+    1: ubyte,  # GDT_Byte
+    2: uint16,  # GDT_UInt16
+    3: int16,  # GDT_Int16
+    4: uint32,  # GDT_UInt32
+    5: int32,  # GDT_Int32
+    6: float32,  # GDT_Float32
+    7: float64,  # GDT_Float64
+    8: complex_int16,  # GDT_CInt16
+    9: complex64,  # GDT_CInt32
+    10: complex64,  # GDT_CFloat32
+    11: complex128,  # GDT_CFloat64
+}
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
-dtype_rev['uint8'] = 1
-dtype_rev['int8'] = 1
+
+dtype_rev["uint8"] = 1
+dtype_rev["int8"] = 1
+dtype_rev["complex"] = 11
+dtype_rev["complex_int16"] = 8
 
 typename_fwd = {
     0: 'Unknown',
@@ -154,7 +153,7 @@ def can_cast_dtype(values, dtype):
     if not is_ndarray(values):
         values = np.array(values)
 
-    if values.dtype.name == np.dtype(dtype).name:
+    if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
     elif values.dtype.kind == 'f':
@@ -185,3 +184,15 @@ def validate_dtype(values, valid_dtypes):
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)
+
+
+def _is_complex_int(dtype):
+    return isinstance(dtype, str) and dtype.startswith("complex_int")
+
+
+def _getnpdtype(dtype):
+    import numpy as np
+    if _is_complex_int(dtype):
+        return np.dtype("complex64")
+    else:
+        return np.dtype(dtype)

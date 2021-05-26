@@ -3,10 +3,26 @@ import pytest
 
 import rasterio
 from rasterio import (
-    ubyte, uint8, uint16, uint32, int16, int32, float32, float64, complex_)
+    ubyte,
+    uint8,
+    uint16,
+    uint32,
+    int16,
+    int32,
+    float32,
+    float64,
+    complex_,
+    complex_int16,
+)
 from rasterio.dtypes import (
-    _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
-    validate_dtype
+    _gdal_typename,
+    is_ndarray,
+    check_dtype,
+    get_minimum_dtype,
+    can_cast_dtype,
+    validate_dtype,
+    _is_complex_int,
+    _getnpdtype,
 )
 
 
@@ -28,10 +44,19 @@ def test_check_dtype_invalid():
     assert not check_dtype('foo')
 
 
-def test_gdal_name():
-    assert _gdal_typename(ubyte) == 'Byte'
-    assert _gdal_typename(np.uint8) == 'Byte'
-    assert _gdal_typename(np.uint16) == 'UInt16'
+@pytest.mark.parametrize(
+    ("dtype", "name"),
+    [
+        (ubyte, "Byte"),
+        (np.uint8, "Byte"),
+        (np.uint16, "UInt16"),
+        ("uint8", "Byte"),
+        ("complex_int16", "CInt16"),
+        (complex_int16, "CInt16"),
+    ],
+)
+def test_gdal_name(dtype, name):
+    assert _gdal_typename(dtype) == name
 
 
 def test_get_minimum_dtype():
@@ -89,3 +114,17 @@ def test_complex(tmpdir):
         arr2 = src.read(1)
 
     assert np.array_equal(arr1, arr2)
+
+
+def test_is_complex_int():
+    assert _is_complex_int("complex_int16")
+
+
+def test_not_is_complex_int():
+    assert not _is_complex_int("complex")
+
+
+def test_get_npdtype():
+    npdtype = _getnpdtype("complex_int16")
+    assert npdtype == np.complex64
+    assert npdtype.kind == "c"
