@@ -64,5 +64,5 @@ def test_issue2163():
 def test_unsafe_casting():
     """Demonstrate fix for issue 2179"""
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
-        result, transform = merge([src], dtype="uint8")
+        result, transform = merge([src], dtype="uint8", nodata=0.0)
         assert not result.any()  # this is why it's called "unsafe".
