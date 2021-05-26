@@ -4,7 +4,8 @@ Changes
 1.2.4 (TBD)
 -----------
 
-- Use Window constructor instead of from_slices in windows.union to allow a proper union to be formed from windows extending outside a dataset (#).
+- Use Window constructor instead of from_slices in windows.union to allow a
+  proper union to be formed from windows extending outside a dataset (#2186).
 - Read GDAL CInt16 data as np.complex64 and allow saving complex data to CInt16
   (#2185).
 - Skip merge sources which do not overlap the destination.
