@@ -73,7 +73,6 @@ before_install:
   - export GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal
   - export PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj
   - curl -Ls https://mapbox-release-engineering.s3.amazonaws.com/mbx-ci/latest/mbx-ci-linux-amd64 > mbx-ci && chmod 755 ./mbx-ci
-  - ./mbx-ci aws setup
 
 install:
   - "if [ \"$GDALVERSION\" == \"master\" -o $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
@@ -88,7 +87,7 @@ install:
 script:
   - unset AWS_ACCESS_KEY_ID
   - unset AWS_SECRET_ACCESS_KEY
-  - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+  - ./mbx-ci aws setup && python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"
