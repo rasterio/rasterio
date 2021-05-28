@@ -180,7 +180,7 @@ def like_handler(ctx, param, value):
 
 def nodata_handler(ctx, param, value):
     """Return a float or None"""
-    if value is None or value is IgnoreOption:
+    if value is None or str(value) == str(IgnoreOption):
         return value
     elif value.lower() in ['null', 'nil', 'none', 'nada']:
         return None
@@ -199,7 +199,7 @@ def edit_nodata_handler(ctx, param, value):
     Expected values are 'like', 'null', a numeric value, 'nan', or
     IgnoreOption. Anything else should raise BadParameter.
     """
-    if value == 'like' or value is IgnoreOption:
+    if value == 'like' or str(value) == str(IgnoreOption):
         retval = from_like_context(ctx, param, value)
         if retval is not None:
             return retval

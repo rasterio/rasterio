@@ -190,7 +190,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             tags = allmd['tags']
             colorinterp = allmd['colorinterp']
 
-        if unset_nodata and nodata is not options.IgnoreOption:
+        if unset_nodata and str(nodata) != str(options.IgnoreOption):
             raise click.BadParameter(
                 "--unset-nodata and --nodata cannot be used together.")
 
@@ -207,7 +207,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             except NotImplementedError as exc:  # pragma: no cover
                 raise click.ClickException(str(exc))
 
-        elif nodata is not options.IgnoreOption:
+        elif str(nodata) != str(options.IgnoreOption):
             dtype = dst.dtypes[0]
             if nodata is not None and not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(
