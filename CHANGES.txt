@@ -4,6 +4,7 @@ Changes
 1.2.4 (TBD)
 -----------
 
+- Guard against use of gauss resampling when creating a WarpedVRT (#2190).
 - Prevent segfaults when buffer and band indexes are mismatched in
   io_multi_band and io_multi_mask (#2189).
 - Change comparisons of nodata to IgnoreOption to accomodate changes in click

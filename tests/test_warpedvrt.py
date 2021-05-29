@@ -608,3 +608,10 @@ def test_issue2086():
     with rasterio.open("tests/data/white-gemini-iv.vrt") as src:
         with WarpedVRT(src, crs=DST_CRS) as vrt:
             assert vrt.shape == (1031, 1146)
+
+
+def test_gauss_no(path_rgb_byte_tif):
+    """Guard against the issue reported in #2190"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with pytest.raises(Exception):
+            WarpedVRT(src, resampling=Resampling.gauss)
