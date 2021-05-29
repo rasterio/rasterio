@@ -4,7 +4,7 @@
 from rasterio import dtypes
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
-from rasterio.errors import ResamplingAlgorithmError
+from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 
 cimport numpy as np
 
@@ -145,6 +145,9 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
+    if len(indexes) != data.shape[0]:
+        raise DatasetIOShapeError("Dataset indexes and destination buffer are mismatched")
+
     bandmap = <int *>CPLMalloc(count*sizeof(int))
     for i in range(count):
         bandmap[i] = <int>indexes[i]
@@ -206,6 +209,9 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     extras.dfYSize = height
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
+
+    if len(indexes) != data.shape[0]:
+        raise DatasetIOShapeError("Dataset indexes and destination buffer are mismatched")
 
     for i in range(count):
         j = <int>indexes[i]

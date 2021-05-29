@@ -364,8 +364,7 @@ cdef class DatasetReaderBase(DatasetBase):
             log.debug("Jump straight to _read()")
             log.debug("Window: %r", window)
 
-            out = self._read(indexes, out, window, dtype,
-                             resampling=resampling)
+            out = self._read(indexes, out, window, dtype, resampling=resampling)
 
             if masked or fill_value is not None:
                 if all_valid:
@@ -631,8 +630,7 @@ cdef class DatasetReaderBase(DatasetBase):
         return out
 
 
-    def _read(self, indexes, out, window, dtype, masks=False,
-              resampling=Resampling.nearest):
+    def _read(self, indexes, out, window, dtype, masks=False, resampling=Resampling.nearest):
         """Read raster bands as a multidimensional array
 
         If `indexes` is a list, the result is a 3D array, but

@@ -4,6 +4,8 @@ Changes
 1.2.4 (TBD)
 -----------
 
+- Prevent segfaults when buffer and band indexes are mismatched in
+  io_multi_band and io_multi_mask (#2189).
 - Change comparisons of nodata to IgnoreOption to accomodate changes in click
   8.0.
 - Use Window constructor instead of from_slices in windows.union to allow a
