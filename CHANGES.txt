@@ -30,7 +30,6 @@ Changes
 - Remove a workaround for an old Python 3.4 bug from the BoundingBox
   implementation (#2172).
 - Add setuptools as an explicit installation requirement.
->>>>>>> 1.2.4
 
 1.2.3 (2021-04-26)
 ------------------
