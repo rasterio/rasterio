@@ -57,20 +57,6 @@ from rasterio.path import parse_path, ParsedPath, UnparsedPath
 logger = logging.getLogger(__name__)
 
 
-class IgnoreOptionMarker(object):
-    """A marker for an option that is to be ignored.
-
-    For use in the case where `None` is a meaningful option value,
-    such as for nodata where `None` means "unset the nodata value."
-    """
-
-    def __repr__(self):
-        return 'IgnoreOption()'
-
-
-IgnoreOption = IgnoreOptionMarker()
-
-
 def _cb_key_val(ctx, param, value):
 
     """
@@ -180,29 +166,36 @@ def like_handler(ctx, param, value):
 
 def nodata_handler(ctx, param, value):
     """Return a float or None"""
-    if value is None or str(value) == str(IgnoreOption):
-        return value
-    elif value.lower() in ['null', 'nil', 'none', 'nada']:
+    if value is None or value.lower() in ["null", "nil", "none", "nada"]:
         return None
     else:
         try:
             return float(value)
         except (TypeError, ValueError):
             raise click.BadParameter(
-                "{!r} is not a number".format(value),
-                param=param, param_hint='nodata')
+                "{!r} is not a number".format(value), param=param, param_hint="nodata"
+            )
 
 
 def edit_nodata_handler(ctx, param, value):
     """Get nodata value from a template file or command line.
 
-    Expected values are 'like', 'null', a numeric value, 'nan', or
-    IgnoreOption. Anything else should raise BadParameter.
+    Expected values are 'like', 'null', a numeric value, 'nan', or None.
+
+    Returns
+    -------
+    float or None
+
+    Raises
+    ------
+    click.BadParameter
+
     """
-    if value == 'like' or str(value) == str(IgnoreOption):
+    if value == "like" or value is None:
         retval = from_like_context(ctx, param, value)
         if retval is not None:
             return retval
+
     return nodata_handler(ctx, param, value)
 
 
@@ -335,12 +328,20 @@ overwrite_opt = click.option(
     help="Always overwrite an existing output file.")
 
 nodata_opt = click.option(
-    '--nodata', callback=nodata_handler, default=None,
-    metavar='NUMBER|nan', help="Set a Nodata value.")
+    "--nodata",
+    callback=nodata_handler,
+    default=None,
+    metavar="NUMBER|nan",
+    help="Set a Nodata value.",
+)
 
 edit_nodata_opt = click.option(
-    '--nodata', callback=edit_nodata_handler, default=IgnoreOption,
-    metavar='NUMBER|nan|null', help="Modify the Nodata value.")
+    "--nodata",
+    callback=edit_nodata_handler,
+    default=None,
+    metavar="NUMBER|nan|null",
+    help="Modify the Nodata value.",
+)
 
 like_opt = click.option(
     '--like',

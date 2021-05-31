@@ -9,8 +9,13 @@ import pytest
 
 from rasterio.enums import ColorInterp
 from rasterio.rio.options import (
-    IgnoreOption, bounds_handler, file_in_handler, like_handler,
-    edit_nodata_handler, nodata_handler, _cb_key_val)
+    bounds_handler,
+    file_in_handler,
+    like_handler,
+    edit_nodata_handler,
+    nodata_handler,
+    _cb_key_val,
+)
 
 
 class MockContext:
@@ -186,14 +191,14 @@ def test_edit_nodata_callback_like(data):
 
 def test_edit_nodata_callback_all_like(data):
     ctx = MockContext()
-    ctx.obj['like'] = {'nodata': 0.0}
-    ctx.obj['all_like'] = True
-    assert edit_nodata_handler(ctx, MockOption('nodata'), IgnoreOption) == 0.0
+    ctx.obj["like"] = {"nodata": 0.0}
+    ctx.obj["all_like"] = True
+    assert edit_nodata_handler(ctx, MockOption("nodata"), None) == 0.0
 
 
 def test_edit_nodata_callback_ignore(data):
     ctx = MockContext()
-    assert edit_nodata_handler(ctx, MockOption('nodata'), IgnoreOption) is IgnoreOption
+    assert edit_nodata_handler(ctx, MockOption("nodata"), None) is None
 
 
 def test_edit_nodata_callback_none(data):
