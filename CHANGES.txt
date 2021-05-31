@@ -10,6 +10,28 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.4 (2021-05-31)
+------------------
+
+- Eliminate unneeded marker for CLI nodata options to be ignored. We will stick
+  with None (#2191).
+- Guard against use of gauss resampling when creating a WarpedVRT (#2190).
+- Prevent segfaults when buffer and band indexes are mismatched in
+  io_multi_band and io_multi_mask (#2189).
+- Change comparisons of nodata to IgnoreOption to accomodate changes in click
+  8.0.
+- Use Window constructor instead of from_slices in windows.union to allow a
+  proper union to be formed from windows extending outside a dataset (#2186).
+- Read GDAL CInt16 data as np.complex64 and allow saving complex data to CInt16
+  (#2185).
+- Skip merge sources which do not overlap the destination.
+- Allow unsafe casting in the merge tool, restoring behavior of version 1.2.0
+  (#2179).
+- Remove a workaround for an old Python 3.4 bug from the BoundingBox
+  implementation (#2172).
+- Add setuptools as an explicit installation requirement.
+>>>>>>> 1.2.4
+
 1.2.3 (2021-04-26)
 ------------------
 

@@ -65,7 +65,7 @@ def test_delete_nodata(data, runner):
     """Delete a dataset's nodata value"""
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
-        main_group, ['edit-info', inputfile, '--unset-nodata'])
+        main_group, ['edit-info', inputfile, '--unset-nodata'], catch_exceptions=False)
     assert result.exit_code == 0
 
 

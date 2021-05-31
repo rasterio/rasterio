@@ -190,13 +190,13 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             tags = allmd['tags']
             colorinterp = allmd['colorinterp']
 
-        if unset_nodata and nodata is not options.IgnoreOption:
+        if unset_nodata and nodata is not None:
             raise click.BadParameter(
-                "--unset-nodata and --nodata cannot be used together.")
+                "--unset-nodata and --nodata cannot be used together."
+            )
 
         if unset_crs and crs:
-            raise click.BadParameter(
-                "--unset-crs and --crs cannot be used together.")
+            raise click.BadParameter("--unset-crs and --crs cannot be used together.")
 
         if unset_nodata:
             # Setting nodata to None will raise NotImplementedError
@@ -207,17 +207,18 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             except NotImplementedError as exc:  # pragma: no cover
                 raise click.ClickException(str(exc))
 
-        elif nodata is not options.IgnoreOption:
+        elif nodata is not None:
             dtype = dst.dtypes[0]
             if nodata is not None and not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(
-                    "outside the range of the file's "
-                    "data type (%s)." % dtype,
-                    param=nodata, param_hint='nodata')
+                    "outside the range of the file's data type (%s)." % dtype,
+                    param=nodata,
+                    param_hint="nodata",
+                )
             dst.nodata = nodata
 
         if unset_crs:
-            dst.crs = None  # CRS()
+            dst.crs = None
         elif crs:
             dst.crs = crs
 

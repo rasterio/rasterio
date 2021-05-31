@@ -16,7 +16,7 @@ from rasterio.enums import Resampling
 cimport numpy as np
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 
-from rasterio.errors import GDALOptionNotImplementedError
+from rasterio.errors import GDALOptionNotImplementedError, DatasetIOShapeError
 
 
 cdef GDALDatasetH open_dataset(
@@ -114,6 +114,9 @@ cdef int io_multi_band(
     cdef int xsize = <int>width
     cdef int ysize = <int>height
 
+    if len(indexes) != data.shape[0]:
+        raise DatasetIOShapeError("Dataset indexes and destination buffer are mismatched")
+
     bandmap = <int *>CPLMalloc(count*sizeof(int))
     for i in range(count):
         bandmap[i] = <int>indexes[i]
@@ -161,6 +164,9 @@ cdef int io_multi_mask(
     cdef int yoff = <int>y0
     cdef int xsize = <int>width
     cdef int ysize = <int>height
+
+    if len(indexes) != data.shape[0]:
+        raise DatasetIOShapeError("Dataset indexes and destination buffer are mismatched")
 
     for i in range(count):
         j = <int>indexes[i]

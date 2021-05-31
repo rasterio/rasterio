@@ -87,9 +87,9 @@ class GDALOptionNotImplementedError(RasterioError):
     by GDAL 1.x.
     """
 
+
 class GDALVersionError(RasterioError):
-    """Raised if the runtime version of GDAL does not meet the required
-    version of GDAL."""
+    """Raised if the runtime version of GDAL does not meet the required version of GDAL."""
 
 
 class WindowEvaluationError(ValueError):
@@ -142,3 +142,7 @@ class TransformError(RasterioError):
 
 class WarpedVRTError(RasterioError):
     """Raised when WarpedVRT can't be initialized"""
+
+
+class DatasetIOShapeError(RasterioError):
+    """Raised when data buffer shape is a mismatch when reading and writing"""

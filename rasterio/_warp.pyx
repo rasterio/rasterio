@@ -43,6 +43,17 @@ from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 
 log = logging.getLogger(__name__)
 
+# Gauss (7) is not supported for warp
+SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
+GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
+if GDALVersion.runtime().at_least('2.0'):
+    SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
+# sum supported since GDAL 3.1
+if GDALVersion.runtime().at_least('3.1'):
+    SUPPORTED_RESAMPLING.append(Resampling.sum)
+# rms supported since GDAL 3.3
+if GDALVersion.runtime().at_least('3.3'):
+    SUPPORTED_RESAMPLING.append(Resampling.rms)
 
 def recursive_round(val, precision):
     """Recursively round coordinates."""
@@ -773,6 +784,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         """
         if src_dataset.mode != "r":
             warnings.warn("Source dataset should be opened in read-only mode. Use of datasets opened in modes other than 'r' will be disallowed in a future version.", RasterioDeprecationWarning, stacklevel=2)
+
+        # Guard against invalid or unsupported resampling algorithms.
+        try:
+            if resampling == 7:
+                raise ValueError("Gauss resampling is not supported")
+            Resampling(resampling)
+
+        except ValueError:
+            raise ValueError(
+                "resampling must be one of: {0}".format(", ".join(['Resampling.{0}'.format(r.name) for r in SUPPORTED_RESAMPLING])))
 
         self.mode = 'r'
         self.options = {}

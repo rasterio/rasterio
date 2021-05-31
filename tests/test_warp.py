@@ -1,7 +1,6 @@
 """rasterio.warp module tests"""
 
 import json
-import sys
 import logging
 
 from affine import Affine
@@ -15,7 +14,6 @@ from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import (
-    GDALBehaviorChangeException,
     CRSError,
     GDALVersionError,
     TransformError,
@@ -1136,6 +1134,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
 
     assert np.count_nonzero(out) in expected[method]
 
+
 @pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
 def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     class DataArray:
@@ -1333,11 +1332,12 @@ def test_resample_default_invert_proj(method):
     assert out.mean() > 0
 
 
+@pytest.mark.xfail(reason="Projection extents have changed with PROJ 8")
 def test_target_aligned_pixels():
     """Issue 853 has been resolved"""
     with rasterio.open("tests/data/world.rgb.tif") as src:
         source = src.read(1)
-        profile = src.profile.copy()
+        profile = src.profile
 
     dst_crs = "EPSG:3857"
 
@@ -1348,7 +1348,7 @@ def test_target_aligned_pixels():
         )
 
         dst_affine, dst_width, dst_height = aligned_target(
-            dst_affine, dst_width, dst_height, 100000.0
+            dst_affine, dst_width, dst_height, 10000.0
         )
 
         profile["height"] = dst_height
@@ -1366,7 +1366,7 @@ def test_target_aligned_pixels():
             resampling=Resampling.nearest,
         )
 
-        # Check that there is no black borders
+        # Check that there are no black borders
         assert out[:, 0].all()
         assert out[:, -1].all()
         assert out[0, :].all()
@@ -1694,26 +1694,6 @@ def test_issue_1446_b():
     assert all([-350 < x < -150 for x, y in transformed_geoms[183519]["coordinates"]])
 
 
-def test_issue_1076():
-    """Confirm fix of #1076"""
-    arr = (np.random.random((20, 30)) * 100).astype('int32')
-    fill_value = 42
-    newarr = np.full((200, 300), fill_value=fill_value, dtype='int32')
-
-    src_crs = CRS.from_epsg(32632)
-    src_transform = Affine(600.0, 0.0, 399960.0, 0.0, -600.0, 6100020.0)
-    dst_transform = Affine(60.0, 0.0, 399960.0, 0.0, -60.0, 6100020.0)
-
-    reproject(arr, newarr,
-        src_transform=src_transform,
-        dst_transform=dst_transform,
-        src_crs=src_crs,
-        dst_crs=src_crs,
-        resample=Resampling.nearest)
-
-    assert not (newarr == fill_value).all()
-
-
 def test_reproject_init_dest_nodata():
     """No pixels should transfer over"""
     crs = CRS.from_epsg(4326)
@@ -1785,16 +1765,16 @@ def test_reproject_rpcs_with_transformer_options(caplog):
             transform = Affine(0.001953396267361111, 0.0, -124.00013888888888, 0.0, -0.001953396267361111, 50.000138888888884)
             with mem.open(
                 driver="GTiff",
-                width=1024, 
-                height=1024, 
+                width=1024,
+                height=1024,
                 count=1,
                 transform=transform,
-                dtype='int16', 
-                crs=crs
+                dtype="int16",
+                crs=crs,
             ) as dem:
                 # we flush dem dataset before letting GDAL read from vsimem
                 dem.write_band(1, 500 * np.ones((1024, 1024), dtype='int16'))
-            
+
             out = np.zeros(
                 (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
             )
@@ -1810,7 +1790,7 @@ def test_reproject_rpcs_with_transformer_options(caplog):
                 resampling=Resampling.nearest,
                 RPC_DEM=dem.name,
 
-            )   
+            )
             caplog.set_level(logging.INFO)
             reproject(
                 rasterio.band(src, src.indexes),
@@ -1820,8 +1800,8 @@ def test_reproject_rpcs_with_transformer_options(caplog):
                 dst_crs="EPSG:3857",
                 resampling=Resampling.nearest,
 
-            ) 
-            
+            )
+
             assert not out.all()
             assert not out2.all()
             assert "RPC_DEM" in caplog.text
@@ -1853,10 +1833,10 @@ def test_warp_gcps_compute_dst_transform_automatically_array():
     assert not out[:, -1, -1].any()
     assert not out[:, -1, 0].any()
 
+
 def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
     """Ensure we don't raise an exception when gcps passed without dst_transform, for a source dataset"""
     tiffname = str(tmpdir.join('test.tif'))
-    arr = np.ones((3, 800, 800), dtype=np.uint8) * 255
     src_gcps = [
         GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
         GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
@@ -1867,7 +1847,7 @@ def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
 
     with rasterio.open(tiffname, mode='w', height=800, width=800, count=3, dtype=np.uint8) as source:
         source.gcps = (src_gcps, CRS.from_epsg(32618))
-    
+
     with rasterio.open(tiffname) as source:
         reproject(
             rasterio.band(source, source.indexes),
@@ -1875,12 +1855,13 @@ def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
             dst_crs="EPSG:32618",
             resampling=Resampling.nearest
         )
-    
+
     assert not out.all()
     assert not out[:, 0, 0].any()
     assert not out[:, 0, -1].any()
     assert not out[:, -1, -1].any()
     assert not out[:, -1, 0].any()
+
 
 def test_reproject_rpcs_exact_transformer(caplog):
     """Reproject using rational polynomial coefficients and DEM, requiring that
@@ -1892,16 +1873,16 @@ def test_reproject_rpcs_exact_transformer(caplog):
             transform = Affine(0.001953396267361111, 0.0, -124.00013888888888, 0.0, -0.001953396267361111, 50.000138888888884)
             with mem.open(
                 driver="GTiff",
-                width=1024, 
-                height=1024, 
+                width=1024,
+                height=1024,
                 count=1,
                 transform=transform,
-                dtype='int16', 
-                crs=crs
+                dtype="int16",
+                crs=crs,
             ) as dem:
                 # we flush dem dataset before letting GDAL read from vsimem
                 dem.write_band(1, 500 * np.ones((1024, 1024), dtype='int16'))
-            
+
             out = np.zeros(
                 (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
             )
@@ -1915,10 +1896,10 @@ def test_reproject_rpcs_exact_transformer(caplog):
                 dst_crs="EPSG:3857",
                 resampling=Resampling.nearest,
                 RPC_DEM=dem.name,
-            )   
+            )
 
             assert "Created exact transformer" in caplog.text
-            
+
 
 def test_reproject_rpcs_approx_transformer(caplog):
     """Reproject using rational polynomial coefficients without a DEM, for which it's
@@ -1937,6 +1918,6 @@ def test_reproject_rpcs_approx_transformer(caplog):
             rpcs=src_rpcs,
             dst_crs="EPSG:3857",
             resampling=Resampling.nearest,
-        ) 
+        )
 
         assert "Created approximate transformer" in caplog.text
