@@ -11,7 +11,7 @@ import rasterio._loading
 
 with rasterio._loading.add_gdal_dll_directories():
     import rasterio
-    from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, getnpdtype
+    from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
     from rasterio.enums import MergeAlg
     from rasterio.env import ensure_env
     from rasterio.errors import ShapeSkipWarning
@@ -278,7 +278,7 @@ def rasterize(
         if dtype is not None and not can_cast_dtype(default_value_array, dtype):
             raise ValueError(format_cast_error('default_vaue', dtype))
 
-    if dtype is not None and getnpdtype(dtype).name not in valid_dtypes:
+    if dtype is not None and _getnpdtype(dtype).name not in valid_dtypes:
         raise ValueError(format_invalid_dtype('dtype'))
 
     valid_shapes = []
@@ -334,7 +334,7 @@ def rasterize(
         raise ValueError(format_cast_error('shape values', dtype))
 
     if out is not None:
-        if getnpdtype(out.dtype).name not in valid_dtypes:
+        if _getnpdtype(out.dtype).name not in valid_dtypes:
             raise ValueError(format_invalid_dtype('out'))
 
         if not can_cast_dtype(shape_values, out.dtype):
