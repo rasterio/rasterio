@@ -1,9 +1,11 @@
 Changes
 =======
 
-1.2.4 (TBD)
------------
+1.2.4 (2021-05-31)
+------------------
 
+- Eliminate unneeded marker for CLI nodata options to be ignored. We will stick
+  with None (#2191).
 - Guard against use of gauss resampling when creating a WarpedVRT (#2190).
 - Prevent segfaults when buffer and band indexes are mismatched in
   io_multi_band and io_multi_mask (#2189).
