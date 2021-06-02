@@ -182,9 +182,11 @@ def _compute_union(w1, w2):
     height = max(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
     return col_off, row_off, width, height
 
+
 def _union(w1, w2):
     coeffs = _compute_union(w1, w2)
     return Window(*coeffs)
+
 
 @iter_args
 def union(*windows):
@@ -220,6 +222,7 @@ def intersection(*windows):
     """
     return functools.reduce(_intersection, windows)
 
+
 def _compute_intersection(w1, w2):
     """ Compute intersection of window 1 and window 2"""
     col_off = max(w1.col_off, w2.col_off)
@@ -227,6 +230,7 @@ def _compute_intersection(w1, w2):
     width = min(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
     height = min(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
     return col_off, row_off, width, height
+
 
 def _intersection(w1, w2):
     """ Compute intersection of window 1 and window 2"""
