@@ -808,18 +808,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
-        if crs is None:
-            crs = src_crs or src_dataset.crs
-
         if add_alpha and gdal_version().startswith('1'):
             warnings.warn("Alpha addition not supported by GDAL 1.x")
             add_alpha = False
 
         # kwargs become warp options.
         self.src_dataset = src_dataset
-        self.src_crs = CRS.from_user_input(src_crs) if src_crs else None
-        self.dst_crs = CRS.from_user_input(crs) if crs else None
+        self.src_crs = src_dataset.crs if src_crs is None else CRS.from_user_input(src_crs)
         self.src_transform = src_transform
+        self.src_gcps = None
         self.name = "WarpedVRT({})".format(src_dataset.name)
         self.resampling = resampling
         self.tolerance = tolerance
@@ -860,8 +857,13 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
 
-        if not self.src_crs:
-            self.src_crs = self.src_dataset.crs
+        if not self.src_crs and self.src_transform.almost_equals(identity):
+            try:
+                self.src_gcps, self.src_crs = self.src_dataset.get_gcps()
+            except ValueError:
+                pass
+
+        self.dst_crs = CRS.from_user_input(crs) if crs is not None else self.src_crs
 
         # Convert CRSes to C WKT strings.
         try:
@@ -957,15 +959,31 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 pass
 
             # Case 2
-            elif self.src_crs == self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+            elif (
+                self.src_crs == self.dst_crs
+                and self.dst_width
+                and self.dst_height
+                and not self.dst_transform
+                and not self.src_gcps
+                and not self.src_dataset.rpcs
+            ):
 
                 self.dst_transform = Affine.scale(self.src_dataset.width / self.dst_width, self.src_dataset.height / self.dst_height) * self.src_transform
 
             # Case 3
-            elif self.src_crs != self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+            elif (
+                (self.src_crs != self.dst_crs or self.src_gcps or self.src_dataset.rpcs)
+                and self.dst_width
+                and self.dst_height
+                and not self.dst_transform
+            ):
 
                 left, bottom, right, top = self.src_dataset.bounds
-                self.dst_transform, width, height = _calculate_default_transform(self.src_crs, self.dst_crs, self.src_dataset.width, self.src_dataset.height, left=left, bottom=bottom, right=right, top=top)
+                self.dst_transform, width, height = _calculate_default_transform(
+                    self.src_crs, self.dst_crs, self.src_dataset.width, self.src_dataset.height,
+                    left=left, bottom=bottom, right=right, top=top,
+                    gcps=self.src_gcps, rpcs=self.src_dataset.rpcs,
+                )
                 self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
 
             # If we get here it's because the tests above are buggy. We raise a Python exception to indicate that.

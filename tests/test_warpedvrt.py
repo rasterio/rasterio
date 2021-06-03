@@ -9,6 +9,7 @@ import numpy
 import pytest
 
 import rasterio
+from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling, MaskFlags
 from rasterio.errors import WarpOptionsError
@@ -607,3 +608,36 @@ def test_gauss_no(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(Exception):
             WarpedVRT(src, resampling=Resampling.gauss)
+
+
+def test_warpedvrt_gcps__width_height(tmp_path):
+    tiffname = tmp_path / "test.tif"
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0),
+    ]
+    crs = CRS.from_epsg(32618)
+    with rasterio.open(tiffname, mode='w', height=800, width=800, count=3, dtype=numpy.uint8) as source:
+        source.gcps = (src_gcps, crs)
+
+    with rasterio.open(tiffname) as src:
+        with WarpedVRT(src, width=10, height=10) as vrt:
+            assert vrt.height == 10
+            assert vrt.width == 10
+            assert vrt.crs == crs
+            assert vrt.dst_transform.almost_equals(
+                affine.Affine(22271.389322449897, 0.0, 11882210.275, 0.0, -20016.05875815117, 260167856.0)
+            )
+
+
+def test_warpedvrt_rcps__width_height():
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        with WarpedVRT(src, src_crs="EPSG:4326", width=10, height=10) as vrt:
+            assert vrt.height == 10
+            assert vrt.width == 10
+            assert vrt.crs == CRS.from_epsg(4326)
+            assert vrt.dst_transform.almost_equals(
+                affine.Affine(0.008598908695300157, 0.0, -14127.055592440069, 0.0, -0.0041566403046337285, 2738.897200252146)
+            )
