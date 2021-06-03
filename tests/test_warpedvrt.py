@@ -632,7 +632,7 @@ def test_warpedvrt_gcps__width_height(tmp_path):
             )
 
 
-def test_warpedvrt_rcps__width_height():
+def test_warpedvrt_rpcs__width_height():
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         with WarpedVRT(src, src_crs="EPSG:4326", width=10, height=10) as vrt:
             assert vrt.height == 10
