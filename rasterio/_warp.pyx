@@ -715,6 +715,52 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 DEFAULT_NODATA_FLAG = object()
 
 
+cdef GDALDatasetH auto_create_warped_vrt(
+    GDALDatasetH hSrcDS,
+    const char *pszSrcWKT,
+    const char *pszDstWKT,
+    GDALResampleAlg eResampleAlg,
+    double dfMaxError,
+    const GDALWarpOptions *psOptions,
+    transformer_options,
+):
+
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
+        cdef char **c_transformer_options = NULL
+
+        if transformer_options is not None:
+            for key, val in transformer_options.items():
+                key = key.upper().encode('utf-8')
+                val = str(val).encode('utf-8')
+                c_transformer_options = CSLSetNameValue(
+                    c_transformer_options, <const char *>key, <const char *>val)
+
+        with nogil:
+            return GDALAutoCreateWarpedVRTEx(
+                hSrcDS,
+                pszSrcWKT,
+                pszDstWKT,
+                eResampleAlg,
+                dfMaxError,
+                psOptions,
+                c_transformer_options,
+            )
+
+    ELSE:
+        if transformer_options is not None:
+            warnings.warn("transformer_options requires GDAL 3.2+. Ignoring...")
+
+        with nogil:
+            return GDALAutoCreateWarpedVRT(
+                hSrcDS,
+                pszSrcWKT,
+                pszDstWKT,
+                eResampleAlg,
+                dfMaxError,
+                psOptions,
+            )
+
+
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, src_crs=None, crs=None,
@@ -723,8 +769,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  width=None, height=None,
                  src_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
-                 warp_mem_limit=0, dtype=None, **warp_extras):
+                 warp_mem_limit=0, dtype=None, transformer_options=None, **warp_extras):
         """Make a virtual warped dataset
+
+        ..versionadded:: 1.3 transformer_options
 
         Parameters
         ----------
@@ -773,9 +821,13 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             means 64 MB with GDAL 2.2.
         dtype : str, optional
             The working data type for warp operation and output.
-        warp_extras : dict
+        warp_extras : dict, optional
             GDAL extra warp options. See
             https://gdal.org/doxygen/structGDALWarpOptions.html.
+        transformer_options: dict, optional
+            GDALCreateGenImgProjTransformer2 options.
+            Requires GDAL 3.2+. See:
+            https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
 
         Returns
         -------
@@ -833,6 +885,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.warp_extras = warp_extras.copy()
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
             self.warp_extras['init_dest'] = 'NO_DATA'
+        self.transformer_options = transformer_options.copy() if transformer_options is not None else None
 
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL
@@ -947,8 +1000,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Case 4
         if not self.dst_transform and (not self.dst_width or not self.dst_height):
 
-            with nogil:
-                hds_warped = GDALAutoCreateWarpedVRT(hds, src_crs_wkt, dst_crs_wkt, c_resampling, c_tolerance, psWOptions)
+            hds_warped = auto_create_warped_vrt(
+                hds,
+                src_crs_wkt,
+                dst_crs_wkt,
+                c_resampling,
+                c_tolerance,
+                psWOptions,
+                self.transformer_options,
+            )
 
         else:
 

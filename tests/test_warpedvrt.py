@@ -18,7 +18,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import requires_gdal21, requires_gdal2
+from .conftest import gdal_version, requires_gdal21, requires_gdal2
 
 log = logging.getLogger(__name__)
 
@@ -202,6 +202,34 @@ def test_warp_extras(path_rgb_byte_tif):
         with WarpedVRT(src, crs=DST_CRS, init_dest=255) as vrt:
             rgb = vrt.read()
             assert (rgb[:, 0, 0] == 255).all()
+
+
+def test_transformer_options(path_rgb_byte_tif):
+    transform = affine.Affine(
+        1.0003577499128138, 0.0, -8848646.496183893,
+        0.0, -1.0003577499128138, 720.9022505759253,
+    )
+    transformer_options = {
+        "SRC_METHOD": "NO_GEOTRANSFORM",
+        "DST_METHOD": "NO_GEOTRANSFORM",
+    }
+    if gdal_version.at_least("3.2"):
+        with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
+            src,
+            crs=DST_CRS,
+            transformer_options=transformer_options.copy(),
+        ) as vrt:
+            assert vrt.transform.almost_equals(transform)
+            assert vrt.transformer_options == transformer_options
+    else:
+        with pytest.warns(UserWarning, match="transformer_options requires GDAL 3.2"):
+            with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
+                src,
+                crs=DST_CRS,
+                transformer_options=transformer_options.copy(),
+            ) as vrt:
+                assert not vrt.transform.almost_equals(transform)
+                assert vrt.transformer_options == transformer_options
 
 
 @requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
