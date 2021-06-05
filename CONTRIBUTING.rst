@@ -95,10 +95,7 @@ C extension modules are written using `Cython <http://cython.org/>`__. The
 Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
-Rasterio supports Python 2 and Python 3 in the same code base, which is
-aided by an internal compatibility module named ``compat.py``. It functions
-similarly to the more widely known `six <https://six.readthedocs.io/>`__ but
-we only use a small portion of the features so it eliminates a dependency.
+Rasterio works with Python versions 3.6 through 3.9.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
@@ -111,8 +108,8 @@ a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 Development Environment
 -----------------------
 
-Developing Rasterio requires Python 2.7 or any final release after and
-including 3.4.  We prefer developing with the most recent version of Python
+Developing Rasterio requires Python 3.6 or any final release after and
+including 3.9.  We prefer developing with the most recent version of Python
 but recognize this is not possible for all contributors.  A C compiler is also
 required to leverage `existing protocols
 <https://docs.python.org/3.5/extending/extending.html>`__ for extending Python
