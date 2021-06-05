@@ -76,9 +76,9 @@ Git Conventions
 ---------------
 
 We use a variant of centralized workflow described in the `Git Book
-<https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.  We
-have no 1.0 release for Rasterio yet and we are tagging and releasing from the
-master branch. Our post-1.0 workflow is to be decided.
+<https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.
+Since Rasterio 1.0 we tag and release versions in the form:
+`x.y.z` version from the `maint-x.y` branch.
 
 Work on features in a new branch of the mapbox/rasterio repo or in a branch on
 a fork. Create a `GitHub pull request
