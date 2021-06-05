@@ -717,11 +717,11 @@ DEFAULT_NODATA_FLAG = object()
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
-    def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
+    def __init__(self, src_dataset, src_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=DEFAULT_NODATA_FLAG, dst_nodata=None, nodata=DEFAULT_NODATA_FLAG,
-                 dst_width=None, width=None, dst_height=None, height=None,
-                 src_transform=None, dst_transform=None, transform=None,
+                 src_nodata=DEFAULT_NODATA_FLAG, nodata=DEFAULT_NODATA_FLAG,
+                 width=None, height=None,
+                 src_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
                  warp_mem_limit=0, dtype=None, **warp_extras):
         """Make a virtual warped dataset
@@ -739,19 +739,19 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             default.
         crs : CRS or str, optional
             The coordinate reference system at the end of the warp
-            operation.  Default: the crs of `src_dataset`. dst_crs is
+            operation.  Default: the crs of `src_dataset`. dst_crs was
             a deprecated alias for this parameter.
         transform : Affine, optional
             The transform for the virtual dataset. Default: will be
             computed from the attributes of `src_dataset`. dst_transform
-            is a deprecated alias for this parameter.
+            was a deprecated alias for this parameter.
         height, width: int, optional
             The dimensions of the virtual dataset. Defaults: will be
             computed from the attributes of `src_dataset`. dst_height
-            and dst_width are deprecated alias for these parameters.
+            and dst_width were deprecated alias for these parameters.
         nodata : float, optional
             Nodata value for the virtual dataset. Default: the nodata
-            value of `src_dataset` or 0.0. dst_nodata is a deprecated
+            value of `src_dataset` or 0.0. dst_nodata was a deprecated
             alias for this parameter.
         resampling : Resampling, optional
             Warp resampling algorithm. Default: `Resampling.nearest`.
@@ -808,50 +808,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
-        # The various `dst_*` parameters are deprecated and will be
-        # removed in 1.1. In the next section of code, we warn
-        # about the deprecation and treat `dst_parameter` as an
-        # alias for `parameter`.
-
-        # Deprecate dst_nodata.
-        if dst_nodata is not None:
-            warnings.warn(
-                "dst_nodata will be removed in 1.1, use nodata",
-                RasterioDeprecationWarning)
-        if nodata is None:
-            nodata = dst_nodata
-
-        # Deprecate dst_width.
-        if dst_width is not None and width is None:
-            warnings.warn(
-                "dst_width will be removed in 1.1, use width",
-                RasterioDeprecationWarning)
-            width = dst_width
-
-        # Deprecate dst_height.
-        if dst_height is not None and height is None:
-            warnings.warn(
-                "dst_height will be removed in 1.1, use height",
-                RasterioDeprecationWarning)
-            height = dst_height
-
-        # Deprecate dst_transform.
-        if dst_transform is not None:
-            warnings.warn(
-                "dst_transform will be removed in 1.1, use transform",
-                RasterioDeprecationWarning)
-        if transform is None:
-            transform = dst_transform
-
-        # Deprecate dst_crs.
-        if dst_crs is not None:
-            warnings.warn(
-                "dst_crs will be removed in 1.1, use crs",
-                RasterioDeprecationWarning)
-
         if crs is None:
-            crs = dst_crs if dst_crs is not None else (src_crs or src_dataset.crs)
-        # End of `dst_parameter` deprecation and aliasing.
+            crs = src_crs or src_dataset.crs
 
         if add_alpha and gdal_version().startswith('1'):
             warnings.warn("Alpha addition not supported by GDAL 1.x")
