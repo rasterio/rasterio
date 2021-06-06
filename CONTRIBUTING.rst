@@ -4,7 +4,7 @@ Code of Conduct
 ---------------
 
 First of all: the Rasterio project has a code of conduct. Please read the
-CODE_OF_CONDUCT.txt file, it's important to all of us.
+CODE_OF_CONDUCT.rst file, it's important to all of us.
 
 Rights
 ------
