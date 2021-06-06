@@ -4,6 +4,7 @@ Changes
 1.3.0 (TBD)
 -----------
 
+- WarpedVRT: Remove deprecated dst_* parameters (#2197).
 - Building from source now requires Cython (#2016).
 - Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.
   DLLs will be loaded from .libs (for wheels) or from directories in PATH
