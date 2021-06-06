@@ -1,10 +1,11 @@
 """Rasterio"""
-
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
 from logging import NullHandler
+from numbers import Real
 from pathlib import Path
+from typing import Union, Optional, Callable, TYPE_CHECKING
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -29,10 +30,11 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import ensure_env_with_credentials, Env
     from rasterio.errors import RasterioIOError, DriverCapabilityError
     from rasterio.io import (
-        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
+        DatasetReader, Dataset, get_writer_for_path, get_writer_for_driver, MemoryFile)
     from rasterio.profiles import default_gtiff_profile
     from rasterio.transform import Affine, guard_transform
     from rasterio.path import parse_path
+    from rasterio.types import MaybeSequence, FileType
 
     # These modules are imported from the Cython extensions, but are also import
     # here to help tools like cx_Freeze find them automatically
@@ -40,6 +42,10 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.coords
     import rasterio.enums
     import rasterio.path
+
+if TYPE_CHECKING:
+    from rasterio.crs import CRSLike
+    import numpy
 
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.3dev"
@@ -55,9 +61,11 @@ log.addHandler(NullHandler())
 
 
 @ensure_env_with_credentials
-def open(fp, mode='r', driver=None, width=None, height=None, count=None,
-         crs=None, transform=None, dtype=None, nodata=None, sharing=False,
-         **kwargs):
+def open(fp: Union[str, Path, FileType], mode: str = 'r', driver: Optional[str] = None,
+         width: Optional[int] = None, height: Optional[int] = None, count: Optional[int] = None,
+         crs: Optional['CRSLike'] = None, transform: Optional[Affine] = None, dtype: Union[str, 'numpy.dtype'] = None,
+         nodata: Optional[Real] = None, sharing: bool = False,
+         **kwargs) -> Dataset:
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
@@ -249,7 +257,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 
 
-def band(ds, bidx):
+def band(ds: Dataset, bidx: MaybeSequence[int]) -> Band:
     """A dataset and one or more of its bands
 
     Parameters
@@ -266,7 +274,8 @@ def band(ds, bidx):
     return Band(ds, bidx, set(ds.dtypes).pop(), ds.shape)
 
 
-def pad(array, transform, pad_width, mode=None, **kwargs):
+
+def pad(array: 'numpy.ndarray', transform: Affine, pad_width: int, mode: Union[str, Callable] = None, **kwargs):
     """pad array and adjust affine transform matrix.
 
     Parameters

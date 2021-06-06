@@ -1,6 +1,7 @@
 """Raster warping and reprojection."""
 
 from math import ceil, floor
+from typing import Union, Optional
 
 from affine import Affine
 import numpy as np
@@ -15,6 +16,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.errors import GDALBehaviorChangeException, TransformError
     from rasterio.transform import array_bounds
     from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
+    from rasterio import Band
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
@@ -186,7 +188,8 @@ def transform_bounds(
 
 @ensure_env
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
-def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
+def reproject(source: Union[np.ndarray, Band], destination: Optional[Union[np.ndarray, Band]]=None, 
+              src_transform=None, gcps=None, rpcs=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,
               resampling=Resampling.nearest, num_threads=1,

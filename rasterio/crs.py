@@ -13,6 +13,7 @@ used.
 from collections.abc import Mapping
 import json
 import pickle
+from typing import Union
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -504,6 +505,9 @@ class CRS(Mapping):
             return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
+
+
+CRSLike = Union[CRS, str, dict]
 
 
 def epsg_treats_as_latlong(input):

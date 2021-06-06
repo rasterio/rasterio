@@ -4,8 +4,11 @@ Instances of these classes are called dataset objects.
 """
 
 import logging
+from typing import Optional, Union
 
 import rasterio._loading
+from rasterio.types import PathLikeOrStr
+
 with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import (
         get_dataset_driver, driver_can_create, driver_can_create_copy)
@@ -39,6 +42,9 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
     def __repr__(self):
         return "<{} DatasetWriter name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
+
+
+Dataset = Union[DatasetReader, DatasetWriter]
 
 
 class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
@@ -182,7 +188,7 @@ class ZipMemoryFile(MemoryFile):
         return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
 
 
-def get_writer_for_driver(driver):
+def get_writer_for_driver(driver: str) -> Optional[DatasetWriterBase]:
     """Return the writer class appropriate for the specified driver."""
     if not driver:
         raise ValueError("'driver' is required to write dataset.")
@@ -194,7 +200,7 @@ def get_writer_for_driver(driver):
     return cls
 
 
-def get_writer_for_path(path, driver=None):
+def get_writer_for_path(path: PathLikeOrStr, driver: Optional[str] = None) -> Optional[DatasetWriterBase]:
     """Return the writer class appropriate for the existing dataset."""
     if not driver:
         driver = get_dataset_driver(path)
