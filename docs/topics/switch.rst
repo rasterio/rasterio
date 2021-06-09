@@ -185,8 +185,11 @@ dataset connections.
 Bands
 -----
 
-``gdal`` has band objects. Rasterio does not and thus never has objects with
-dangling dataset pointers. With Rasterio, bands are represented by a numerical
+``gdal`` and ``Rasterio`` both have band objects.
+But unlike gdal's band, Rasterio's band is just a tuple of the dataset,
+band index and some other band properties.
+Thus Rasterio never has objects with dangling dataset pointers.
+With Rasterio, bands are represented by a numerical
 index, starting from 1 (as GDAL does), and are used as arguments to dataset
 methods. To read the first band of a dataset as a Numpy ``ndarray``, do this.
 
@@ -194,6 +197,14 @@ methods. To read the first band of a dataset as a Numpy ``ndarray``, do this.
 
    with rasterio.open('example.tif') as src:
        band1 = src.read(1)
+
+A band object can be used to represent a single band (or a sequence of bands):
+
+.. code-block:: python
+
+   with rasterio.open('example.tif') as src:
+       bnd = rasterio.band(src, 1)
+       print(bnd.dtype)
 
 Other attributes of GDAL band objects generally surface in Rasterio as tuples
 returned by dataset attributes, with one value per band, in order.
