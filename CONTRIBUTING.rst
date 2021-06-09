@@ -87,8 +87,8 @@ ready for review.  We recommend creating a pull request as early as possible
 to give other developers a heads up and to provide an opportunity for valuable
 early feedback.
 
-Code Conventions
-----------------
+Conventions
+-----------
 
 The ``rasterio`` namespace contains both Python and C extension modules. All
 C extension modules are written using `Cython <http://cython.org/>`__. The
@@ -100,10 +100,19 @@ Rasterio works with Python versions 3.6 through 3.9.
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
 
-Tests are mandatory for new features. We use `pytest <https://pytest.org>`__.
+Tests are mandatory for new code. We use `pytest <https://pytest.org>`__. Use
+pytest's parameterization feature.
 
 We aspire to 100% coverage for Python modules but coverage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
+
+Use [darker](https://pypi.org/project/darker/) to reformat code as you change it.
+We aren't going to run black on everything all at once.
+
+Type hints are welcome as a part of refactoring work or new feature development.
+We aren't going to make a large initiative about adding hints to everything.
+
+Changes should be noted in CHANGES.txt. New entries go above older entries.
 
 Development Environment
 -----------------------
