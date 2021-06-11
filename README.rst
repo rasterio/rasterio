@@ -183,14 +183,63 @@ other libraries provided by most major operating systems and also depends on
 the non standard GEOS and PROJ4 libraries. How to meet these requirement will
 be explained below.
 
-Rasterio's Python dependencies are listed in its requirements.txt file.
+Rasterio's Python dependencies are (see the package metadata file):
 
-Development also requires (see requirements-dev.txt) Cython and other packages.
+```
+affine
+attrs
+certifi
+click>=4.0
+cligj>=0.5
+numpy
+snuggs>=1.4.1
+click-plugins
+setuptools
+
+[all]
+hypothesis
+pytest-cov>=2.2.0
+matplotlib
+boto3>=1.2.4
+numpydoc
+pytest>=2.8.2
+shapely
+ipython>=2.0
+sphinx
+packaging
+ghp-import
+sphinx-rtd-theme
+
+[docs]
+ghp-import
+numpydoc
+sphinx
+sphinx-rtd-theme
+
+[ipython]
+ipython>=2.0
+
+[plot]
+matplotlib
+
+[s3]
+boto3>=1.2.4
+
+[test]
+boto3>=1.2.4
+hypothesis
+packaging
+pytest-cov>=2.2.0
+pytest>=2.8.2
+shapely
+```
+
+Development requires (see requirements-dev.txt) Cython and other packages.
 
 Binary Distributions
 --------------------
 
-Use a binary distributions that directly or indirectly provide GDAL if
+Use a binary distribution that directly or indirectly provides GDAL if
 possible.
 
 Linux
