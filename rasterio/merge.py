@@ -141,6 +141,10 @@ def merge(
             coff: int
                 column offset in base array
 
+    target_aligned_pixels : bool, optional
+        Whether to adjust output image bounds so that pixel coordinates
+        are integer multiples of pixel size, matching the ``-tap``
+        options of GDAL utilities.  Default: False.
     dst_path : str or Pathlike, optional
         Path of output dataset
     dst_kwds : dict, optional
