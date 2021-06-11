@@ -70,6 +70,7 @@ def merge(
     output_count=None,
     resampling=Resampling.nearest,
     method="first",
+    target_aligned_pixels=False,
     dst_path=None,
     dst_kwds=None,
 ):
@@ -140,6 +141,10 @@ def merge(
             coff: int
                 column offset in base array
 
+    target_aligned_pixels : bool, optional
+        Whether to adjust output image bounds so that pixel coordinates
+        are integer multiples of pixel size, matching the ``-tap``
+        options of GDAL utilities.  Default: False.
     dst_path : str or Pathlike, optional
         Path of output dataset
     dst_kwds : dict, optional
@@ -217,10 +222,6 @@ def merge(
             ys.extend([bottom, top])
         dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
-    logger.debug("Output bounds: %r", (dst_w, dst_s, dst_e, dst_n))
-    output_transform = Affine.translation(dst_w, dst_n)
-    logger.debug("Output transform, before scaling: %r", output_transform)
-
     # Resolution/pixel size
     if not res:
         res = first_res
@@ -228,18 +229,19 @@ def merge(
         res = (res, res)
     elif len(res) == 1:
         res = (res[0], res[0])
-    output_transform *= Affine.scale(res[0], -res[1])
-    logger.debug("Output transform, after scaling: %r", output_transform)
+
+    if target_aligned_pixels:
+        dst_w = math.floor(dst_w / res[0]) * res[0]
+        dst_e = math.ceil(dst_e / res[0]) * res[0]
+        dst_s = math.floor(dst_s / res[1]) * res[1]
+        dst_n = math.ceil(dst_n / res[1]) * res[1]
 
     # Compute output array shape. We guarantee it will cover the output
     # bounds completely
-    output_width = int(math.ceil((dst_e - dst_w) / res[0]))
-    output_height = int(math.ceil((dst_n - dst_s) / res[1]))
+    output_width = int(round((dst_e - dst_w) / res[0]))
+    output_height = int(round((dst_n - dst_s) / res[1]))
 
-    # Adjust bounds to fit
-    dst_e, dst_s = output_transform * (output_width, output_height)
-    logger.debug("Output width: %d, height: %d", output_width, output_height)
-    logger.debug("Adjusted bounds: %r", (dst_w, dst_s, dst_e, dst_n))
+    output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(res[0], -res[1])
 
     if dtype is not None:
         dt = dtype
@@ -314,13 +316,17 @@ def merge(
             )
 
             # 4. Read data in source window into temp
-            src_window = src_window.round_shape(pixel_precision=0)
-            dst_window = dst_window.round_shape(pixel_precision=0)
-            trows, tcols = dst_window.height, dst_window.width
-            temp_shape = (src_count, trows, tcols)
-            temp = src.read(
+            src_window_rnd_shp = src_window.round_shape(pixel_precision=0)
+            dst_window_rnd_shp = dst_window.round_shape(pixel_precision=0)
+            dst_window_rnd_off = dst_window_rnd_shp.round_offsets(pixel_precision=0)
+            temp_height, temp_width = (
+                dst_window_rnd_off.height,
+                dst_window_rnd_off.width,
+            )
+            temp_shape = (src_count, temp_height, temp_width)
+            temp_src = src.read(
                 out_shape=temp_shape,
-                window=src_window,
+                window=src_window_rnd_shp,
                 boundless=False,
                 masked=True,
                 indexes=indexes,
@@ -328,9 +334,11 @@ def merge(
             )
 
         # 5. Copy elements of temp into dest
-        dst_window = dst_window.round_offsets(pixel_precision=0)
-        roff, coff = dst_window.row_off, dst_window.col_off
-        region = dest[:, roff:roff + trows, coff:coff + tcols]
+        roff, coff = (
+            max(0, dst_window_rnd_off.row_off),
+            max(0, dst_window_rnd_off.col_off),
+        )
+        region = dest[:, roff : roff + temp_height, coff : coff + temp_width]
 
         if math.isnan(nodataval):
             region_mask = np.isnan(region)
@@ -339,8 +347,9 @@ def merge(
         else:
             region_mask = region == nodataval
 
+        # Ensure common shape, resolving issue #2202.
+        temp = temp_src[:, : region.shape[1], : region.shape[2]]
         temp_mask = np.ma.getmask(temp)
-
         copyto(region, temp, region_mask, temp_mask, index=idx, roff=roff, coff=coff)
 
     if dst_path is None:
