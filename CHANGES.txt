@@ -4,6 +4,7 @@ Changes
 1.2.5 (TBD)
 -----------
 
+- Get correct nodata values for complex_int16 data (#2206).
 - Prevent merge failures due to window and slicing mismatches (#2204 and
   #2202).
 
