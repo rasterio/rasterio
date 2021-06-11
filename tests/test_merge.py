@@ -1,5 +1,8 @@
 """Tests of rasterio.merge"""
 
+import boto3
+from hypothesis import given, settings
+from hypothesis.strategies import floats
 import numpy
 import pytest
 
@@ -58,7 +61,7 @@ def test_issue2163():
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
         data = src.read()
         result, transform = merge([src])
-        assert numpy.allclose(data, result)
+        assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
 
 
 def test_unsafe_casting():
@@ -66,3 +69,38 @@ def test_unsafe_casting():
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
         result, transform = merge([src], dtype="uint8", nodata=0.0)
         assert not result.any()  # this is why it's called "unsafe".
+
+
+@pytest.mark.skipif(
+    not (boto3.Session()._session.get_credentials()),
+    reason="S3 raster access requires credentials",
+)
+@pytest.mark.network
+@pytest.mark.slow
+@settings(deadline=None, max_examples=5)
+@given(
+    dx=floats(min_value=-0.05, max_value=0.05),
+    dy=floats(min_value=-0.05, max_value=0.05),
+)
+def test_issue2202(dx, dy):
+    import rasterio.merge
+    from shapely import wkt
+    from shapely.affinity import translate
+
+    aoi = wkt.loads(
+        r"POLYGON((11.09 47.94, 11.06 48.01, 11.12 48.11, 11.18 48.11, 11.18 47.94, 11.09 47.94))"
+    )
+    aoi = translate(aoi, dx, dy)
+
+    with rasterio.Env(AWS_NO_SIGN_REQUEST=True,):
+        ds = [
+            rasterio.open(i)
+            for i in [
+                "/vsis3/copernicus-dem-30m/Copernicus_DSM_COG_10_N47_00_E011_00_DEM/Copernicus_DSM_COG_10_N47_00_E011_00_DEM.tif",
+                "/vsis3/copernicus-dem-30m/Copernicus_DSM_COG_10_N48_00_E011_00_DEM/Copernicus_DSM_COG_10_N48_00_E011_00_DEM.tif",
+            ]
+        ]
+        aux_array, aux_transform = rasterio.merge.merge(datasets=ds, bounds=aoi.bounds)
+        from rasterio.plot import show
+
+        show(aux_array)
