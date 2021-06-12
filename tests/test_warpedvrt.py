@@ -213,23 +213,17 @@ def test_transformer_options(path_rgb_byte_tif):
         "SRC_METHOD": "NO_GEOTRANSFORM",
         "DST_METHOD": "NO_GEOTRANSFORM",
     }
-    if gdal_version.at_least("3.2"):
-        with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
-            src,
-            crs=DST_CRS,
-            transformer_options=transformer_options.copy(),
-        ) as vrt:
+    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
+        src,
+        crs=DST_CRS,
+        **transformer_options,
+    ) as vrt:
+        for key, value in transformer_options.items():
+            assert vrt.warp_extras[key] == value
+        if gdal_version.at_least("3.2"):
             assert vrt.transform.almost_equals(transform)
-            assert vrt.transformer_options == transformer_options
-    else:
-        with pytest.warns(UserWarning, match="transformer_options requires GDAL 3.2"):
-            with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
-                src,
-                crs=DST_CRS,
-                transformer_options=transformer_options.copy(),
-            ) as vrt:
-                assert not vrt.transform.almost_equals(transform)
-                assert vrt.transformer_options == transformer_options
+        else:
+            assert not vrt.transform.almost_equals(transform)
 
 
 @requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
