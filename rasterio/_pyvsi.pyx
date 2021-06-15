@@ -43,14 +43,7 @@ include "gdal.pxi"
 import logging
 from uuid import uuid4
 
-from rasterio._base cimport open_dataset
-from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
-
-from libc.stdio cimport printf
 from libc.string cimport memcpy
-
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 
 log = logging.getLogger(__name__)
 
@@ -77,81 +70,41 @@ cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _FILESYSTEM_INFO = {}
 
-def _delete_dataset_if_exists(path):
-
-    """Delete a dataset if it already exists.  This operates at a lower
-    level than a:
-
-        if rasterio.shutil.exists(path):
-            rasterio.shutil.delete(path)
-
-    and can take some shortcuts.
-
-    Parameters
-    ----------
-    path : str
-        Dataset path.
-    """
-
-    cdef GDALDatasetH h_dataset = NULL
-    cdef GDALDriverH h_driver = NULL
-    cdef const char *path_c = NULL
-
-    try:
-        h_dataset = open_dataset(path, 0x40, None, None, None)
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError) as exc:
-        log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %r", path)
-    else:
-        h_driver = GDALGetDatasetDriver(h_dataset)
-        GDALClose(h_dataset)
-        h_dataset = NULL
-
-        if h_driver != NULL:
-            path_b = path.encode("utf-8")
-            path_c = path_b
-            with nogil:
-                err = GDALDeleteDataset(h_driver, path_c)
-            exc_wrap_int(err)
-    finally:
-        if h_dataset != NULL:
-            GDALClose(h_dataset)
-
 ## Filesystem Functions
 
-cdef int pyvsi_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) with gil:
-    # Optional
-    printf("stat\n")
-
-
-cdef int pyvsi_unlink(void *pUserData, const char *pszFilename) with gil:
-    # Optional
-    printf("unlink\n")
-
-
-cdef int pyvsi_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
-    # Optional
-    printf("rename\n")
-
-
-cdef int pyvsi_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
-    # Optional
-    printf("mkdir\n")
-
-
-cdef int pyvsi_rmdir(void *pUserData, const char *pszDirname) with gil:
-    # Optional
-    printf("rmdir\n")
-
-
-cdef char** pyvsi_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
-    # Optional
-    printf("read_dir\n")
-
-
-cdef char** pyvsi_siblings_files(void *pUserData, const char *pszDirname) with gil:
-    # Optional (GDAL 3.2+)
-    printf("siblings_files\n")
+# cdef int pyvsi_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) with gil:
+#     # Optional
+#     printf("stat\n")
+#
+#
+# cdef int pyvsi_unlink(void *pUserData, const char *pszFilename) with gil:
+#     # Optional
+#     printf("unlink\n")
+#
+#
+# cdef int pyvsi_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
+#     # Optional
+#     printf("rename\n")
+#
+#
+# cdef int pyvsi_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
+#     # Optional
+#     printf("mkdir\n")
+#
+#
+# cdef int pyvsi_rmdir(void *pUserData, const char *pszDirname) with gil:
+#     # Optional
+#     printf("rmdir\n")
+#
+#
+# cdef char** pyvsi_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
+#     # Optional
+#     printf("read_dir\n")
+#
+#
+# cdef char** pyvsi_siblings_files(void *pUserData, const char *pszDirname) with gil:
+#     # Optional (GDAL 3.2+)
+#     printf("siblings_files\n")
 
 
 cdef void* pyvsi_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
@@ -210,37 +163,36 @@ cdef size_t pyvsi_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) 
     return <size_t>(num_bytes / nSize)
 
 
-cdef int pyvsi_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
-    # Optional
-    print("read_multi_range")
-
-
-cdef VSIRangeStatus pyvsi_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
-    # Optional
-    print("get_range_status")
-
-
-cdef int pyvsi_eof(void *pFile) with gil:
-    # Mandatory?
-    print("eof")
-
-
-cdef size_t pyvsi_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
-    print("write")
-
-
-cdef int pyvsi_flush(void *pFile) with gil:
-    # Optional
-    print("flush")
-
-
-cdef int pyvsi_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
-    print("truncate")
+# cdef int pyvsi_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
+#     # Optional
+#     print("read_multi_range")
+#
+#
+# cdef VSIRangeStatus pyvsi_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
+#     # Optional
+#     print("get_range_status")
+#
+#
+# cdef int pyvsi_eof(void *pFile) with gil:
+#     # Mandatory?
+#     print("eof")
+#
+#
+# cdef size_t pyvsi_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
+#     print("write")
+#
+#
+# cdef int pyvsi_flush(void *pFile) with gil:
+#     # Optional
+#     print("flush")
+#
+#
+# cdef int pyvsi_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
+#     print("truncate")
 
 
 cdef int pyvsi_close(void *pFile) except -1 with gil:
     # Optional
-    print("close")
     cdef object file_wrapper = <object>pFile
     del _FILESYSTEM_INFO[file_wrapper._pyvsi_path]
     return 0
@@ -257,6 +209,7 @@ cdef int install_rasterio_pyvsi_plugin(VSIFilesystemPluginCallbacksStruct *callb
 
 
 cdef class PyVSIFileBase:
+    """Base for a BytesIO-like class backed by a Python file-like object."""
 
     cdef VSIFilesystemPluginCallbacksStruct* _vsif
 
@@ -277,26 +230,26 @@ cdef class PyVSIFileBase:
             VSIFreeFilesystemPluginCallbacksStruct(self._vsif)
             self._vsif = NULL
 
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
+    def __init__(self, filelike_obj, dirname=None, filename=None, ext='.tif'):
         """A file in an in-memory filesystem.
 
         Parameters
         ----------
-        file_or_bytes : file or bytes
-            A file opened in binary mode or bytes
+        filelike_obj : file-like objects
+            A file opened in binary mode
         filename : str
-            A filename for the in-memory file under /vsimem
+            An optional filename used internally by GDAL. If not provided then
+            a unique one will be generated.
         ext : str
             A file extension for the in-memory file under /vsimem. Ignored if
             filename was provided.
 
         """
-        if isinstance(file_or_bytes, (bytes, str)) or not hasattr(file_or_bytes, "read"):
+        if isinstance(filelike_obj, (bytes, str)) or not hasattr(filelike_obj, "read"):
             raise TypeError("PyVSIFile expects file-like objects only.")
 
         # Make an in-memory directory specific to this dataset to help organize
         # auxiliary files.
-        # XXX: Do we really need directories?
         self._dirname = dirname or str(uuid4())
 
         if filename:
@@ -309,7 +262,7 @@ cdef class PyVSIFileBase:
 
         self._path = self.name.encode('utf-8')
         self._pyvsi_path = self._path[len(FILESYSTEM_PREFIX):]
-        self._file_obj = file_or_bytes
+        self._file_obj = filelike_obj
         self.mode = "r"
         self.closed = False
 
@@ -327,7 +280,6 @@ cdef class PyVSIFileBase:
             True if the in-memory file exists.
 
         """
-        print("exists")
         cdef VSIStatBufL st_buf
         return VSIStatL(self._path, &st_buf) == 0
 
@@ -346,24 +298,20 @@ cdef class PyVSIFileBase:
         try:
             return self._file_obj.size
         except AttributeError:
-            # FIXME: What should this actually do?
-            return 0
+            raise RuntimeError("Could not determine length for provided "
+                               "file-like object.")
 
     def close(self):
-        print("Python close")
-        # FIXME: _vsif is now the actual filesystem, this should deal with the file
-        # if hasattr(self, '_vsif') and self._vsif is not NULL:
-        #     print("vsif is not Null")
-        #     VSIFCloseL(<VSILFILE *>self._vsif)
-        # self._vsif = NULL
-        # _delete_dataset_if_exists(self.name)
-        # VSIRmdir(self._dirname.encode("utf-8"))
+        """Mark the file as closed.
+
+        This does not actually attempt to close the file; that is left up
+        to the user.
+
+        """
         self.closed = True
 
     def seek(self, offset, whence=0):
-        print("python seek")
         return self._file_obj.seek(offset, whence)
 
     def tell(self):
-        print("python tell")
         return self._file_obj.tell()

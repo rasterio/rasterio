@@ -149,13 +149,45 @@ class MemoryFile(MemoryFileBase):
 
 
 class PythonVSIFile(PyVSIFileBase):
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
-        """Create a new file in memory
+    """A BytesIO-like object, backed by an in-memory file.
+
+    This allows formatted files to be read and written without I/O.
+
+    A MemoryFile created with initial bytes becomes immutable. A
+    MemoryFile created without initial bytes may be written to using
+    either file-like or dataset interfaces.
+
+    Examples
+    --------
+
+    A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+    format driver
+
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, PythonVSIFile(f) as vsi_file:
+    ...     with vsi_file.open() as src:
+    ...         pprint.pprint(src.profile)
+    ...
+    {'count': 3,
+     'crs': CRS({'init': 'epsg:32618'}),
+     'driver': 'GTiff',
+     'dtype': 'uint8',
+     'height': 718,
+     'interleave': 'pixel',
+     'nodata': 0.0,
+     'tiled': False,
+     'transform': Affine(300.0379266750948, 0.0, 101985.0,
+           0.0, -300.041782729805, 2826915.0),
+     'width': 791}
+
+    """
+
+    def __init__(self, filelike_obj, dirname=None, filename=None, ext='.tif'):
+        """Create a new wrapper around the provided file-like object.
 
         Parameters
         ----------
-        file_or_bytes : file-like object or bytes, optional
-            File or bytes holding initial data.
+        filelike_obj : file-like object
+            Open file-like object. Currently only reading is supported.
         filename : str, optional
             An optional filename. A unique one will otherwise be generated.
         ext : str, optional
@@ -166,39 +198,25 @@ class PythonVSIFile(PyVSIFileBase):
         PythonVSIFile
         """
         super(PythonVSIFile, self).__init__(
-            file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)
+            file_or_bytes=filelike_obj, dirname=dirname, filename=filename, ext=ext)
 
     @ensure_env
-    def open(self, driver=None, width=None, height=None, count=None, crs=None,
-             transform=None, dtype=None, nodata=None, sharing=False, **kwargs):
+    def open(self, driver=None, sharing=False, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
-        If data has already been written, the file is opened in 'r'
-        mode. Otherwise, the file is opened in 'w' mode.
+        The provided file-like object is assumed to be readable.
+        Writing is currently not supported.
 
-        Parameters
-        ----------
-        Note well that there is no `path` parameter: a `MemoryFile`
-        contains a single dataset and there is no need to specify a
-        path.
-
-        Other parameters are optional and have the same semantics as the
+        Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
         mempath = UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        # if len(self) > 0:
         # Assume we were given a non-empty file-like object
         log.debug("VSI path: {}".format(mempath.path))
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
-        # else:
-        #     writer = get_writer_for_driver(driver)
-        #     return writer(mempath, 'w+', driver=driver, width=width,
-        #                   height=height, count=count, crs=crs,
-        #                   transform=transform, dtype=dtype,
-        #                   nodata=nodata, sharing=sharing, **kwargs)
 
     def __enter__(self):
         self._env = env_ctx_if_needed()
@@ -217,8 +235,8 @@ class ZipMemoryFile(MemoryFile):
     without I/O.
     """
 
-    def __init__(self, file_or_bytes=None):
-        super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
+    def __init__(self, filelike_obj=None):
+        super(ZipMemoryFile, self).__init__(filelike_obj, ext='zip')
 
     @ensure_env
     def open(self, path, driver=None, sharing=False, **kwargs):

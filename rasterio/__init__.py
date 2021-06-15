@@ -166,13 +166,13 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            memfile = PythonVSIFile(fp)
-            dataset = memfile.open(driver=driver, sharing=sharing)
+            vsi_file = PythonVSIFile(fp)
+            dataset = vsi_file.open(driver=driver, sharing=sharing)
             try:
                 yield dataset
             finally:
                 dataset.close()
-                memfile.close()
+                vsi_file.close()
 
         return fp_reader(fp)
 
