@@ -9,6 +9,7 @@ import logging
 import numpy as np
 
 from rasterio import dtypes
+from rasterio.dtypes import _getnpdtype
 from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
@@ -62,12 +63,12 @@ def _shapes(image, mask, connectivity, transform):
     cdef ShapeIterator shape_iter = None
     cdef int fieldtp
 
-    is_float = np.dtype(image.dtype).kind == "f"
+    is_float = _getnpdtype(image.dtype).kind == "f"
     fieldtp = 2 if is_float else 0
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
 
-    if np.dtype(image.dtype).name not in valid_dtypes:
+    if _getnpdtype(image.dtype).name not in valid_dtypes:
         raise ValueError("image dtype must be one of: {0}".format(
             ', '.join(valid_dtypes)))
 
@@ -89,7 +90,7 @@ def _shapes(image, mask, connectivity, transform):
             if mask.shape != image.shape:
                 raise ValueError("Mask must have same shape as image")
 
-            if np.dtype(mask.dtype).name not in ('bool', 'uint8'):
+            if _getnpdtype(mask.dtype).name not in ('bool', 'uint8'):
                 raise ValueError("Mask must be dtype rasterio.bool_ or "
                                  "rasterio.uint8")
 
@@ -184,7 +185,7 @@ def _sieve(image, size, out, mask, connectivity):
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
 
-    if np.dtype(image.dtype).name not in valid_dtypes:
+    if _getnpdtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
                                      in valid_dtypes))
         raise ValueError(
@@ -203,7 +204,7 @@ def _sieve(image, size, out, mask, connectivity):
     if out.shape != image.shape:
         raise ValueError('out raster shape must be same as image shape')
 
-    if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
+    if _getnpdtype(image.dtype).name != _getnpdtype(out.dtype).name:
         raise ValueError('out raster must match dtype of image')
 
     try:
@@ -231,7 +232,7 @@ def _sieve(image, size, out, mask, connectivity):
             if mask.shape != image.shape:
                 raise ValueError("Mask must have same shape as image")
 
-            if np.dtype(mask.dtype) not in ('bool', 'uint8'):
+            if _getnpdtype(mask.dtype) not in ('bool', 'uint8'):
                 raise ValueError("Mask must be dtype rasterio.bool_ or "
                                  "rasterio.uint8")
 

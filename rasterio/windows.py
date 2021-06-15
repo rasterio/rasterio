@@ -32,7 +32,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.transform import rowcol, guard_transform
 
 
-class WindowMethodsMixin(object):
+class WindowMethodsMixin:
     """Mixin providing methods for window-related calculations.
     These methods are wrappers for the functionality in
     `rasterio.windows` module.
@@ -189,9 +189,14 @@ def union(*windows):
     Window
     """
     stacked = np.dstack([toranges(w) for w in windows])
-    return Window.from_slices(
-        (stacked[0, 0].min(), stacked[0, 1].max()),
-        (stacked[1, 0].min(), stacked[1, 1]. max()))
+    row_start, row_stop = stacked[0, 0].min(), stacked[0, 1].max()
+    col_start, col_stop = stacked[1, 0].min(), stacked[1, 1].max()
+    return Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=col_stop - col_start,
+        height=row_stop - row_start,
+    )
 
 
 @iter_args
@@ -213,9 +218,14 @@ def intersection(*windows):
         raise WindowError("windows do not intersect")
 
     stacked = np.dstack([toranges(w) for w in windows])
-    return Window.from_slices(
-        (stacked[0, 0].max(), stacked[0, 1].min()),
-        (stacked[1, 0].max(), stacked[1, 1]. min()))
+    row_start, row_stop = stacked[0, 0].max(), stacked[0, 1].min()
+    col_start, col_stop = stacked[1, 0].max(), stacked[1, 1].min()
+    return Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=col_stop - col_start,
+        height=row_stop - row_start,
+    )
 
 
 @iter_args
@@ -286,6 +296,12 @@ def from_bounds(
     """
     if not isinstance(transform, Affine):  # TODO: RPCs?
         raise WindowError("A transform object is required to calculate the window")
+
+    if (right - left) / transform.a < 0:
+        raise WindowError("Bounds and transform are inconsistent")
+
+    if (bottom - top) / transform.e < 0:
+        raise WindowError("Bounds and transform are inconsistent")
 
     rows, cols = rowcol(
         transform,
@@ -498,7 +514,7 @@ def validate_length_value(instance, attribute, value):
 
 @attr.s(slots=True,
         frozen=True)
-class Window(object):
+class Window:
     """Windows are rectangular subsets of rasters.
 
     This class abstracts the 2-tuples mentioned in the module docstring

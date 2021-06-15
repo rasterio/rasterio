@@ -17,7 +17,7 @@ except ImportError:
     boto3 = None
 
 
-class Session(object):
+class Session:
     """Base for classes that configure access to secured resources.
 
     Attributes
@@ -102,7 +102,9 @@ class Session(object):
         if isinstance(path, UnparsedPath) or path.is_local:
             return DummySession
 
-        elif path.scheme == "s3" or "amazonaws.com" in path.path:
+        elif (
+            path.scheme == "s3" or "amazonaws.com" in path.path
+        ) and not "X-Amz-Signature" in path.path:
             if boto3 is not None:
                 return AWSSession
             else:

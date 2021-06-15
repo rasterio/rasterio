@@ -43,6 +43,17 @@ from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 
 log = logging.getLogger(__name__)
 
+# Gauss (7) is not supported for warp
+SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
+GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
+if GDALVersion.runtime().at_least('2.0'):
+    SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
+# sum supported since GDAL 3.1
+if GDALVersion.runtime().at_least('3.1'):
+    SUPPORTED_RESAMPLING.append(Resampling.sum)
+# rms supported since GDAL 3.3
+if GDALVersion.runtime().at_least('3.3'):
+    SUPPORTED_RESAMPLING.append(Resampling.rms)
 
 def recursive_round(val, precision):
     """Recursively round coordinates."""
@@ -474,7 +485,7 @@ def _reproject(
         if key == b"RPC_DEM":
             # don't .upper() since might be a path
             val = str(val).encode('utf-8')
-            
+
             if rpcs:
                 bUseApproxTransformer = False
         else:
@@ -706,11 +717,11 @@ DEFAULT_NODATA_FLAG = object()
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
-    def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
+    def __init__(self, src_dataset, src_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=DEFAULT_NODATA_FLAG, dst_nodata=None, nodata=DEFAULT_NODATA_FLAG,
-                 dst_width=None, width=None, dst_height=None, height=None,
-                 src_transform=None, dst_transform=None, transform=None,
+                 src_nodata=DEFAULT_NODATA_FLAG, nodata=DEFAULT_NODATA_FLAG,
+                 width=None, height=None,
+                 src_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
                  warp_mem_limit=0, dtype=None, **warp_extras):
         """Make a virtual warped dataset
@@ -728,19 +739,19 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             default.
         crs : CRS or str, optional
             The coordinate reference system at the end of the warp
-            operation.  Default: the crs of `src_dataset`. dst_crs is
+            operation.  Default: the crs of `src_dataset`. dst_crs was
             a deprecated alias for this parameter.
         transform : Affine, optional
             The transform for the virtual dataset. Default: will be
             computed from the attributes of `src_dataset`. dst_transform
-            is a deprecated alias for this parameter.
+            was a deprecated alias for this parameter.
         height, width: int, optional
             The dimensions of the virtual dataset. Defaults: will be
             computed from the attributes of `src_dataset`. dst_height
-            and dst_width are deprecated alias for these parameters.
+            and dst_width were deprecated alias for these parameters.
         nodata : float, optional
             Nodata value for the virtual dataset. Default: the nodata
-            value of `src_dataset` or 0.0. dst_nodata is a deprecated
+            value of `src_dataset` or 0.0. dst_nodata was a deprecated
             alias for this parameter.
         resampling : Resampling, optional
             Warp resampling algorithm. Default: `Resampling.nearest`.
@@ -774,6 +785,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if src_dataset.mode != "r":
             warnings.warn("Source dataset should be opened in read-only mode. Use of datasets opened in modes other than 'r' will be disallowed in a future version.", RasterioDeprecationWarning, stacklevel=2)
 
+        # Guard against invalid or unsupported resampling algorithms.
+        try:
+            if resampling == 7:
+                raise ValueError("Gauss resampling is not supported")
+            Resampling(resampling)
+
+        except ValueError:
+            raise ValueError(
+                "resampling must be one of: {0}".format(", ".join(['Resampling.{0}'.format(r.name) for r in SUPPORTED_RESAMPLING])))
+
         self.mode = 'r'
         self.options = {}
         self._count = 0
@@ -787,50 +808,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
-        # The various `dst_*` parameters are deprecated and will be
-        # removed in 1.1. In the next section of code, we warn
-        # about the deprecation and treat `dst_parameter` as an
-        # alias for `parameter`.
-
-        # Deprecate dst_nodata.
-        if dst_nodata is not None:
-            warnings.warn(
-                "dst_nodata will be removed in 1.1, use nodata",
-                RasterioDeprecationWarning)
-        if nodata is None:
-            nodata = dst_nodata
-
-        # Deprecate dst_width.
-        if dst_width is not None and width is None:
-            warnings.warn(
-                "dst_width will be removed in 1.1, use width",
-                RasterioDeprecationWarning)
-            width = dst_width
-
-        # Deprecate dst_height.
-        if dst_height is not None and height is None:
-            warnings.warn(
-                "dst_height will be removed in 1.1, use height",
-                RasterioDeprecationWarning)
-            height = dst_height
-
-        # Deprecate dst_transform.
-        if dst_transform is not None:
-            warnings.warn(
-                "dst_transform will be removed in 1.1, use transform",
-                RasterioDeprecationWarning)
-        if transform is None:
-            transform = dst_transform
-
-        # Deprecate dst_crs.
-        if dst_crs is not None:
-            warnings.warn(
-                "dst_crs will be removed in 1.1, use crs",
-                RasterioDeprecationWarning)
-
         if crs is None:
-            crs = dst_crs if dst_crs is not None else (src_crs or src_dataset.crs)
-        # End of `dst_parameter` deprecation and aliasing.
+            crs = src_crs or src_dataset.crs
 
         if add_alpha and gdal_version().startswith('1'):
             warnings.warn("Alpha addition not supported by GDAL 1.x")
@@ -1071,9 +1050,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         """The dataset's coordinate reference system"""
         return self.dst_crs
 
-    def read(self, indexes=None, out=None, window=None, masked=False,
-            out_shape=None, boundless=False, resampling=Resampling.nearest,
-            fill_value=None, out_dtype=None):
+    def read(self, indexes=None, out=None, window=None, masked=False, out_shape=None, resampling=Resampling.nearest, fill_value=None, out_dtype=None, **kwargs):
         """Read a dataset's raw pixels as an N-d array
 
         This data is read from the dataset's band cache, which means
@@ -1124,11 +1101,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             regular array. Masks will be exactly the inverse of the
             GDAL RFC 15 conforming arrays returned by read_masks().
 
-        boundless : bool, optional (default `False`)
-            If `True`, windows that extend beyond the dataset's extent
-            are permitted and partially or completely filled arrays will
-            be returned as appropriate.
-
         resampling : Resampling
             By default, pixel values are read raw or interpolated using
             a nearest neighbor algorithm from the band cache. Other
@@ -1137,6 +1109,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         fill_value : scalar
             Fill value applied in the `boundless=True` case only.
+
+        kwargs : dict
+            This is only for backwards compatibility. No keyword arguments
+            are supported other than the ones named above.
 
         Returns
         -------
@@ -1147,18 +1123,17 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         preferentially used by callers.
 
         """
-        if boundless:
+        if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
-            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
+            return super().read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
 
-    def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
-                   boundless=False, resampling=Resampling.nearest):
+    def read_masks(self, indexes=None, out=None, out_shape=None, window=None, resampling=Resampling.nearest, **kwargs):
         """Read raster band masks as a multidimensional array"""
-        if boundless:
+        if kwargs.get("boundless", False):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
-            return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
+            return super().read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
 
 
 def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None):

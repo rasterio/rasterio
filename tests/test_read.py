@@ -1,23 +1,18 @@
 from hashlib import md5
-import logging
-import sys
 import unittest
 
 import numpy as np
 import pytest
 
 import rasterio
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
+from rasterio.errors import DatasetIOShapeError
 
 # Find out if we've got HDF support (needed below).
 try:
     with rasterio.open('tests/data/no_band.h5') as s:
         pass
     has_hdf = True
-except:
+except Exception:
     has_hdf = False
 
 
@@ -93,13 +88,7 @@ class ReaderContextTest(unittest.TestCase):
     def test_read_out_dtype_fail(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = np.zeros((718, 791), dtype=rasterio.float32)
-            try:
-                s.read(1, a)
-            except ValueError as e:
-                assert ("the array's dtype 'float32' does not match the "
-                        "file's dtype") in str(e)
-            except:
-                assert "failed to catch exception" is False
+            s.read(1, a)
 
     def test_read_basic(self):
         with rasterio.open('tests/data/shade.tif') as s:
@@ -315,7 +304,7 @@ def test_out_shape_exceptions(path_rgb_byte_tif):
                 out_shape = (src.count, src.height, src.width)
                 reader(out=out, out_shape=out_shape)
 
-            with pytest.raises(ValueError):
+            with pytest.raises(Exception):
                 out_shape = (5, src.height, src.width)
                 reader(1, out_shape=out_shape)
 
@@ -325,3 +314,10 @@ def test_out_shape_implicit(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         out = src.read(indexes=(1, 2), out_shape=src.shape)
         assert out.shape == (2,) + src.shape
+
+
+def test_out_shape_no_segfault(path_rgb_byte_tif):
+    """Prevent segfault as reported in 2189"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with pytest.raises(DatasetIOShapeError):
+            src.read(out_shape=(2, src.height, src.width))

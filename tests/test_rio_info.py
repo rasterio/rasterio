@@ -1,5 +1,6 @@
 import json
 
+import boto3
 import pytest
 
 import rasterio
@@ -416,7 +417,7 @@ def test_info_no_credentials(tmpdir, monkeypatch, runner):
         ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
 
-
+@pytest.mark.skipif(not(boto3.Session()._session.get_credentials()), reason="S3 raster access requires credentials")
 @requires_gdal23(reason="Unsigned S3 requests require GDAL ~= 2.3")
 @pytest.mark.network
 def test_info_aws_unsigned(runner):

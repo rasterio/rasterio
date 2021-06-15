@@ -14,7 +14,7 @@ IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
-class TransformMethodsMixin(object):
+class TransformMethodsMixin:
     """Mixin providing methods for calculations related
     to transforming between rows and columns of the raster
     array and the coordinates.

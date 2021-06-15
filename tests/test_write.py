@@ -107,8 +107,12 @@ def test_write_sbyte(tmpdir):
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
-            dtype=a.dtype) as s:
-        s.write(a, indexes=1)
+            dtype=a.dtype) as dst:
+        dst.write(a, indexes=1)
+
+    with rasterio.open(name) as dst:
+        assert (dst.read() == -33).all()
+
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
     assert 'SIGNEDBYTE' in info

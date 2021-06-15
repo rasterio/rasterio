@@ -104,8 +104,9 @@ class MemoryFile(MemoryFileBase):
         -------
         MemoryFile
         """
-        super(MemoryFile, self).__init__(
-            file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext)
+        super().__init__(
+            file_or_bytes=file_or_bytes, dirname=dirname, filename=filename, ext=ext
+        )
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
@@ -235,8 +236,8 @@ class ZipMemoryFile(MemoryFile):
     without I/O.
     """
 
-    def __init__(self, filelike_obj=None):
-        super(ZipMemoryFile, self).__init__(filelike_obj, ext='zip')
+    def __init__(self, file_or_bytes=None):
+        super().__init__(file_or_bytes, ext="zip")
 
     @ensure_env
     def open(self, path, driver=None, sharing=False, **kwargs):

@@ -171,6 +171,7 @@ cdef _band_dtype(GDALRasterBandH band):
         else:
             return 'uint8'
 
+
     return dtypes.dtype_fwd[gdal_dtype]
 
 
@@ -223,7 +224,7 @@ cdef GDALDatasetH open_dataset(
             CSLDestroy(options)
 
 
-cdef class DatasetBase(object):
+cdef class DatasetBase:
     """Dataset base class
 
     Attributes
@@ -549,7 +550,9 @@ cdef class DatasetBase(object):
                 # to check that the return value is within the range of the
                 # data type. If so, the band has a nodata value. If not,
                 # there's no nodata value.
-                if (success == 0 or
+                if dtype not in dtypes.dtype_ranges:
+                    pass
+                elif (success == 0 or
                         val < dtypes.dtype_ranges[dtype][0] or
                         val > dtypes.dtype_ranges[dtype][1]):
                     val = None

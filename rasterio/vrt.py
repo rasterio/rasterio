@@ -36,19 +36,19 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         default.
     crs : CRS or str, optional
         The coordinate reference system at the end of the warp
-        operation.  Default: the crs of `src_dataset`. dst_crs is
+        operation.  Default: the crs of `src_dataset`. dst_crs was
         a deprecated alias for this parameter.
     transform : Affine, optional
         The transform for the virtual dataset. Default: will be
         computed from the attributes of `src_dataset`. dst_transform
-        is a deprecated alias for this parameter.
+        was a deprecated alias for this parameter.
     height, width: int, optional
         The dimensions of the virtual dataset. Defaults: will be
         computed from the attributes of `src_dataset`. dst_height
-        and dst_width are deprecated alias for these parameters.
+        and dst_width were deprecated alias for these parameters.
     nodata : float, optional
         Nodata value for the virtual dataset. Default: the nodata
-        value of `src_dataset` or 0.0. dst_nodata is a deprecated
+        value of `src_dataset` or 0.0. dst_nodata was a deprecated
         alias for this parameter.
     resampling : Resampling, optional
         Warp resampling algorithm. Default: `Resampling.nearest`.

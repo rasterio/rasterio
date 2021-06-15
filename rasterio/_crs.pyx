@@ -69,7 +69,7 @@ def _epsg_treats_as_northingeasting(input_crs):
         raise CRSError("{}".format(exc))
 
 
-cdef class _CRS(object):
+cdef class _CRS:
     """Cython extension class"""
 
     def __cinit__(self):

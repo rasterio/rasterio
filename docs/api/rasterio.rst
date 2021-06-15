@@ -22,7 +22,6 @@ Submodules
    rasterio._fill
    rasterio._io
    rasterio._warp
-   rasterio.compat
    rasterio.control
    rasterio.coords
    rasterio.crs

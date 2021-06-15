@@ -9,7 +9,7 @@ import click
 
 from . import options
 import rasterio
-from rasterio.enums import Resampling
+from rasterio.enums import _OverviewResampling as OverviewResampling
 
 
 def build_handler(ctx, param, value):
@@ -70,8 +70,7 @@ def get_maximum_overview_level(width, height, minsize=256):
 @click.option('--rebuild', help="Reconstruct existing overviews.",
               is_flag=True, default=False)
 @click.option('--resampling', help="Resampling algorithm.",
-              type=click.Choice(
-                  [it.name for it in Resampling if it.value in [0, 1, 2, 3, 4, 5, 6, 7]]),
+              type=click.Choice([it.name for it in OverviewResampling]),
               default='nearest', show_default=True)
 @click.pass_context
 def overview(ctx, input, build, ls, rebuild, resampling):
@@ -126,14 +125,14 @@ def overview(ctx, input, build, ls, rebuild, resampling):
                     ns='rio_overview').get('resampling') or resampling
 
                 dst.build_overviews(
-                    list(factors), Resampling[resampling_method])
+                    list(factors), OverviewResampling[resampling_method])
 
         elif build:
             with rasterio.open(input, 'r+') as dst:
                 if build == "auto":
                     overview_level = get_maximum_overview_level(dst.width, dst.height)
                     build = [2 ** j for j in range(1, overview_level + 1)]
-                dst.build_overviews(build, Resampling[resampling])
+                dst.build_overviews(build, OverviewResampling[resampling])
 
                 # Save the resampling method to a tag.
                 dst.update_tags(ns='rio_overview', resampling=resampling)

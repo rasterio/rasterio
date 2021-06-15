@@ -76,9 +76,9 @@ Git Conventions
 ---------------
 
 We use a variant of centralized workflow described in the `Git Book
-<https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.  We
-have no 1.0 release for Rasterio yet and we are tagging and releasing from the
-master branch. Our post-1.0 workflow is to be decided.
+<https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.
+Since Rasterio 1.0 we tag and release versions in the form:
+`x.y.z` version from the `maint-x.y` branch.
 
 Work on features in a new branch of the mapbox/rasterio repo or in a branch on
 a fork. Create a `GitHub pull request
@@ -87,32 +87,38 @@ ready for review.  We recommend creating a pull request as early as possible
 to give other developers a heads up and to provide an opportunity for valuable
 early feedback.
 
-Code Conventions
-----------------
+Conventions
+-----------
 
 The ``rasterio`` namespace contains both Python and C extension modules. All
 C extension modules are written using `Cython <http://cython.org/>`__. The
 Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
-Rasterio supports Python 2 and Python 3 in the same code base, which is
-aided by an internal compatibility module named ``compat.py``. It functions
-similarly to the more widely known `six <https://six.readthedocs.io/>`__ but
-we only use a small portion of the features so it eliminates a dependency.
+Rasterio works with Python versions 3.6 through 3.9.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
 
-Tests are mandatory for new features. We use `pytest <https://pytest.org>`__.
+Tests are mandatory for new code. We use `pytest <https://pytest.org>`__. Use
+pytest's parameterization feature.
 
 We aspire to 100% coverage for Python modules but coverage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 
+Use [darker](https://pypi.org/project/darker/) to reformat code as you change it.
+We aren't going to run black on everything all at once.
+
+Type hints are welcome as a part of refactoring work or new feature development.
+We aren't going to make a large initiative about adding hints to everything.
+
+Changes should be noted in CHANGES.txt. New entries go above older entries.
+
 Development Environment
 -----------------------
 
-Developing Rasterio requires Python 2.7 or any final release after and
-including 3.4.  We prefer developing with the most recent version of Python
+Developing Rasterio requires Python 3.6 or any final release after and
+including 3.9.  We prefer developing with the most recent version of Python
 but recognize this is not possible for all contributors.  A C compiler is also
 required to leverage `existing protocols
 <https://docs.python.org/3.5/extending/extending.html>`__ for extending Python

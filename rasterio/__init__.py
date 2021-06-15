@@ -11,8 +11,21 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import gdal_version
     from rasterio.drivers import driver_from_extension, is_blacklisted
     from rasterio.dtypes import (
-        bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
-        complex_, check_dtype)
+        bool_,
+        ubyte,
+        sbyte,
+        uint8,
+        int8,
+        uint16,
+        int16,
+        uint32,
+        int32,
+        float32,
+        float64,
+        complex_,
+        check_dtype,
+        complex_int16,
+    )
     from rasterio.env import ensure_env_with_credentials, Env
     from rasterio.errors import RasterioIOError, DriverCapabilityError
     from rasterio.io import (

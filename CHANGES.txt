@@ -4,11 +4,64 @@ Changes
 1.3.0 (TBD)
 -----------
 
+- WarpedVRT: Remove deprecated dst_* parameters (#2197).
 - Building from source now requires Cython (#2016).
-- Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8. 
-  DLLs will be loaded from .libs (for wheels) or from directories in PATH 
+- Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.
+  DLLs will be loaded from .libs (for wheels) or from directories in PATH
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
+
+1.2.4 (2021-05-31)
+------------------
+
+- Eliminate unneeded marker for CLI nodata options to be ignored. We will stick
+  with None (#2191).
+- Guard against use of gauss resampling when creating a WarpedVRT (#2190).
+- Prevent segfaults when buffer and band indexes are mismatched in
+  io_multi_band and io_multi_mask (#2189).
+- Change comparisons of nodata to IgnoreOption to accomodate changes in click
+  8.0.
+- Use Window constructor instead of from_slices in windows.union to allow a
+  proper union to be formed from windows extending outside a dataset (#2186).
+- Read GDAL CInt16 data as np.complex64 and allow saving complex data to CInt16
+  (#2185).
+- Skip merge sources which do not overlap the destination.
+- Allow unsafe casting in the merge tool, restoring behavior of version 1.2.0
+  (#2179).
+- Remove a workaround for an old Python 3.4 bug from the BoundingBox
+  implementation (#2172).
+- Add setuptools as an explicit installation requirement.
+
+1.2.3 (2021-04-26)
+------------------
+
+- Change usage of super() to be Python 3 compatible only.
+- Use numpy.isclose instead of equals when merging float data (fixes #2163).
+- The restriction on resampling methods available to overviews has been made
+  more clear with the addition of a not-yet-public _OverviewResampling enum
+  (#2157).
+- Fix a regression introduced in 1.2.2: from_bounds() can again return Windows
+  of zero height or width.
+- Search for GDAL data in installed packages is done before searching in
+  built-in locations when entering an Env, as is already done when importing
+  rasterio.env.
+
+1.2.2 (2021-04-06)
+------------------
+
+- Add a --nodata option to rio-clip to help support the relative complement use
+  case (#2087).
+- Remove boundless keyword argument from WarpedVRT method signatures (#2084).
+- Implement the advertised intent of warp.reproject's src_crs parameter. It can
+  override the source's crs (#2036).
+- A regression in the merge tool's min and max methods has been fixed (#2145).
+- windows.from_bounds raises WindowError when the given bounds and transform are
+  inconsistent with each other (#2138).
+- Support for GDAL's "sum" resampling algorith has been added (#2137).
+- Cython and numpy versions are pinned in pyproject.toml. Numpy versions
+  correspond to scipy's oldest supported versions for Python versions 3.6-3.10.
+- GDAL data path is configured in env.py with set_gdal_config (#2139).
+- AWS sessions are not created for pre-signed URLs (#2133).
 
 1.2.1 (2021-03-03)
 ------------------
