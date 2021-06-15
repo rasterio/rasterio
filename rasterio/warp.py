@@ -136,7 +136,7 @@ def transform_bounds(
     Optionally densifying the edges (to account for nonlinear transformations
     along these edges) and extracting the outermost bounds.
 
-    Note: this does not account for the antimeridian.
+    Note: antimeridian support added in version 1.3.0
 
     Parameters
     ----------
