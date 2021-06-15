@@ -198,8 +198,9 @@ class PythonVSIFile(PyVSIFileBase):
         -------
         PythonVSIFile
         """
-        super(PythonVSIFile, self).__init__(
-            file_or_bytes=filelike_obj, dirname=dirname, filename=filename, ext=ext)
+        super().__init__(
+            file_or_bytes=filelike_obj, dirname=dirname, filename=filename, ext=ext
+        )
 
     @ensure_env
     def open(self, driver=None, sharing=False, **kwargs):
