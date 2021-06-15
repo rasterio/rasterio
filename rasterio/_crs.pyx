@@ -278,6 +278,54 @@ cdef class _CRS:
 
         return None
 
+    def to_json(self, pretty=False, indentation=2):
+        """PROJ JSON representation of the CRS
+
+        .. versionadded:: 1.3.0
+
+        .. note:: Requites GDAL 3.1+ and PROJ 6.2+
+
+        Parameters
+        ----------
+        pretty: bool
+            If True, it will set the output to be a multiline string. Defaults to False.
+        indentation: int
+            If pretty is True, it will set the width of the indentation. Default is 2.
+
+        Returns
+        -------
+        str
+
+        """
+        cdef char *conv_json = NULL
+        cdef const char* options[3]
+
+        try:
+            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
+                if osr_get_name(self._osr) != NULL:
+                    multiline = b"MULTILINE=NO"
+                    if pretty:
+                        multiline = b"MULTILINE=YES"
+                    indentation_width = f"INDENTATION_WIDTH={indentation:.0f}".encode("utf-8")
+                    options[0] = multiline
+                    options[1] = indentation_width
+                    options[2] = NULL
+                    exc_wrap_ogrerr(OSRExportToPROJJSON(self._osr, &conv_json, options))
+            ELSE:
+                raise CRSError("GDAL 3.1+ required to export to PROJ JSON.")
+
+        except CPLE_BaseError as exc:
+            raise CRSError("Cannot convert to PROJ JSON. {}".format(exc))
+
+        else:
+            if conv_json != NULL:
+                return conv_json.decode('utf-8')
+            else:
+                return ''
+        finally:
+            CPLFree(conv_json)
+
+
     @staticmethod
     def from_epsg(code):
         """Make a CRS from an EPSG code

@@ -22,6 +22,7 @@ from .conftest import (
     requires_gdal22,
     requires_gdal_lt_3,
     requires_gdal3,
+    requires_gdal31,
 )
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -697,3 +698,94 @@ def test_latlong_northingeasting_gdal3():
     """Check CRS created from epsg with GDAL 3."""
     assert epsg_treats_as_latlong(CRS.from_epsg(4326))
     assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))
+
+
+def test_crs_to_json_dict():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    if gdal_version.at_least('3.1'):
+        json_dict = aeqd_crs.to_json_dict()
+        assert json_dict["type"] == "ProjectedCRS"
+    else:
+        with pytest.raises(CRSError):
+            aeqd_crs.to_json_dict()
+
+
+def test_crs_to_json():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    if gdal_version.at_least('3.1'):
+        json_data = aeqd_crs.to_json()
+        assert "ProjectedCRS" in json_data
+        assert "\n" not in json_data
+    else:
+        with pytest.raises(CRSError):
+            aeqd_crs.to_json_dict()
+
+
+def test_crs_to_json__empty():
+    crs = CRS()
+    if gdal_version.at_least('3.1'):
+        assert crs.to_json() == ""
+    else:
+        with pytest.raises(CRSError):
+            crs.to_json()
+
+
+def test_crs_to_json_dict__empty():
+    crs = CRS()
+    if gdal_version.at_least('3.1'):
+        assert crs.to_json_dict() == {}
+    else:
+        with pytest.raises(CRSError):
+            crs.to_json_dict()
+
+
+def test_crs_to_json__pretty():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    if gdal_version.at_least('3.1'):
+        json_data = aeqd_crs.to_json(pretty=True)
+        assert "ProjectedCRS" in json_data
+        assert json_data.startswith('{\n  "')
+    else:
+        with pytest.raises(CRSError):
+            aeqd_crs.to_json_dict()
+
+
+def test_crs_to_json__pretty__indenation():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    if gdal_version.at_least('3.1'):
+        json_data = aeqd_crs.to_json(pretty=True, indentation=4)
+        assert "ProjectedCRS" in json_data
+        assert json_data.startswith('{\n    "')
+    else:
+        with pytest.raises(CRSError):
+            aeqd_crs.to_json_dict()
+
+
+@requires_gdal31
+def test_crs_from_json():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_json(aeqd_crs.to_json()) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_from_json_dict():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_json_dict(aeqd_crs.to_json_dict()) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_proj_json__user_input():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_user_input(aeqd_crs.to_json()) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_proj_json__from_string():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_string(aeqd_crs.to_json()) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_proj_json_dict__user_input():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_user_input(aeqd_crs.to_json_dict()) == aeqd_crs

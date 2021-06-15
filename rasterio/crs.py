@@ -200,6 +200,44 @@ class CRS(Mapping):
                 except CRSError:
                     return {}
 
+    def to_json(self, pretty: bool=False, indentation: int=2) -> str:
+        """
+        PROJ JSON representation of the CRS
+
+        .. versionadded:: 1.3.0
+
+        .. note:: Requites GDAL 3.1+ and PROJ 6.2+
+
+        Parameters
+        ----------
+        pretty: bool, default=False
+            If True, it will set the output to be a multiline string.
+        indentation: int, default=2
+            If pretty is True, it will set the width of the indentation.
+
+        Returns
+        -------
+        str
+        """
+        return self._crs.to_json(pretty=pretty, indentation=indentation)
+
+    def to_json_dict(self) -> dict:
+        """
+        PROJ JSON representation of the CRS as dict
+
+        .. versionadded:: 1.3.0
+
+        .. note:: Requites GDAL 3.1+ and PROJ 6.2+
+
+        Returns
+        -------
+        dict
+        """
+        proj_json = self.to_json()
+        if proj_json:
+            return json.loads(proj_json)
+        return {}
+
     @property
     def data(self):
         """A PROJ4 dict representation of the CRS"""
@@ -400,7 +438,8 @@ class CRS(Mapping):
 
             if not val:
                 raise CRSError("CRS is empty JSON")
-            else:
+            # make sure it is not a PROJ JSON dict
+            elif "proj" in val or "init" in val:
                 return cls.from_dict(**val)
         elif string.endswith("]"):
             return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
@@ -471,6 +510,44 @@ class CRS(Mapping):
         return obj
 
     @classmethod
+    def from_json(cls, crs_json: str) -> "CRS":
+        """
+        .. versionadded:: 1.3.0
+
+        Create CRS from a PROJ JSON string.
+
+        Parameters
+        ----------
+        crs_json: str
+            PROJ JSON string.
+
+        Returns
+        -------
+        CRS
+        """
+        obj = cls()
+        obj._crs = _CRS.from_user_input(crs_json)
+        return obj
+
+    @classmethod
+    def from_json_dict(cls, crs_dict: dict) -> "CRS":
+        """
+        .. versionadded:: 1.3.0
+
+        Create CRS from a PROJ JSON dictionary.
+
+        Parameters
+        ----------
+        crs_dict: dict
+            CRS dictionary.
+
+        Returns
+        -------
+        CRS
+        """
+        return cls.from_json(json.dumps(crs_dict))
+
+    @classmethod
     def from_user_input(cls, value, morph_from_esri_dialect=False):
         """Make a CRS from various input
 
@@ -499,7 +576,9 @@ class CRS(Mapping):
         elif isinstance(value, int):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
-            return cls(**value)
+            if "proj" in value or "init" in value:
+                return cls(**value)
+            return cls.from_json_dict(value)
         elif isinstance(value, str):
             return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:
