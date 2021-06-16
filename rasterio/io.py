@@ -199,7 +199,7 @@ class PythonVSIFile(PyVSIFileBase):
         PythonVSIFile
         """
         super().__init__(
-            file_or_bytes=filelike_obj, dirname=dirname, filename=filename, ext=ext
+            filelike_obj, dirname=dirname, filename=filename, ext=ext
         )
 
     @ensure_env
