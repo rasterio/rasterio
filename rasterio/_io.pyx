@@ -1042,6 +1042,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         Returns
         -------
         dataset
+
         """
         cdef char **options = NULL
         cdef char *key_c = NULL
@@ -1137,17 +1138,18 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
-            if self._init_dtype == 'int8':
+            if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
                 options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.
             try:
-
                 self._hds = exc_wrap_pointer(
-                    GDALCreate(drv, fname, width, height,
-                               count, gdal_dtype, options))
+                    GDALCreate(drv, fname, width, height, count, gdal_dtype, options)
+                )
+
             except CPLE_BaseError as exc:
                 raise RasterioIOError(str(exc))
+
             finally:
                 if options != NULL:
                     CSLDestroy(options)
@@ -1375,6 +1377,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             dtype = check_dtypes.pop()
 
         dtype = _getnpdtype(dtype)
+
+        if dtype.name == "int8":
+            arr = arr.astype("uint8")
 
         # Require C-continguous arrays (see #108).
         arr = np.require(arr, dtype=dtype, requirements='C')
@@ -1755,7 +1760,7 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        if dtype == 'int8':
+        if _getnpdtype(dtype) == _getnpdtype("int8"):
             options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
         datasetname = str(uuid4()).encode('utf-8')
@@ -2019,7 +2024,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
-                if self._init_dtype == 'int8':
+                if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
                     options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
                 tp = self._init_dtype.type

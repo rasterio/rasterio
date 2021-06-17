@@ -55,12 +55,15 @@ def test_show_cmyk_interp(tmpdir):
     """A CMYK TIFF has cyan, magenta, yellow, black bands."""
     matplotlib = pytest.importorskip('matplotlib')
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        meta = src.meta
-    meta['photometric'] = 'cmyk'
-    meta['count'] = 4
-    del meta["nodata"]
+        profile = src.profile
+
+    profile['photometric'] = "CMYK"
+    profile['count'] = 4
+    del profile["nodata"]
+
     tiffname = str(tmpdir.join('foo.tif'))
-    with rasterio.open(tiffname, 'w', **meta) as dst:
+
+    with rasterio.open(tiffname, 'w', **profile) as dst:
         assert dst.colorinterp == (
             ColorInterp.cyan,
             ColorInterp.magenta,
