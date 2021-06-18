@@ -564,6 +564,16 @@ cdef extern from "gdalwarper.h" nogil:
          double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
 
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
+    cdef extern from "gdalwarper.h" nogil:
+
+        GDALDatasetH GDALAutoCreateWarpedVRTEx(
+            GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
+            GDALResampleAlg eResampleAlg, double dfMaxError,
+            const GDALWarpOptions *psOptions, char** papszTransformerOptions)
+
+
+
 cdef extern from "gdal_alg.h" nogil:
     void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
                           double dfPixErrThreshold,

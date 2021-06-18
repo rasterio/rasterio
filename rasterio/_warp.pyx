@@ -715,6 +715,38 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 DEFAULT_NODATA_FLAG = object()
 
 
+cdef GDALDatasetH auto_create_warped_vrt(
+    GDALDatasetH hSrcDS,
+    const char *pszSrcWKT,
+    const char *pszDstWKT,
+    GDALResampleAlg eResampleAlg,
+    double dfMaxError,
+    const GDALWarpOptions *psOptions,
+    const char **transformer_options,
+) nogil:
+
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
+        return GDALAutoCreateWarpedVRTEx(
+            hSrcDS,
+            pszSrcWKT,
+            pszDstWKT,
+            eResampleAlg,
+            dfMaxError,
+            psOptions,
+            transformer_options,
+        )
+
+    ELSE:
+        return GDALAutoCreateWarpedVRT(
+            hSrcDS,
+            pszSrcWKT,
+            pszDstWKT,
+            eResampleAlg,
+            dfMaxError,
+            psOptions,
+        )
+
+
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, src_crs=None, crs=None,
@@ -773,9 +805,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             means 64 MB with GDAL 2.2.
         dtype : str, optional
             The working data type for warp operation and output.
-        warp_extras : dict
-            GDAL extra warp options. See
+        warp_extras : dict, optional
+            GDAL extra warp options. See:
             https://gdal.org/doxygen/structGDALWarpOptions.html.
+            Also, GDALCreateGenImgProjTransformer2() options.
+            Requires rasterio 1.3+, GDAL 3.2+. See:
+            https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
 
         Returns
         -------
@@ -950,7 +985,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if not self.dst_transform and (not self.dst_width or not self.dst_height):
 
             with nogil:
-                hds_warped = GDALAutoCreateWarpedVRT(hds, src_crs_wkt, dst_crs_wkt, c_resampling, c_tolerance, psWOptions)
+                hds_warped = auto_create_warped_vrt(
+                    hds,
+                    src_crs_wkt,
+                    dst_crs_wkt,
+                    c_resampling,
+                    c_tolerance,
+                    psWOptions,
+                    <const char **>c_warp_extras,
+                )
 
         else:
 
