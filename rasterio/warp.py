@@ -14,7 +14,12 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import GDALVersion, ensure_env, require_gdal_version
     from rasterio.errors import GDALBehaviorChangeException, TransformError
     from rasterio.transform import array_bounds
-    from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
+    from rasterio._warp import (
+        _calculate_default_transform,
+        _reproject,
+        _transform_bounds,
+        _transform_geom,
+    )
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
@@ -131,7 +136,7 @@ def transform_bounds(
     Optionally densifying the edges (to account for nonlinear transformations
     along these edges) and extracting the outermost bounds.
 
-    Note: this does not account for the antimeridian.
+    Note: antimeridian support added in version 1.3.0
 
     Parameters
     ----------
@@ -152,36 +157,15 @@ def transform_bounds(
     left, bottom, right, top: float
         Outermost coordinates in target coordinate reference system.
     """
-    if densify_pts < 0:
-        raise ValueError('densify parameter must be >= 0')
-
-    in_xs = []
-    in_ys = []
-
-    if densify_pts > 0:
-        densify_factor = 1.0 / float(densify_pts + 1)
-
-        # Add points along outer edges.
-        for x in (left, right):
-            in_xs.extend([x] * (densify_pts + 2))
-            in_ys.extend(
-                bottom + np.arange(0, densify_pts + 2, dtype=np.float64) *
-                ((top - bottom) * densify_factor)
-            )
-
-        for y in (bottom, top):
-            in_xs.extend(
-                left + np.arange(1, densify_pts + 1, dtype=np.float64) *
-                ((right - left) * densify_factor)
-            )
-            in_ys.extend([y] * densify_pts)
-
-    else:
-        in_xs = [left, left, right, right]
-        in_ys = [bottom, top, bottom, top]
-
-    xs, ys = transform(src_crs, dst_crs, in_xs, in_ys)
-    return (min(xs), min(ys), max(xs), max(ys))
+    return _transform_bounds(
+        src_crs,
+        dst_crs,
+        left,
+        bottom,
+        right,
+        top,
+        densify_pts,
+    )
 
 
 @ensure_env

@@ -16,7 +16,7 @@ from affine import Affine, identity
 import numpy as np
 
 import rasterio
-from rasterio._base import gdal_version
+from rasterio._base import gdal_version, _transform
 from rasterio._base cimport open_dataset
 from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
@@ -32,7 +32,9 @@ from rasterio.errors import (
     RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
+cimport cython
 cimport numpy as np
+from libc.math cimport HUGE_VAL
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
@@ -1224,3 +1226,245 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None)
         geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
 
     return ET.tostring(vrtdataset)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef double antimeridian_min(data):
+    """
+    Handles the case when longitude values cross the antimeridian
+    when calculating the minumum.
+
+    Note: The data array must be in a linear ring.
+
+    Note: This requires a densified ring with at least 2 additional
+          points per edge to correctly handle global extents.
+
+    If only 1 additional point:
+
+      |        |
+      |RL--x0--|RL--
+      |        |
+    -180    180|-180
+
+    If they are evenly spaced and it crosses the antimeridian:
+    x0 - L = 180
+    R - x0 = -180
+
+    For example:
+    Let R = -179.9, x0 = 0.1, L = -179.89
+    x0 - L = 0.1 - -179.9 = 180
+    R - x0 = -179.89 - 0.1 ~= -180
+    This is the same in the case when it didn't cross the antimeridian.
+
+    If you have 2 additional points:
+      |            |
+      |RL--x0--x1--|RL--
+      |            |
+    -180        180|-180
+
+    If they are evenly spaced and it crosses the antimeridian:
+    x0 - L = 120
+    x1 - x0 = 120
+    R - x1 = -240
+
+    For example:
+    Let R = -179.9, x0 = -59.9, x1 = 60.1 L = -179.89
+    x0 - L = 59.9 - -179.9 = 120
+    x1 - x0 = 60.1 - 59.9 = 120
+    R - x1 = -179.89 - 60.1 ~= -240
+
+    However, if they are evenly spaced and it didn't cross the antimeridian:
+    x0 - L = 120
+    x1 - x0 = 120
+    R - x1 = 120
+
+    From this, we have a delta that is guaranteed to be significantly
+    large enough to tell the difference reguarless of the direction
+    the antimeridian was crossed.
+
+    However, even though the spacing was even in the source projection, it isn't
+    guaranteed in the targed geographic projection. So, instead of 240, 200 is used
+    as it significantly larger than 120 to be sure that the antimeridian was crossed
+    but smalller than 240 to account for possible irregularities in distances
+    when re-projecting. Also, 200 ensures latitudes are ignored for axis order handling.
+    """
+    cdef Py_ssize_t arr_len = len(data)
+    cdef int iii = 0
+    cdef int prev_iii = arr_len - 1
+    cdef double positive_min = HUGE_VAL
+    cdef double min_value = HUGE_VAL
+    cdef double delta = 0
+    cdef int crossed_meridian_count = 0
+    cdef bint positive_meridian = False
+
+    for iii in range(0, arr_len):
+        prev_iii = iii - 1
+        if prev_iii == -1:
+            prev_iii = arr_len - 1
+        # check if crossed meridian
+        delta = data[prev_iii] - data[iii]
+        # 180 -> -180
+        if delta >= 200:
+            if crossed_meridian_count == 0:
+                positive_min = min_value
+            crossed_meridian_count += 1
+            positive_meridian = False
+        # -180 -> 180
+        elif delta <= -200:
+            if crossed_meridian_count == 0:
+                positive_min = data[iii]
+            crossed_meridian_count += 1
+            positive_meridian = True
+        # positive meridian side min
+        if positive_meridian and data[iii] < positive_min:
+            positive_min = data[iii]
+        # track genral min value
+        if data[iii] < min_value:
+            min_value = data[iii]
+    if crossed_meridian_count == 2:
+        return positive_min
+    elif crossed_meridian_count == 4:
+        # bounds extends beyond -180/180
+        return -180
+    return min_value
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef double antimeridian_max(data):
+    """
+    Handles the case when longitude values cross the antimeridian
+    when calculating the minumum.
+
+    Note: The data array must be in a linear ring.
+
+    Note: This requires a densified ring with at least 2 additional
+          points per edge to correctly handle global extents.
+
+    See antimeridian_min docstring for reasoning.
+    """
+    cdef Py_ssize_t arr_len = len(data)
+    cdef int iii = 0
+    cdef int prev_iii = arr_len - 1
+    cdef double negative_max = -HUGE_VAL
+    cdef double max_value = -HUGE_VAL
+    cdef double delta = 0
+    cdef bint negative_meridian = False
+    cdef int crossed_meridian_count = 0
+    for iii in range(0, arr_len):
+        prev_iii = iii - 1
+        if prev_iii == -1:
+            prev_iii = arr_len - 1
+        # check if crossed meridian
+        delta = data[prev_iii] - data[iii]
+        # 180 -> -180
+        if delta >= 200:
+            if crossed_meridian_count == 0:
+                negative_max = data[iii]
+            crossed_meridian_count += 1
+            negative_meridian = True
+        # -180 -> 180
+        elif delta <= -200:
+            if crossed_meridian_count == 0:
+                negative_max = max_value
+            negative_meridian = False
+            crossed_meridian_count += 1
+        # negative meridian side max
+        if (negative_meridian
+            and (data[iii] > negative_max or negative_max == HUGE_VAL)
+            and data[iii] != HUGE_VAL
+        ):
+            negative_max = data[iii]
+        # track genral max value
+        if (data[iii] > max_value or max_value == HUGE_VAL) and data[iii] != HUGE_VAL:
+            max_value = data[iii]
+    if crossed_meridian_count == 2:
+        return negative_max
+    elif crossed_meridian_count == 4:
+        # bounds extends beyond -180/180
+        return 180
+    return max_value
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def _transform_bounds(
+    src_crs,
+    dst_crs,
+    double left,
+    double bottom,
+    double right,
+    double top,
+    int densify_pts,
+):
+    src_crs = CRS.from_user_input(src_crs)
+    dst_crs = CRS.from_user_input(dst_crs)
+
+    if src_crs == dst_crs:
+        return (left, bottom, right, top)
+
+    if densify_pts < 0:
+        raise ValueError("densify_pts must be positive")
+
+    cdef bint degree_output = dst_crs.is_geographic
+    cdef bint degree_input = src_crs.is_geographic
+
+    if degree_output and densify_pts < 2:
+        raise ValueError("densify_pts must be 2+ for degree output")
+
+    cdef int side_pts = densify_pts + 1  # add one because we are densifying
+    cdef int boundary_len = side_pts * 4
+    x_boundary_array = np.empty(boundary_len, dtype=np.float64)
+    y_boundary_array = np.empty(boundary_len, dtype=np.float64)
+    cdef double delta_x = 0
+    cdef double delta_y = 0
+    cdef int iii = 0
+
+    if degree_input and right < left:
+        # handle antimeridian
+        delta_x = (right - left + 360.0) / side_pts
+    else:
+        delta_x = (right - left) / side_pts
+    if degree_input and top < bottom:
+        # handle antimeridian
+        # depending on the axis order, longitude has the potential
+        # to be on the y axis. It shouldn't reach here if it is latitude.
+        delta_y = (top - bottom + 360.0) / side_pts
+    else:
+        delta_y = (top - bottom) / side_pts
+
+    # build densified bounding box
+    # Note: must be a linear ring for antimeridian logic
+    for iii in range(side_pts):
+        # left boundary
+        y_boundary_array[iii] = top - iii * delta_y
+        x_boundary_array[iii] = left
+        # bottom boundary
+        y_boundary_array[iii + side_pts] = bottom
+        x_boundary_array[iii + side_pts] = left + iii * delta_x
+        # right boundary
+        y_boundary_array[iii + side_pts * 2] = bottom + iii * delta_y
+        x_boundary_array[iii + side_pts * 2] = right
+        # top boundary
+        y_boundary_array[iii + side_pts * 3] = top
+        x_boundary_array[iii + side_pts * 3] = right - iii * delta_x
+
+    x_boundary_array, y_boundary_array = _transform(
+        src_crs, dst_crs, x_boundary_array, y_boundary_array, None,
+    )
+
+    if degree_output:
+        left = antimeridian_min(x_boundary_array)
+        right = antimeridian_max(x_boundary_array)
+    else:
+        x_boundary_array = np.ma.masked_invalid(x_boundary_array, copy=False)
+        left = x_boundary_array.min()
+        right = x_boundary_array.max()
+
+    y_boundary_array = np.ma.masked_invalid(y_boundary_array, copy=False)
+    bottom = y_boundary_array.min()
+    top = y_boundary_array.max()
+
+    return left, bottom, right, top
