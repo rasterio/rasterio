@@ -227,6 +227,24 @@ def test_transformer_options(path_rgb_byte_tif):
             assert not vrt.transform.almost_equals(transform)
 
 
+def test_transformer_options__width_height(path_rgb_byte_tif):
+    transform = affine.Affine(79.1, 0.0, 0.0, 0.0, -71.8, 51552.4)
+    transformer_options = {
+        "SRC_METHOD": "NO_GEOTRANSFORM",
+        "DST_METHOD": "NO_GEOTRANSFORM",
+    }
+    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(
+        src,
+        crs=DST_CRS,
+        width=10,
+        height=10,
+        **transformer_options,
+    ) as vrt:
+        for key, value in transformer_options.items():
+            assert vrt.warp_extras[key] == value
+        assert vrt.transform.almost_equals(transform)
+
+
 @requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
 @credentials
 @pytest.mark.network

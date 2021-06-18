@@ -1025,9 +1025,17 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
                 left, bottom, right, top = self.src_dataset.bounds
                 self.dst_transform, width, height = _calculate_default_transform(
-                    self.src_crs, self.dst_crs, self.src_dataset.width, self.src_dataset.height,
-                    left=left, bottom=bottom, right=right, top=top,
-                    gcps=self.src_gcps, rpcs=self.src_dataset.rpcs,
+                    self.src_crs,
+                    self.dst_crs,
+                    self.src_dataset.width,
+                    self.src_dataset.height,
+                    left=left,
+                    bottom=bottom,
+                    right=right,
+                    top=top,
+                    gcps=self.src_gcps,
+                    rpcs=self.src_dataset.rpcs,
+                    **self.warp_extras,
                 )
                 self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
 
