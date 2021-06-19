@@ -16,7 +16,7 @@ import pickle
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._crs import _CRS, all_proj_keys, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
+    from rasterio._crs import _CRS, _epsg_treats_as_latlong, _epsg_treats_as_northingeasting
     from rasterio.errors import CRSError
 
 
@@ -64,10 +64,7 @@ class CRS(Mapping):
         self._crs = None
 
         if initialdata or kwargs:
-            data = dict(initialdata or {})
-            data.update(**kwargs)
-            data = {k: v for k, v in data.items() if k in all_proj_keys}
-            self._crs = _CRS.from_dict(data)
+            self._crs = _CRS.from_dict(initialdata=initialdata, **kwargs)
 
         else:
             self._crs = _CRS()
@@ -175,12 +172,19 @@ class CRS(Mapping):
         """
         return self._crs.to_authority()
 
-    def to_dict(self):
-        """Convert CRS to a PROJ4 dict
+    def to_dict(self, proj_json=False):
+        """Convert CRS to a PROJ dict
 
-        Notes
-        -----
-        If there is a corresponding EPSG code, it will be used.
+        .. note:: If there is a corresponding EPSG code, it will be used
+                  when returning PROJ parameter dict.
+
+        .. versionadded:: 1.3.0 proj_json
+
+        Parameters
+        ----------
+        proj_json: bool, default=False
+            If True, will convert to PROJ JSON dict (Requites GDAL 3.1+ and PROJ 6.2+).
+            If False, will convert to PROJ parameter dict.
 
         Returns
         -------
@@ -190,15 +194,18 @@ class CRS(Mapping):
         if self._crs is None:
             raise CRSError("Undefined CRS has no dict representation")
 
+        if proj_json:
+            proj_json = self.to_json()
+            return json.loads(proj_json) if proj_json else {}
+
+        epsg_code = self.to_epsg()
+        if epsg_code:
+            return {'init': 'epsg:{}'.format(epsg_code)}
         else:
-            epsg_code = self.to_epsg()
-            if epsg_code:
-                return {'init': 'epsg:{}'.format(epsg_code)}
-            else:
-                try:
-                    return self._crs.to_dict()
-                except CRSError:
-                    return {}
+            try:
+                return self._crs.to_dict()
+            except CRSError:
+                return {}
 
     def to_json(self, pretty: bool=False, indentation: int=2) -> str:
         """
@@ -220,23 +227,6 @@ class CRS(Mapping):
         str
         """
         return self._crs.to_json(pretty=pretty, indentation=indentation)
-
-    def to_json_dict(self) -> dict:
-        """
-        PROJ JSON representation of the CRS as dict
-
-        .. versionadded:: 1.3.0
-
-        .. note:: Requites GDAL 3.1+ and PROJ 6.2+
-
-        Returns
-        -------
-        dict
-        """
-        proj_json = self.to_json()
-        if proj_json:
-            return json.loads(proj_json)
-        return {}
 
     @property
     def data(self):
@@ -438,8 +428,7 @@ class CRS(Mapping):
 
             if not val:
                 raise CRSError("CRS is empty JSON")
-            # make sure it is not a PROJ JSON dict
-            elif "proj" in val or "init" in val:
+            else:
                 return cls.from_dict(**val)
         elif string.endswith("]"):
             return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
@@ -470,7 +459,7 @@ class CRS(Mapping):
 
     @classmethod
     def from_dict(cls, initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
+        """Make a CRS from a dict of PROJ parameters or PROJ JSON
 
         Parameters
         ----------
@@ -510,44 +499,6 @@ class CRS(Mapping):
         return obj
 
     @classmethod
-    def from_json(cls, crs_json: str) -> "CRS":
-        """
-        .. versionadded:: 1.3.0
-
-        Create CRS from a PROJ JSON string.
-
-        Parameters
-        ----------
-        crs_json: str
-            PROJ JSON string.
-
-        Returns
-        -------
-        CRS
-        """
-        obj = cls()
-        obj._crs = _CRS.from_user_input(crs_json)
-        return obj
-
-    @classmethod
-    def from_json_dict(cls, crs_dict: dict) -> "CRS":
-        """
-        .. versionadded:: 1.3.0
-
-        Create CRS from a PROJ JSON dictionary.
-
-        Parameters
-        ----------
-        crs_dict: dict
-            CRS dictionary.
-
-        Returns
-        -------
-        CRS
-        """
-        return cls.from_json(json.dumps(crs_dict))
-
-    @classmethod
     def from_user_input(cls, value, morph_from_esri_dialect=False):
         """Make a CRS from various input
 
@@ -576,9 +527,7 @@ class CRS(Mapping):
         elif isinstance(value, int):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
-            if "proj" in value or "init" in value:
-                return cls(**value)
-            return cls.from_json_dict(value)
+            return cls(**value)
         elif isinstance(value, str):
             return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:

@@ -3,6 +3,7 @@
 """Coordinate reference systems, class and functions.
 """
 
+import json
 import logging
 import warnings
 
@@ -398,7 +399,7 @@ cdef class _CRS:
 
     @staticmethod
     def from_dict(initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
+        """Make a CRS from a dict of PROJ parameters or PROJ JSON
 
         Parameters
         ----------
@@ -414,6 +415,11 @@ cdef class _CRS:
         """
         data = dict(initialdata or {})
         data.update(**kwargs)
+
+        if not ("init" in data or "proj" in data):
+            # PROJ JSON
+            return _CRS.from_user_input(json.dumps(data))
+
         data = {k: v for k, v in data.items() if k in all_proj_keys}
 
         # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
