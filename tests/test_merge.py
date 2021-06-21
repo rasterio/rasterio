@@ -104,3 +104,8 @@ def test_issue2202(dx, dy):
         from rasterio.plot import show
 
         show(aux_array)
+
+
+def test_neg():
+    files = ["https://github.com/mattijn/datasets/raw/master/cube_nan.tif", "https://github.com/mattijn/datasets/raw/master/clip_cube.tif"]
+    merge(files)

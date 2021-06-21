@@ -5,7 +5,7 @@ Changes
 ------------------
 
 - Change rio-warp to unrotate imagery by default to match gdalwarp (#2125).
-- In write(), cast int8 arrays to uint8 (#2180).
+- Internal to write() cast int8 arrays to uint8 (#2180).
 - Get correct nodata values for complex_int16 data (#2206).
 - Prevent merge failures due to window and slicing mismatches (#2204 and
   #2202).
