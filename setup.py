@@ -219,7 +219,6 @@ if os.environ.get('CYTHON_COVERAGE'):
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
-ext_modules = None
 if "clean" not in sys.argv:
     ext_modules = cythonize([
         Extension(
