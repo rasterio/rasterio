@@ -159,8 +159,8 @@ def test_warp_no_reproject_res(runner, tmpdir):
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
             assert np.allclose([30, 30], [output.transform.a, -output.transform.e])
-            assert output.width == 327
-            assert output.height == 327
+            assert output.width == 326
+            assert output.height == 326
 
 
 def test_warp_no_reproject_bounds(runner, tmpdir):
@@ -179,7 +179,7 @@ def test_warp_no_reproject_bounds(runner, tmpdir):
             assert np.allclose([src.transform.a, src.transform.e],
                                [output.transform.a, output.transform.e])
             assert output.width == 105
-            assert output.height == 210
+            assert output.height == 209
 
 
 def test_warp_no_reproject_bounds_res(runner, tmpdir):
@@ -196,7 +196,7 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
             assert output.crs == src.crs
             assert np.allclose(output.bounds, out_bounds)
             assert np.allclose([30, 30], [output.transform.a, -output.transform.e])
-            assert output.width == 34
+            assert output.width == 33
             assert output.height == 67
 
     # dst-bounds should be an alias to bounds
@@ -609,3 +609,14 @@ def test_warp_resampling_not_yet_supported(
     assert result.exit_code == 2
     assert "Invalid value for" in result.output
     assert "--resampling" in result.output
+
+
+def test_unrotate(runner, tmp_path):
+    """rio-warp unrotates imagery by default, like gdalwarp"""
+    outputname = tmp_path.joinpath("test.tif").as_posix()
+    runner.invoke(main_group, ["warp", "tests/data/rotated.tif", outputname])
+
+    # There is no skew in the output.
+    with rasterio.open(outputname) as src:
+        assert src.transform.b == 0.0
+        assert src.transform.d == 0.0

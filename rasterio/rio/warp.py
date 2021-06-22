@@ -1,7 +1,8 @@
 """$ rio warp"""
 
 import logging
-from math import ceil
+from math import ceil, floor
+import sys
 
 import click
 
@@ -148,7 +149,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         setenv(CHECK_WITH_INVERT_PROJ=check_invert_proj)
 
         with rasterio.open(files[0]) as src:
-            l, b, r, t = src.bounds
+            left, bottom, right, top = src.bounds
+
             out_kwargs = src.profile
             out_kwargs.pop("driver", None)
             if driver:
@@ -232,7 +234,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 # Same projection, different dimensions, calculate resolution.
                 dst_crs = src.crs
                 dst_width, dst_height = dimensions
-                l, b, r, t = src_bounds or (l, b, r, t)
+                l, b, r, t = src_bounds or (left, bottom, right, top)
                 dst_transform = Affine(
                     (r - l) / float(dst_width),
                     0, l, 0,
@@ -249,21 +251,38 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_crs = src.crs
                 xmin, ymin, xmax, ymax = (src_bounds or dst_bounds)
                 dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
-                dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
-                dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
+                dst_width = max(int(round((xmax - xmin) / res[0])), 1)
+                dst_height = max(int(round((ymax - ymin) / res[1])), 1)
 
             elif res:
                 # Same projection, different resolution.
                 dst_crs = src.crs
-                dst_transform = Affine(res[0], 0, l, 0, -res[1], t)
-                dst_width = max(int(ceil((r - l) / res[0])), 1)
-                dst_height = max(int(ceil((t - b) / res[1])), 1)
+                dst_transform = Affine(res[0], 0, left, 0, -res[1], top)
+                dst_width = max(int(round((right - left) / res[0])), 1)
+                dst_height = max(int(round((top - bottom) / res[1])), 1)
 
             else:
                 dst_crs = src.crs
-                dst_transform = src.transform
-                dst_width = src.width
-                dst_height = src.height
+                inv_transform = ~src.transform
+                eps = sys.float_info.epsilon
+                c1, r1 = inv_transform * (left + eps, top + eps)
+                c2, r2 = inv_transform * (right + eps, top + eps)
+                c3, r3 = inv_transform * (right + eps, bottom + eps)
+                c4, r4 = inv_transform * (left + eps, bottom + eps)
+                col1 = min(c1, c2, c3, c4)
+                col2 = max(c1, c2, c3, c4)
+                row1 = min(r1, r2, r3, r4)
+                row2 = max(r1, r2, r3, r4)
+                col1 = floor(col1)
+                col2 = ceil(col2)
+                row1 = floor(row1)
+                row2 = ceil(row2)
+                px = (right - left) / (col2 - col1)
+                py = (top - bottom) / (row2 - row1)
+                res = max(px, py)
+                dst_width = max(int(round((right - left) / res)), 1)
+                dst_height = max(int(round((top - bottom) / res)), 1)
+                dst_transform = Affine.translation(left, top) * Affine.scale(res, -res)
 
             if target_aligned_pixels:
                 dst_transform, dst_width, dst_height = aligned_target(dst_transform, dst_width, dst_height, res)

@@ -541,9 +541,12 @@ cdef class DatasetBase:
                     dtype = "float64"
                 elif dtype == "complex64":
                     dtype = "float32"
+                elif dtype == "complex_int16":
+                    dtype = "int16"
 
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
+
                 # GDALGetRasterNoDataValue() has two ways of telling you that
                 # there's no nodata value. The success flag might come back
                 # 0 (FALSE). Even if it comes back 1 (TRUE), you still need
@@ -552,9 +555,7 @@ cdef class DatasetBase:
                 # there's no nodata value.
                 if dtype not in dtypes.dtype_ranges:
                     pass
-                elif (success == 0 or
-                        val < dtypes.dtype_ranges[dtype][0] or
-                        val > dtypes.dtype_ranges[dtype][1]):
+                elif (success == 0 or val < dtypes.dtype_ranges[dtype][0] or val > dtypes.dtype_ranges[dtype][1]):
                     val = None
                 log.debug(
                     "Nodata success: %d, Nodata value: %f", success, nodataval)

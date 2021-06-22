@@ -81,7 +81,7 @@ def test_complex_int16(tmpdir):
         driver="GTiff",
         height=Z1.shape[0],
         width=Z1.shape[1],
-        nodata=0,
+        nodata=None,
         count=1,
         dtype="complex_int16",
         crs="+proj=latlong",
@@ -94,5 +94,6 @@ def test_complex_int16(tmpdir):
     )
 
     with rasterio.open(tempfile) as dst:
+        assert dst.nodatavals == (None,)
         data = dst.read()
         assert data.dtype == np.complex64

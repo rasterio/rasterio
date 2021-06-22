@@ -11,6 +11,15 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.5 (2021-06-21)
+------------------
+
+- Change rio-warp to unrotate imagery by default to match gdalwarp (#2125).
+- Internal to write() cast int8 arrays to uint8 (#2180).
+- Get correct nodata values for complex_int16 data (#2206).
+- Prevent merge failures due to window and slicing mismatches (#2204 and
+  #2202).
+
 1.2.4 (2021-05-31)
 ------------------
 
