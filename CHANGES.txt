@@ -11,6 +11,12 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.6 (2021-06-22)
+------------------
+
+- Replace the defective 1.2.5 sdist, which had breakpoint in merge.py. This did
+  not affect wheels.
+
 1.2.5 (2021-06-21)
 ------------------
 
