@@ -527,6 +527,15 @@ def merge_tiled(
                          .format(method, list(MERGE_METHODS.keys())))
 
     DS = tuple(map(dataset_opener, datasets))
+    nodataval = DS[0].nodatavals[0]
+    dt = DS[0].dtypes[0]
+
+    if indexes is None:
+        src_count = DS[0].count
+    elif isinstance(indexes, int):
+        src_count = indexes
+    else:
+        src_count = len(indexes)
 
     # Compute destination bounds
     if bounds:
@@ -585,7 +594,8 @@ def merge_tiled(
 
     # Compute output array shape. We guarantee it will cover the output
     # bounds completely
-    output_count = min(src.count for src in DS)
+    if not output_count:
+        output_count = src_count
     output_width = round((dst_e - dst_w) / res[0])
     output_height = round((dst_n - dst_s) / res[1])
     output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(res[0], -res[1])
@@ -604,8 +614,9 @@ def merge_tiled(
     with rasterio.open(dst_path, 'w', **out_profile) as dest:
         for i, block in enumerate(blocks):
             tile_shape = (output_count, block.height, block.width)
-            tile = np.zeros(tile_shape, dtype='float32')
-            tile.fill(nodataval)
+            tile = np.zeros(tile_shape, dtype=dt)
+            if inrange:
+                tile.fill(nodataval)
 
             tile_window = windows.bounds(block, output_transform)
             for idx, ds in enumerate(DS):
