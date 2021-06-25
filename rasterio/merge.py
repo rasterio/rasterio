@@ -426,6 +426,8 @@ def merge_tiled(
     method="first",
     target_aligned_pixels=False,
     dst_kwds=None,
+    memory_limit=None,
+    block_shape=None
 ):
     """Copy valid pixels from input files to an output file.
 
@@ -608,9 +610,18 @@ def merge_tiled(
     out_profile['count'] = output_count
     if nodata is not None:
         out_profile['nodata'] = nodata
+
+    dest_shape = (output_count, output_height, output_width)
+    if memory_limit is not None and block_shape is not None:
+        raise ValueError("Can only set memory limit or block_shape, but not both")
+    if memory_limit:
+        block_shape, blocks = arrblocks(dest_shape, dt, mem_limit=memory_limit)
+    elif block_shape:
+        assert len(block_shape) == 2
+        blocks = arrblocksxy(dest_shape, *block_shape)
+    else:
+        block_shape, blocks = arrblocks(dest_shape, dt, mem_limit=1024*1024*256)
     
-    dest_shape = (output_count, output_width, output_height)
-    block_shape, blocks = arrblocks(dest_shape, dt)
     with rasterio.open(dst_path, 'w', **out_profile) as dest:
         for i, block in enumerate(blocks):
             tile_shape = (output_count, block.height, block.width)
