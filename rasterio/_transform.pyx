@@ -92,7 +92,7 @@ cdef class RPCTransformerBase:
         """
         cdef char **papszMD = NULL
         cdef char **options = NULL
-        cdef int bReversed = 0
+        cdef int bReversed = 1
         cdef double dfPixErrThreshold = 0.1  # GDAL default
         cdef GDALRPCInfo rpcinfo
 
@@ -236,7 +236,7 @@ cdef class GCPTransformerBase:
         """
         Construct a new GCP transformer
         """
-        cdef int bReversed = 0
+        cdef int bReversed = 1
         cdef int nReqOrder = 0  # let GDAL determine polynomial order
         cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
         cdef int nGCPCount = len(gcps)

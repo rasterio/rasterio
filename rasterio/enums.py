@@ -3,9 +3,16 @@
 from enum import Enum, IntEnum
 
 class TransformDirection(IntEnum):
-    """Coordinate transform direction"""
-    reverse = 0
+    """Coordinate transform direction
+    
+    Notes
+    -----
+    Forward transform direction defined as image pixel (row, col) to 
+    geographic/projected (x, y) coordinates. Reverse transform direction defined as
+    geographic/projected (x, y) to image pixel (row, col) coordinates.
+    """
     forward = 1
+    reverse = 0
 
 class TransformMethod(Enum):
     affine = 'transform'

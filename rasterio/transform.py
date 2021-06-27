@@ -47,9 +47,17 @@ class TransformMethodsMixin:
             Pixel row.
         col : int
             Pixel column.
+        z : int or float, optional
+            Height associated with coordinates. Primarily used for RPC based 
+            coordinate transformations. Ignored for affine based 
+            transformations. Default: 0.
         offset : str, optional
             Determines if the returned coordinates are for the center of the
             pixel or for a corner.
+        transform_method: TransformMethod, optional 
+            The coordinate transformation method. Default: `TransformMethod.affine`.
+        rpc_options: dict, optional
+            Additional arguments passed to GDALCreateRPCTransformer
 
         Returns
         -------
@@ -78,11 +86,19 @@ class TransformMethodsMixin:
             x value in coordinate reference system
         y : float
             y value in coordinate reference system
+        z : int or float, optional
+            Height associated with coordinates. Primarily used for RPC based 
+            coordinate transformations. Ignored for affine based 
+            transformations. Default: 0.
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
         precision : int, optional (default: None)
             Decimal places of precision in indexing, as in `round()`.
+        transform_method: TransformMethod, optional 
+            The coordinate transformation method. Default: `TransformMethod.affine`.
+        rpc_options: dict, optional
+            Additional arguments passed to GDALCreateRPCTransformer
 
         Returns
         -------
@@ -102,9 +118,8 @@ def get_transformer(transform, **rpc_options):
         transformer_cls = partial(AffineTransformer, transform)
     elif isinstance(transform, RPC):
         transformer_cls = partial(RPCTransformer, transform, **rpc_options)
-    elif len(transform):
-        if isinstance(transform[0], GroundControlPoint):
-            transformer_cls = partial(GCPTransformer, transform)
+    else:
+        transformer_cls = partial(GCPTransformer, transform)
     return transformer_cls
 
 def tastes_like_gdal(seq):
@@ -163,17 +178,26 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
+    Supports affine, Ground Control Point (GCP), or Rational Polynomial 
+    Coefficients (RPC) based coordinate transformations.
+
     Parameters
     ----------
-    transform : affine.Affine
-        Transformation from pixel coordinates to coordinate reference system.
+    transform : Affine or sequence of GroundControlPoint or RPC
+        Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer. 
     rows : list or int
         Pixel rows.
     cols : list or int
         Pixel columns.
+    zs : list or float, optional
+        Height associated with coordinates. Primarily used for RPC based 
+        coordinate transformations. Ignored for affine based 
+        transformations. Default: 0.
     offset : str, optional
         Determines if the returned coordinates are for the center of the
         pixel or for a corner.
+    rpc_options : dict, optional
+        Additional arguments passed to GDALCreateRPCTransformer.
 
     Returns
     -------
@@ -198,18 +222,24 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
 
     Parameters
     ----------
-    transform : Affine
-        Coefficients mapping pixel coordinates to coordinate reference system.
+    transform : Affine or sequence of GroundControlPoint or RPC
+        Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer.
     xs : list or float
-        x values in coordinate reference system
+        x values in coordinate reference system.
     ys : list or float
-        y values in coordinate reference system
+        y values in coordinate reference system.
+    zs : list or float, optional
+        Height associated with coordinates. Primarily used for RPC based 
+        coordinate transformations. Ignored for affine based 
+        transformations. Default: 0.
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
-        round)
+        round).
     precision : int or float, optional
         An integer number of decimal points of precision when computing
         inverse transform, or an absolute float precision.
+    rpc_options : dict, optional
+        Additional arguments passed to GDALCreateRPCTransformer.
 
     Returns
     -------
@@ -238,10 +268,17 @@ def from_gcps(gcps):
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
-class TransformerBase:
+class TransformerBase():
     """
     Generic GDAL transformer base class
+
+    Notes
+    -----
+    Subclasses must have a _transformer attribute and implement a `_transform` method.
     """
+    def __init__(self):
+        self._transformer = None
+
     def close(self):
         raise NotImplementedError
     
@@ -309,7 +346,7 @@ class TransformerBase:
         f = lambda val: val + eps
         xs = list(map(f, xs))
         ys = list(map(f, ys))
-        new_cols, new_rows =  self._transform(xs, ys, zs, transform_direction=TransformDirection.forward)
+        new_cols, new_rows =  self._transform(xs, ys, zs, transform_direction=TransformDirection.reverse)
 
         if len(new_rows) == 1:
             return (op(new_rows[0]), op(new_cols[0]))
@@ -361,12 +398,15 @@ class TransformerBase:
             temp_rows.append(y)
             temp_cols.append(x)
 
-        new_ys, new_xs = self._transform(temp_rows, temp_cols, zs, transform_direction=TransformDirection.reverse)
+        new_ys, new_xs = self._transform(temp_rows, temp_cols, zs, transform_direction=TransformDirection.forward)
 
         if len(new_ys) == 1:
             return (new_ys[0], new_xs[0])
         
         return (new_ys, new_xs)
+    
+    def _transform(self, xs, ys, zs, transform_direction):
+        raise NotImplementedError
 
 
 class AffineTransformer(TransformerBase):
@@ -382,9 +422,9 @@ class AffineTransformer(TransformerBase):
         resxs = []
         resys = []
         
-        if transform_direction is TransformDirection.reverse:
+        if transform_direction is TransformDirection.forward:
             transform = self._transformer
-        elif transform_direction is TransformDirection.forward:
+        elif transform_direction is TransformDirection.reverse:
             transform = ~self._transformer
 
         for x, y in zip(xs, ys):
@@ -401,6 +441,8 @@ class AffineTransformer(TransformerBase):
 
 class RPCTransformer(RPCTransformerBase, TransformerBase):
     def __init__(self, rpcs, **kwargs):
+        if not isinstance(rpcs, RPC):
+            raise ValueError("RPCTransformer requires RPC")
         super().__init__(rpcs, **kwargs)
 
     def __repr__(self):
@@ -410,6 +452,8 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
 
 class GCPTransformer(GCPTransformerBase, TransformerBase):
     def __init__(self, gcps):
+        if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
+            raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
         super().__init__(gcps)
 
     def __repr__(self):
