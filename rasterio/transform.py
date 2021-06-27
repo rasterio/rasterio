@@ -47,7 +47,7 @@ class TransformMethodsMixin:
             Pixel row.
         col : int
             Pixel column.
-        z : int or float, optional
+        z : float, optional
             Height associated with coordinates. Primarily used for RPC based 
             coordinate transformations. Ignored for affine based 
             transformations. Default: 0.
@@ -86,7 +86,7 @@ class TransformMethodsMixin:
             x value in coordinate reference system
         y : float
             y value in coordinate reference system
-        z : int or float, optional
+        z : float, optional
             Height associated with coordinates. Primarily used for RPC based 
             coordinate transformations. Ignored for affine based 
             transformations. Default: 0.
@@ -320,7 +320,15 @@ class TransformerBase():
         xs, ys : float or list of float
             Geographic coordinates
         zs : float or list of float, optional
-            Geodetic height
+            Height associated with coordinates. Primarily used for RPC based 
+            coordinate transformations. Ignored for affine based 
+            transformations. Default: 0.
+        op : function, optional (default: math.floor)
+            Function to convert fractional pixels to whole numbers (floor,
+            ceiling, round)
+        precision : int, optional (default: None)
+            Decimal places of precision in indexing, as in `round()`.
+        
 
         Raises
         ------
@@ -361,10 +369,15 @@ class TransformerBase():
 
         Parameters
         ----------
-        rows, cols : float or list of float
+        rows, cols : int or list of int
             Image pixel coordinates
         zs : float or list of float, optional
-            Geodetic height
+            Height associated with coordinates. Primarily used for RPC based 
+            coordinate transformations. Ignored for affine based 
+            transformations. Default: 0.
+        offset : str, optional
+            Determines if the returned coordinates are for the center of the
+            pixel or for a corner.
         Raises
         ------
         ValueError
@@ -410,6 +423,7 @@ class TransformerBase():
 
 
 class AffineTransformer(TransformerBase):
+    """A pure Python class related to affine based coordinate transformations."""
     def __init__(self, affine_transform):
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
@@ -440,10 +454,19 @@ class AffineTransformer(TransformerBase):
 
 
 class RPCTransformer(RPCTransformerBase, TransformerBase):
-    def __init__(self, rpcs, **kwargs):
+    """
+    Class related to Rational Polynomial Coeffecients (RPCs) based
+    coordinate transformations.
+
+    Uses GDALCreateRPCTransformer and GDALRPCTransform for computations. Options
+    for GDALCreateRPCTransformer may be passed using `rpc_options`.
+    Ensure that GDAL transformer objects are destroyed by calling `close()` 
+    method or using context manager interface.
+    """
+    def __init__(self, rpcs, **rpc_options):
         if not isinstance(rpcs, RPC):
             raise ValueError("RPCTransformer requires RPC")
-        super().__init__(rpcs, **kwargs)
+        super().__init__(rpcs, **rpc_options)
 
     def __repr__(self):
         return "<{} RPCTransformer>".format(
@@ -451,6 +474,14 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
 
 
 class GCPTransformer(GCPTransformerBase, TransformerBase):
+    """
+    Class related to Ground Control Point (GCPs) based
+    coordinate transformations.
+
+    Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
+    Ensure that GDAL transformer objects are destroyed by calling `close()` 
+    method or using context manager interface.
+    """
     def __init__(self, gcps):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")

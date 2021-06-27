@@ -132,9 +132,9 @@ cdef class RPCTransformerBase:
         xs, ys, zs : list
             List of coordinates to be transformed. May be either pixel/line/height or
             lon/lat/height)
-        transform_direction : rasterio.enums.TransformDirection
+        transform_direction : TransformDirection
             The transform direction i.e. forward implies pixel/line -> lon/lat/height
-            while reverse implies lon/lat/height -> pixel/line
+            while reverse implies lon/lat/height -> pixel/line. 
 
         Raises
         ------
