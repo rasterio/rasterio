@@ -7,6 +7,11 @@ class TransformDirection(IntEnum):
     reverse = 0
     forward = 1
 
+class TransformMethod(Enum):
+    affine = 'transform'
+    gcps = 'gcps'
+    rpcs = 'rpcs'
+
 class ColorInterp(IntEnum):
     """Raster band color interpretation."""
     undefined = 0

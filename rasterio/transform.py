@@ -1,9 +1,9 @@
 """Geospatial transforms"""
 
 from collections.abc import Iterable
+from functools import partial
 import math
 import sys
-from pathlib import Path
 
 from affine import Affine
 
@@ -16,7 +16,9 @@ with rasterio._loading.add_gdal_dll_directories():
         RPCTransformerBase,
         GCPTransformerBase
     )
-    from rasterio.enums import TransformDirection
+    from rasterio.enums import TransformDirection, TransformMethod
+    from rasterio.control import GroundControlPoint
+    from rasterio.rpc import RPC
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -34,7 +36,7 @@ class TransformMethodsMixin:
     property.
     """
 
-    def xy(self, row, col, offset="center"):
+    def xy(self, row, col, z=None, offset="center", transform_method=TransformMethod.affine, **rpc_options):
         """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
         The pixel's center is returned by default, but a corner can be returned
         by setting `offset` to one of `ul, ur, ll, lr`.
@@ -54,9 +56,14 @@ class TransformMethodsMixin:
         tuple
             ``(x, y)``
         """
-        return xy(self.transform, row, col, offset=offset)
+        transform = getattr(self, transform_method.value)
+        if transform_method is TransformMethod.gcps:
+            transform = transform[0]
+        if not transform:
+            raise AttributeError("Dataset has no {}".format(transform_method))
+        return xy(transform, row, col, z=z, offset=offset, **rpc_options)
 
-    def index(self, x, y, op=math.floor, precision=None):
+    def index(self, x, y, z=None, op=math.floor, precision=None, transform_method=TransformMethod.affine, **rpc_options):
         """
         Returns the (row, col) index of the pixel containing (x, y) given a
         coordinate reference system.
@@ -82,8 +89,23 @@ class TransformMethodsMixin:
         tuple
             (row index, col index)
         """
-        return rowcol(self.transform, x, y, op=op, precision=precision)
+        transform = getattr(self, transform_method.value)
+        if transform_method is TransformMethod.gcps:
+            transform = transform[0]
+        if not transform:
+            raise AttributeError("Dataset has no {}".format(transform_method))
+        return rowcol(transform, x, y, z=z, op=op, precision=precision, **rpc_options)
 
+def get_transformer(transform, **rpc_options):
+    """Return the appropriate transformer class"""
+    if isinstance(transform, Affine):
+        transformer_cls = partial(AffineTransformer, transform)
+    elif isinstance(transform, RPC):
+        transformer_cls = partial(RPCTransformer, transform, **rpc_options)
+    elif len(transform):
+        if isinstance(transform[0], GroundControlPoint):
+            transformer_cls = partial(GCPTransformer, transform)
+    return transformer_cls
 
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
@@ -136,7 +158,7 @@ def array_bounds(height, width, transform):
     return w, s, e, n
 
 
-def xy(transform, rows, cols, offset='center'):
+def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
     """Returns the x and y coordinates of pixels at `rows` and `cols`.
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
@@ -160,39 +182,12 @@ def xy(transform, rows, cols, offset='center'):
     ys : list
         y coordinates in coordinate reference system
     """
-    if not isinstance(cols, Iterable):
-        cols = [cols]
-    if not isinstance(rows, Iterable):
-        rows = [rows]
-
-    if offset == 'center':
-        coff, roff = (0.5, 0.5)
-    elif offset == 'ul':
-        coff, roff = (0, 0)
-    elif offset == 'ur':
-        coff, roff = (1, 0)
-    elif offset == 'll':
-        coff, roff = (0, 1)
-    elif offset == 'lr':
-        coff, roff = (1, 1)
-    else:
-        raise ValueError("Invalid offset")
-
-    xs = []
-    ys = []
-    T = transform * transform.translation(coff, roff)
-    for pt in zip(cols, rows):
-        x, y = T * pt
-        xs.append(x)
-        ys.append(y)
-
-    if len(xs) == 1:
-        # xs and ys will always have the same length
-        return xs[0], ys[0]
-    return xs, ys
+    transformer_cls = get_transformer(transform, **rpc_options)
+    with transformer_cls() as transformer:
+        return transformer.xy(rows, cols, zs=zs, offset=offset)
 
 
-def rowcol(transform, xs, ys, op=math.floor, precision=None):
+def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_options):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -223,36 +218,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     cols : list of ints
         list of column indices
     """
-
-    if not isinstance(xs, Iterable):
-        xs = [xs]
-    if not isinstance(ys, Iterable):
-        ys = [ys]
-
-    if precision is None:
-        eps = sys.float_info.epsilon
-    elif isinstance(precision, int):
-        eps = 10.0 ** -precision
-    else:
-        eps = precision
-
-    # If op rounds up, switch the sign of eps.
-    if op(0.1) >= 1:
-        eps = -eps
-
-    invtransform = ~transform
-
-    rows = []
-    cols = []
-    for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y + eps)
-        cols.append(op(fcol))
-        rows.append(op(frow))
-
-    if len(cols) == 1:
-        # rows and cols will always have the same length
-        return rows[0], cols[0]
-    return rows, cols
+    transformer_cls = get_transformer(transform, **rpc_options)
+    with transformer_cls() as transformer:
+        return transformer.rowcol(xs, ys, zs=zs, op=op, precision=precision)
 
 
 def from_gcps(gcps):
@@ -276,6 +244,26 @@ class TransformerBase:
     """
     def close(self):
         raise NotImplementedError
+    
+    def ensure_coords_arr(self, xs, ys, zs=None):
+        """Ensure all input coordinates are mapped to array-like objects
+        
+        Raises
+        ------
+        ValueError
+            If input coordinates arrays are not all of the same length
+        """
+        if not isinstance(xs, Iterable):
+            xs = [xs]
+        if not isinstance(ys, Iterable):
+            ys = [ys]
+        if zs is None:
+            zs = [0] * len(xs)
+        elif not isinstance(zs, Iterable):
+            zs = [zs]
+        if len(set((len(xs), len(ys), len(zs)))) > 1:
+            raise ValueError("Input coordinate arrays should be of equal length")
+        return xs, ys, zs
 
     def __enter__(self):
         self._env = env_ctx_if_needed()
@@ -286,7 +274,7 @@ class TransformerBase:
         self.close()
         self._env.__exit__()
     
-    def rowcol(self, xs, ys, zs=None):
+    def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
         """
         Returns rows and cols coordinates given geographic coordinates
 
@@ -306,22 +294,31 @@ class TransformerBase:
         -------
             tuple of float or list of float
         """
-        if not isinstance(xs, Iterable):
-            xs = [xs]
-        if not isinstance(ys, Iterable):
-            ys = [ys]
-        if zs is None:
-            zs = [0] * len(xs)
-        if len(set((len(xs), len(ys), len(zs)))) > 1:
-            raise ValueError("Input coordinate arrays should be of equal length")
-
-        new_rows, new_cols =  self._transform(xs, ys, zs, transform_direction=TransformDirection.forward)
+        xs, ys, zs = self.ensure_coords_arr(xs, ys, zs=zs)
+        
+        if precision is None:
+            eps = sys.float_info.epsilon
+        elif isinstance(precision, int):
+            eps = 10.0 ** -precision
+        else:
+            eps = precision
+        
+        # If op rounds up, switch the sign of eps.
+        if op(0.1) >= 1:
+            eps = -eps
+        f = lambda val: val + eps
+        xs = list(map(f, xs))
+        ys = list(map(f, ys))
+        new_cols, new_rows =  self._transform(xs, ys, zs, transform_direction=TransformDirection.forward)
 
         if len(new_rows) == 1:
-            return (new_rows[0], new_cols[0])
-        return (new_rows, new_cols)
+            return (op(new_rows[0]), op(new_cols[0]))
+        return (
+            [op(r) for r in new_rows], 
+            [op(c) for c in new_cols]
+        )
 
-    def xy(self, rows, cols, zs=None):
+    def xy(self, rows, cols, zs=None, offset='center'):
         """
         Returns geographic coordinates given dataset rows and cols coordinates
 
@@ -340,17 +337,31 @@ class TransformerBase:
         -------
             tuple of float or list of float
         """
+        rows, cols, zs = self.ensure_coords_arr(rows, cols, zs=zs)
+        
+        if offset == 'center':
+            coff, roff = (0.5, 0.5)
+        elif offset == 'ul':
+            coff, roff = (0, 0)
+        elif offset == 'ur':
+            coff, roff = (1, 0)
+        elif offset == 'll':
+            coff, roff = (0, 1)
+        elif offset == 'lr':
+            coff, roff = (1, 1)
+        else:
+            raise ValueError("Invalid offset")
+        
+        # shift input coordinates according to offset
+        T = IDENTITY.translation(coff, roff)
+        temp_rows = []
+        temp_cols = []
+        for pt in zip(cols, rows):
+            x, y = T * pt
+            temp_rows.append(y)
+            temp_cols.append(x)
 
-        if not isinstance(rows, Iterable):
-            rows = [rows]
-        if not isinstance(cols, Iterable):
-            cols = [cols]
-        if zs is None:
-            zs = [0] * len(rows)
-        if len(set((len(rows), len(cols), len(zs)))) > 1:
-            raise ValueError("Input coordinate arrays should be of equal length")
-
-        new_ys, new_xs =  self._transform(rows, cols, zs, transform_direction=TransformDirection.reverse)
+        new_ys, new_xs = self._transform(temp_rows, temp_cols, zs, transform_direction=TransformDirection.reverse)
 
         if len(new_ys) == 1:
             return (new_ys[0], new_xs[0])
@@ -360,13 +371,33 @@ class TransformerBase:
 
 class AffineTransformer(TransformerBase):
     def __init__(self, affine_transform):
-        pass
+        if not isinstance(affine_transform, Affine):
+            raise ValueError("Not an affine transform")
+        self._transformer = affine_transform
 
     def close(self):
         pass
     
-    def _transform(xs, ys, zs, transform_direction):
+    def _transform(self, xs, ys, zs, transform_direction):
+        resxs = []
+        resys = []
         
+        if transform_direction is TransformDirection.reverse:
+            transform = self._transformer
+        elif transform_direction is TransformDirection.forward:
+            transform = ~self._transformer
+
+        for x, y in zip(xs, ys):
+            resx, resy = transform * (x, y)
+            resxs.append(resx)
+            resys.append(resy)
+        
+        return (resxs, resys)
+    
+    def __repr__(self):
+        return "<{} AffineTransformer>".format(
+            self.closed and 'closed' or 'open')
+
 
 class RPCTransformer(RPCTransformerBase, TransformerBase):
     def __init__(self, rpcs, **kwargs):
@@ -376,21 +407,6 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
         return "<{} RPCTransformer>".format(
             self.closed and 'closed' or 'open')
 
-    @classmethod
-    def from_dataset(cls, dataset, **kwargs):
-        is_pathlike = False
-        if isinstance(dataset, str) or isinstance(dataset, Path):
-            dataset = rasterio.open(dataset)
-            is_pathlike = True
-
-        if not dataset.rpcs:
-            raise ValueError("{} has no rpcs".format(dataset))
-
-        if is_pathlike:
-            dataset.close()
-
-        return cls(dataset.rpcs, **kwargs)
-
 
 class GCPTransformer(GCPTransformerBase, TransformerBase):
     def __init__(self, gcps):
@@ -399,18 +415,3 @@ class GCPTransformer(GCPTransformerBase, TransformerBase):
     def __repr__(self):
         return "<{} GCPTransformer>".format(
             self.closed and 'closed' or 'open')
-
-    @classmethod
-    def from_dataset(cls, dataset):
-        is_pathlike = False
-        if isinstance(dataset, str) or isinstance(dataset, Path):
-            dataset = rasterio.open(dataset)
-            is_pathlike = True
-
-        if not dataset.rpcs:
-            raise ValueError("{} has no rpcs".format(dataset))
-
-        if is_pathlike:
-            dataset.close()
-
-        return cls(dataset.rpcs)
