@@ -237,9 +237,10 @@ cdef class GCPTransformerBase:
         """
         Construct a new GCP transformer
 
-        The RPCs map geographic coordinates referenced against the WGS84 ellipsoid (longitude, latitude, height)
-        to image pixel/line coordinates. The reverse is done through an iterative solver implemented
-        in GDAL.
+        Ground Control Points (GCPs) can be used to map specific world coordinates to pixel coordinates
+        within an image. GDAL can use GCP interpolation in order to compute image pixel or geographic/
+        projected coordinates as needed. Rasterio allows GDAL to determine the appropriate kind of 
+        interpolation (up to cubic) depending on the number of GCPs available.
 
         Parameters
         ----------
