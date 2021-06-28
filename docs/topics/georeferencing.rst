@@ -41,11 +41,16 @@ argument.
 
 Coordinate Transformation
 -------------------------
+This section describes the three primary kinds of georefencing metadata supported by
+rasterio.
+
+Affine
+^^^^^^^
 
 A dataset's pixel coordinate system has its origin at the "upper left" (imagine
 it displayed on your screen). Column index increases to the right, and row 
 index increases downward. The mapping of these coordinates to "world"
-coordinates in the dataset's reference system is done with an affine
+coordinates in the dataset's reference system is typically done with an affine
 transformation matrix.
 
 .. code-block:: pycon
@@ -69,7 +74,7 @@ described at https://github.com/sgillies/affine.
 Some datasets may not have an affine transformation matrix, but are still georeferenced.
 
 Ground Control Points
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 A ground control point (GCP) is the mapping of a dataset's row and pixel coordinate to a
 single world x, y, and optionally z coordinate. Typically a dataset will have multiple
@@ -77,7 +82,7 @@ GCPs distributed across the image. Rasterio can calculate an affine transformati
 from a collection of GCPs using the ``rasterio.transform.from_gcps`` method.
 
 Rational Polynomial Coefficients
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A dataset may also be georeferenced with a set of rational polynomial coefficients (RPCs)
 which can be used to compute pixel coordinates from x, y, and z coordinates. The RPCs are
