@@ -114,6 +114,8 @@ class TransformMethodsMixin:
 
 def get_transformer(transform, **rpc_options):
     """Return the appropriate transformer class"""
+    if transform is None:
+        raise ValueError("Invalid transform")
     if isinstance(transform, Affine):
         transformer_cls = partial(AffineTransformer, transform)
     elif isinstance(transform, RPC):
@@ -407,7 +409,7 @@ class TransformerBase():
         temp_rows = []
         temp_cols = []
         for pt in zip(cols, rows):
-            x, y = T * pt
+            y, x = T * pt
             temp_rows.append(y)
             temp_cols.append(x)
 
