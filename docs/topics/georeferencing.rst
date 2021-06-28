@@ -79,7 +79,8 @@ Ground Control Points
 A ground control point (GCP) is the mapping of a dataset's row and pixel coordinate to a
 single world x, y, and optionally z coordinate. Typically a dataset will have multiple
 GCPs distributed across the image. Rasterio can calculate an affine transformation matrix
-from a collection of GCPs using the ``rasterio.transform.from_gcps`` method.
+from a collection of GCPs using the ``rasterio.transform.from_gcps`` method. Alternatively
+GCP interpolation can also be used for coordinate transforms.
 
 Rational Polynomial Coefficients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
