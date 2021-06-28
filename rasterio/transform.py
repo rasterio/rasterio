@@ -280,6 +280,7 @@ class TransformerBase():
     """
     def __init__(self):
         self._transformer = None
+        self.closed = True
 
     def close(self):
         raise NotImplementedError
@@ -427,6 +428,7 @@ class TransformerBase():
 class AffineTransformer(TransformerBase):
     """A pure Python class related to affine based coordinate transformations."""
     def __init__(self, affine_transform):
+        super().__init__()
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
@@ -451,8 +453,7 @@ class AffineTransformer(TransformerBase):
         return (resxs, resys)
     
     def __repr__(self):
-        return "<{} AffineTransformer>".format(
-            self.closed and 'closed' or 'open')
+        return "<AffineTransformer>"
 
 
 class RPCTransformer(RPCTransformerBase, TransformerBase):
