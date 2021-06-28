@@ -89,3 +89,21 @@ Better yet is to sample height values from a digital elevation model (DEM).
 
 See https://gdal.org/api/gdal_alg.html?highlight=gdalcreaterpctransformer#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
 for more details.
+
+Transformer Resources
+----------------------
+The ``AffineTransformer`` is a pure Python class, however ``GCPTransformer``
+and ``RPCTransformer`` make use of C/C++ GDAL objects. Explicit control of 
+the transformer object can be achieved by use within a context manager or 
+by calling ``close()`` method e.g.
+
+.. code-block:: python
+
+    >>> with rasterio.transform.RPCTransformer(rpcs) as transform:
+            transform.xy(0, 0)
+    >>> transform.xy(0, 0)
+    ValueError: Unexpected NULL transformer
+
+.. note::
+    If ``RPC_DEM`` is specified in ``rpc_options``, GDAL will maintain an
+    open file handle to the DEM until the transformer is closed.
