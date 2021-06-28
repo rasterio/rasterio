@@ -152,7 +152,7 @@ def test_xy():
 
 def test_bogus_offset():
     with pytest.raises(ValueError):
-        xy(None, 1, 0, offset='bogus')
+        xy(Affine.identity(), 1, 0, offset='bogus')
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
