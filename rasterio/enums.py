@@ -132,6 +132,8 @@ class Compression(Enum):
     none = 'NONE'
     zstd = 'ZSTD'
     lerc = 'LERC'
+    lerc_deflate = 'LERC_DEFLATE'
+    lerc_zstd = 'LERC_ZSTD'
     webp = 'WEBP'
     jpeg2000 = 'JPEG2000'
 
