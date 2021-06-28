@@ -1,7 +1,6 @@
 """Copy valid pixels from input files to an output file."""
 
 from contextlib import contextmanager
-from collections import namedtuple
 from collections.abc import Sequence
 from functools import reduce
 from operator import mul
@@ -66,7 +65,6 @@ MERGE_METHODS = {
     'max': copy_max
 }
 
-Source = namedtuple('Source', ('res', 'bounds', 'dtype', 'transform', 'nodataval', 'profile', 'count', 'colormap', 'window'))
 
 def merge(
     datasets,
