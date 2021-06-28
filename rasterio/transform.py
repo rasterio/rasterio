@@ -291,7 +291,7 @@ class TransformerBase():
         Raises
         ------
         ValueError
-            If input coordinates arrays are not all of the same length
+            If input coordinates are not all of the same length
         """
         if not isinstance(xs, Iterable):
             xs = [xs]
