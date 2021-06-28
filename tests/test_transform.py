@@ -198,7 +198,7 @@ def test_xy_gcps_rpcs(dataset, transform_attr, coords, expected):
         if transform_attr == 'gcps':
             transform = transform[0]
         for coord, truth in zip(coords, expected):
-            assert xy(transform, *coord) == truth
+            assert xy(transform, *coord) == pytest.approx(truth)
         # check offset behaviour
         assert xy(transform, 0, 0, offset='lr') == \
                xy(transform, 0, 1, offset='ll') == \
@@ -349,5 +349,5 @@ def test_rpctransformer_options(caplog):
 )
 def test_dataset_mixins(dataset, transform_method, expected):
     with rasterio.open(dataset) as src:
-        assert src.xy(0, 0, transform_method=transform_method) == expected
+        assert src.xy(0, 0, transform_method=transform_method) == pytest.approx(expected)
         assert src.index(*expected, transform_method=transform_method) == (0, 0)
