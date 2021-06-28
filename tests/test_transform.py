@@ -3,12 +3,28 @@ import pytest
 import rasterio
 from rasterio import transform
 from rasterio.env import GDALVersion
-from rasterio.transform import xy, rowcol
+from rasterio.transform import (
+    xy, 
+    rowcol,
+    AffineTransformer,
+    GCPTransformer,
+    RPCTransformer
+)
 from rasterio.windows import Window
+from rasterio.control import GroundControlPoint
 
 
 gdal_version = GDALVersion.runtime()
 
+gcps = [
+    GroundControlPoint(row=11521.5, col=0.5, x=-123.6185142817931, y=48.99561141948625, z=89.13533782958984, id='217', info=''), 
+    GroundControlPoint(row=11521.5, col=7448.5, x=-122.8802747777599, y=48.91210259315549, z=89.13533782958984, id='234', info=''), 
+    GroundControlPoint(row=0.5, col=0.5, x=-123.4809665720148, y=49.52809729106944, z=89.13533782958984, id='1', info=''), 
+    GroundControlPoint(row=0.5, col=7448.5, x=-122.7345733674704, y=49.44455878004666, z=89.13533782958984, id='18', info='')
+]
+
+with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+    rpcs = src.rpcs
 
 def test_window_transform():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -199,3 +215,35 @@ def test_from_gcps():
         assert not aff == src.transform
         assert len(aff) == 9
         assert not transform.tastes_like_gdal(aff)
+
+@pytest.mark.parametrize(
+    'transformer_cls,transform', 
+    [
+        (GCPTransformer,gcps), 
+        (RPCTransformer,rpcs)
+    ]
+)
+def test_transformer_open_closed(transformer_cls, transform):
+    # open or closed does not matter for pure Python AffineTransformer
+    with transformer_cls(transform) as transformer:
+        assert not transformer.closed 
+    assert transformer.closed
+    with pytest.raises(ValueError):
+        transformer.xy(0, 0)
+
+@pytest.mark.parametrize(
+    'coords,expected',
+    [
+        ((0,0), (0,0)),
+        (([0],[0]), (0,0)),
+        (([0,1],[0,1]), ([0,1],[0,1]))
+    ]
+)
+def test_ensure_coords_arr(coords, expected):
+    transformer = transform.AffineTransformer(Affine.identity())
+    assert transformer.xy(*coords, offset='ul') == expected
+
+def test_ensure_coords_arr_same_shape():
+    transformer = transform.AffineTransformer(Affine.identity())
+    with pytest.raises(ValueError):
+        transformer.xy([0], [0, 1])
