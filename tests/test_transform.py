@@ -1,9 +1,5 @@
-from contextlib import closing
 import logging
-import sys
 
-import numpy as np
-from rasterio.rpc import RPC
 from affine import Affine
 import pytest
 import rasterio
