@@ -236,6 +236,15 @@ cdef class GCPTransformerBase:
     def __init__(self, gcps):
         """
         Construct a new GCP transformer
+
+        The RPCs map geographic coordinates referenced against the WGS84 ellipsoid (longitude, latitude, height)
+        to image pixel/line coordinates. The reverse is done through an iterative solver implemented
+        in GDAL.
+
+        Parameters
+        ----------
+        gcps : a sequence of GroundControlPoint
+            Ground Control Points for a dataset.
         """
         cdef int bReversed = 1
         cdef int nReqOrder = 0  # let GDAL determine polynomial order
