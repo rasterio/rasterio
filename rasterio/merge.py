@@ -20,6 +20,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.enums import Resampling
     from rasterio import windows
     from rasterio.transform import Affine
+    from rasterio.errors import WindowError
 
 
 logger = logging.getLogger(__name__)
@@ -624,25 +625,34 @@ def merge_tiled(
     
     with rasterio.open(dst_path, 'w', **out_profile) as dest:
         for i, block in enumerate(blocks):
-            tile_shape = (output_count, block.height, block.width)
-            tile = np.zeros(tile_shape, dtype=dt)
+            tile = np.zeros((output_count, block.height, block.width), dtype=dt)
             if inrange:
                 tile.fill(nodataval)
-
-            tile_window = windows.bounds(block, output_transform)
+            
+            tile_bounds = windows.bounds(block, output_transform)
+            tile_transform = windows.transform(block, output_transform)
             for idx, ds in enumerate(DS):
-                tw = ds.window(*tile_window)
-                sw = windows.from_bounds(*ds.bounds, ds.transform)
-                if not windows.intersect(tw, sw):
+                # Intersect source bounds and tile bounds
+                try:
+                    ibounds = intersect_bounds(ds.bounds, tile_bounds, tile_transform)
+                    sw = wfrombounds(ibounds, ds.transform)
+                    dw = wfrombounds(ibounds, tile_transform)
+                except (ValueError, WindowError):
                     continue
-                new_data = ds.read(
+
+                rows, cols = dw.toslices()
+                new_data = np.ma.masked_all_like(tile)
+                data = ds.read(
+                    out_shape=(output_count, *windows.shape(dw)),
                     indexes=indexes,
                     masked=True,
-                    boundless=True,
-                    window=tw,
+                    boundless=False,
+                    window=sw,
                     resampling=resampling
                 )
-                copyto(tile, new_data, tile==nodataval, new_data.mask, index=idx, roff=tw.row_off, coff=tw.col_off)
+                new_data[:, rows, cols] = data
+
+                copyto(tile, new_data, tile==nodataval, new_data.mask, index=idx, roff=dw.row_off, coff=dw.col_off)
             dest.write(tile, window=block)
         try:
             cmap = DS[0].colormap(1)
@@ -652,3 +662,40 @@ def merge_tiled(
 
     for ds in DS:
         ds.close()
+
+def wfrombounds(bounds, transform):
+    # Based on gdal_merge.py
+    ulx = bounds[0]
+    uly = bounds[3]
+    lrx = bounds[2]
+    lry = bounds[1]
+
+    xoff = int((ulx - transform.c) / transform.a + 0.1)
+    yoff = int((uly - transform.f) / transform.e + 0.1)
+    width = round((lrx - transform.c) / transform.a) - xoff
+    height = round((lry - transform.f) / transform.e) - yoff
+    if width < 1 or height < 1:
+        raise WindowError
+    return windows.Window(xoff, yoff, width, height)
+
+
+def intersect_bounds(b1, b2, transform):
+    # Based on gdal_merge.py
+    int_w = max(b1[0], b2[0])
+    int_e = min(b1[2], b2[2])
+    if int_w >= int_e:
+        raise ValueError
+
+    if transform.e < 0:
+        # north up
+        int_s = max(b1[1], b2[1])
+        int_n = min(b1[3], b2[3])
+        if int_s >= int_n:
+            raise ValueError
+    else:
+        int_s = min(b1[1], b2[1])
+        int_n = max(b1[3], b2[3])
+        if int_n >= int_s:
+            raise ValueError
+
+    return int_w, int_s, int_e, int_n
