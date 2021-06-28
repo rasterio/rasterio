@@ -239,11 +239,11 @@ def test_transformer_open_closed(transformer_cls, transform):
         (([0,1],[0,1]), ([0,1],[0,1]))
     ]
 )
-def test_ensure_coords_arr(coords, expected):
+def test_ensure_arr_input(coords, expected):
     transformer = transform.AffineTransformer(Affine.identity())
     assert transformer.xy(*coords, offset='ul') == expected
 
-def test_ensure_coords_arr_same_shape():
+def test_ensure_arr_input_same_shape():
     transformer = transform.AffineTransformer(Affine.identity())
     with pytest.raises(ValueError):
         transformer.xy([0], [0, 1])
