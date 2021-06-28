@@ -464,7 +464,7 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
     method or using context manager interface.
     """
     def __init__(self, rpcs, **rpc_options):
-        if not isinstance(rpcs, RPC):
+        if not isinstance(rpcs, (RPC, dict)):
             raise ValueError("RPCTransformer requires RPC")
         super().__init__(rpcs, **rpc_options)
 
