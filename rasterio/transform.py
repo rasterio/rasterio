@@ -285,7 +285,7 @@ class TransformerBase():
     def close(self):
         raise NotImplementedError
     
-    def ensure_coords_arr(self, xs, ys, zs=None):
+    def _ensure_arr_input(self, xs, ys, zs=None):
         """Ensure all input coordinates are mapped to array-like objects
         
         Raises
@@ -302,7 +302,7 @@ class TransformerBase():
         elif not isinstance(zs, Iterable):
             zs = [zs]
         if len(set((len(xs), len(ys), len(zs)))) > 1:
-            raise ValueError("Input coordinate arrays should be of equal length")
+            raise ValueError("Input coordinates must be of equal length")
         return xs, ys, zs
 
     def __enter__(self):
@@ -342,7 +342,7 @@ class TransformerBase():
         -------
             tuple of float or list of float
         """
-        xs, ys, zs = self.ensure_coords_arr(xs, ys, zs=zs)
+        xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
         
         if precision is None:
             eps = sys.float_info.epsilon
@@ -390,7 +390,7 @@ class TransformerBase():
         -------
             tuple of float or list of float
         """
-        rows, cols, zs = self.ensure_coords_arr(rows, cols, zs=zs)
+        rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
         
         if offset == 'center':
             coff, roff = (0.5, 0.5)
