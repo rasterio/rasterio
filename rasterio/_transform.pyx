@@ -77,7 +77,8 @@ cdef class RPCTransformerBase:
         Notes
         -----
         Explicit control of the transformer (and open datasets if RPC_DEM
-        is specified) can be achieved by use within a context manager e.g.
+        is specified) can be achieved by use within a context manager or 
+        by calling `close()` method e.g.
 
         >>> with rasterio.transform.RPCTransformer(rpcs) as transform:
         ...    transform.xy(0, 0)
@@ -260,6 +261,29 @@ cdef class GCPTransformerBase:
     def _transform(self, xs, ys, zs, transform_direction):
         """
         General computation of dataset pixel/line <-> lon/lat/height coordinates using GCPs
+
+        Parameters
+        ----------
+        xs, ys, zs : list
+            List of coordinates to be transformed. May be either pixel/line/height or
+            lon/lat/height)
+        transform_direction : TransformDirection
+            The transform direction i.e. forward implies pixel/line -> lon/lat/height
+            while reverse implies lon/lat/height -> pixel/line. 
+
+        Raises
+        ------
+        ValueError
+            If transformer is NULL
+
+        Warns
+        -----
+        rasterio.errors.TransformWarning
+            If one or more coordinates failed to transform
+
+        Returns
+        -------
+        tuple of list
         """
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
