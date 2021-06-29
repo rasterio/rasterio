@@ -1131,16 +1131,20 @@ cdef class DatasetBase:
         num_items = CSLCount(metadata)
 
         tag_items = []
-        for i in range(num_items):
-            item = <char *>metadata[i]
-            try:
-                val = CPLParseNameValue(metadata[i], &key)
-                tag_items.append((key[:], val[:]))
-            except UnicodeDecodeError:
-                item_bytes = <bytes>item
-                log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
-            finally:
-                CPLFree(key)
+        if num_items and (domain and domain.startswith("xml")):
+            # https://gdal.org/user/raster_data_model.html#xml-domains
+            tag_items.append((domain[:], metadata[0][:]))
+        else:
+            for i in range(num_items):
+                item = <char *>metadata[i]
+                try:
+                    val = CPLParseNameValue(metadata[i], &key)
+                    tag_items.append((key[:], val[:]))
+                except UnicodeDecodeError:
+                    item_bytes = <bytes>item
+                    log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
+                finally:
+                    CPLFree(key)
 
         return dict(tag_items)
 
