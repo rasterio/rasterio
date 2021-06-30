@@ -53,6 +53,11 @@ and 'RPC'. You can get the tags from these namespaces using the `ns` keyword of
     >>> src.tags(ns='RPC')
     {}
 
+.. note::
+
+A special case for GDAL tag namespaces are those prefixed with 'xml' e.g. 'xml:TRE' or 'xml:VRT'. 
+GDAL will treat these namespaces as a single xml string.
+
 Writing tags
 ------------
 
