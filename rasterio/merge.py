@@ -2,6 +2,7 @@
 
 from contextlib import contextmanager
 import logging
+import os
 import math
 from pathlib import Path
 import warnings
@@ -92,7 +93,7 @@ def merge(
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode, filenames or pathlib.Path objects
+    datasets : list of dataset objects opened in 'r' mode, filenames or PathLike objects
         source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
@@ -148,7 +149,7 @@ def merge(
         Whether to adjust output image bounds so that pixel coordinates
         are integer multiples of pixel size, matching the ``-tap``
         options of GDAL utilities.  Default: False.
-    dst_path : str or Pathlike, optional
+    dst_path : str or PathLike, optional
         Path of output dataset
     dst_kwds : dict, optional
         Dictionary of creation options and other paramters that will be
@@ -177,7 +178,7 @@ def merge(
                          .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], str) or isinstance(datasets[0], Path):
+    if isinstance(datasets[0], (str, os.PathLike)):
         dataset_opener = rasterio.open
     else:
 
