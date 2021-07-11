@@ -309,6 +309,8 @@ cdef bint in_dtype_range(value, dtype):
     key = _getnpdtype(dtype).kind
     if np.isnan(value):
         return key in ('c', 'f', 99, 102)
+    if key == "f" and np.isinf(value):
+        return True
 
     rng = infos[key](dtype)
     return rng.min <= value <= rng.max

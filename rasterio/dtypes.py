@@ -5,6 +5,7 @@ Happily strings can be used throughout Numpy and so existing code will
 not break.
 
 """
+import numpy
 
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
@@ -68,6 +69,16 @@ dtype_ranges = {
     'int32': (-2147483648, 2147483647),
     'float32': (-3.4028235e+38, 3.4028235e+38),
     'float64': (-1.7976931348623157e+308, 1.7976931348623157e+308)}
+
+
+def in_dtype_range(value, dtype):
+    """
+    Check if the value is within the dtype range
+    """
+    if numpy.dtype(dtype).kind == "f" and (numpy.isinf(value) or numpy.isnan(value)):
+        return True
+    range_min, range_max = dtype_ranges[dtype]
+    return range_min <= value <= range_max
 
 
 def _gdal_typename(dt):

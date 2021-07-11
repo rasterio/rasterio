@@ -555,7 +555,7 @@ cdef class DatasetBase:
                 # there's no nodata value.
                 if dtype not in dtypes.dtype_ranges:
                     pass
-                elif (success == 0 or val < dtypes.dtype_ranges[dtype][0] or val > dtypes.dtype_ranges[dtype][1]):
+                elif (success == 0 or not dtypes.in_dtype_range(val, dtype)):
                     val = None
                 log.debug(
                     "Nodata success: %d, Nodata value: %f", success, nodataval)
