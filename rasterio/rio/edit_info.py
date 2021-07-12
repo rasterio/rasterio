@@ -168,7 +168,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
 
     def in_dtype_range(value, dtype):
         kind = np.dtype(dtype).kind
-        if kind == 'f' and np.isnan(value):
+        if kind == 'f' and (np.isnan(value) or np.isinf(value)):
             return True
         infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
                  'u': np.iinfo}
