@@ -1,5 +1,3 @@
-# cython: language_level=3
-
 """rasterio._err
 
 Exception-raising wrappers for GDAL API functions.

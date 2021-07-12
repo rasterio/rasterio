@@ -1,5 +1,3 @@
-# cython: language_level=3
-
 from rasterio._io cimport DatasetReaderBase
 
 include "gdal.pxi"

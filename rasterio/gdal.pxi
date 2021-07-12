@@ -1,5 +1,3 @@
-# cython: language_level=3
-
 # GDAL API definitions.
 
 from libc.stdio cimport FILE
