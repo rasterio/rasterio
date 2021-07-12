@@ -235,6 +235,37 @@ cdef class CRS:
             units_b = units_c
             return (units_b.decode('utf-8'), to_meters)
 
+    @property
+    def units_factor(self):
+        """Get units and the conversion factor of the CRS.
+
+        Returns
+        -------
+        units : str
+            "m", "ft", etc.
+        factor : float
+            Ratio of one unit to one radian if the CRS is geographic
+            otherwise, it is to one meter.
+
+        Raises
+        ------
+        CRSError
+
+        """
+        cdef char *units_c = NULL
+        cdef double factor
+
+        try:
+            if self.is_geographic:
+                factor = OSRGetAngularUnits(self._osr, &units_c)
+            else:
+                factor = OSRGetLinearUnits(self._osr, &units_c)
+        except CPLE_BaseError as exc:
+            raise CRSError(exc)
+        else:
+            units_b = units_c
+            return (units_b.decode('utf-8'), factor)
+
     def to_dict(self, projjson=False):
         """Convert CRS to a PROJ dict.
 

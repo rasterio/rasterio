@@ -518,6 +518,14 @@ def test_linear_units_factor():
         CRS.from_epsg(4326).linear_units_factor
 
 
+@pytest.mark.parametrize("epsg_code, units_factor", [
+    (3857, ("metre", 1.0)),
+    (4326, ("degree", pytest.approx(0.017453292519943295))),
+])
+def test_units_factor(epsg_code, units_factor):
+    assert CRS.from_epsg(epsg_code).units_factor == units_factor
+
+
 def test_crs_copy():
     """CRS can be copied"""
     assert copy.copy(CRS.from_epsg(3857)).wkt.startswith('PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84"')
