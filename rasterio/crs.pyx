@@ -194,16 +194,10 @@ cdef class CRS:
         CRSError
 
         """
-        cdef char *units_c = NULL
-        cdef double fmeter
-
         try:
-            fmeter = OSRGetLinearUnits(self._osr, &units_c)
-        except CPLE_BaseError as exc:
-            raise CRSError("{}".format(exc))
-        else:
-            units_b = units_c
-            return units_b.decode('utf-8')
+            return self.linear_units_factor[0]
+        except CRSError:
+            return "unknown"
 
     @property
     def linear_units_factor(self):
@@ -228,7 +222,7 @@ cdef class CRS:
             if self.is_projected:
                 to_meters = OSRGetLinearUnits(self._osr, &units_c)
             else:
-                raise CRSError("{}".format("Linear units factor is not defined for non projected CRS"))
+                raise CRSError("Linear units factor is not defined for non projected CRS")
         except CPLE_BaseError as exc:
             raise CRSError("{}".format(exc))
         else:
