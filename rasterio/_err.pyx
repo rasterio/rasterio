@@ -4,9 +4,6 @@
 
 Exception-raising wrappers for GDAL API functions.
 """
-
-include "gdal.pxi"
-
 from enum import IntEnum
 import logging
 import sys

@@ -1,14 +1,8 @@
 # cython: language_level=3
 
+include "gdal.pxi"
+
 from libc.stdio cimport *
-
-cdef extern from "cpl_vsi.h":
-
-    ctypedef FILE VSILFILE
-
-cdef extern from "ogr_core.h":
-
-    ctypedef int OGRErr
 
 
 cdef int exc_wrap(int retval) except -1

@@ -373,8 +373,6 @@ cdef extern from "ogr_api.h" nogil:
     ctypedef void * OGRFeatureH
     ctypedef void * OGRGeometryH
 
-    ctypedef int OGRErr
-
     ctypedef struct OGREnvelope:
         double MinX
         double MaxX

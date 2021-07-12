@@ -8,9 +8,6 @@ CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
 threads will inherit config options from the main thread unless the
 option is set to a new value inside the thread.
 """
-
-include "gdal.pxi"
-
 from contextlib import contextmanager
 import logging
 import os
