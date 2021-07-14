@@ -199,3 +199,37 @@ def test_from_gcps():
         assert not aff == src.transform
         assert len(aff) == 9
         assert not transform.tastes_like_gdal(aff)
+
+
+def test_rowcol_types():
+    # Test that rowcol returns proper types
+    aff = Affine.identity()
+    
+    x, y = rowcol(aff, [1.0], [1.0])
+    assert isinstance(x, list) and isinstance(y, list)
+
+    x, y = rowcol(aff, 1.0, 1.0)
+    assert not isinstance(x, list) and not isinstance(y, list)
+
+    with pytest.raises(ValueError):
+        rowcol(aff, [1.0], 1.0)
+
+    with pytest.raises(ValueError):
+        rowcol(aff, 1.0, [1.0])
+
+
+def test_xy_types():
+    # Test that xy returns proper types
+    aff = Affine.identity()
+    
+    x, y = xy(aff, [1], [1])
+    assert isinstance(x, list) and isinstance(y, list)
+
+    x, y = xy(aff, 1, 1)
+    assert not isinstance(x, list) and not isinstance(y, list)
+
+    with pytest.raises(ValueError):
+        xy(aff, [1], 1)
+
+    with pytest.raises(ValueError):
+        xy(aff, 1, [1])
