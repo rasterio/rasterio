@@ -6,6 +6,7 @@ import sys
 
 from affine import Affine
 
+from rasterio.errors import TransformError
 from rasterio._transform import _transform_from_gcps
 
 IDENTITY = Affine.identity()
@@ -127,7 +128,8 @@ def array_bounds(height, width, transform):
 
 
 def xy(transform, rows, cols, offset='center'):
-    """Returns the x and y coordinates of pixels at `rows` and `cols`.
+    """Get the x and y coordinates of pixels at `rows` and `cols`.
+
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
@@ -135,9 +137,9 @@ def xy(transform, rows, cols, offset='center'):
     ----------
     transform : affine.Affine
         Transformation from pixel coordinates to coordinate reference system.
-    rows : list or int
+    rows : int or sequence of ints
         Pixel rows.
-    cols : list or int
+    cols : int or sequence of ints
         Pixel columns.
     offset : str, optional
         Determines if the returned coordinates are for the center of the
@@ -145,16 +147,12 @@ def xy(transform, rows, cols, offset='center'):
 
     Returns
     -------
-    xs : list
+    xs : float or list of floats
         x coordinates in coordinate reference system
-    ys : list
+    ys : float or list of floats
         y coordinates in coordinate reference system
-    """
-    if not isinstance(cols, Iterable):
-        cols = [cols]
-    if not isinstance(rows, Iterable):
-        rows = [rows]
 
+    """
     if offset == 'center':
         coff, roff = (0.5, 0.5)
     elif offset == 'ul':
@@ -166,26 +164,21 @@ def xy(transform, rows, cols, offset='center'):
     elif offset == 'lr':
         coff, roff = (1, 1)
     else:
-        raise ValueError("Invalid offset")
+        raise TransformError("Invalid offset")
 
-    xs = []
-    ys = []
-    T = transform * transform.translation(coff, roff)
-    for pt in zip(cols, rows):
-        x, y = T * pt
-        xs.append(x)
-        ys.append(y)
+    adjusted_transform = transform * Affine.translation(coff, roff)
 
-    if len(xs) == 1:
-        # xs and ys will always have the same length
-        return xs[0], ys[0]
-    return xs, ys
+    if isinstance(rows, (int, float)) and isinstance(cols, (int, float)):
+        return adjusted_transform * (cols, rows)
+    elif isinstance(rows, Iterable) and isinstance(cols, Iterable):
+        xs, ys = zip(*(adjusted_transform * (col, row) for col, row in zip(cols, rows)))
+        return list(xs), list(ys)
+    else:
+        raise TransformError("Invalid inputs")
 
 
 def rowcol(transform, xs, ys, op=math.floor, precision=None):
-    """
-    Returns the rows and cols of the pixels containing (x, y) given a
-    coordinate reference system.
+    """The rows and cols of the pixels containing (x, y).
 
     Use an epsilon, magnitude determined by the precision parameter
     and sign determined by the op function:
@@ -208,17 +201,12 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     Returns
     -------
-    rows : list of ints
-        list of row indices
-    cols : list of ints
-        list of column indices
+    rows : list or int
+        Row indices.
+    cols : list or int
+        Column indices.
+
     """
-
-    if not isinstance(xs, Iterable):
-        xs = [xs]
-    if not isinstance(ys, Iterable):
-        ys = [ys]
-
     if precision is None:
         eps = sys.float_info.epsilon
     elif isinstance(precision, int):
@@ -232,17 +220,14 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     invtransform = ~transform
 
-    rows = []
-    cols = []
-    for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y + eps)
-        cols.append(op(fcol))
-        rows.append(op(frow))
-
-    if len(cols) == 1:
-        # rows and cols will always have the same length
-        return rows[0], cols[0]
-    return rows, cols
+    if isinstance(xs, (int, float)) and isinstance(ys, (int, float)):
+        fcol, frow = invtransform * (xs + eps, ys + eps)
+        return op(frow), op(fcol)
+    elif isinstance(xs, Iterable) and isinstance(ys, Iterable):
+        fcols, frows = zip(*(invtransform * (x + eps, y + eps) for x, y in zip(xs, ys)))
+        return [op(row) for row in frows], [op(col) for col in fcols]
+    else:
+        raise TransformError("Invalid inputs")
 
 
 def from_gcps(gcps):
