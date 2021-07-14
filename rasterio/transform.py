@@ -131,6 +131,8 @@ def xy(transform, rows, cols, offset='center'):
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
+    Note: rows, cols must be the same type, either both lists or both scalars.
+
     Parameters
     ----------
     transform : affine.Affine
@@ -150,9 +152,13 @@ def xy(transform, rows, cols, offset='center'):
     ys : list
         y coordinates in coordinate reference system
     """
-    if not isinstance(cols, Iterable):
+    is_iterable= isinstance(cols, Iterable)
+    one_iterable = is_iterable ^ isinstance(rows, Iterable)
+    if one_iterable:
+        raise ValueError("rows and cols must be same type (list or int)")
+    elif not is_iterable:
+        # We know they must both scalar
         cols = [cols]
-    if not isinstance(rows, Iterable):
         rows = [rows]
 
     if offset == 'center':
@@ -176,9 +182,9 @@ def xy(transform, rows, cols, offset='center'):
         xs.append(x)
         ys.append(y)
 
-    if len(xs) == 1:
-        # xs and ys will always have the same length
-        return xs[0], ys[0]
+    if not is_iterable:
+        [xs] = xs
+        [ys] = ys
     return xs, ys
 
 
@@ -190,6 +196,8 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     Use an epsilon, magnitude determined by the precision parameter
     and sign determined by the op function:
         positive for floor, negative for ceil.
+
+    Note: xs, ys must be the same type, either both lists or both scalars.
 
     Parameters
     ----------
@@ -213,10 +221,13 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     cols : list of ints
         list of column indices
     """
-
-    if not isinstance(xs, Iterable):
+    is_iterable= isinstance(xs, Iterable)
+    one_iterable = is_iterable ^ isinstance(ys, Iterable)
+    if one_iterable:
+        raise ValueError("xs and ys must be same type (list or float)")
+    elif not is_iterable:
+        # We know they must both scalar
         xs = [xs]
-    if not isinstance(ys, Iterable):
         ys = [ys]
 
     if precision is None:
@@ -239,9 +250,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         cols.append(op(fcol))
         rows.append(op(frow))
 
-    if len(cols) == 1:
-        # rows and cols will always have the same length
-        return rows[0], cols[0]
+    if not is_iterable:
+        [cols] = cols
+        [rows] = rows
     return rows, cols
 
 
