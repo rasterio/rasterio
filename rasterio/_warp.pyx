@@ -3,8 +3,6 @@
 
 """Raster and vector warping and reprojection."""
 
-include "gdal.pxi"
-
 from collections import UserDict
 from collections.abc import Mapping
 import logging

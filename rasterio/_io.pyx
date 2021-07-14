@@ -2,8 +2,6 @@
 
 """Rasterio input/output."""
 
-include "gdal.pxi"
-
 from collections import Counter
 from contextlib import contextmanager
 import logging

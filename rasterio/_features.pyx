@@ -2,8 +2,6 @@
 
 """Feature extraction"""
 
-include "gdal.pxi"
-
 import logging
 
 import numpy as np
