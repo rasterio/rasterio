@@ -1,5 +1,5 @@
-# cython: language_level=3
 include "gdal.pxi"
+
 
 cdef class ConfigEnv:
     cdef public object options

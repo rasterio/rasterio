@@ -210,7 +210,7 @@ if (gdal_major_version, gdal_minor_version) >= (2, 3):
     cpp_ext_options['extra_compile_args'] = eca
 
 # Configure optional Cython coverage.
-cythonize_options = {}
+cythonize_options = {"language_level": sys.version_info[0]}
 if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'] = {'linetrace': True}
     cythonize_options['annotate'] = True

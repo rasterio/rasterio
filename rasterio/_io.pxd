@@ -1,5 +1,3 @@
-# cython: language_level=3
-
 include "gdal.pxi"
 
 cimport numpy as np

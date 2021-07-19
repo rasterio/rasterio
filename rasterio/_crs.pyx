@@ -1,4 +1,4 @@
-# cython: language_level=3, boundscheck=False
+# cython: boundscheck=False
 
 """Coordinate reference systems, class and functions.
 """
