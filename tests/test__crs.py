@@ -45,6 +45,13 @@ def test_from_dict():
     assert 'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84"' in crs.to_wkt()
 
 
+@pytest.mark.parametrize('south,epsg', [(False, 32631), (True, 32731)])
+def test_from_dict_bool_kwarg(south, epsg):
+    """Confirm resolution of issue #2246"""
+    crs = _CRS.from_dict({'proj': 'utm', 'zone': 31, 'south': south})
+    assert crs.to_epsg() == epsg
+
+
 def test_from_dict_keywords():
     """Can create a CRS from keyword args, ignoring unknowns"""
     crs = _CRS.from_dict(init='epsg:3857', foo='bar')
