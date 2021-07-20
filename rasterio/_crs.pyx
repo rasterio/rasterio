@@ -375,7 +375,16 @@ cdef class _CRS:
             return _CRS.from_epsg(epsg_code)
 
         # Continue with the general case.
-        proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
+        pjargs = []
+        for key, val in data.items():
+            if val is None or val is True:
+                pjargs.append('+{}'.format(key))
+            elif val is False:
+                pass
+            else:
+                pjargs.append('+{}={}'.format(key, val))
+
+        proj = ' '.join(pjargs)
         b_proj = proj.encode('utf-8')
 
         cdef _CRS obj = _CRS.__new__(_CRS)
