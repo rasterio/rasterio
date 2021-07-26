@@ -7,16 +7,13 @@ import os.path
 import pytest
 
 import rasterio
-from rasterio.io import PythonVSIFile
 from rasterio.enums import MaskFlags
-from rasterio.env import GDALVersion
 from rasterio.shutil import copyfiles
 
-
-# Skip ENTIRE module if not GDAL >= 3.x.
-pytestmark = pytest.mark.skipif(
-    not GDALVersion.runtime().major >= 3,
-    reason="PyVSI requires GDAL 3.x")
+try:
+    from rasterio.io import PythonVSIFile
+except ImportError:
+    pytest.skip("PythonVSIFile is not available for GDAL <3.0", allow_module_level=True)
 
 
 @pytest.fixture(scope='function')

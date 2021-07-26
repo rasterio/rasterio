@@ -29,7 +29,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import ensure_env_with_credentials, Env
     from rasterio.errors import RasterioIOError, DriverCapabilityError
     from rasterio.io import (
-        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile, PythonVSIFile)
+        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
     from rasterio.profiles import default_gtiff_profile
     from rasterio.transform import Affine, guard_transform
     from rasterio.path import parse_path
@@ -40,6 +40,12 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.coords
     import rasterio.enums
     import rasterio.path
+
+    try:
+        from rasterio.io import PythonVSIFile
+        have_vsi_plugin = True
+    except ImportError:
+        have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.3dev"
@@ -179,7 +185,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            vsi_file = PythonVSIFile(fp)
+            if have_vsi_plugin:
+                vsi_file = PythonVSIFile(fp)
+            else:
+                vsi_file = MemoryFile(fp.read())
             dataset = vsi_file.open(driver=driver, sharing=sharing)
             try:
                 yield dataset

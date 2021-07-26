@@ -12,11 +12,14 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._io import (
         DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
         MemoryFileBase)
-    from rasterio._pyvsi import PyVSIFileBase
     from rasterio.windows import WindowMethodsMixin
     from rasterio.env import ensure_env, env_ctx_if_needed
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
+    try:
+        from rasterio._pyvsi import PyVSIFileBase
+    except ImportError:
+        PyVSIFileBase = object
 
 
 log = logging.getLogger(__name__)
@@ -149,7 +152,7 @@ class MemoryFile(MemoryFileBase):
         self._env.__exit__()
 
 
-class PythonVSIFile(PyVSIFileBase):
+class _PythonVSIFile(PyVSIFileBase):
     """A BytesIO-like object, backed by an in-memory file.
 
     This allows formatted files to be read and written without I/O.
@@ -228,6 +231,11 @@ class PythonVSIFile(PyVSIFileBase):
     def __exit__(self, *args, **kwargs):
         self.close()
         self._env.__exit__()
+
+
+if PyVSIFileBase is not object:
+    # only make this object available if the cython extension was compiled
+    PythonVSIFile = _PythonVSIFile
 
 
 class ZipMemoryFile(MemoryFile):
