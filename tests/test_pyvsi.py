@@ -154,7 +154,7 @@ def test_vsifile_copyfiles(path_rgb_msk_byte_tif):
                 assert sorted(rgb2.files) == sorted(['/vsimem/foo/{}'.format(src_basename), '/vsimem/foo/{}.msk'.format(src_basename)])
 
 
-@pytest.mark.xfail(reason="Copying is not supported by PythonVSIFile")
+@pytest.mark.xfail(reason="PythonVSIFile does not implement '.files' property properly.")
 def test_multi_vsifile(path_rgb_msk_byte_tif):
     """Multiple files can be copied to a PythonVSIFile using copyfiles"""
     with open(path_rgb_msk_byte_tif, 'rb') as tif_fp, open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
