@@ -315,3 +315,12 @@ cdef class PyVSIFileBase:
 
     def tell(self):
         return self._file_obj.tell()
+
+    def read(self, size=-1):
+        """Read size bytes from PythonVSIFile.
+
+        Note this reads directly from the file-like object without
+        going through GDAL.
+
+        """
+        return self._file_obj.read(size)
