@@ -30,9 +30,9 @@ def rgb_file_bytes(path_rgb_byte_tif):
 
 
 @pytest.fixture(scope='session')
-def rgb_lzw_file_bytes():
+def rgb_lzw_file_bytes(path_rgb_lzw_byte_tif):
     """Get the bytes of our RGB.bytes.tif file"""
-    return open('tests/data/rgb_lzw.tif', 'rb').read()
+    return open(path_rgb_lzw_byte_tif, 'rb').read()
 
 
 @pytest.fixture(scope='function')
@@ -244,11 +244,11 @@ def test_zip_file_object_read(path_zip_file):
                 assert src.read().shape == (3, 768, 1024)
 
 
-def test_vrt_memfile():
+def test_vrt_memfile(data_dir, path_white_gemini_iv_vrt):
     """Successfully read an in-memory VRT"""
-    with open('tests/data/white-gemini-iv.vrt') as vrtfile:
+    with open(path_white_gemini_iv_vrt) as vrtfile:
         source = vrtfile.read()
-        source = source.replace('<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>', '<SourceFilename relativeToVRT="0">{}/389225main_sw_1965_1024.jpg</SourceFilename>'.format(os.path.abspath("tests/data")))
+        source = source.replace('<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>', '<SourceFilename relativeToVRT="0">{}/389225main_sw_1965_1024.jpg</SourceFilename>'.format(data_dir))
 
     with MemoryFile(source.encode('utf-8'), ext='vrt') as memfile:
         with memfile.open() as src:
@@ -334,9 +334,10 @@ def test_write_plus_mode_blockxsize_requires_width():
         with pytest.raises(TypeError):
             memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5), blockxsize=128)
 
-def test_write_rpcs_to_memfile():
+
+def test_write_rpcs_to_memfile(path_rgb_byte_rpc_vrt):
     """Ensure we can write rpcs to a new MemoryFile"""
-    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+    with rasterio.open(path_rgb_byte_rpc_vrt) as src:
         profile = src.profile.copy()
         with MemoryFile() as memfile:
             with memfile.open(**profile) as dst:
