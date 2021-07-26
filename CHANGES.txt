@@ -4,6 +4,9 @@ Changes
 1.2.7 (TBD)
 -----------
 
+- Note upcoming deprecation of the height and width parameters of
+  rasterio.windows.from_bounds() and stop using these parameters in project
+  code and tests.
 - The transform.xy and transform.rowcol functions now return a pair of
   single-element lists if passed a pair of single-element lists. This was the
   original behavior, but was broken in version 1.2.1 (#2242).

@@ -273,13 +273,11 @@ def from_bounds(
         Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    height: int, required
-        Number of rows of the window.
-    width: int, required
-        Number of columns of the window.
     precision: int or float, optional
         An integer number of decimal points of precision when computing
         inverse transform, or an absolute float precision.
+    height, width: int, optional
+        These parameters are unused and will be deprecated.
 
     Returns
     -------
@@ -300,6 +298,10 @@ def from_bounds(
 
     if (bottom - top) / transform.e < 0:
         raise WindowError("Bounds and transform are inconsistent")
+
+    if height is None or width is not None:
+        # TODO: raise a deprecation warning in version 1.3.0.
+        pass
 
     rows, cols = rowcol(
         transform,
