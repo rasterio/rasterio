@@ -163,3 +163,17 @@ def test_multi_vsifile(path_rgb_msk_byte_tif):
             with tifvsifile.open() as src:
                 assert sorted(os.path.basename(fn) for fn in src.files) == sorted(['foo.tif', 'foo.tif.msk'])
                 assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
+
+
+def _open_geotiff(file_path):
+    with open(file_path, 'rb') as file_obj:
+        with rasterio.open(file_obj) as dataset:
+            dataset.read()
+
+
+def test_concurrent(path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif):
+    """Test multiple threads opening multiple files at the same time."""
+    from concurrent.futures import ThreadPoolExecutor
+    tifs = [path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif] * 4
+    with ThreadPoolExecutor(max_workers=8) as exe:
+        list(exe.map(_open_geotiff, tifs, timeout=5))
