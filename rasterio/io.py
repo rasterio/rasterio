@@ -185,7 +185,7 @@ class _PythonVSIFile(PyVSIFileBase):
 
     """
 
-    def __init__(self, filelike_obj, dirname=None, filename=None, ext='.tif'):
+    def __init__(self, filelike_obj, dirname=None, filename=None):
         """Create a new wrapper around the provided file-like object.
 
         Parameters
@@ -194,15 +194,13 @@ class _PythonVSIFile(PyVSIFileBase):
             Open file-like object. Currently only reading is supported.
         filename : str, optional
             An optional filename. A unique one will otherwise be generated.
-        ext : str, optional
-            An optional extension.
 
         Returns
         -------
         PythonVSIFile
         """
         super().__init__(
-            filelike_obj, dirname=dirname, filename=filename, ext=ext
+            filelike_obj, dirname=dirname, filename=filename
         )
 
     @ensure_env

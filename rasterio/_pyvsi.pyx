@@ -230,7 +230,7 @@ cdef class PyVSIFileBase:
             VSIFreeFilesystemPluginCallbacksStruct(self._vsif)
             self._vsif = NULL
 
-    def __init__(self, filelike_obj, dirname=None, filename=None, ext='.tif'):
+    def __init__(self, filelike_obj, dirname=None, filename=None):
         """A file in an in-memory filesystem.
 
         Parameters
@@ -240,9 +240,6 @@ cdef class PyVSIFileBase:
         filename : str
             An optional filename used internally by GDAL. If not provided then
             a unique one will be generated.
-        ext : str
-            A file extension for the in-memory file under /vsimem. Ignored if
-            filename was provided.
 
         """
         if isinstance(filelike_obj, (bytes, str)) or not hasattr(filelike_obj, "read"):
@@ -257,8 +254,7 @@ cdef class PyVSIFileBase:
             # the bounds being written)
             self.name = "{0}{1}/{2}".format(FILESYSTEM_PREFIX, self._dirname, filename)
         else:
-            # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = "{0}{1}/{1}.{2}".format(FILESYSTEM_PREFIX, self._dirname, ext.lstrip('.'))
+            self.name = "{0}{1}/{1}".format(FILESYSTEM_PREFIX, self._dirname)
 
         self._path = self.name.encode('utf-8')
         self._pyvsi_path = self._path[len(FILESYSTEM_PREFIX):]

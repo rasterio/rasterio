@@ -132,7 +132,7 @@ def test_vrt_vsifile(data_dir, path_white_gemini_iv_vrt):
         source = source.replace('<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>', '<SourceFilename relativeToVRT="0">{}/389225main_sw_1965_1024.jpg</SourceFilename>'.format(data_dir))
         source = BytesIO(source.encode('utf-8'))
 
-    with PythonVSIFile(source, ext='vrt') as vsifile:
+    with PythonVSIFile(source) as vsifile:
         with vsifile.open() as src:
             assert src.driver == 'VRT'
             assert src.count == 3
