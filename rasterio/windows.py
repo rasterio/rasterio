@@ -527,6 +527,8 @@ class Window:
     width, height: float
         Lengths of the window.
 
+    Notes
+    -----
     Previously the lengths were called 'num_cols' and 'num_rows' but
     this is a bit confusing in the new float precision world and the
     attributes have been changed. The originals are deprecated.
