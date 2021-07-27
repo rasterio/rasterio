@@ -4,6 +4,7 @@
 import os
 import sys
 import textwrap
+from pathlib import Path
 
 import affine
 from click.testing import CliRunner
@@ -12,7 +13,6 @@ from pytest import fixture
 import pytest
 
 import rasterio
-from rasterio import Path
 from rasterio.enums import Resampling
 from rasterio.merge import merge
 from rasterio.rio.main import main_group
