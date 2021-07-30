@@ -200,7 +200,7 @@ setuptools
 hypothesis
 pytest-cov>=2.2.0
 matplotlib
-boto3>=1.2.4
+boto3>=1.3.1
 numpydoc
 pytest>=2.8.2
 shapely
@@ -223,10 +223,10 @@ ipython>=2.0
 matplotlib
 
 [s3]
-boto3>=1.2.4
+boto3>=1.3.1
 
 [test]
-boto3>=1.2.4
+boto3>=1.3.1
 hypothesis
 packaging
 pytest-cov>=2.2.0
