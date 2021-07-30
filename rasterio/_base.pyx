@@ -608,6 +608,9 @@ cdef class DatasetBase:
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
 
+        Parameters
+        ----------
+
         all_valid: There are no invalid pixels, all mask values will be
             255. When used this will normally be the only flag set.
         per_dataset: The mask band is shared between all bands on the
@@ -670,7 +673,7 @@ cdef class DatasetBase:
         raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise DatasetAttributeError("read-only attribute") 
+        raise DatasetAttributeError("read-only attribute")
 
     property descriptions:
         """Descriptions for each dataset band
@@ -1204,8 +1207,13 @@ cdef class DatasetBase:
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
 
+        Examples
+        --------
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
+
+        .. code-block:: python
 
             import rasterio
             from rasterio.enums import ColorInterp

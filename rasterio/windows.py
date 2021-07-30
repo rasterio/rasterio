@@ -106,8 +106,8 @@ class WindowMethodsMixin:
 
 
 def iter_args(function):
-    """Decorator to allow function to take either *args or
-    a single iterable which gets expanded to *args.
+    """Decorator to allow function to take either ``*args`` or
+    a single iterable which gets expanded to ``*args``.
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):

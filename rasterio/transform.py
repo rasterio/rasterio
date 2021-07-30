@@ -54,8 +54,7 @@ class TransformMethodsMixin:
         coordinate reference system.
 
         Use an epsilon, magnitude determined by the precision parameter
-        and sign determined by the op function:
-            positive for floor, negative for ceil.
+        and sign determined by the op function: positive for floor, negative for ceil.
 
         Parameters
         ----------
@@ -190,8 +189,7 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     coordinate reference system.
 
     Use an epsilon, magnitude determined by the precision parameter
-    and sign determined by the op function:
-        positive for floor, negative for ceil.
+    and sign determined by the op function: positive for floor, negative for ceil.
 
     Parameters
     ----------
