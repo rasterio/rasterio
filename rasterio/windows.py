@@ -21,6 +21,7 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
+from itertools import zip_longest
 
 from affine import Affine
 import attr
@@ -142,36 +143,31 @@ def get_data_window(arr, nodata=None):
     -------
     Window
     """
-
-    num_dims = len(arr.shape)
-    if num_dims > 3:
+    if not 0 < arr.ndim <= 3:
         raise WindowError(
-            "get_data_window input array must have no more than "
-            "3 dimensions")
+            "get_data_window input array must have 1, 2, or 3 dimensions"
+        )
 
-    if nodata is None:
-        if not hasattr(arr, 'mask'):
-            return Window.from_slices((0, arr.shape[-2]), (0, arr.shape[-1]))
+    # If nodata is defined, construct mask from that value
+    # Otherwise retrieve mask from array (if it is masked)
+    # Finally try returning a full window (nodata=None and nothing in arr is masked)
+    if nodata is not None:
+        arr_mask = arr != nodata
+    elif np.ma.is_masked(arr):
+        arr_mask = ~np.ma.getmask(arr)
     else:
-        arr = np.ma.masked_array(arr, arr == nodata)
+        return Window.from_slices((0, arr.shape[-2]), (0, arr.shape[-1]))
 
-    if num_dims == 2:
-        data_rows, data_cols = np.where(np.equal(arr.mask, False))
-    else:
-        data_rows, data_cols = np.where(
-            np.any(np.equal(np.rollaxis(arr.mask, 0, 3), False), axis=2))
-
-    if data_rows.size:
-        row_range = (data_rows.min(), data_rows.max() + 1)
-    else:
-        row_range = (0, 0)
-
-    if data_cols.size:
-        col_range = (data_cols.min(), data_cols.max() + 1)
-    else:
-        col_range = (0, 0)
-
-    return Window.from_slices(row_range, col_range)
+    if arr.ndim == 3:
+        arr_mask = np.any(arr_mask, axis=0)
+    
+    v = []
+    for _, nz in zip_longest(range(2), np.nonzero(arr_mask)):
+        if nz is not None and nz.size:
+            v.append((nz.min(), nz.max() + 1))
+        else:
+            v.append((0, 0))
+    return Window.from_slices(*v)
 
 
 @iter_args
