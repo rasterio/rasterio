@@ -156,7 +156,11 @@ def get_data_window(arr, nodata=None):
     elif np.ma.is_masked(arr):
         arr_mask = ~np.ma.getmask(arr)
     else:
-        return Window.from_slices((0, arr.shape[-2]), (0, arr.shape[-1]))
+        if arr.ndim == 1:
+            full_window = ((0, arr.size), (0, 0))
+        else:
+            full_window = ((0, arr.shape[-2]), (0, arr.shape[-1]))
+        return Window.from_slices(*full_window)
 
     if arr.ndim == 3:
         arr_mask = np.any(arr_mask, axis=0)
