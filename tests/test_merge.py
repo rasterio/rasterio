@@ -72,7 +72,7 @@ def test_unsafe_casting():
 
 
 @pytest.mark.skipif(
-    not (boto3.Session()._session.get_credentials()),
+    not (boto3.Session().get_credentials()),
     reason="S3 raster access requires credentials",
 )
 @pytest.mark.network
