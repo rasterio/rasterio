@@ -201,7 +201,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     hypothesis
     pytest-cov>=2.2.0
     matplotlib
-    boto3>=1.2.4
+    boto3>=1.3.1
     numpydoc
     pytest>=2.8.2
     shapely
@@ -224,18 +224,17 @@ Rasterio's Python dependencies are (see the package metadata file):
     matplotlib
 
     [s3]
-    boto3>=1.2.4
+    boto3>=1.3.1
 
     [test]
-    boto3>=1.2.4
+    boto3>=1.3.1
     hypothesis
     packaging
     pytest-cov>=2.2.0
     pytest>=2.8.2
     shapely
 
-
-Development requires (see requirements-dev.txt) Cython and other packages.
+Development requires Cython and other packages.
 
 Binary Distributions
 --------------------
