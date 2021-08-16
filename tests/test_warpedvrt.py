@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 # Custom markers.
 credentials = pytest.mark.skipif(
-    not (boto3.Session()._session.get_credentials()),
+    not (boto3.Session().get_credentials()),
     reason="S3 raster access requires credentials",
 )
 

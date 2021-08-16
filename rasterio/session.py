@@ -285,7 +285,7 @@ class AWSSession(Session):
         self.unsigned = bool(os.getenv("AWS_NO_SIGN_REQUEST", aws_unsigned))
         self.endpoint_url = endpoint_url
         self._creds = (
-            self._session._session.get_credentials()
+            self._session.get_credentials()
             if not self.unsigned and self._session
             else None
         )
