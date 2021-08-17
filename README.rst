@@ -244,12 +244,12 @@ possible.
 
 The rasterio wheels on PyPI include GDAL and its own dependencies.
 
-  ========  ====
-  Rasterio  GDAL
-  ========  ====
-  1.2.3     3.2.2
-  1.2.4+    3.3.0
-  ========  ====
+========  ====
+Rasterio  GDAL
+========  ====
+1.2.3     3.2.2
+1.2.4+    3.3.0
+========  ====
 
 Linux
 +++++
