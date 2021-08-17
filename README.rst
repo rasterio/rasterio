@@ -185,56 +185,56 @@ be explained below.
 
 Rasterio's Python dependencies are (see the package metadata file):
 
-```
-affine
-attrs
-certifi
-click>=4.0
-cligj>=0.5
-numpy
-snuggs>=1.4.1
-click-plugins
-setuptools
+.. code-block:: none
 
-[all]
-hypothesis
-pytest-cov>=2.2.0
-matplotlib
-boto3>=1.3.1
-numpydoc
-pytest>=2.8.2
-shapely
-ipython>=2.0
-sphinx
-packaging
-ghp-import
-sphinx-rtd-theme
+    affine
+    attrs
+    certifi
+    click>=4.0
+    cligj>=0.5
+    numpy
+    snuggs>=1.4.1
+    click-plugins
+    setuptools
 
-[docs]
-ghp-import
-numpydoc
-sphinx
-sphinx-rtd-theme
+    [all]
+    hypothesis
+    pytest-cov>=2.2.0
+    matplotlib
+    boto3>=1.3.1
+    numpydoc
+    pytest>=2.8.2
+    shapely
+    ipython>=2.0
+    sphinx
+    packaging
+    ghp-import
+    sphinx-rtd-theme
 
-[ipython]
-ipython>=2.0
+    [docs]
+    ghp-import
+    numpydoc
+    sphinx
+    sphinx-rtd-theme
 
-[plot]
-matplotlib
+    [ipython]
+    ipython>=2.0
 
-[s3]
-boto3>=1.3.1
+    [plot]
+    matplotlib
 
-[test]
-boto3>=1.3.1
-hypothesis
-packaging
-pytest-cov>=2.2.0
-pytest>=2.8.2
-shapely
-```
+    [s3]
+    boto3>=1.3.1
 
-Development requires (see requirements-dev.txt) Cython and other packages.
+    [test]
+    boto3>=1.3.1
+    hypothesis
+    packaging
+    pytest-cov>=2.2.0
+    pytest>=2.8.2
+    shapely
+
+Development requires Cython and other packages.
 
 Binary Distributions
 --------------------
