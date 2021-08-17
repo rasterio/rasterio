@@ -454,7 +454,7 @@ def geometry_window(
     ys = [
         y
         for (left, bottom, right, top) in all_bounds
-        for y in (top + pad_y, top + pad_y, bottom - pad_x, bottom - pad_x)
+        for y in (top + pad_y, top + pad_y, bottom - pad_y, bottom - pad_y)
     ]
 
     rows1, cols1 = rowcol(

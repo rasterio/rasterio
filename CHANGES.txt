@@ -4,6 +4,8 @@ Changes
 1.2.7 (TBD)
 -----------
 
+- Fix a copy-paste bug in features.geometry_window() affecting Y-axis padding
+  (#2266).
 - Note upcoming deprecation of the height and width parameters of
   rasterio.windows.from_bounds() and stop using these parameters in project
   code and tests.
