@@ -1265,7 +1265,28 @@ cdef class DatasetBase:
                     GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
 
     def colormap(self, bidx):
-        """Returns a dict containing the colormap for a band or None."""
+        """Returns a dict containing the colormap for a band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band whose colormap will be returned. Band index
+            starts at 1.
+
+        Returns
+        -------
+        dict
+            Mapping of color index value (starting at 0) to RGBA color as a
+            4-element tuple.
+
+        Raises
+        ------
+        ValueError
+            If no colormap is found for the specified band (NULL color table).
+        IndexError
+            If no band exists for the provided index.
+
+        """
         cdef GDALRasterBandH band = NULL
         cdef GDALColorTableH colortable = NULL
         cdef GDALColorEntry *color = NULL
