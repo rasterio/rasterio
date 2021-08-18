@@ -65,7 +65,7 @@ def copy(src, dst, driver=None, strict=True, **creation_options):
     strict : bool, optional.  Default: True
         Indicates if the output must be strictly equivalent or if the
         driver may adapt as necessary
-    creation_options : **kwargs, optional
+    creation_options : dict, optional
         Creation options for output dataset
 
     Returns

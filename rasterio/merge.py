@@ -125,11 +125,6 @@ def merge(
             min: pixel-wise min of existing and new
             max: pixel-wise max of existing and new
         or custom callable with signature:
-
-        def function(merged_data, new_data, merged_mask, new_mask, index=None, roff=None, coff=None):
-
-            Parameters
-            ----------
             merged_data : array_like
                 array to update with new_data
             new_data : array_like
