@@ -1,7 +1,8 @@
 Writing Datasets
 =================
 
-..
+.. todo::
+
     * appending to existing data
     * context manager
     * write 3d vs write 2d

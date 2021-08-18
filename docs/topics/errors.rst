@@ -1,4 +1,6 @@
 Error Handling
 ==============
 
-.. error enums, context managers, converting GDAL errors to python exceptions
+.. todo::
+
+    error enums, context managers, converting GDAL errors to python exceptions
