@@ -1,2 +1,10 @@
 [build-system]
 requires = ["setuptools", "wheel", "cython==0.29.21", "oldest-supported-numpy"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow",
+    "gdalbin: marks test requiring GDAL binaries",
+    "wheel: marks test specific to wheel-building infra",
+    "network: marks tests that require network access"
+]
