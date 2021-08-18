@@ -1,8 +1,7 @@
 Reading Datasets
 ================
 
-.. todo::
-
+..
     * Discuss and/or link to topics
         - supported formats, drivers
         - vsi

@@ -1,6 +1,4 @@
 Filling nodata areas
 ====================
 
-.. todo::
-
-    fillnodata()
+.. fillnodata()

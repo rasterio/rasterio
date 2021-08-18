@@ -1,8 +1,7 @@
 Virtual Files
 =============
 
-.. todo::
-
+..
     Support for URIs describing zip, s3, https resources.
     Relationship to GDAL vsicurl, vsis3 et al.
 
