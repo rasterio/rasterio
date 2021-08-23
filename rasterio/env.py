@@ -420,8 +420,10 @@ def ensure_env_with_credentials(f):
         else:
             env_ctor = Env.from_defaults
 
-        if isinstance(args[0], str):
-            session_cls = Session.cls_from_path(args[0])
+        fp_arg = kwds.get("fp", None) or args[0]
+
+        if isinstance(fp_arg, str):
+            session_cls = Session.cls_from_path(fp_arg)
 
             if local._env and session_cls.hascreds(getenv()):
                 session_cls = DummySession

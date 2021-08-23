@@ -4,6 +4,7 @@ Changes
 1.2.7 (TBD)
 -----------
 
+- Allow open's fp keyword argument to pass the credential decorator (#2267).
 - Fix a copy-paste bug in features.geometry_window() affecting Y-axis padding
   (#2266).
 - Note upcoming deprecation of the height and width parameters of
