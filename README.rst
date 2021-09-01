@@ -4,8 +4,8 @@ Rasterio
 
 Rasterio reads and writes geospatial raster data.
 
-.. image:: https://travis-ci.com/mapbox/rasterio.png?branch=master
-   :target: https://travis-ci.com/mapbox/rasterio
+.. image:: https://app.travis-ci.com/mapbox/rasterio.svg?branch=master
+   :target: https://app.travis-ci.com/mapbox/rasterio
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
@@ -15,9 +15,10 @@ store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
 Rasterio 1.2 works with Python versions 3.6 through 3.9, Numpy versions 1.15
-and newer, and GDAL versions 2.3 through 3.2. Official binary packages for
-Linux and Mac OS X are available on PyPI. Unofficial binary packages for
-Windows are available through other channels.
+and newer, and GDAL versions 2.4 through 3.3. Official binary packages for
+Linux and Mac OS X with most built-in format drivers plus HDF5, netCDF, and
+OpenJPEG2000 are available on PyPI. Unofficial binary packages for Windows are
+available through other channels.
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
@@ -44,8 +45,10 @@ band.  This new band is then written to a new single band TIFF.
     # arrays to it in-place converts those arrays "up" and
     # preserves the type of the total array.
     total = np.zeros(r.shape)
+
     for band in r, g, b:
         total += band
+
     total /= 3
 
     # Write the product as a raster band to a new 8-bit file. For
@@ -86,17 +89,19 @@ Rasterio gives access to properties of a geospatial raster file.
     # 3
     # [1, 2, 3]
 
-A rasterio dataset also provides methods for getting extended array slices given
-georeferenced coordinates.
-
+A rasterio dataset also provides methods for getting read/write windows (like
+extended array slices) given georeferenced coordinates.
 
 .. code-block:: python
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        print src.window(**src.window_bounds(((100, 200), (100, 200))))
+        window = src.window(*src.bounds)
+        print(window)
+        print(src.read(window=window).shape)
 
     # Printed:
-    # ((100, 200), (100, 200))
+    # Window(col_off=0.0, row_off=0.0, width=791.0000000000002, height=718.0)
+    # (3, 718, 791)
 
 Rasterio CLI
 ============
