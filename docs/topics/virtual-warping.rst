@@ -124,7 +124,7 @@ CRS, and cell size within a pre-defined bounding box:
     # Destination CRS is Web Mercator
     dst_crs = CRS.from_epsg(3857)
 
-    # These coordiantes are in Web Mercator
+    # These coordinates are in Web Mercator
     dst_bounds = -8744355, 2768114, -8559167, 2908677
 
     # Output image dimensions
