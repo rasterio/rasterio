@@ -154,7 +154,7 @@ def test_rpcs_write_read_rpcs(tmpdir):
         rpcs = dst.rpcs
         assert rpcs
         assert isinstance(rpcs, RPC)
-        expected = TEST_RPCS_FROM_GDAL
+        expected = TEST_RPCS_FROM_GDAL.copy()
 
         # GDAL < 3.3 does not ensure ERR_BIAS and ERR_RAND are written out
         # so we wont either
