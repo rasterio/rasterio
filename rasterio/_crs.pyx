@@ -258,17 +258,28 @@ cdef class _CRS(object):
 
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-            matches = OSRFindMatches(osr, NULL, &num_matches, NULL)
 
-            for i in range(num_matches):
-                c_code = OSRGetAuthorityCode(matches[i], NULL)
-                c_name = OSRGetAuthorityName(matches[i], NULL)
-                if c_code != NULL and c_name != NULL:
-                    code = c_code.decode('utf-8')
-                    name = c_name.decode('utf-8')
-                    log.debug("Match authority: name=%r, code=%r", name, code)
-                    if name not in results:
+            if gdal_version().startswith("3"):
+                matches = OSRFindMatches(osr, NULL, &num_matches, NULL)
+
+                for i in range(num_matches):
+                    c_code = OSRGetAuthorityCode(matches[i], NULL)
+                    c_name = OSRGetAuthorityName(matches[i], NULL)
+                    if c_code != NULL and c_name != NULL:
+                        code = c_code.decode('utf-8')
+                        name = c_name.decode('utf-8')
+                        log.debug("Match authority: name=%r, code=%r", name, code)
+                        if name not in results:
+                            results[name] = code
+
+            else:
+                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+                if OSRAutoIdentifyEPSG(osr) == 0:
+                    c_code = OSRGetAuthorityCode(osr, NULL)
+                    c_name = OSRGetAuthorityName(osr, NULL)
+                    if c_code != NULL and c_name != NULL:
+                        code = c_code.decode('utf-8')
+                        name = c_name.decode('utf-8')
                         results[name] = code
 
             return results
