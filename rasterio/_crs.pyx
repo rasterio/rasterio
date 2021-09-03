@@ -215,14 +215,13 @@ cdef class _CRS(object):
         """
         if self._epsg is not None:
             return self._epsg
-
-        auth = self.to_authority()
-        if auth is None:
-            return None
-        name, code = auth
-        if name.upper() == "EPSG":
-            self._epsg = int(code)
-        return self._epsg
+        else:
+            matches = self._matches()
+            if "EPSG" in matches:
+                self._epsg = int(matches["EPSG"])
+                return self._epsg
+            else:
+                return None
 
     def to_authority(self):
         """The authority name and code of the CRS
@@ -232,29 +231,51 @@ cdef class _CRS(object):
         (str, str) or None
 
         """
-        cdef OGRSpatialReferenceH osr = NULL
+        matches = self._matches()
+        if "EPSG" in matches:
+            return "EPSG", matches["EPSG"]
+        elif "ESRI" in matches:
+            return "ESRI", matches["ESRI"]
+        elif "OGC" in matches:
+            return "OGC", matches["OGC"]
+        else:
+            return None
 
-        code = None
-        name = None
+    def _matches(self):
+        """Find matches in authority files.
+
+        Returns
+        -------
+        dict : {name: code}
+
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+        cdef OGRSpatialReferenceH *matches = NULL
+        cdef int num_matches = 0
+        cdef int i = 0
+
+        results = {}
 
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
             exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+            matches = OSRFindMatches(osr, NULL, &num_matches, NULL)
 
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                c_code = OSRGetAuthorityCode(osr, NULL)
-                c_name = OSRGetAuthorityName(osr, NULL)
+            for i in range(num_matches):
+                c_code = OSRGetAuthorityCode(matches[i], NULL)
+                c_name = OSRGetAuthorityName(matches[i], NULL)
                 if c_code != NULL and c_name != NULL:
                     code = c_code.decode('utf-8')
                     name = c_name.decode('utf-8')
+                    log.debug("Match authority: name=%r, code=%r", name, code)
+                    if name not in results:
+                        results[name] = code
+
+            return results
 
         finally:
             _safe_osr_release(osr)
-
-        if None not in (name, code):
-            return (name, code)
-
-        return None
+            OSRFreeSRSArray(matches)
 
     @staticmethod
     def from_epsg(code):
