@@ -1,9 +1,11 @@
 Changes
 =======
 
-1.2.7 (TBD)
------------
+1.2.7 (2021-09-06)
+------------------
 
+- CRS objects are now compared to the EPSG authority using OSRFindMatches for
+  compatibility with GDAL 3.3.2 (#2279).
 - Allow open's fp keyword argument to pass the credential decorator (#2267).
 - Fix a copy-paste bug in features.geometry_window() affecting Y-axis padding
   (#2266).
