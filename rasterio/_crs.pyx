@@ -3,6 +3,7 @@
 """Coordinate reference systems, class and functions.
 """
 
+from collections import defaultdict
 import logging
 
 import rasterio._env
@@ -218,7 +219,7 @@ cdef class _CRS(object):
         else:
             matches = self._matches()
             if "EPSG" in matches:
-                self._epsg = int(matches["EPSG"])
+                self._epsg = int(matches["EPSG"][0])
                 return self._epsg
             else:
                 return None
@@ -232,12 +233,15 @@ cdef class _CRS(object):
 
         """
         matches = self._matches()
+        # Note: before version 1.2.7 this function only paid attention
+        # to EPSG as an authority, which is why it takes priority over
+        # others even if they were a better match.
         if "EPSG" in matches:
-            return "EPSG", matches["EPSG"]
-        elif "ESRI" in matches:
-            return "ESRI", matches["ESRI"]
+            return "EPSG", matches["EPSG"][0]
         elif "OGC" in matches:
-            return "OGC", matches["OGC"]
+            return "OGC", matches["OGC"][0]
+        elif "ESRI" in matches:
+            return "ESRI", matches["ESRI"][0]
         else:
             return None
 
@@ -246,7 +250,10 @@ cdef class _CRS(object):
 
         Returns
         -------
-        dict : {name: code}
+        dict : {name: [codes]}
+            A dictionary in which capitalized authority names are the
+            keys and lists of codes ordered by match confidence,
+            descending, are the values.
 
         """
         cdef OGRSpatialReferenceH osr = NULL
@@ -254,7 +261,7 @@ cdef class _CRS(object):
         cdef int num_matches = 0
         cdef int i = 0
 
-        results = {}
+        results = defaultdict(list)
 
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
@@ -268,9 +275,7 @@ cdef class _CRS(object):
                     if c_code != NULL and c_name != NULL:
                         code = c_code.decode('utf-8')
                         name = c_name.decode('utf-8')
-                        log.debug("Match authority: name=%r, code=%r", name, code)
-                        if name not in results:
-                            results[name] = code
+                        results[name].append(code)
 
             else:
                 exc_wrap_ogrerr(OSRMorphFromESRI(osr))
@@ -280,7 +285,7 @@ cdef class _CRS(object):
                     if c_code != NULL and c_name != NULL:
                         code = c_code.decode('utf-8')
                         name = c_name.decode('utf-8')
-                        results[name] = code
+                        results[name].append(code)
 
             return results
 
