@@ -1101,7 +1101,7 @@ cdef class MemoryFileBase:
             self.mode = "w+"
 
         if self._vsif == NULL:
-            raise IOError("Failed to open in-memory file.")
+            raise OSError("Failed to open in-memory file.")
 
         self.closed = False
 

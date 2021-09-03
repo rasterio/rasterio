@@ -96,7 +96,7 @@ def test_closed():
     """A closed MemoryFile can not be opened"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(IOError):
+    with pytest.raises(OSError):
         memfile.open()
 
 
@@ -229,7 +229,7 @@ def test_zip_closed():
     """A closed ZipMemoryFile can not be opened"""
     with ZipMemoryFile() as zipmemfile:
         pass
-    with pytest.raises(IOError):
+    with pytest.raises(OSError):
         zipmemfile.open('foo')
 
 

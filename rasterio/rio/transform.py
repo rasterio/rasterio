@@ -25,7 +25,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
     # Handle the case of file, stream, or string input.
     try:
         src = click.open_file(input).readlines()
-    except IOError:
+    except OSError:
         src = [input]
 
     try:

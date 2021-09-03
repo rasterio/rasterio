@@ -41,7 +41,7 @@ class FileOverwriteError(FileError):
         super().__init__('', hint=message)
 
 
-class RasterioIOError(IOError):
+class RasterioIOError(OSError):
     """Raised when a dataset cannot be opened using one of the
     registered format drivers."""
 
