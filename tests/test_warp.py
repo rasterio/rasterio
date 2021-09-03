@@ -233,13 +233,12 @@ def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_proj4(
-        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
-    )
-    assert np.allclose(
-        expected,
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
-    )
+    dst_crs = CRS.from_epsg(2163)
+    with rasterio.Env(OSR_USE_NON_DEPRECATED="NO"):
+        assert np.allclose(
+            expected,
+            transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
+        )
 
 
 def test_transform_bounds_no_change():
