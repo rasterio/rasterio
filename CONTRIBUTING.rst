@@ -106,7 +106,7 @@ pytest's parameterization feature.
 We aspire to 100% coverage for Python modules but coverage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 
-Use [darker](https://pypi.org/project/darker/) to reformat code as you change it.
+Use `darker <https://pypi.org/project/darker/>`_ to reformat code as you change it.
 We aren't going to run black on everything all at once.
 
 Type hints are welcome as a part of refactoring work or new feature development.
