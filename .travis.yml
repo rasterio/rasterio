@@ -15,14 +15,6 @@ jobs:
   include:
     - python: "3.6"
       env:
-        GDALVERSION="2.3.3"
-        PROJVERSION="4.9.3"
-    - python: "3.6"
-      env:
-        GDALVERSION="2.4.4"
-        PROJVERSION="4.9.3"
-    - python: "3.7"
-      env:
         GDALVERSION="2.4.4"
         PROJVERSION="4.9.3"
     - python: "3.7"
@@ -43,16 +35,28 @@ jobs:
         PROJVERSION="6.2.1"
     - python: "3.8"
       env:
-        GDALVERSION="3.2.2"
+        GDALVERSION="3.2.3"
+        PROJVERSION="7.2.1"
+    - python: "3.9"
+      env:
+        GDALVERSION="3.2.3"
         PROJVERSION="7.2.1"
     - python: "3.8"
       env:
+        GDALVERSION="3.3.2"
+        PROJVERSION="8.1.1"
+    - python: "3.9"
+      env:
+        GDALVERSION="3.3.2"
+        PROJVERSION="8.1.1"
+    - python: "3.9"
+      env:
         GDALVERSION="master"
-        PROJVERSION="8.0.1"
+        PROJVERSION="8.1.1"
   allow_failures:
     - env:
         GDALVERSION="master"
-        PROJVERSION="8.0.1"
+        PROJVERSION="8.1.1"
 
 addons:
   apt:
