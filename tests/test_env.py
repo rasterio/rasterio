@@ -168,17 +168,33 @@ def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
 
     @ensure_env_credentialled
-    def f(path):
+    def f(fp):
         return getenv()
 
-    config = f('s3://foo/bar')
-    assert config['AWS_ACCESS_KEY_ID'] == 'id'
-    assert config['AWS_SECRET_ACCESS_KEY'] == 'key'
-    assert config['AWS_SESSION_TOKEN'] == 'token'
+    config = f("s3://foo/bar")
+    assert config["AWS_ACCESS_KEY_ID"] == "id"
+    assert config["AWS_SECRET_ACCESS_KEY"] == "key"
+    assert config["AWS_SESSION_TOKEN"] == "token"
 
     monkeypatch.undo()
 
 
+def test_ensure_env_credentialled_decorator_fp_kwarg(monkeypatch, gdalenv):
+    """Demonstrate resolution of #2267"""
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+
+    @ensure_env_credentialled
+    def f(fp):
+        return getenv()
+
+    config = f(fp="s3://foo/bar")
+    assert config["AWS_ACCESS_KEY_ID"] == "id"
+    assert config["AWS_SECRET_ACCESS_KEY"] == "key"
+    assert config["AWS_SESSION_TOKEN"] == "token"
+
+    monkeypatch.undo()
 def test_no_aws_gdal_config(gdalenv):
     """Trying to set AWS-specific GDAL config options fails."""
     with pytest.raises(EnvError):

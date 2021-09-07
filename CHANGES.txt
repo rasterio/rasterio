@@ -11,6 +11,21 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.7 (2021-09-07)
+------------------
+
+- CRS objects are now compared to the EPSG authority using OSRFindMatches for
+  compatibility with GDAL 3.3.2 (#2279).
+- Allow open's fp keyword argument to pass the credential decorator (#2267).
+- Fix a copy-paste bug in features.geometry_window() affecting Y-axis padding
+  (#2266).
+- Note upcoming deprecation of the height and width parameters of
+  rasterio.windows.from_bounds() and stop using these parameters in project
+  code and tests.
+- The transform.xy and transform.rowcol functions now return a pair of
+  single-element lists if passed a pair of single-element lists. This was the
+  original behavior, but was broken in version 1.2.1 (#2242).
+
 1.2.6 (2021-06-22)
 ------------------
 

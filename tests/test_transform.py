@@ -3,6 +3,7 @@ import pytest
 import rasterio
 from rasterio import transform
 from rasterio.env import GDALVersion
+from rasterio.errors import TransformError
 from rasterio.transform import xy, rowcol
 from rasterio.windows import Window
 
@@ -132,12 +133,12 @@ def test_from_bounds_two():
 
 
 def test_xy():
+    # TODO: use pytest's parametrize to make separate tests.
     aff = Affine(300.0379266750948, 0.0, 101985.0,
                  0.0, -300.041782729805, 2826915.0)
     ul_x, ul_y = aff * (0, 0)
     xoff = aff.a
     yoff = aff.e
-    assert xy(aff, 0, 0, offset='ul') == (ul_x, ul_y)
     assert xy(aff, 0, 0, offset='ur') == (ul_x + xoff, ul_y)
     assert xy(aff, 0, 0, offset='ll') == (ul_x, ul_y + yoff)
     expected = (ul_x + xoff, ul_y + yoff)
@@ -149,9 +150,12 @@ def test_xy():
         xy(aff, 1, 1, offset='ul') == \
         xy(aff, 1, 0, offset='ur')
 
+    # Check list inputs.
+    assert xy(aff, [0], [0], offset='ul') == ([ul_x], [ul_y])
+
 
 def test_bogus_offset():
-    with pytest.raises(ValueError):
+    with pytest.raises(TransformError):
         xy(None, 1, 0, offset='bogus')
 
 
@@ -181,7 +185,9 @@ def test_rowcol():
         assert rowcol(aff, right, bottom) == (src.height, src.width)
         assert rowcol(aff, left, bottom) == (src.height, 0)
         assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
-        assert rowcol(aff, 101985.0 + 400.0, 2826915.0) == (0, 1)
+
+        # Check list inputs.
+        assert rowcol(aff, [101985.0 + 400.0], [2826915.0]) == ([0], [1])
 
 
 def test_xy_rowcol_inverse():
