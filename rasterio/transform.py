@@ -13,6 +13,12 @@ IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
+def wrap_noniterable(x):
+    if isinstance(x, Iterable):
+        return x
+    else:
+        return [x]
+
 class TransformMethodsMixin(object):
     """Mixin providing methods for calculations related
     to transforming between rows and columns of the raster
@@ -168,13 +174,17 @@ def xy(transform, rows, cols, offset='center'):
 
     adjusted_transform = transform * Affine.translation(coff, roff)
 
-    if isinstance(rows, (int, float)) and isinstance(cols, (int, float)):
-        return adjusted_transform * (cols, rows)
-    elif isinstance(rows, Iterable) and isinstance(cols, Iterable):
-        xs, ys = zip(*(adjusted_transform * (col, row) for col, row in zip(cols, rows)))
-        return list(xs), list(ys)
-    else:
-        raise TransformError("Invalid inputs")
+    cols_rows = zip(wrap_noniterable(cols), wrap_noniterable(rows))
+    try:
+        xs, ys = zip(*(adjusted_transform * (col, row) for col, row in cols_rows))
+        xs = list(xs)
+        ys = list(ys)
+        if not isinstance(rows, Iterable) and not isinstance(cols, Iterable):
+            return xs[0], ys[0]
+        else:
+            return xs, ys
+    except TypeError as exc:
+        raise TransformError("Invalid inputs") from exc
 
 
 def rowcol(transform, xs, ys, op=math.floor, precision=None):
@@ -220,14 +230,17 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     invtransform = ~transform
 
-    if isinstance(xs, (int, float)) and isinstance(ys, (int, float)):
-        fcol, frow = invtransform * (xs + eps, ys + eps)
-        return op(frow), op(fcol)
-    elif isinstance(xs, Iterable) and isinstance(ys, Iterable):
-        fcols, frows = zip(*(invtransform * (x + eps, y + eps) for x, y in zip(xs, ys)))
-        return [op(row) for row in frows], [op(col) for col in fcols]
-    else:
-        raise TransformError("Invalid inputs")
+    xs_ys = zip(wrap_noniterable(xs), wrap_noniterable(ys))
+    try:
+        fcols, frows = zip(*(invtransform * (x + eps, y + eps) for x, y in xs_ys))
+        fcols = list(map(op, fcols))
+        frows = list(map(op, frows))
+        if not isinstance(xs, Iterable) and not isinstance(ys, Iterable):
+            return frows[0], fcols[0]
+        else:
+            return frows, fcols
+    except TypeError as exc:
+        raise TransformError("Invalid inputs") from exc
 
 
 def from_gcps(gcps):
