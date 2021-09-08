@@ -1,6 +1,8 @@
 from affine import Affine
 import pytest
 import rasterio
+import numpy as np
+from collections.abc import Iterable
 from rasterio import transform
 from rasterio.env import GDALVersion
 from rasterio.errors import TransformError
@@ -205,3 +207,16 @@ def test_from_gcps():
         assert not aff == src.transform
         assert len(aff) == 9
         assert not transform.tastes_like_gdal(aff)
+
+def test_xy_np_primitive():
+    aff = Affine.identity()
+    assert (1.5, 1.5) == xy(aff, np.int64(1), np.int64(1))
+
+def test_wrap_noniterable():
+    j = 1
+    it = transform.wrap_noniterable(j)
+    assert isinstance(it, Iterable)
+    assert it == [1]
+    
+    j = []
+    assert transform.wrap_noniterable(j) is j
