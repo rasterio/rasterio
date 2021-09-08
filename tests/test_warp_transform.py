@@ -6,6 +6,7 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 import rasterio
+from rasterio._err import CPLE_BaseError
 from rasterio._warp import _calculate_default_transform
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
@@ -242,12 +243,15 @@ def test_transform_bounds__beyond_global_bounds():
 
 @requires_gdal3
 def test_transform_bounds__ignore_inf():
-    assert not numpy.isinf(
-        transform_bounds(
-            "EPSG:4326", "ESRI:102036", -180.0, -90.0, 180.0, 0.0,
-        )
-    ).any()
-
+    # Depending on the GDAL version we might get an exception or inf values
+    try:
+        assert not numpy.isinf(
+            transform_bounds(
+                "EPSG:4326", "ESRI:102036", -180.0, -90.0, 180.0, 0.0,
+            )
+        ).any()
+    except CPLE_BaseError:
+        pass
 
 def test_transform_bounds__noop_geographic():
     bounds = (19.57, 35.14, -168.97, 81.91)
