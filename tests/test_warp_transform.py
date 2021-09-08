@@ -1,9 +1,12 @@
+"""Tests of the warp module's coordinate transformation features."""
+
 import os
 import logging
 
 import pytest
 
 import rasterio
+from rasterio._err import CPLE_BaseError
 from rasterio._warp import _calculate_default_transform
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
@@ -12,6 +15,7 @@ from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 log = logging.getLogger(__name__)
+
 
 def test_gcps_bounds_exclusivity():
     """gcps and bounds parameters are mutually exclusive"""
@@ -179,31 +183,61 @@ def test_transform_bounds_identity():
     assert transform_bounds("+init=epsg:3857", "+init=epsg:3857", *bounds) == bounds
 
 
+def test_transform_bounds_densify_out_of_bounds():
+    with pytest.raises(ValueError):
+        transform_bounds(
+            "EPSG:4326",
+            "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
+            "+a=6370997 +b=6370997 +units=m +no_defs",
+            -120,
+             40,
+            -80,
+             64,
+             densify_pts=-1,
+        )
+
+
+def test_transform_bounds_densify_out_of_bounds__geographic_output():
+    with pytest.raises(ValueError):
+        transform_bounds(
+            "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
+            "+a=6370997 +b=6370997 +units=m +no_defs",
+            "EPSG:4326",
+            -120,
+             40,
+            -80,
+             64,
+             densify_pts=-1,
+        )
+
+
 def test_issue1131():
     """Confirm that we don't run out of memory"""
     transform, w, h = calculate_default_transform(CRS.from_epsg(4326), CRS.from_epsg(3857), 455880, 454450, 13.0460235139, 42.6925552354, 13.2511695428, 42.8970561511)
     assert (w, h) == (381595, 518398)
 
+
 def test_rpcs_calculate_transform():
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         _, width, height = calculate_default_transform('EPSG:4326', 'EPSG:32610', width=7449, height=11522, rpcs=src.rpcs)
-        
         assert width == 10889
         assert height == 11579
+
 
 def test_rpcs_calculate_transform_pass_kwargs_to_transformer(caplog):
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         caplog.set_level(logging.DEBUG)
         _, width, height = calculate_default_transform('EPSG:4326', 'EPSG:32610', width=7449, height=11522, rpcs=src.rpcs, RPC_HEIGHT=1000)
-        
         assert "RPC_HEIGHT" in caplog.text
         assert width == 10880
         assert height == 11587
 
+
 def test_gcps_rpcs_exclusivity():
     with pytest.raises(ValueError):
         calculate_default_transform('EPSG:4326', 'EPSG:32610', width=7449, height=11522, gcps=[0], rpcs={'a':'123'})
-    
+
+
 def test_rpcs_bounds_exclusivity():
     with pytest.raises(ValueError):
         calculate_default_transform('EPSG:4326', 'EPSG:32610', width=7449, height=11522, left=1, rpcs={'a':'123'})

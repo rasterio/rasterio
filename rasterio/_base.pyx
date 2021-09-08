@@ -1413,7 +1413,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     try:
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
-        exc_wrap_int(OCTTransform(transform, n, x, y, z))
+        # OCTTransform() returns TRUE/FALSE contrary to most GDAL API functions
+        exc_wrap_int(OCTTransform(transform, n, x, y, z) == 0)
 
         res_xs = [0]*n
         res_ys = [0]*n

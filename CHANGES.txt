@@ -1,9 +1,10 @@
 Changes
 =======
 
-1.2.8 (TBD)
------------
+1.2.8 (2021-09-09)
+------------------
 
+- Correct for the sense of OCTTransform's return value (#2287).
 - Fix a regression in the rasterio.transform module's xy and rowcol functions
   (#2283).
 
