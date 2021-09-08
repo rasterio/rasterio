@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.2.8 (TBD)
+-----------
+
+- Fix a regression in the rasterio.transform module's xy and rowcol functions
+  (#2283).
+
 1.2.7 (2021-09-07)
 ------------------
 
