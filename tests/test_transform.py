@@ -212,6 +212,10 @@ def test_xy_np_primitive():
     aff = Affine.identity()
     assert (1.5, 1.5) == xy(aff, np.int64(1), np.int64(1))
 
+def test_rowcol_np_primitive():
+    aff = Affine.identity()
+    assert (1, 1) == rowcol(aff, np.int64(1), np.int64(1))
+
 def test_wrap_noniterable():
     j = 1
     it = transform.wrap_noniterable(j)
