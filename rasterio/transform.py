@@ -168,12 +168,15 @@ def xy(transform, rows, cols, offset='center'):
 
     adjusted_transform = transform * Affine.translation(coff, roff)
 
-    if isinstance(rows, (int, float)) and isinstance(cols, (int, float)):
-        return adjusted_transform * (cols, rows)
-    elif isinstance(rows, Iterable) and isinstance(cols, Iterable):
-        xs, ys = zip(*(adjusted_transform * (col, row) for col, row in zip(cols, rows)))
-        return list(xs), list(ys)
-    else:
+    try:
+        if hasattr(rows, "__iter__") and hasattr(cols, "__iter__"):
+            xs, ys = zip(
+                *(adjusted_transform * (col, row) for col, row in zip(cols, rows))
+            )
+            return list(xs), list(ys)
+        else:
+            return adjusted_transform * (cols, rows)
+    except TypeError:
         raise TransformError("Invalid inputs")
 
 
@@ -220,13 +223,16 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     invtransform = ~transform
 
-    if isinstance(xs, (int, float)) and isinstance(ys, (int, float)):
-        fcol, frow = invtransform * (xs + eps, ys + eps)
-        return op(frow), op(fcol)
-    elif isinstance(xs, Iterable) and isinstance(ys, Iterable):
-        fcols, frows = zip(*(invtransform * (x + eps, y + eps) for x, y in zip(xs, ys)))
-        return [op(row) for row in frows], [op(col) for col in fcols]
-    else:
+    try:
+        if hasattr(xs, "__iter__") and hasattr(ys, "__iter__"):
+            fcols, frows = zip(
+                *(invtransform * (x + eps, y + eps) for x, y in zip(xs, ys))
+            )
+            return [op(row) for row in frows], [op(col) for col in fcols]
+        else:
+            fcol, frow = invtransform * (xs + eps, ys + eps)
+            return op(frow), op(fcol)
+    except TypeError:
         raise TransformError("Invalid inputs")
 
 
