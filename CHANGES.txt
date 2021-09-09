@@ -11,6 +11,13 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.8 (2021-09-09)
+------------------
+
+- Correct for the sense of OCTTransform's return value (#2287).
+- Fix a regression in the rasterio.transform module's xy and rowcol functions
+  (#2283).
+
 1.2.7 (2021-09-07)
 ------------------
 
