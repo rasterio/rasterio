@@ -21,7 +21,6 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
-from itertools import zip_longest
 
 from affine import Affine
 import attr
@@ -164,13 +163,18 @@ def get_data_window(arr, nodata=None):
 
     if arr.ndim == 3:
         arr_mask = np.any(arr_mask, axis=0)
-    
+
+    # We only have 1 or 2 dimension cases to process
     v = []
-    for _, nz in zip_longest(range(2), np.nonzero(arr_mask)):
-        if nz is not None and nz.size:
+    for nz in arr_mask.nonzero():
+        if nz.size:
             v.append((nz.min(), nz.max() + 1))
         else:
             v.append((0, 0))
+    
+    if arr_mask.ndim == 1:
+        v.append((0, 0))
+        
     return Window.from_slices(*v)
 
 
