@@ -15,7 +15,7 @@ import numpy as np
 from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._base cimport open_dataset
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -269,7 +269,7 @@ def _delete_dataset_if_exists(path):
     try:
         h_dataset = open_dataset(path, 0x40, None, None, None)
 
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError) as exc:
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError) as exc:
         log.debug(
             "Skipped delete for overwrite. Dataset does not exist: %r", path)
 
