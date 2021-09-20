@@ -20,6 +20,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 cdef class BufferedDatasetWriterBase(DatasetWriterBase):
     pass
 
+cdef class InMemoryRasterArray(DatasetWriterBase):
+    cdef np.ndarray _array
 
 cdef class InMemoryRaster:
     cdef GDALDatasetH _hds

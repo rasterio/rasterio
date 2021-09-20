@@ -24,7 +24,7 @@ from rasterio.errors import (
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
-from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype
+from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, UnparsedPath
@@ -1885,6 +1885,41 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             rpcs = rpcs.to_gdal()
         self.update_tags(ns='RPC', **rpcs)
         self._rpcs = None
+
+
+cdef class InMemoryRasterArray(DatasetWriterBase):
+    def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
+        cdef const char *srcwkt = NULL
+        cdef OGRSpatialReferenceH osr = NULL
+        cdef GDAL_GCP *gcplist = NULL
+        cdef char **papszMD = NULL
+        cdef double *gdal_transform = NULL
+    
+        if copy:
+            self._array = arr.copy()
+        else:
+            self._array = arr
+
+        dtype = self._array.dtype
+        if self._array.ndim == 2:
+            count = 1
+            height, width = arr.shape
+        elif self._array.ndim == 3:
+            count, height, width = arr.shape
+        else:
+            raise ValueError("arr must be 2D or 3D array")
+
+        arr_info = self._array.__array_interface__
+        info = {"DATAPOINTER": arr_info["data"][0],
+                "PIXELS": width, "LINES": height,
+                "BANDS": count,
+                "DATATYPE": _gdal_typename(arr.dtype)}
+        dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
+
+        datasetname = f"MEM:::{dataset_options}"
+        super().__init__(parse_path(datasetname), 'r+', 
+                        transform=transform, crs=crs, gcps=gcps, rpcs=rpcs)
+
 
 cdef class InMemoryRaster:
     """
