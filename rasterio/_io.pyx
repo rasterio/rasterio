@@ -1889,12 +1889,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
 cdef class InMemoryRasterArray(DatasetWriterBase):
     def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
-        cdef const char *srcwkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-        cdef GDAL_GCP *gcplist = NULL
-        cdef char **papszMD = NULL
-        cdef double *gdal_transform = NULL
-    
         if copy:
             self._array = arr.copy()
         else:
