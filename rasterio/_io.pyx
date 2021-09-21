@@ -1907,7 +1907,7 @@ cdef class InMemoryRasterArray(DatasetWriterBase):
         info = {"DATAPOINTER": arr_info["data"][0],
                 "PIXELS": width, "LINES": height,
                 "BANDS": count,
-                "DATATYPE": _gdal_typename(arr.dtype)}
+                "DATATYPE": _gdal_typename(arr.dtype.name)}
         dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
 
         datasetname = f"MEM:::{dataset_options}"
