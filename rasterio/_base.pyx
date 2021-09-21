@@ -412,7 +412,7 @@ cdef class DatasetBase:
         if err == GDALError.failure and not self._has_gcps_or_rpcs():
             warnings.warn(
                 ("Dataset has no geotransform, gcps, or rpcs. "
-                "The identity matrix be returned."),
+                "The identity matrix will be returned."),
                 NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
