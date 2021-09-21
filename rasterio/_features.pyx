@@ -356,9 +356,6 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                     mem.handle(), 1, band_ids, num_geoms, geoms, NULL,
                     NULL, pixel_values, options, NULL, NULL))
 
-            # Read in-memory data back into image
-            image = mem.read()
-
     finally:
         for i in range(num_geoms):
             _deleteOgrGeom(geoms[i])
