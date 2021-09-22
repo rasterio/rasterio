@@ -19,7 +19,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
 
     try:
         # copy numpy ndarray into an in-memory dataset.
-        image_dataset = InMemoryRasterArray(image, copy=True)
+        image_dataset = InMemoryRasterArray(image)
         image_band = image_dataset.band(1)
 
         if mask is not None:
