@@ -4,8 +4,9 @@
 
 include "gdal.pxi"
 
+import numpy as np
 from rasterio._err cimport exc_wrap_int
-from rasterio._io cimport InMemoryRaster, InMemoryRasterArray
+from rasterio._io cimport InMemoryRasterArray
 
 
 def _fillnodata(image, mask, double max_search_distance=100.0,
@@ -23,14 +24,14 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
 
         if mask is not None:
             mask_cast = mask.astype('uint8')
-            mask_dataset = InMemoryRasterArray(mask_cast, copy=True)
+            mask_dataset = InMemoryRasterArray(mask_cast)
             mask_band = mask_dataset.band(1)
 
         alg_options = CSLSetNameValue(alg_options, "TEMP_FILE_DRIVER", "MEM")
         exc_wrap_int(
             GDALFillNodata(image_band, mask_band, max_search_distance, 0,
                            smoothing_iterations, alg_options, NULL, NULL))
-        return image_dataset.read()
+        return np.asarray(image_dataset)
     finally:
         if image_dataset is not None:
             image_dataset.close()
