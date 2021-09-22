@@ -1889,10 +1889,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
 cdef class InMemoryRasterArray(DatasetWriterBase):
     def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
-        if copy:
-            self._array = arr.copy()
-        else:
-            self._array = arr
+        self._array = np.array(arr, copy=copy)
 
         dtype = self._array.dtype
         if self._array.ndim == 2:
