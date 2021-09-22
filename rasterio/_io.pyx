@@ -1239,7 +1239,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
             a `tiled=True` keyword argument will direct the GeoTIFF format
-            driver to create a tiled, rather than striped, TIFF.
+            driver to create a tiled, rather than striped, TIFF. In 'w' or 'w+'
+            modes a APPEND_SUBDATASET=YES skip deletion (destroying) previous dataset
 
         Returns
         -------
@@ -1320,8 +1321,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
         if mode in ('w', 'w+'):
-
-            _delete_dataset_if_exists(path)
+            if kwargs.get('APPEND_SUBDATASET','NO') != 'YES':
+                 _delete_dataset_if_exists(path)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
