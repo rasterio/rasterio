@@ -1914,6 +1914,9 @@ cdef class InMemoryRasterArray(DatasetWriterBase):
         super().__init__(parse_path(datasetname), 'r+', 
                         transform=transform, crs=crs, gcps=gcps, rpcs=rpcs)
 
+    def __array__(self):
+        return self._array
+
 
 cdef class InMemoryRaster:
     """
