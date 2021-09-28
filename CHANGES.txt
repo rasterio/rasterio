@@ -4,6 +4,7 @@ Changes
 1.3.0 (TBD)
 -----------
 
+- Add support for enum and tuple type creation options (#2102)
 - WarpedVRT: Remove deprecated dst_* parameters (#2197).
 - Building from source now requires Cython (#2016).
 - Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.

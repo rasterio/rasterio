@@ -2,6 +2,7 @@
 
 """Rasterio input/output."""
 
+from enum import Enum, IntEnum
 from collections import Counter
 from contextlib import contextmanager
 import logging
@@ -341,6 +342,36 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
 
     except CPLE_BaseError as cplerr:
         raise RasterioIOError(str(cplerr))
+
+
+cdef char **convert_options(kwargs):
+    cdef char **options = NULL
+
+    tiled = kwargs.get("tiled", False) or kwargs.get("TILED", False)
+    if isinstance(tiled, str):
+        tiled = (tiled.lower() in ("true", "yes"))
+
+    for k, v in kwargs.items():
+        if k.lower() in ['affine']:
+            continue
+        elif k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+            continue
+
+        # Special cases for enums and tuples.
+        elif isinstance(v, (IntEnum, Enum)):
+            v = v.name.upper()
+        elif isinstance(v, tuple):
+            v = ",".join([str(it) for it in v])
+
+        k, v = k.upper(), str(v)
+        key_b = k.encode('utf-8')
+        val_b = v.encode('utf-8')
+        key_c = key_b
+        val_c = val_b
+        options = CSLSetNameValue(options, key_c, val_c)
+
+    return options
+
 
 
 cdef class DatasetReaderBase(DatasetBase):
@@ -1300,24 +1331,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
-        for k, v in kwargs.items():
-            # Skip items that are definitely *not* valid driver
-            # options.
-            if k.lower() in ['affine']:
-                continue
-
-            k, v = k.upper(), str(v)
-
-            if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
-                continue
-
-            key_b = k.encode('utf-8')
-            val_b = v.encode('utf-8')
-            key_c = key_b
-            val_c = val_b
-            options = CSLSetNameValue(options, key_c, val_c)
-            log.debug(
-                "Option: %r", (k, CSLFetchNameValue(options, key_c)))
+        options = convert_options(kwargs)
 
         if mode in ('w', 'w+'):
 
@@ -2306,20 +2320,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if drv == NULL:
             raise ValueError("NULL driver for %s", self.driver)
 
-        # Creation options
-        for k, v in self._options.items():
-            # Skip items that are definitely *not* valid driver options.
-            if k.lower() in ['affine']:
-                continue
-            k, v = k.upper(), str(v)
-            key_b = k.encode('utf-8')
-            val_b = v.encode('utf-8')
-            key_c = key_b
-            val_c = val_b
-            options = CSLSetNameValue(options, key_c, val_c)
-            log.debug(
-                "Option: %r\n",
-                (k, CSLFetchNameValue(options, key_c)))
+        options = convert_options(self._options)
 
         try:
             temp = exc_wrap_pointer(

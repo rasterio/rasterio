@@ -1,6 +1,5 @@
 import re
 import subprocess
-import sys
 
 import affine
 import numpy as np
@@ -8,9 +7,9 @@ import pytest
 
 import rasterio
 from rasterio.drivers import blacklist
+from rasterio.enums import Resampling
 from rasterio.env import Env
-from rasterio.errors import RasterioIOError, DriverRegistrationError
-from rasterio._base import driver_supports_mode
+from rasterio.errors import RasterioIOError
 
 
 def test_validate_dtype_None(tmpdir):
@@ -427,3 +426,12 @@ def test_issue2088(tmpdir, capsys, driver):
     captured = capsys.readouterr()
     assert "ERROR 4" not in captured.err
     assert "ERROR 4" not in captured.out
+
+
+def test_write_cog(tmpdir, path_rgb_byte_tif):
+    """Show resolution of issue #2102"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        profile = src.profile
+        profile.update(driver="COG", extent=src.bounds, resampling=Resampling.bilinear)
+        with rasterio.open(str(tmpdir.join("test.tif")), "w", **profile) as cog:
+            cog.write(src.read())
