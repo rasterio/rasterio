@@ -206,7 +206,7 @@ cdef class _CRS(object):
             CPLFree(conv_wkt)
 
 
-    def to_epsg(self):
+    def to_epsg(self, confidence_threshold=70):
         """The epsg code of the CRS
 
         Returns
@@ -217,14 +217,14 @@ cdef class _CRS(object):
         if self._epsg is not None:
             return self._epsg
         else:
-            matches = self._matches()
+            matches = self._matches(confidence_threshold=confidence_threshold)
             if "EPSG" in matches:
                 self._epsg = int(matches["EPSG"][0])
                 return self._epsg
             else:
                 return None
 
-    def to_authority(self):
+    def to_authority(self, confidence_threshold=70):
         """The authority name and code of the CRS
 
         Returns
@@ -232,7 +232,7 @@ cdef class _CRS(object):
         (str, str) or None
 
         """
-        matches = self._matches()
+        matches = self._matches(confidence_threshold=confidence_threshold)
         # Note: before version 1.2.7 this function only paid attention
         # to EPSG as an authority, which is why it takes priority over
         # others even if they were a better match.
@@ -245,7 +245,7 @@ cdef class _CRS(object):
         else:
             return None
 
-    def _matches(self):
+    def _matches(self, confidence_threshold=70):
         """Find matches in authority files.
 
         Returns
@@ -258,6 +258,7 @@ cdef class _CRS(object):
         """
         cdef OGRSpatialReferenceH osr = NULL
         cdef OGRSpatialReferenceH *matches = NULL
+        cdef int *confidences = NULL
         cdef int num_matches = 0
         cdef int i = 0
 
@@ -267,12 +268,18 @@ cdef class _CRS(object):
             osr = exc_wrap_pointer(OSRClone(self._osr))
 
             if gdal_version().startswith("3"):
-                matches = OSRFindMatches(osr, NULL, &num_matches, NULL)
+                matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
 
                 for i in range(num_matches):
+                    confidence = confidences[i]
                     c_code = OSRGetAuthorityCode(matches[i], NULL)
                     c_name = OSRGetAuthorityName(matches[i], NULL)
-                    if c_code != NULL and c_name != NULL:
+
+                    log.debug(
+                        "Matched. confidence=%r, c_code=%r, c_name=%r",
+                        confidence, c_code, c_name)
+
+                    if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
                         code = c_code.decode('utf-8')
                         name = c_name.decode('utf-8')
                         results[name].append(code)
@@ -292,6 +299,7 @@ cdef class _CRS(object):
         finally:
             _safe_osr_release(osr)
             OSRFreeSRSArray(matches)
+            CPLFree(confidences)
 
     @staticmethod
     def from_epsg(code):

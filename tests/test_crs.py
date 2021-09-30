@@ -673,3 +673,11 @@ def test_latlong_northingeasting_gdal3():
     """Check CRS created from epsg with GDAL 3."""
     assert epsg_treats_as_latlong(CRS.from_epsg(4326))
     assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))
+
+
+@requires_gdal3
+def test_tmerc_no_match():
+    """Should not match an authority, see issue #2293."""
+    s = "+proj=tmerc +lat_0=0 +lon_0=10.7584 +k=0.9996 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+    crs = CRS.from_string(s)
+    assert crs.to_epsg() is None

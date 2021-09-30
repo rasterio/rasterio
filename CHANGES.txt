@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.2.9 (2021-09-30)
+------------------
+
+- Use a default 70% confidence threshold when matching CRS to definitions in
+  authority files (#2293). The confidence threshold can be defined when calling
+  to_epsg and to_authority, which partially addressed the issue reported in
+  #2290.
+
 1.2.8 (2021-09-09)
 ------------------
 
