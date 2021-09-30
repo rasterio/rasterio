@@ -65,3 +65,9 @@ def test_tags_eq(tmpdir):
             'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
         dst.update_tags(a="foo=bar")
         assert dst.tags() == {'a': "foo=bar"}
+
+def test_tags_xml_prefix():
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        md = src.tags(ns='xml:VRT')
+        assert 'xml:VRT' in md
+        assert md.get('xml:VRT').startswith('<VRTDataset')
