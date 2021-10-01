@@ -438,48 +438,21 @@ def geometry_window(
 
     """
 
-    if pad_x:
-        pad_x = abs(pad_x * dataset.res[0])
+    all_bounds = [bounds(shape, transform=~dataset.transform) for shape in shapes]
 
-    if pad_y:
-        pad_y = abs(pad_y * dataset.res[1])
-
-    all_bounds = [bounds(shape) for shape in shapes]
-
-    xs = [
+    cols = [
         x
         for (left, bottom, right, top) in all_bounds
         for x in (left - pad_x, right + pad_x, right + pad_x, left - pad_x)
     ]
-    ys = [
+    rows = [
         y
         for (left, bottom, right, top) in all_bounds
-        for y in (top + pad_y, top + pad_y, bottom - pad_y, bottom - pad_y)
+        for y in (top - pad_y, top - pad_y, bottom + pad_y, bottom + pad_y)
     ]
 
-    rows1, cols1 = rowcol(
-        dataset.transform, xs, ys, op=math.floor, precision=pixel_precision
-    )
-
-    if isinstance(rows1, (int, float)):
-        rows1 = [rows1]
-    if isinstance(cols1, (int, float)):
-        cols1 = [cols1]
-
-    rows2, cols2 = rowcol(
-        dataset.transform, xs, ys, op=math.ceil, precision=pixel_precision
-    )
-
-    if isinstance(rows2, (int, float)):
-        rows2 = [rows2]
-    if isinstance(cols2, (int, float)):
-        cols2 = [cols2]
-
-    rows = rows1 + rows2
-    cols = cols1 + cols2
-
-    row_start, row_stop = min(rows), max(rows)
-    col_start, col_stop = min(cols), max(cols)
+    row_start, row_stop = int(math.floor(min(rows))), int(math.ceil(max(rows)))
+    col_start, col_stop = int(math.floor(min(cols))), int(math.ceil(max(cols)))
 
     window = Window(
         col_off=col_start,
