@@ -1,9 +1,10 @@
 Changes
 =======
 
-1.2.9 (2021-09-30)
+1.2.9 (2021-10-01)
 ------------------
 
+- Copy mask to destination in rio-clip and rio-convert (#2232).
 - Use a default 70% confidence threshold when matching CRS to definitions in
   authority files (#2293). The confidence threshold can be defined when calling
   to_epsg and to_authority, which partially addressed the issue reported in
