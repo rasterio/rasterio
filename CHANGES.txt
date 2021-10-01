@@ -4,8 +4,8 @@ Changes
 1.2.9 (2021-10-01)
 ------------------
 
-- Compute geometry_window more accurately and tightly for rotated rasters
-  (#2303).
+- Compute geometry_window more accurately and tightly for rotated rasters,
+  fixing a regression introduced in 1.2.1 (#2303).
 - Copy mask to destination in rio-clip and rio-convert (#2232).
 - Use a default 70% confidence threshold when matching CRS to definitions in
   authority files (#2293). The confidence threshold can be defined when calling
