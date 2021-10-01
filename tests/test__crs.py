@@ -97,7 +97,7 @@ def test_to_wkt():
 @pytest.mark.parametrize('proj_string', ['+init=epsg:4326', '+proj=longlat +datum=WGS84 +no_defs'])
 def test_to_epsg(proj_string):
     """CRS has EPSG code"""
-    assert _CRS.from_proj4(proj_string).to_epsg() == 4326
+    assert _CRS.from_proj4(proj_string).to_epsg(confidence_threshold=20) == 4326
 
 
 @pytest.mark.parametrize('proj_string', [ESRI_PROJECTION_STRING])
