@@ -1945,7 +1945,7 @@ def http_error_server(data):
             start, stop = self.range
             print(start, stop)
 
-            if start >= 16384 and stop < 1720320:
+            if start < 1609000 < stop:
                 self.send_error(503, "Boom!")
                 return None
             else:
