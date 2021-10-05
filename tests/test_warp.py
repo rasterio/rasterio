@@ -1943,6 +1943,7 @@ def http_error_server(data):
                 return super().copyfile(source, outputfile)
 
             start, stop = self.range
+            print(start, stop)
 
             if start >= 16384 and stop < 1720320:
                 self.send_error(503, "Boom!")
