@@ -17,6 +17,7 @@ from rasterio.errors import (
     CRSError,
     GDALVersionError,
     TransformError,
+    WarpOperationError,
 )
 from rasterio.warp import (
     reproject,
@@ -1920,3 +1921,60 @@ def test_reproject_rpcs_approx_transformer(caplog):
         )
 
         assert "Created approximate transformer" in caplog.text
+
+
+@pytest.fixture
+def http_error_server(data):
+    """Serves files from the test data directory, poorly."""
+    import functools
+    import multiprocessing
+    import http.server
+    from . import rangehttpserver
+
+    class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
+        """Return 500 for a range of bytes to simulate a malfunctioning server.
+
+        The byte range is specific to rasterio's RGB.byte.tif file.
+
+        """
+
+        def copyfile(self, source, outputfile):
+            if not self.range:
+                return super().copyfile(source, outputfile)
+
+            start, stop = self.range
+
+            if start >= 16384 and stop < 1720320:
+                self.send_error(503, "Boom!")
+                return None
+            else:
+                return super().copyfile(source, outputfile)
+
+    PORT = 8000
+    Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
+    httpd = http.server.HTTPServer(("", PORT), Handler)
+    p = multiprocessing.Process(target=httpd.serve_forever)
+    p.start()
+    yield
+    p.terminate()
+    p.join()
+
+
+def test_reproject_error_propagation(http_error_server):
+    """Propagate errors up from ChunkAndWarpMulti."""
+
+    #    import subprocess
+    #    res = subprocess.run(["gdal_translate", "/vsicurl?url=http://localhost:8000/RGB.byte.tif", "/tmp/translate.tif"], capture_output=True)
+    #    print(res.stdout)
+    #    print(res.stderr)
+
+    with rasterio.open("/vsicurl?url=http://localhost:8000/RGB.byte.tif") as src:
+        out = np.zeros((src.count, src.height, src.width), dtype="uint8")
+
+        with pytest.raises(WarpOperationError):
+            reproject(
+                rasterio.band(src, (1, 2, 3)),
+                out,
+                dst_crs=src.crs,
+                dst_transform=src.transform,
+            )

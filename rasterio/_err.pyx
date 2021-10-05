@@ -11,6 +11,7 @@ from enum import IntEnum
 import logging
 import sys
 
+log = logging.getLogger(__name__)
 
 # Python exceptions expressing the CPL error numbers.
 
