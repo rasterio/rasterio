@@ -146,3 +146,7 @@ class WarpedVRTError(RasterioError):
 
 class DatasetIOShapeError(RasterioError):
     """Raised when data buffer shape is a mismatch when reading and writing"""
+
+
+class WarpOperationError(RasterioError):
+    """Raised when a warp operation fails."""

@@ -85,6 +85,7 @@ install:
 
 script:
   - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+  - CPL_DEBUG=YES GDAL_HTTP_MAX_RETRY=2 GDAL_HTTP_RETRY_DELAY=1 GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR python -m pytest tests/test_warp.py -k error_prop --log-level DEBUG -rP
 
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"

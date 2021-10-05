@@ -28,7 +28,8 @@ from rasterio.crs import CRS
 from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
-    RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError)
+    RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError,
+    WarpOperationError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -581,24 +582,33 @@ def _reproject(
 
         if num_threads > 1:
             with nogil:
-                oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+                err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
         else:
             with nogil:
-                oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+                err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+
+        try:
+            exc_wrap_int(err)
+        except CPLE_BaseError as base:
+            raise WarpOperationError("Chunk and warp failed") from base
 
         if dtypes.is_ndarray(destination):
             exc_wrap_int(io_auto(destination, dst_dataset, 0))
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
+
         if bUseApproxTransformer:
             GDALDestroyApproxTransformer(hTransformArg)
         else:
             GDALDestroyGenImgProjTransformer(hTransformArg)
+
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
+
         if mem_raster is not None:
             mem_raster.close()
+
         if src_mem is not None:
             src_mem.close()
 

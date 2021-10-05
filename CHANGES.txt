@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.2.10 (TBD)
+------------
+
+- Raise WarpOperationError if ChunkAndWarp* do not succeed.
+
 1.2.9 (2021-10-01)
 ------------------
 
