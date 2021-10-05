@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sys
 
 from affine import Affine
 import numpy as np
@@ -1961,6 +1962,10 @@ def http_error_server(data):
     p.join()
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="Python 3.7 required to serve the data fixture directory",
+)
 def test_reproject_error_propagation(http_error_server):
     """Propagate errors up from ChunkAndWarpMulti."""
 
