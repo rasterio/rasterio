@@ -1999,6 +1999,7 @@ def http_error_server(data):
     p.join()
 
 
+@requires_gdal3
 @pytest.mark.skipif(
     sys.version_info < (3, 7),
     reason="Python 3.7 required to serve the data fixture directory",
