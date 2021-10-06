@@ -1930,6 +1930,8 @@ def http_error_server(data):
     import functools
     import multiprocessing
     import http.server
+    import os
+
     from . import rangehttpserver
 
     class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
@@ -1939,18 +1941,53 @@ def http_error_server(data):
 
         """
 
-        def copyfile(self, source, outputfile):
-            if not self.range:
-                return super().copyfile(source, outputfile)
-
-            start, stop = self.range
-            print(start, stop)
-
-            if start < 1609000 < stop:
-                self.send_error(503, "Boom!")
+        def send_head(self):
+            if "Range" not in self.headers:
+                self.range = None
+                return super().send_head()
+            try:
+                self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
+            except ValueError as e:
+                self.send_error(400, "Invalid byte range")
                 return None
-            else:
-                return super().copyfile(source, outputfile)
+            first, last = self.range
+
+            # Our "poison byte" is at position 1609000.
+            if first <= 1609000 <= last:
+                self.send_error(500, "Boom!")
+                return None
+
+            # Mirroring SimpleHTTPServer.py here
+            path = self.translate_path(self.path)
+            f = None
+            ctype = self.guess_type(path)
+            try:
+                f = open(path, "rb")
+            except IOError:
+                self.send_error(404, "File not found")
+                return None
+
+            fs = os.fstat(f.fileno())
+            file_len = fs[6]
+            if first >= file_len:
+                self.send_error(416, "Requested Range Not Satisfiable")
+                return None
+
+            self.send_response(206)
+            self.send_header("Content-type", ctype)
+            self.send_header("Accept-Ranges", "bytes")
+
+            if last is None or last >= file_len:
+                last = file_len - 1
+            response_length = last - first + 1
+
+            self.send_header(
+                "Content-Range", "bytes %s-%s/%s" % (first, last, file_len)
+            )
+            self.send_header("Content-Length", str(response_length))
+            self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+            self.end_headers()
+            return f
 
     PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
@@ -1966,15 +2003,12 @@ def http_error_server(data):
     sys.version_info < (3, 7),
     reason="Python 3.7 required to serve the data fixture directory",
 )
-def test_reproject_error_propagation(http_error_server):
-    """Propagate errors up from ChunkAndWarpMulti."""
+def test_reproject_error_propagation(http_error_server, caplog):
+    """Propagate errors up from ChunkAndWarpMulti and check for a retry."""
 
-    #    import subprocess
-    #    res = subprocess.run(["gdal_translate", "/vsicurl?url=http://localhost:8000/RGB.byte.tif", "/tmp/translate.tif"], capture_output=True)
-    #    print(res.stdout)
-    #    print(res.stderr)
-
-    with rasterio.open("/vsicurl?url=http://localhost:8000/RGB.byte.tif") as src:
+    with rasterio.open(
+        "/vsicurl?max_retry=1&retry_delay=.1&url=http://localhost:8000/RGB.byte.tif"
+    ) as src:
         out = np.zeros((src.count, src.height, src.width), dtype="uint8")
 
         with pytest.raises(WarpOperationError):
@@ -1984,3 +2018,5 @@ def test_reproject_error_propagation(http_error_server):
                 dst_crs=src.crs,
                 dst_transform=src.transform,
             )
+
+    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
