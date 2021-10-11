@@ -12,6 +12,12 @@ Changes
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
 
+1.2.10 (2021-10-11)
+-------------------
+
+- Raise WarpOperationError if ChunkAndWarp* do not succeed instead of silently
+  failing to write to the warp output dataset (#2305).
+
 1.2.9 (2021-10-01)
 ------------------
 
