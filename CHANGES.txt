@@ -1,10 +1,11 @@
 Changes
 =======
 
-1.2.10 (TBD)
-------------
+1.2.10 (2021-10-11)
+-------------------
 
-- Raise WarpOperationError if ChunkAndWarp* do not succeed (#2305).
+- Raise WarpOperationError if ChunkAndWarp* do not succeed instead of silently
+  failing to write to the warp output dataset (#2305).
 
 1.2.9 (2021-10-01)
 ------------------
