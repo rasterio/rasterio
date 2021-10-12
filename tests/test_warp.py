@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import sys
 
 from affine import Affine
@@ -32,6 +33,7 @@ from rasterio.warp import (
 )
 from rasterio import windows
 
+from . import rangehttpserver
 from .conftest import requires_gdal22, requires_gdal3, requires_gdal_lt_3
 
 log = logging.getLogger(__name__)
@@ -104,6 +106,62 @@ def uninvertable_reproject_params():
 
 
 WGS84_crs = CRS.from_epsg(4326)
+
+
+class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
+    """Return 500 for a range of bytes to simulate a malfunctioning server.
+
+    The byte range is specific to rasterio's RGB.byte.tif file.
+
+    """
+
+    def send_head(self):
+        if "Range" not in self.headers:
+            self.range = None
+            return super().send_head()
+        try:
+            self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
+        except ValueError as e:
+            self.send_error(400, "Invalid byte range")
+            return None
+        first, last = self.range
+
+        # Our "poison byte" is at position 1609000.
+        if first <= 1609000 <= last:
+            self.send_error(500, "Boom!")
+            return None
+
+        # Mirroring SimpleHTTPServer.py here
+        path = self.translate_path(self.path)
+        f = None
+        ctype = self.guess_type(path)
+        try:
+            f = open(path, "rb")
+        except IOError:
+            self.send_error(404, "File not found")
+            return None
+
+        fs = os.fstat(f.fileno())
+        file_len = fs[6]
+        if first >= file_len:
+            self.send_error(416, "Requested Range Not Satisfiable")
+            return None
+
+        self.send_response(206)
+        self.send_header("Content-type", ctype)
+        self.send_header("Accept-Ranges", "bytes")
+
+        if last is None or last >= file_len:
+            last = file_len - 1
+        response_length = last - first + 1
+
+        self.send_header(
+            "Content-Range", "bytes %s-%s/%s" % (first, last, file_len)
+        )
+        self.send_header("Content-Length", str(response_length))
+        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+        self.end_headers()
+        return f
 
 
 def test_transform_src_crs_none():
@@ -1932,62 +1990,6 @@ def http_error_server(data):
     import http.server
     import os
 
-    from . import rangehttpserver
-
-    class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
-        """Return 500 for a range of bytes to simulate a malfunctioning server.
-
-        The byte range is specific to rasterio's RGB.byte.tif file.
-
-        """
-
-        def send_head(self):
-            if "Range" not in self.headers:
-                self.range = None
-                return super().send_head()
-            try:
-                self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
-            except ValueError as e:
-                self.send_error(400, "Invalid byte range")
-                return None
-            first, last = self.range
-
-            # Our "poison byte" is at position 1609000.
-            if first <= 1609000 <= last:
-                self.send_error(500, "Boom!")
-                return None
-
-            # Mirroring SimpleHTTPServer.py here
-            path = self.translate_path(self.path)
-            f = None
-            ctype = self.guess_type(path)
-            try:
-                f = open(path, "rb")
-            except IOError:
-                self.send_error(404, "File not found")
-                return None
-
-            fs = os.fstat(f.fileno())
-            file_len = fs[6]
-            if first >= file_len:
-                self.send_error(416, "Requested Range Not Satisfiable")
-                return None
-
-            self.send_response(206)
-            self.send_header("Content-type", ctype)
-            self.send_header("Accept-Ranges", "bytes")
-
-            if last is None or last >= file_len:
-                last = file_len - 1
-            response_length = last - first + 1
-
-            self.send_header(
-                "Content-Range", "bytes %s-%s/%s" % (first, last, file_len)
-            )
-            self.send_header("Content-Length", str(response_length))
-            self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
-            self.end_headers()
-            return f
 
     PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
