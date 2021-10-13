@@ -21,6 +21,7 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
+import warnings
 
 from affine import Affine
 import attr
@@ -28,7 +29,7 @@ import numpy as np
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio.errors import WindowError
+    from rasterio.errors import WindowError, RasterioDeprecationWarning
     from rasterio.transform import rowcol, guard_transform
 
 
@@ -283,7 +284,8 @@ def from_bounds(
         An integer number of decimal points of precision when computing
         inverse transform, or an absolute float precision.
     height, width: int, optional
-        These parameters are unused and will be deprecated.
+        These parameters are unused, deprecated in rasterio 1.3.0, and
+        will be removed in version 2.0.0.
 
     Returns
     -------
@@ -305,9 +307,11 @@ def from_bounds(
     if (bottom - top) / transform.e < 0:
         raise WindowError("Bounds and transform are inconsistent")
 
-    if height is None or width is not None:
-        # TODO: raise a deprecation warning in version 1.3.0.
-        pass
+    if height is not None or width is not None:
+        warnings.warn(
+            "The height and width parameters are unused, deprecated, and will be removed in Rasterio 2.0.0.",
+            RasterioDeprecationWarning,
+        )
 
     rows, cols = rowcol(
         transform,
@@ -710,8 +714,12 @@ class Window:
                           operator(round(self.width, pixel_precision)),
                           operator(round(self.height, pixel_precision)))
 
-    # TODO: deprecate round_shape at 1.3.0, with a warning.
-    round_shape = round_lengths
+    def round_shape(self, **kwds):
+        warnings.warn(
+            "round_shape is deprecated and will be removed in Rasterio 2.0.0.",
+            RasterioDeprecationWarning,
+        )
+        return self.round_lengths(**kwds)
 
     def round_offsets(self, op='floor', pixel_precision=None):
         """Return a copy with column and row offsets rounded.

@@ -4,11 +4,19 @@ Changes
 1.3.0 (TBD)
 -----------
 
+Note: building from source now requires Cython (#2016).
+
+New features:
+
+- More efficient window intersection and union (#2164).
+- New Affine, GCP, and RFC transformer classes (#2225).
+- Add support for enum and tuple type creation options (#2102)
+
+Bug fixes:
+
 - Allow addition of subdatasets to GPKG rasters opened in "w" mode with the
   APPEND_SUBDATASET creation option (#2300).
-- Add support for enum and tuple type creation options (#2102)
 - WarpedVRT: Remove deprecated dst_* parameters (#2197).
-- Building from source now requires Cython (#2016).
 - Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.
   DLLs will be loaded from .libs (for wheels) or from directories in PATH
   environment variable.
