@@ -174,6 +174,20 @@ def get_data_window(arr, nodata=None):
     return Window.from_slices(row_range, col_range)
 
 
+def _compute_union(w1, w2):
+    """Compute the union of two windows"""
+    col_off = min(w1.col_off, w2.col_off)
+    row_off = min(w1.row_off, w2.row_off)
+    width = max(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
+    height = max(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    return col_off, row_off, width, height
+
+
+def _union(w1, w2):
+    coeffs = _compute_union(w1, w2)
+    return Window(*coeffs)
+
+
 @iter_args
 def union(*windows):
     """
@@ -188,15 +202,7 @@ def union(*windows):
     -------
     Window
     """
-    stacked = np.dstack([toranges(w) for w in windows])
-    row_start, row_stop = stacked[0, 0].min(), stacked[0, 1].max()
-    col_start, col_stop = stacked[1, 0].min(), stacked[1, 1].max()
-    return Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=col_stop - col_start,
-        height=row_stop - row_start,
-    )
+    return functools.reduce(_union, windows)
 
 
 @iter_args
@@ -214,18 +220,25 @@ def intersection(*windows):
     -------
     Window
     """
-    if not intersect(windows):
-        raise WindowError("windows do not intersect")
+    return functools.reduce(_intersection, windows)
 
-    stacked = np.dstack([toranges(w) for w in windows])
-    row_start, row_stop = stacked[0, 0].max(), stacked[0, 1].min()
-    col_start, col_stop = stacked[1, 0].max(), stacked[1, 1].min()
-    return Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=col_stop - col_start,
-        height=row_stop - row_start,
-    )
+
+def _compute_intersection(w1, w2):
+    """ Compute intersection of window 1 and window 2"""
+    col_off = max(w1.col_off, w2.col_off)
+    row_off = max(w1.row_off, w2.row_off)
+    width = min(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
+    height = min(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    return col_off, row_off, width, height
+
+
+def _intersection(w1, w2):
+    """ Compute intersection of window 1 and window 2"""
+    coeffs = _compute_intersection(w1, w2)
+    if coeffs[2] > 0 and coeffs[3] > 0:
+        return Window(*coeffs)
+    else:
+        raise WindowError(f"Intersection is empty {w1} {w2}")
 
 
 @iter_args
@@ -242,20 +255,11 @@ def intersect(*windows):
     bool
         True if all windows intersect.
     """
-    from itertools import combinations
-
-    def intersects(range1, range2):
-        return not (
-            range1[0] >= range2[1] or range1[1] <= range2[0])
-
-    windows = np.array([toranges(w) for w in windows])
-
-    for i in (0, 1):
-        for c in combinations(windows[:, i], 2):
-            if not intersects(*c):
-                return False
-
-    return True
+    try:
+        intersection(*windows)
+        return True
+    except WindowError:
+        return False
 
 
 def from_bounds(
