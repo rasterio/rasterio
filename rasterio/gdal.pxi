@@ -1,5 +1,3 @@
-# cython: language_level=3
-
 # GDAL API definitions.
 
 from libc.stdio cimport FILE
@@ -372,8 +370,6 @@ cdef extern from "ogr_api.h" nogil:
     ctypedef void * OGRFeatureDefnH
     ctypedef void * OGRFeatureH
     ctypedef void * OGRGeometryH
-
-    ctypedef int OGRErr
 
     ctypedef struct OGREnvelope:
         double MinX

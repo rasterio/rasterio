@@ -13,46 +13,42 @@ env:
 
 jobs:
   include:
-    - python: "3.6"
-      env:
-        GDALVERSION="2.3.3"
-        PROJVERSION="4.9.3"
-    - python: "3.6"
-      env:
-        GDALVERSION="2.4.4"
-        PROJVERSION="4.9.3"
     - python: "3.7"
-      env:
-        GDALVERSION="2.4.4"
-        PROJVERSION="4.9.3"
-    - python: "3.7"
-      env:
-        GDALVERSION="3.0.4"
-        PROJVERSION="6.2.1"
-    - python: "3.8"
       env:
         GDALVERSION="3.0.4"
         PROJVERSION="6.2.1"
     - python: "3.7"
       env:
         GDALVERSION="3.1.4"
-        PROJVERSION="6.2.1"
+        PROJVERSION="6.3.2"
     - python: "3.8"
       env:
         GDALVERSION="3.1.4"
-        PROJVERSION="6.2.1"
+        PROJVERSION="7.0.1"
     - python: "3.8"
       env:
-        GDALVERSION="3.2.2"
+        GDALVERSION="3.2.3"
+        PROJVERSION="7.1.1"
+    - python: "3.9"
+      env:
+        GDALVERSION="3.2.3"
         PROJVERSION="7.2.1"
     - python: "3.8"
       env:
-        GDALVERSION="master"
+        GDALVERSION="3.3.2"
         PROJVERSION="8.0.1"
+    - python: "3.9"
+      env:
+        GDALVERSION="3.3.2"
+        PROJVERSION="8.1.1"
+    - python: "3.9"
+      env:
+        GDALVERSION="master"
+        PROJVERSION="8.1.1"
   allow_failures:
     - env:
         GDALVERSION="master"
-        PROJVERSION="8.0.1"
+        PROJVERSION="8.1.1"
 
 addons:
   apt:
@@ -86,6 +82,7 @@ install:
 
 script:
   - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+  - CPL_DEBUG=YES GDAL_HTTP_MAX_RETRY=2 GDAL_HTTP_RETRY_DELAY=1 GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR python -m pytest tests/test_warp.py -k error_prop --log-level DEBUG -rP
 
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"

@@ -1,4 +1,4 @@
-# cython: language_level=3, c_string_type=unicode, c_string_encoding=utf8
+# cython: c_string_type=unicode, c_string_encoding=utf8
 
 """GDAL and OGR driver and configuration management
 
@@ -8,9 +8,6 @@ CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
 threads will inherit config options from the main thread unless the
 option is set to a new value inside the thread.
 """
-
-include "gdal.pxi"
-
 from contextlib import contextmanager
 import logging
 import os

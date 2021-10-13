@@ -242,7 +242,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
     dst_alpha : int, optional
         Index of a band to use as the alpha band when warping.
     resampling: int, rasterio.enums.Resampling
-        Resampling method to use.  
+        Resampling method to use.
         Default is :attr:`rasterio.enums.Resampling.nearest`.
         An exception will be raised for a method not supported by the running
         version of GDAL.
@@ -450,9 +450,11 @@ def calculate_default_transform(
     Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable:
 
-        YES: constrain output raster to extents that can be inverted
-             avoids visual artifacts and coordinate discontinuties.
-        NO:  reproject coordinates beyond valid bound limits
+        YES
+            constrain output raster to extents that can be inverted
+            avoids visual artifacts and coordinate discontinuties.
+        NO
+            reproject coordinates beyond valid bound limits
     """
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
@@ -464,7 +466,7 @@ def calculate_default_transform(
     if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
         raise ValueError("Either four bounding values, ground control points,"
                          " or rational polynomial coefficients must be specified")
-    
+
     if gcps and rpcs:
         raise ValueError("ground control points and rational polynomial",
                          " coefficients may not be used together.")
@@ -509,14 +511,14 @@ def calculate_default_transform(
 
         dst_width = ceil(dst_width * xratio)
         dst_height = ceil(dst_height * yratio)
-    
+
     if dimensions:
         xratio = dst_width / dimensions[0]
         yratio = dst_height / dimensions[1]
 
         dst_width = dimensions[0]
         dst_height = dimensions[1]
-        
+
         dst_affine = Affine(dst_affine.a * xratio, dst_affine.b, dst_affine.c,
                             dst_affine.d, dst_affine.e * yratio, dst_affine.f)
 

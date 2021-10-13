@@ -1,16 +1,12 @@
-# cython: language_level=3
-
 """rasterio._err
 
 Exception-raising wrappers for GDAL API functions.
 """
-
-include "gdal.pxi"
-
 from enum import IntEnum
 import logging
 import sys
 
+log = logging.getLogger(__name__)
 
 # Python exceptions expressing the CPL error numbers.
 

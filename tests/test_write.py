@@ -1,16 +1,17 @@
 import re
 import subprocess
-import sys
 
 import affine
 import numpy as np
 import pytest
 
+from .conftest import requires_gdal31
+
 import rasterio
 from rasterio.drivers import blacklist
+from rasterio.enums import Resampling
 from rasterio.env import Env
-from rasterio.errors import RasterioIOError, DriverRegistrationError
-from rasterio._base import driver_supports_mode
+from rasterio.errors import RasterioIOError
 
 
 def test_validate_dtype_None(tmpdir):
@@ -180,12 +181,22 @@ def test_write_crs_transform(tmpdir):
                               0.0, -300.041782729805, 2826915.0)
 
     with rasterio.open(
-            name, 'w',
-            driver='GTiff', width=100, height=100, count=1,
-            crs={'units': 'm', 'no_defs': True, 'ellps': 'WGS84',
-                 'proj': 'utm', 'zone': 18},
-            transform=transform,
-            dtype=rasterio.ubyte) as s:
+        name,
+        "w",
+        driver="GTiff",
+        width=100,
+        height=100,
+        count=1,
+        crs={
+            "units": "m",
+            "no_defs": True,
+            "datum": "WGS84",
+            "proj": "utm",
+            "zone": 18,
+        },
+        transform=transform,
+        dtype=rasterio.ubyte,
+    ) as s:
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
@@ -201,12 +212,22 @@ def test_write_crs_transform_affine(tmpdir):
     transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
                               0.0, -300.041782729805, 2826915.0)
     with rasterio.open(
-            name, 'w',
-            driver='GTiff', width=100, height=100, count=1,
-            crs={'units': 'm', 'no_defs': True, 'ellps': 'WGS84',
-                 'proj': 'utm', 'zone': 18},
-            transform=transform,
-            dtype=rasterio.ubyte) as s:
+        name,
+        "w",
+        driver="GTiff",
+        width=100,
+        height=100,
+        count=1,
+        crs={
+            "units": "m",
+            "no_defs": True,
+            "datum": "WGS84",
+            "proj": "utm",
+            "zone": 18,
+        },
+        transform=transform,
+        dtype=rasterio.ubyte,
+    ) as s:
         s.write(a, indexes=1)
 
     assert s.crs.to_epsg() == 32618
@@ -247,7 +268,8 @@ def test_write_crs_transform_3(tmpdir):
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
                               0.0, -300.041782729805, 2826915.0)
-    wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
+    wkt = 'PROJCS["WGS 84 / UTM zone 18N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32618"]]'
+
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -257,7 +279,7 @@ def test_write_crs_transform_3(tmpdir):
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert '"UTM Zone 18, Northern Hemisphere",' in info
+    assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
@@ -406,3 +428,13 @@ def test_issue2088(tmpdir, capsys, driver):
     captured = capsys.readouterr()
     assert "ERROR 4" not in captured.err
     assert "ERROR 4" not in captured.out
+
+
+@requires_gdal31
+def test_write_cog(tmpdir, path_rgb_byte_tif):
+    """Show resolution of issue #2102"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        profile = src.profile
+        profile.update(driver="COG", extent=src.bounds, resampling=Resampling.bilinear)
+        with rasterio.open(str(tmpdir.join("test.tif")), "w", **profile) as cog:
+            cog.write(src.read())

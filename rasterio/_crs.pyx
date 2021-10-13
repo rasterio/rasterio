@@ -1,8 +1,9 @@
-# cython: language_level=3, boundscheck=False
+# cython: boundscheck=False
 
 """Coordinate reference systems, class and functions.
 """
 
+from collections import defaultdict
 import logging
 import warnings
 
@@ -227,7 +228,7 @@ cdef class _CRS:
             CPLFree(conv_wkt)
 
 
-    def to_epsg(self):
+    def to_epsg(self, confidence_threshold=70):
         """The epsg code of the CRS
 
         Returns
@@ -237,16 +238,15 @@ cdef class _CRS:
         """
         if self._epsg is not None:
             return self._epsg
+        else:
+            matches = self._matches(confidence_threshold=confidence_threshold)
+            if "EPSG" in matches:
+                self._epsg = int(matches["EPSG"][0])
+                return self._epsg
+            else:
+                return None
 
-        auth = self.to_authority()
-        if auth is None:
-            return None
-        name, code = auth
-        if name.upper() == "EPSG":
-            self._epsg = int(code)
-        return self._epsg
-
-    def to_authority(self):
+    def to_authority(self, confidence_threshold=70):
         """The authority name and code of the CRS
 
         Returns
@@ -254,29 +254,74 @@ cdef class _CRS:
         (str, str) or None
 
         """
-        cdef OGRSpatialReferenceH osr = NULL
+        matches = self._matches(confidence_threshold=confidence_threshold)
+        # Note: before version 1.2.7 this function only paid attention
+        # to EPSG as an authority, which is why it takes priority over
+        # others even if they were a better match.
+        if "EPSG" in matches:
+            return "EPSG", matches["EPSG"][0]
+        elif "OGC" in matches:
+            return "OGC", matches["OGC"][0]
+        elif "ESRI" in matches:
+            return "ESRI", matches["ESRI"][0]
+        else:
+            return None
 
-        code = None
-        name = None
+    def _matches(self, confidence_threshold=70):
+        """Find matches in authority files.
+
+        Returns
+        -------
+        dict : {name: [codes]}
+            A dictionary in which capitalized authority names are the
+            keys and lists of codes ordered by match confidence,
+            descending, are the values.
+
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+        cdef OGRSpatialReferenceH *matches = NULL
+        cdef int *confidences = NULL
+        cdef int num_matches = 0
+        cdef int i = 0
+
+        results = defaultdict(list)
 
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
 
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                c_code = OSRGetAuthorityCode(osr, NULL)
-                c_name = OSRGetAuthorityName(osr, NULL)
-                if c_code != NULL and c_name != NULL:
-                    code = c_code.decode('utf-8')
-                    name = c_name.decode('utf-8')
+            if gdal_version().startswith("3"):
+                matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
+
+                for i in range(num_matches):
+                    confidence = confidences[i]
+                    c_code = OSRGetAuthorityCode(matches[i], NULL)
+                    c_name = OSRGetAuthorityName(matches[i], NULL)
+
+                    log.debug(
+                        "Matched. confidence=%r, c_code=%r, c_name=%r",
+                        confidence, c_code, c_name)
+
+                    if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
+                        code = c_code.decode('utf-8')
+                        name = c_name.decode('utf-8')
+                        results[name].append(code)
+
+            else:
+                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+                if OSRAutoIdentifyEPSG(osr) == 0:
+                    c_code = OSRGetAuthorityCode(osr, NULL)
+                    c_name = OSRGetAuthorityName(osr, NULL)
+                    if c_code != NULL and c_name != NULL:
+                        code = c_code.decode('utf-8')
+                        name = c_name.decode('utf-8')
+                        results[name].append(code)
+
+            return results
 
         finally:
             _safe_osr_release(osr)
-
-        if None not in (name, code):
-            return (name, code)
-
-        return None
+            OSRFreeSRSArray(matches)
+            CPLFree(confidences)
 
     @staticmethod
     def from_epsg(code):
@@ -375,7 +420,16 @@ cdef class _CRS:
             return _CRS.from_epsg(epsg_code)
 
         # Continue with the general case.
-        proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
+        pjargs = []
+        for key, val in data.items():
+            if val is None or val is True:
+                pjargs.append('+{}'.format(key))
+            elif val is False:
+                pass
+            else:
+                pjargs.append('+{}={}'.format(key, val))
+
+        proj = ' '.join(pjargs)
         b_proj = proj.encode('utf-8')
 
         cdef _CRS obj = _CRS.__new__(_CRS)

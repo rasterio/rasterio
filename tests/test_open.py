@@ -1,5 +1,6 @@
 import pytest
 import rasterio
+from pathlib import Path
 
 
 def test_open_bad_path():
@@ -23,10 +24,14 @@ def test_open_bad_driver():
 
 
 def test_open_pathlib_path():
-    try:
-        from pathlib import Path
-    except ImportError:
-        return
     tif = Path.cwd() / 'tests' / 'data' / 'RGB.byte.tif'
     with rasterio.open(tif) as src:
+        assert src.count == 3
+
+
+def test_open_pathlike():
+    class MyPath:
+        def __fspath__(self):
+            return str(Path.cwd() / 'tests' / 'data' / 'RGB.byte.tif')
+    with rasterio.open(MyPath()) as src:
         assert src.count == 3

@@ -311,21 +311,29 @@ def test_window_from_bounds(path_rgb_byte_tif):
         height = src.height
         width = src.width
 
-        assert_window_almost_equals(from_bounds(
-            left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform,
-            height, width), Window.from_slices((0, height), (0, width)))
+        assert_window_almost_equals(
+            from_bounds(
+                left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform
+            ),
+            Window.from_slices((0, height), (0, width)),
+        )
 
-        assert_window_almost_equals(from_bounds(
-            left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
-            height, width), Window.from_slices((0, 2), (0, 2)))
+        assert_window_almost_equals(
+            from_bounds(
+                left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform
+            ),
+            Window.from_slices((0, 2), (0, 2)),
+        )
 
         # boundless
         assert_window_almost_equals(
-            from_bounds(left - 2 * dx, top - 2 * dy, left + 2 * dx,
-                        top + 2 * dy, src.transform, height=height,
-                        width=width),
-            Window.from_slices((-2, 2), (-2, 2), boundless=True, height=height,
-                               width=width))
+            from_bounds(
+                left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy, src.transform
+            ),
+            Window.from_slices(
+                (-2, 2), (-2, 2), boundless=True, height=height, width=width
+            ),
+        )
 
 
 def test_window_float(path_rgb_byte_tif):
@@ -333,26 +341,25 @@ def test_window_float(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         left, bottom, right, top = src.bounds
         dx, dy = src.res
-        height = src.height
-        width = src.width
 
-        assert_window_almost_equals(from_bounds(
-            left, top - 400, left + 400, top, src.transform,
-            height, width), Window.from_slices((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+        assert_window_almost_equals(
+            from_bounds(left, top - 400, left + 400, top, src.transform),
+            Window.from_slices((0, 400 / src.res[1]), (0, 400 / src.res[0])),
+        )
 
 
 def test_window_bounds_south_up():
     identity = Affine.identity()
     assert_window_almost_equals(
-        from_bounds(0, 10, 10, 0, identity, 10, 10),
-        Window(0, 0, 10, 10))
+        from_bounds(0, 10, 10, 0, identity), Window(0, 0, 10, 10)
+    )
 
 
 def test_window_bounds_north_up():
     transform = Affine.translation(0.0, 10.0) * Affine.scale(1.0, -1.0) * Affine.identity()
     assert_window_almost_equals(
-        from_bounds(0, 0, 10, 10, transform, 10, 10),
-        Window(0, 0, 10, 10))
+        from_bounds(0, 0, 10, 10, transform), Window(0, 0, 10, 10)
+    )
 
 
 def test_window_transform_function(path_rgb_byte_tif):
@@ -584,7 +591,7 @@ def test_window_hashable():
 def test_from_bounds_requires_transform():
     """Test fix for issue 1857"""
     with pytest.raises(WindowError):
-        from_bounds(-105, 40, -100, 45, height=100, width=100)
+        from_bounds(-105, 40, -100, 45)
 
 
 def test_from_bounds_rotation():
@@ -598,9 +605,7 @@ def test_from_bounds_rotation():
         * Affine.translation(-sqrt2, sqrt2)
         * Affine.scale(sqrt2 / 2.0, -sqrt2 / 2.0)
     )
-    win = from_bounds(
-        -2.0, -2.0, 2.0, 2.0, transform=transform, height=height, width=width,
-    )
+    win = from_bounds(-2.0, -2.0, 2.0, 2.0, transform=transform)
     assert win.col_off == pytest.approx(-2.0)
     assert win.row_off == pytest.approx(-2.0)
     assert win.width == pytest.approx(2.0 * width)

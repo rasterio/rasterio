@@ -422,8 +422,10 @@ def ensure_env_with_credentials(f):
         else:
             env_ctor = Env.from_defaults
 
-        if isinstance(args[0], str):
-            session_cls = Session.cls_from_path(args[0])
+        fp_arg = kwds.get("fp", None) or args[0]
+
+        if isinstance(fp_arg, str):
+            session_cls = Session.cls_from_path(fp_arg)
 
             if local._env and session_cls.hascreds(getenv()):
                 session_cls = DummySession
@@ -511,22 +513,27 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
     by the runtime version of GDAL.  Raises GDALVersionError if conditions
     are not met.
 
-    Examples:
-    \b
+    Examples
+    --------
+
+    .. code-block:: python
+
         @require_gdal_version('2.2')
         def some_func():
 
     calling `some_func` with a runtime version of GDAL that is < 2.2 raises a
     GDALVersionErorr.
 
-    \b
+    .. code-block:: python
+
         @require_gdal_version('2.2', param='foo')
         def some_func(foo='bar'):
 
     calling `some_func` with parameter `foo` of any value on GDAL < 2.2 raises
     a GDALVersionError.
 
-    \b
+    .. code-block:: python
+
         @require_gdal_version('2.2', param='foo', values=('bar',))
         def some_func(foo=None):
 

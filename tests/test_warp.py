@@ -2,6 +2,8 @@
 
 import json
 import logging
+import os
+import sys
 
 from affine import Affine
 import numpy as np
@@ -17,6 +19,7 @@ from rasterio.errors import (
     CRSError,
     GDALVersionError,
     TransformError,
+    WarpOperationError,
 )
 from rasterio.warp import (
     reproject,
@@ -30,6 +33,7 @@ from rasterio.warp import (
 )
 from rasterio import windows
 
+from . import rangehttpserver
 from .conftest import requires_gdal22, requires_gdal3, requires_gdal_lt_3
 
 log = logging.getLogger(__name__)
@@ -102,6 +106,62 @@ def uninvertable_reproject_params():
 
 
 WGS84_crs = CRS.from_epsg(4326)
+
+
+class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
+    """Return 500 for a range of bytes to simulate a malfunctioning server.
+
+    The byte range is specific to rasterio's RGB.byte.tif file.
+
+    """
+
+    def send_head(self):
+        if "Range" not in self.headers:
+            self.range = None
+            return super().send_head()
+        try:
+            self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
+        except ValueError as e:
+            self.send_error(400, "Invalid byte range")
+            return None
+        first, last = self.range
+
+        # Our "poison byte" is at position 1609000.
+        if first <= 1609000 <= last:
+            self.send_error(500, "Boom!")
+            return None
+
+        # Mirroring SimpleHTTPServer.py here
+        path = self.translate_path(self.path)
+        f = None
+        ctype = self.guess_type(path)
+        try:
+            f = open(path, "rb")
+        except IOError:
+            self.send_error(404, "File not found")
+            return None
+
+        fs = os.fstat(f.fileno())
+        file_len = fs[6]
+        if first >= file_len:
+            self.send_error(416, "Requested Range Not Satisfiable")
+            return None
+
+        self.send_response(206)
+        self.send_header("Content-type", ctype)
+        self.send_header("Accept-Ranges", "bytes")
+
+        if last is None or last >= file_len:
+            last = file_len - 1
+        response_length = last - first + 1
+
+        self.send_header(
+            "Content-Range", "bytes %s-%s/%s" % (first, last, file_len)
+        )
+        self.send_header("Content-Length", str(response_length))
+        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+        self.end_headers()
+        return f
 
 
 def test_transform_src_crs_none():
@@ -233,13 +293,12 @@ def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_proj4(
-        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
-    )
-    assert np.allclose(
-        expected,
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
-    )
+    dst_crs = CRS.from_epsg(2163)
+    with rasterio.Env(OSR_USE_NON_DEPRECATED="NO"):
+        assert np.allclose(
+            expected,
+            transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
+        )
 
 
 def test_transform_bounds_no_change():
@@ -1921,3 +1980,46 @@ def test_reproject_rpcs_approx_transformer(caplog):
         )
 
         assert "Created approximate transformer" in caplog.text
+
+
+@pytest.fixture
+def http_error_server(data):
+    """Serves files from the test data directory, poorly."""
+    import functools
+    import multiprocessing
+    import http.server
+    import os
+
+
+    PORT = 8000
+    Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
+    httpd = http.server.HTTPServer(("", PORT), Handler)
+    p = multiprocessing.Process(target=httpd.serve_forever)
+    p.start()
+    yield
+    p.terminate()
+    p.join()
+
+
+@requires_gdal3
+@pytest.mark.skipif(
+    sys.version_info < (3, 7),
+    reason="Python 3.7 required to serve the data fixture directory",
+)
+def test_reproject_error_propagation(http_error_server, caplog):
+    """Propagate errors up from ChunkAndWarpMulti and check for a retry."""
+
+    with rasterio.open(
+        "/vsicurl?max_retry=1&retry_delay=.1&url=http://localhost:8000/RGB.byte.tif"
+    ) as src:
+        out = np.zeros((src.count, src.height, src.width), dtype="uint8")
+
+        with pytest.raises(WarpOperationError):
+            reproject(
+                rasterio.band(src, (1, 2, 3)),
+                out,
+                dst_crs=src.crs,
+                dst_transform=src.transform,
+            )
+
+    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2

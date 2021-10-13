@@ -1,4 +1,4 @@
-# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
 
 """Numpy-free base classes."""
 
@@ -555,7 +555,7 @@ cdef class DatasetBase:
                 # there's no nodata value.
                 if dtype not in dtypes.dtype_ranges:
                     pass
-                elif (success == 0 or val < dtypes.dtype_ranges[dtype][0] or val > dtypes.dtype_ranges[dtype][1]):
+                elif (success == 0 or not dtypes.in_dtype_range(val, dtype)):
                     val = None
                 log.debug(
                     "Nodata success: %d, Nodata value: %f", success, nodataval)
@@ -607,6 +607,9 @@ cdef class DatasetBase:
 
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
+
+        Parameters
+        ----------
 
         all_valid: There are no invalid pixels, all mask values will be
             255. When used this will normally be the only flag set.
@@ -670,7 +673,7 @@ cdef class DatasetBase:
         raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise DatasetAttributeError("read-only attribute") 
+        raise DatasetAttributeError("read-only attribute")
 
     property descriptions:
         """Descriptions for each dataset band
@@ -1131,16 +1134,20 @@ cdef class DatasetBase:
         num_items = CSLCount(metadata)
 
         tag_items = []
-        for i in range(num_items):
-            item = <char *>metadata[i]
-            try:
-                val = CPLParseNameValue(metadata[i], &key)
-                tag_items.append((key[:], val[:]))
-            except UnicodeDecodeError:
-                item_bytes = <bytes>item
-                log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
-            finally:
-                CPLFree(key)
+        if num_items and (domain and domain.startswith("xml")):
+            # https://gdal.org/user/raster_data_model.html#xml-domains
+            tag_items.append((domain[:], metadata[0][:]))
+        else:
+            for i in range(num_items):
+                item = <char *>metadata[i]
+                try:
+                    val = CPLParseNameValue(metadata[i], &key)
+                    tag_items.append((key[:], val[:]))
+                except UnicodeDecodeError:
+                    item_bytes = <bytes>item
+                    log.warning("Failed to decode metadata item: i=%r, item=%r", i, item_bytes)
+                finally:
+                    CPLFree(key)
 
         return dict(tag_items)
 
@@ -1204,8 +1211,13 @@ cdef class DatasetBase:
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
 
+        Examples
+        --------
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
+
+        .. code-block:: python
 
             import rasterio
             from rasterio.enums import ColorInterp
@@ -1265,7 +1277,28 @@ cdef class DatasetBase:
                     GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
 
     def colormap(self, bidx):
-        """Returns a dict containing the colormap for a band or None."""
+        """Returns a dict containing the colormap for a band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band whose colormap will be returned. Band index
+            starts at 1.
+
+        Returns
+        -------
+        dict
+            Mapping of color index value (starting at 0) to RGBA color as a
+            4-element tuple.
+
+        Raises
+        ------
+        ValueError
+            If no colormap is found for the specified band (NULL color table).
+        IndexError
+            If no band exists for the provided index.
+
+        """
         cdef GDALRasterBandH band = NULL
         cdef GDALColorTableH colortable = NULL
         cdef GDALColorEntry *color = NULL
@@ -1461,7 +1494,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     try:
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
-        exc_wrap_int(OCTTransform(transform, n, x, y, z))
+        # OCTTransform() returns TRUE/FALSE contrary to most GDAL API functions
+        exc_wrap_int(OCTTransform(transform, n, x, y, z) == 0)
 
         res_xs = [0]*n
         res_ys = [0]*n

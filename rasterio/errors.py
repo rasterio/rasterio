@@ -73,6 +73,11 @@ class GDALBehaviorChangeException(RuntimeError):
     expecting it to be off will be presented with a MultiPolygon when the
     rest of their code expects a Polygon.
 
+    Examples
+    --------
+
+    .. code-block:: python
+
         # Raises an exception on GDAL >= 2.2.0
         rasterio.warp.transform_geometry(
             src_crs, dst_crs, antimeridian_cutting=False)
@@ -146,3 +151,7 @@ class WarpedVRTError(RasterioError):
 
 class DatasetIOShapeError(RasterioError):
     """Raised when data buffer shape is a mismatch when reading and writing"""
+
+
+class WarpOperationError(RasterioError):
+    """Raised when a warp operation fails."""

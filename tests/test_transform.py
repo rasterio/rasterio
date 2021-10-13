@@ -1,7 +1,13 @@
+"""Tests of the transform module."""
+
+from array import array
 import logging
 
 from affine import Affine
 import pytest
+
+import numpy
+
 import rasterio
 from rasterio import transform
 from rasterio.env import GDALVersion
@@ -13,6 +19,7 @@ from rasterio.transform import (
     GCPTransformer,
     RPCTransformer
 )
+from rasterio.errors import TransformError
 from rasterio.windows import Window
 from rasterio.control import GroundControlPoint
 
@@ -153,23 +160,20 @@ def test_from_bounds_two():
     assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
 
 
-def test_xy():
-    aff = Affine(300.0379266750948, 0.0, 101985.0,
-                 0.0, -300.041782729805, 2826915.0)
-    ul_x, ul_y = aff * (0, 0)
-    xoff = aff.a
-    yoff = aff.e
-    assert xy(aff, 0, 0, offset='ul') == (ul_x, ul_y)
-    assert xy(aff, 0, 0, offset='ur') == (ul_x + xoff, ul_y)
-    assert xy(aff, 0, 0, offset='ll') == (ul_x, ul_y + yoff)
-    expected = (ul_x + xoff, ul_y + yoff)
-    assert xy(aff, 0, 0, offset='lr') == expected
-    expected = (ul_x + xoff / 2, ul_y + yoff / 2)
-    assert xy(aff, 0, 0, offset='center') == expected
-    assert xy(aff, 0, 0, offset='lr') == \
-        xy(aff, 0, 1, offset='ll') == \
-        xy(aff, 1, 1, offset='ul') == \
-        xy(aff, 1, 0, offset='ur')
+@pytest.mark.parametrize("aff", [Affine.identity()])
+@pytest.mark.parametrize(
+    "offset, exp_xy",
+    [
+        ("ur", (1.0, 0.0)),
+        ("lr", (1.0, 1.0)),
+        ("ll", (0.0, 1.0)),
+        ("ul", (0.0, 0.0)),
+        ("center", (0.5, 0.5)),
+    ],
+)
+def test_xy_offset(offset, exp_xy, aff):
+    """Check offset keyword arg."""
+    assert xy(aff, 0, 0, offset=offset) == exp_xy
 
 @pytest.mark.parametrize(
     'dataset,transform_attr,coords,expected',
@@ -203,8 +207,35 @@ def test_xy_gcps_rpcs(dataset, transform_attr, coords, expected):
 
 
 def test_bogus_offset():
-    with pytest.raises(ValueError):
+    with pytest.raises(TransformError):
         xy(Affine.identity(), 1, 0, offset='bogus')
+
+
+@pytest.mark.parametrize("aff", [Affine.identity()])
+@pytest.mark.parametrize(
+    "rows, cols, exp_xy",
+    [
+        (0, 0, (0.5, 0.5)),
+        (0.0, 0.0, (0.5, 0.5)),
+        (numpy.int32(0), numpy.int32(0), (0.5, 0.5)),
+        (numpy.float32(0), numpy.float32(0), (0.5, 0.5)),
+        ([0], [0], ([0.5], [0.5])),
+        (array("d", [0.0]), array("d", [0.0]), ([0.5], [0.5])),
+        ([numpy.int32(0)], [numpy.int32(0)], ([0.5], [0.5])),
+        (numpy.array([0.0]), numpy.array([0.0]), ([0.5], [0.5])),
+    ],
+)
+def test_xy_input(rows, cols, exp_xy, aff):
+    """Handle single and iterable inputs of different numerical types."""
+    assert xy(aff, rows, cols) == exp_xy
+
+
+@pytest.mark.parametrize("aff", [Affine.identity()])
+@pytest.mark.parametrize("rows, cols", [(0, [0]), ("0", "0")])
+def test_invalid_xy_input(rows, cols, aff):
+    """Raise on invalid input."""
+    with pytest.raises(TransformError):
+        xy(aff, rows, cols)
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
@@ -233,7 +264,22 @@ def test_rowcol():
         assert rowcol(aff, right, bottom) == (src.height, src.width)
         assert rowcol(aff, left, bottom) == (src.height, 0)
         assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
-        assert rowcol(aff, 101985.0 + 400.0, 2826915.0) == (0, 1)
+
+
+@pytest.mark.parametrize(
+    "xs, ys, exp_rowcol",
+    [
+        ([101985.0 + 400.0], [2826915.0], ([0], [1])),
+        (array("d", [101985.0 + 400.0]), array("d", [2826915.0]), ([0], [1])),
+        (numpy.array([101985.0 + 400.0]), numpy.array([2826915.0]), ([0], [1])),
+    ],
+)
+def test_rowcol_input(xs, ys, exp_rowcol):
+    """Handle single and iterable inputs of different numerical types."""
+    with rasterio.open("tests/data/RGB.byte.tif", "r") as src:
+        aff = src.transform
+
+    assert rowcol(aff, xs, ys) == exp_rowcol
 
 
 @pytest.mark.parametrize(
@@ -276,6 +322,14 @@ def test_xy_rowcol_inverse(transform):
     rows_cols = ([0, 0, 10, 10],
                  [0, 10, 0, 10])
     assert rows_cols == rowcol(transform, *xy(transform, *rows_cols))
+
+
+@pytest.mark.parametrize("aff", [Affine.identity()])
+@pytest.mark.parametrize("xs, ys", [(0, [0]), ("0", "0")])
+def test_invalid_rowcol_input(xs, ys, aff):
+    """Raise on invalid input."""
+    with pytest.raises(TransformError):
+        rowcol(aff, xs, ys)
 
 
 def test_from_gcps():

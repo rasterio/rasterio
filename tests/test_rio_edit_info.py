@@ -4,6 +4,7 @@
 import json
 
 import click
+import numpy
 import pytest
 
 import rasterio
@@ -76,6 +77,14 @@ def test_edit_nodata(data, runner):
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.nodata == 255.0
+
+def test_edit_nodata__inf(data, runner):
+    inputfile = str(data.join('float.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--nodata', 'inf'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert numpy.isinf(src.nodata)
 
 
 def test_edit_crs_err(data, runner):

@@ -65,9 +65,9 @@ in a defined bounding box.
 The `tests/data/RGB.byte.tif` file is in UTM zone 18, so another file in a
 different CRS is required for demonstration.  This command will create a new
 image with drastically different dimensions and cell size, and reproject to
-WGS84.  As of this writing ``$ rio warp`` implements only a subset of
-`$ gdalwarp <http://www.gdal.org/gdalwarp.html>`__'s features, so
-``$ gdalwarp`` must be used to achieve the desired transform:
+WGS84.  As of this writing ``rio warp`` implements only a subset of
+`gdalwarp <http://www.gdal.org/gdalwarp.html>`__'s features, so
+``gdalwarp`` must be used to achieve the desired transform:
 
 .. code-block:: console
 

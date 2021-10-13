@@ -1,16 +1,9 @@
-# cython: language_level=3
-
 """Raster file management."""
 
 include "gdal.pxi"
 
 import logging
-
-try:
-    from pathlib import Path
-except ImportError:  # pragma: no cover
-    class Path:
-        pass
+import os
 
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
@@ -63,16 +56,16 @@ def copy(src, dst, driver=None, strict=True, **creation_options):
 
     Parameters
     ----------
-    src : str or pathlib.Path or dataset object opened in 'r' mode
+    src : str or PathLike or dataset object opened in 'r' mode
         Source dataset
-    dst : str or pathlib.Path
+    dst : str or PathLike
         Output dataset path
     driver : str, optional
         Output driver name
     strict : bool, optional.  Default: True
         Indicates if the output must be strictly equivalent or if the
         driver may adapt as necessary
-    creation_options : **kwargs, optional
+    creation_options : dict, optional
         Creation options for output dataset
 
     Returns
@@ -100,10 +93,10 @@ def copy(src, dst, driver=None, strict=True, **creation_options):
     c_strictness = strict
 
     # Convert src and dst Paths to strings.
-    if isinstance(src, Path):
-        src = str(src)
-    if isinstance(dst, Path):
-        dst = str(dst)
+    if isinstance(src, os.PathLike):
+        src = os.fspath(src)
+    if isinstance(dst, os.PathLike):
+        dst = os.fspath(dst)
 
     if driver is None:
         driver = driver_from_extension(dst)
@@ -162,9 +155,9 @@ def copyfiles(src, dst):
 
     Parameters
     ----------
-    src : str or pathlib.Path
+    src : str or PathLike
         Source dataset
-    dst : str or pathlib.Path
+    dst : str or PathLike
         Target dataset
 
     Returns
@@ -177,10 +170,10 @@ def copyfiles(src, dst):
     cdef GDALDriverH h_driver = NULL
 
     # Convert src and dst Paths to strings.
-    if isinstance(src, Path):
-        src = str(src)
-    if isinstance(dst, Path):
-        dst = str(dst)
+    if isinstance(src, os.PathLike):
+        src = os.fspath(src)
+    if isinstance(dst, os.PathLike):
+        dst = os.fspath(dst)
 
     src_path = parse_path(src)
     dst_path = parse_path(dst)

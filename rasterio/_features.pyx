@@ -1,8 +1,4 @@
-# cython: language_level=3
-
 """Feature extraction"""
-
-include "gdal.pxi"
 
 import logging
 

@@ -19,6 +19,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.enums import TransformDirection, TransformMethod
     from rasterio.control import GroundControlPoint
     from rasterio.rpc import RPC
+    from rasterio.errors import TransformError
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -77,8 +78,7 @@ class TransformMethodsMixin:
         coordinate reference system.
 
         Use an epsilon, magnitude determined by the precision parameter
-        and sign determined by the op function:
-            positive for floor, negative for ceil.
+        and sign determined by the op function: positive for floor, negative for ceil.
 
         Parameters
         ----------
@@ -177,6 +177,7 @@ def array_bounds(height, width, transform):
 
 def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
     """Returns the x and y coordinates of pixels at `rows` and `cols`.
+
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
@@ -189,7 +190,7 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
         Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer. 
     rows : list or int
         Pixel rows.
-    cols : list or int
+    cols : int or sequence of ints
         Pixel columns.
     zs : list or float, optional
         Height associated with coordinates. Primarily used for RPC based 
@@ -203,10 +204,11 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
 
     Returns
     -------
-    xs : list
+    xs : float or list of floats
         x coordinates in coordinate reference system
-    ys : list
+    ys : float or list of floats
         y coordinates in coordinate reference system
+
     """
     transformer_cls = get_transformer(transform, **rpc_options)
     with transformer_cls() as transformer:
@@ -219,8 +221,7 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
     coordinate reference system.
 
     Use an epsilon, magnitude determined by the precision parameter
-    and sign determined by the op function:
-        positive for floor, negative for ceil.
+    and sign determined by the op function: positive for floor, negative for ceil.
 
     Parameters
     ----------
@@ -249,6 +250,7 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
         list of row indices
     cols : list of ints
         list of column indices
+
     """
     transformer_cls = get_transformer(transform, **rpc_options)
     with transformer_cls() as transformer:
@@ -403,7 +405,7 @@ class TransformerBase():
         elif offset == 'lr':
             coff, roff = (1, 1)
         else:
-            raise ValueError("Invalid offset")
+            raise TransformError("Invalid offset")
         
         # shift input coordinates according to offset
         T = IDENTITY.translation(coff, roff)

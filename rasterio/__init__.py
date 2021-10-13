@@ -4,7 +4,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 import logging
 from logging import NullHandler
-from pathlib import Path
+import os
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -43,7 +43,6 @@ with rasterio._loading.add_gdal_dll_directories():
 
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.3dev"
-__version__ = "1.2.6"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -72,7 +71,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Parameters
     ----------
-    fp : str, file object or pathlib.Path object
+    fp : str, file object or PathLike object
         A filename or URL, a file object opened in binary ('rb') mode,
         or a Path object.
     mode : str, optional
@@ -156,7 +155,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     """
 
     if not isinstance(fp, str):
-        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, Path)):
+        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, os.PathLike)):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, str):
         raise TypeError("invalid mode: {0!r}".format(mode))
@@ -209,9 +208,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         return fp_writer(fp)
 
     else:
-        # If a pathlib.Path instance is given, convert it to a string path.
-        if isinstance(fp, Path):
-            fp = str(fp)
+        # If a PathLike instance is given, convert it to a string path.
+        fp = os.fspath(fp)
 
         # The 'normal' filename or URL path.
         path = parse_path(fp)
