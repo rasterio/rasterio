@@ -59,8 +59,8 @@ class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
-class RPCTransformWarning(UserWarning):
-    """Error raised when GDALRPCTransform fails."""
+class TransformWarning(UserWarning):
+    """Error raised when a GDALRPCTransform or GDALGCPTransform call fails."""
 
 
 class ShapeSkipWarning(UserWarning):
