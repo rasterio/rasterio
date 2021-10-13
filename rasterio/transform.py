@@ -292,19 +292,22 @@ class TransformerBase():
         
         Raises
         ------
-        ValueError
+        TransformError
             If input coordinates are not all of the same length
         """
-        if not isinstance(xs, Iterable):
+        if (isinstance(xs, Iterable) and not isinstance(ys, Iterable)) or (
+            isinstance(ys, Iterable) and not isinstance(xs, Iterable)
+        ):
+            raise TransformError("Invalid inputs")
+        if not isinstance(xs, Iterable) and not isinstance(ys, Iterable):
             xs = [xs]
-        if not isinstance(ys, Iterable):
             ys = [ys]
         if zs is None:
             zs = [0] * len(xs)
         elif not isinstance(zs, Iterable):
             zs = [zs]
         if len(set((len(xs), len(ys), len(zs)))) > 1:
-            raise ValueError("Input coordinates must be of equal length")
+            raise TransformError("Input coordinates must be of equal length")
         return xs, ys, zs
 
     def __enter__(self):
@@ -344,6 +347,7 @@ class TransformerBase():
         -------
             tuple of float or list of float
         """
+        AS_ARR = True if hasattr(xs, "__iter__") else False
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
         
         if precision is None:
@@ -357,16 +361,20 @@ class TransformerBase():
         if op(0.1) >= 1:
             eps = -eps
         f = lambda val: val + eps
-        xs = list(map(f, xs))
-        ys = list(map(f, ys))
-        new_cols, new_rows =  self._transform(xs, ys, zs, transform_direction=TransformDirection.reverse)
 
-        if len(new_rows) == 1:
-            return (op(new_rows[0]), op(new_cols[0]))
-        return (
-            [op(r) for r in new_rows], 
-            [op(c) for c in new_cols]
-        )
+        try:
+            xs = list(map(f, xs))
+            ys = list(map(f, ys))
+            new_cols, new_rows = self._transform(
+                xs, ys, zs, transform_direction=TransformDirection.reverse
+            )
+
+            if len(new_rows) == 1 and not AS_ARR:
+                return (op(new_rows[0]), op(new_cols[0]))
+            else:
+                return ([op(r) for r in new_rows], [op(c) for c in new_cols])
+        except TypeError:
+            raise TransformError("Invalid inputs")
 
     def xy(self, rows, cols, zs=None, offset='center'):
         """
@@ -392,6 +400,7 @@ class TransformerBase():
         -------
             tuple of float or list of float
         """
+        AS_ARR = True if hasattr(rows, "__iter__") else False
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
         
         if offset == 'center':
@@ -411,17 +420,22 @@ class TransformerBase():
         T = IDENTITY.translation(coff, roff)
         temp_rows = []
         temp_cols = []
-        for pt in zip(cols, rows):
-            y, x = T * pt
-            temp_rows.append(y)
-            temp_cols.append(x)
+        try:
+            for pt in zip(cols, rows):
+                y, x = T * pt
+                temp_rows.append(y)
+                temp_cols.append(x)
 
-        new_ys, new_xs = self._transform(temp_rows, temp_cols, zs, transform_direction=TransformDirection.forward)
+            new_ys, new_xs = self._transform(
+                temp_rows, temp_cols, zs, transform_direction=TransformDirection.forward
+            )
 
-        if len(new_ys) == 1:
-            return (new_ys[0], new_xs[0])
-        
-        return (new_ys, new_xs)
+            if len(new_ys) == 1 and not AS_ARR:
+                return (new_ys[0], new_xs[0])
+            else:
+                return (new_ys, new_xs)
+        except TypeError:
+            raise TransformError("Invalid inputs")
     
     def _transform(self, xs, ys, zs, transform_direction):
         raise NotImplementedError

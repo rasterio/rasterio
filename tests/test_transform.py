@@ -358,7 +358,7 @@ def test_transformer_open_closed(transformer_cls, transform):
     'coords,expected',
     [
         ((0,0), (0,0)),
-        (([0],[0]), (0,0)),
+        (([0],[0]), ([0], [0])),
         (([0,1],[0,1]), ([0,1],[0,1]))
     ]
 )
@@ -368,7 +368,7 @@ def test_ensure_arr_input(coords, expected):
 
 def test_ensure_arr_input_same_shape():
     transformer = transform.AffineTransformer(Affine.identity())
-    with pytest.raises(ValueError):
+    with pytest.raises(TransformError):
         transformer.xy([0], [0, 1])
 
 @pytest.mark.parametrize(
