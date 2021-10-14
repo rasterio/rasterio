@@ -570,16 +570,6 @@ def test_round_window_boundless(path_alpha_tif):
         assert rounded_window.width % width_shape == 0
 
 
-def test_round_lengths_no_op_error():
-    with pytest.raises(WindowError):
-        Window(0, 0, 1, 1).round_lengths(op='lolwut')
-
-
-def test_round_offsets_no_op_error():
-    with pytest.raises(WindowError):
-        Window(0, 0, 1, 1).round_offsets(op='lolwut')
-
-
 def test_window_hashable():
     a = Window(0, 0, 10, 10)
     b = Window(0, 0, 10, 10)

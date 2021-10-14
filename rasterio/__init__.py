@@ -42,7 +42,7 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.path
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.3dev"
+__version__ = "1.3a1"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its

@@ -685,7 +685,7 @@ class Window:
         return cls(col_off=col_off, row_off=row_off, width=num_cols,
                    height=num_rows)
 
-    def round_lengths(self, op='floor', pixel_precision=None):
+    def round_lengths(self, **kwds):
         """Return a copy with width and height rounded.
 
         Lengths are rounded to the preceding (floor) or succeeding (ceil)
@@ -693,41 +693,18 @@ class Window:
 
         Parameters
         ----------
-        op: str
-            'ceil', 'floor', or 'half-up'
-        pixel_precision: int, optional (default: None)
-            Number of places of rounding precision.
+        kwds : dict
+            Collects keyword arguments that are no longer used.
 
         Returns
         -------
         Window
+
         """
-        if op not in {'ceil', 'floor', 'gdal'}:
-            raise WindowError("operator must be 'ceil', 'floor', or 'gdal', got '{}'".format(op))
-
-        if op == 'gdal':
-            multiplier = 10 ** (pixel_precision or 0)
-            operator = lambda x: int(math.floor(multiplier * x + 0.5) / multiplier)
-            width = operator(self.width)
-            height = operator(self.height)
-            return Window(self.col_off, self.row_off, width, height)
-        else:
-            operator = getattr(math, op)
-
-            if pixel_precision is None:
-                return Window(
-                    self.col_off,
-                    self.row_off,
-                    operator(self.width),
-                    operator(self.height),
-                )
-            else:
-                return Window(
-                    self.col_off,
-                    self.row_off,
-                    operator(round(self.width, pixel_precision)),
-                    operator(round(self.height, pixel_precision)),
-                )
+        operator = lambda x: int(math.floor(x + 0.5))
+        width = operator(self.width)
+        height = operator(self.height)
+        return Window(self.col_off, self.row_off, width, height)
 
     def round_shape(self, **kwds):
         warnings.warn(
@@ -736,7 +713,7 @@ class Window:
         )
         return self.round_lengths(**kwds)
 
-    def round_offsets(self, op='floor', pixel_precision=None):
+    def round_offsets(self, **kwds):
         """Return a copy with column and row offsets rounded.
 
         Offsets are rounded to the preceding (floor) or succeeding (ceil)
@@ -744,41 +721,18 @@ class Window:
 
         Parameters
         ----------
-        op : str
-            'ceil' or 'floor'
-        pixel_precision : int, optional (default: None)
-            Number of places of rounding precision.
+        kwds : dict
+            Collects keyword arguments that are no longer used.
 
         Returns
         -------
         Window
+
         """
-        if op not in {'ceil', 'floor', 'gdal'}:
-            raise WindowError("operator must be 'ceil', 'floor', 'gdal', got '{}'".format(op))
-
-        if op == "gdal":
-            multiplier = 10 ** (pixel_precision or 0)
-            operator = lambda x: int(math.floor(multiplier * x + 0.1) / multiplier)
-            row_off = operator(self.row_off)
-            col_off = operator(self.col_off)
-            return Window(col_off, row_off, self.width, self.height)
-        else:
-            operator = getattr(math, op)
-
-            if pixel_precision is None:
-                return Window(
-                    operator(self.col_off),
-                    operator(self.row_off),
-                    self.width,
-                    self.height,
-                )
-            else:
-                return Window(
-                    operator(round(self.col_off, pixel_precision)),
-                    operator(round(self.row_off, pixel_precision)),
-                    self.width,
-                    self.height,
-                )
+        operator = lambda x: int(math.floor(x + 0.1))
+        row_off = operator(self.row_off)
+        col_off = operator(self.col_off)
+        return Window(col_off, row_off, self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""
