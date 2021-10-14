@@ -315,14 +315,16 @@ def merge(
             )
 
             # 4. Read data in source window into temp
-            src_window_rnd_shp = src_window.round_lengths(op="gdal")  # pixel_precision=0)
-            dst_window_rnd_shp = dst_window.round_lengths(op="gdal")  # pixel_precision=0)
-            dst_window_rnd_off = dst_window_rnd_shp.round_offsets(op="gdal")  # pixel_precision=0)
+            src_window_rnd_shp = src_window.round_lengths(op="gdal")
+            dst_window_rnd_shp = dst_window.round_lengths(op="gdal")
+            dst_window_rnd_off = dst_window_rnd_shp.round_offsets(op="gdal")
+
             temp_height, temp_width = (
                 dst_window_rnd_off.height,
                 dst_window_rnd_off.width,
             )
             temp_shape = (src_count, temp_height, temp_width)
+
             temp_src = src.read(
                 out_shape=temp_shape,
                 window=src_window_rnd_shp,
