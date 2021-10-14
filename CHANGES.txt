@@ -14,6 +14,7 @@ New features:
 
 Bug fixes:
 
+- Standardize rounding of window lengths and offsets to match GDAL (#2311).
 - Allow addition of subdatasets to GPKG rasters opened in "w" mode with the
   APPEND_SUBDATASET creation option (#2300).
 - WarpedVRT: Remove deprecated dst_* parameters (#2197).
