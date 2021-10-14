@@ -694,7 +694,7 @@ class Window:
         Parameters
         ----------
         op: str
-            'ceil' or 'floor'
+            'ceil', 'floor', or 'half-up'
         pixel_precision: int, optional (default: None)
             Number of places of rounding precision.
 
@@ -702,10 +702,14 @@ class Window:
         -------
         Window
         """
-        if op not in {'ceil', 'floor'}:
-            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+        if op not in {'ceil', 'floor', 'gdal'}:
+            raise WindowError("operator must be 'ceil', 'floor', or 'gdal', got '{}'".format(op))
 
-        operator = getattr(math, op)
+        if op == 'gdal':
+            operator = lambda x: math.floor(x + 0.5)
+        else:
+            operator = getattr(math, op)
+
         if pixel_precision is None:
             return Window(self.col_off, self.row_off,
                           operator(self.width), operator(self.height))
@@ -738,10 +742,14 @@ class Window:
         -------
         Window
         """
-        if op not in {'ceil', 'floor'}:
-            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+        if op not in {'ceil', 'floor', 'gdal'}:
+            raise WindowError("operator must be 'ceil', 'floor', 'gdal', got '{}'".format(op))
 
-        operator = getattr(math, op)
+        if op == "gdal":
+            operator = lambda x: math.floor(x + 0.1)
+        else:
+            operator = getattr(math, op)
+
         if pixel_precision is None:
             return Window(operator(self.col_off), operator(self.row_off),
                           self.width, self.height)
