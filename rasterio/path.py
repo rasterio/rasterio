@@ -71,7 +71,7 @@ class ParsedPath(Path):
         parts = path.split('!')
         path = parts.pop() if parts else None
         archive = parts.pop() if parts else None
-        return ParsedPath(path, archive, scheme)
+        return ParsedPath(pathlib.Path(path).as_posix(), archive, scheme)
 
     @property
     def name(self):

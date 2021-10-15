@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 import subprocess
 
 import affine
@@ -62,7 +63,7 @@ def test_no_crs(tmpdir):
 
 @pytest.mark.gdalbin
 def test_context(tmpdir):
-    name = str(tmpdir.join("test_context.tif"))
+    name = Path(str(tmpdir.join("test_context.tif"))).as_posix()
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,

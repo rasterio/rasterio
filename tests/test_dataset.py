@@ -1,7 +1,7 @@
 """High level tests for Rasterio's ``GDALDataset`` abstractions."""
 
 
-import os
+from pathlib import Path
 try:
     from unittest.mock import MagicMock
 except ImportError:
@@ -16,12 +16,12 @@ from rasterio.transform import Affine
 
 
 def test_files(data):
-    tif = str(data.join('RGB.byte.tif'))
-    aux = tif + '.aux.xml'
+    tif = Path(data).joinpath('RGB.byte.tif')
+    aux = tif.parent.joinpath(tif.name + '.aux.xml')
     with open(aux, 'w'):
         pass
     with rasterio.open(tif) as src:
-        assert src.files == [tif, aux]
+        assert src.files == [tif.as_posix(), aux.as_posix()]
 
 
 def test_handle_closed(path_rgb_byte_tif):
