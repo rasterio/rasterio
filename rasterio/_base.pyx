@@ -563,7 +563,8 @@ cdef class DatasetBase:
 
         return tuple(self._nodatavals)
 
-    property nodatavals:
+    @property
+    def nodatavals(self):
         """Nodata values for each band
 
         Notes
@@ -574,13 +575,13 @@ cdef class DatasetBase:
         -------
         list of float
         """
-        def __get__(self):
-            return self.get_nodatavals()
+        return self.get_nodatavals()
 
     def _set_nodatavals(self, value):
         raise DatasetAttributeError("read-only attribute")
 
-    property nodata:
+    @property
+    def nodata(self):
         """The dataset's single nodata value
 
         Notes
@@ -591,21 +592,21 @@ cdef class DatasetBase:
         -------
         float
         """
+        if self.count == 0:
+            return None
+        return self.nodatavals[0]
 
-        def __get__(self):
-            if self.count == 0:
-                return None
-            return self.nodatavals[0]
-
-        def __set__(self, value):
-            self._set_nodatavals([value for old_val in self.nodatavals])
+    @nodata.setter
+    def nodata(self, value):
+        self._set_nodatavals([value for old_val in self.nodatavals])
 
     def _mask_flags(self):
         """Mask flags for each band."""
         cdef GDALRasterBandH band = NULL
         return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
 
-    property mask_flag_enums:
+    @property
+    def mask_flag_enums(self):
         """Sets of flags describing the sources of band masks.
 
         Parameters
@@ -638,15 +639,15 @@ cdef class DatasetBase:
         >>> rasterio.enums.MaskFlags.alpha in band1_flags
         False
         """
-        def __get__(self):
-            return tuple(
-                [flag for flag in MaskFlags if x & flag.value]
-                for x in self._mask_flags())
+        return tuple(
+            [flag for flag in MaskFlags if x & flag.value]
+            for x in self._mask_flags())
 
     def _set_crs(self, value):
         raise DatasetAttributeError("read-only attribute")
 
-    property crs:
+    @property
+    def crs(self):
         """The dataset's coordinate reference system
 
         In setting this property, the value may be a CRS object or an
@@ -656,12 +657,11 @@ cdef class DatasetBase:
         -------
         CRS
         """
+        return self._get_crs()
 
-        def __get__(self):
-            return self._get_crs()
-
-        def __set__(self, value):
-            self._set_crs(value)
+    @crs.setter
+    def crs(self, value):
+        self._set_crs(value)
 
     def _set_all_descriptions(self, value):
         raise DatasetAttributeError("read-only attribute")
@@ -675,7 +675,8 @@ cdef class DatasetBase:
     def _set_all_units(self, value):
         raise DatasetAttributeError("read-only attribute")
 
-    property descriptions:
+    @property
+    def descriptions(self):
         """Descriptions for each dataset band
 
         To set descriptions, one for each band is required.
@@ -684,19 +685,20 @@ cdef class DatasetBase:
         -------
         list of str
         """
-        def __get__(self):
-            if not self._descriptions:
-                descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
-                self._descriptions = tuple((d or None) for d in descr)
-            return self._descriptions
+        if not self._descriptions:
+            descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
+            self._descriptions = tuple((d or None) for d in descr)
+        return self._descriptions
 
-        def __set__(self, value):
-            self._set_all_descriptions(value)
+    @descriptions.setter
+    def descriptions(self, value):
+        self._set_all_descriptions(value)
 
     def write_transform(self, value):
         raise DatasetAttributeError("read-only attribute")
 
-    property transform:
+    @property
+    def transform(self):
         """The dataset's georeferencing transformation matrix
 
         This transform maps pixel row/column coordinates to coordinates
@@ -706,14 +708,14 @@ cdef class DatasetBase:
         -------
         Affine
         """
+        return Affine.from_gdal(*self.get_transform())
 
-        def __get__(self):
-            return Affine.from_gdal(*self.get_transform())
+    @transform.setter
+    def transform(self, value):
+        self.write_transform(value.to_gdal())
 
-        def __set__(self, value):
-            self.write_transform(value.to_gdal())
-
-    property offsets:
+    @property
+    def offsets(self):
         """Raster offset for each dataset band
 
         To set offsets, one for each band is required.
@@ -722,17 +724,18 @@ cdef class DatasetBase:
         -------
         list of float
         """
-        def __get__(self):
-            cdef int success = 0
-            if not self._offsets:
-                offsets = [GDALGetRasterOffset(self.band(j), &success) for j in self.indexes]
-                self._offsets = tuple(offsets)
-            return self._offsets
+        cdef int success = 0
+        if not self._offsets:
+            offsets = [GDALGetRasterOffset(self.band(j), &success) for j in self.indexes]
+            self._offsets = tuple(offsets)
+        return self._offsets
 
-        def __set__(self, value):
-            self._set_all_offsets(value)
+    @offsets.setter
+    def offsets(self, value):
+        self._set_all_offsets(value)
 
-    property scales:
+    @property
+    def scales(self):
         """Raster scale for each dataset band
 
         To set scales, one for each band is required.
@@ -741,17 +744,18 @@ cdef class DatasetBase:
         -------
         list of float
         """
-        def __get__(self):
-            cdef int success = 0
-            if not self._scales:
-                scales = [GDALGetRasterScale(self.band(j), &success) for j in self.indexes]
-                self._scales = tuple(scales)
-            return self._scales
+        cdef int success = 0
+        if not self._scales:
+            scales = [GDALGetRasterScale(self.band(j), &success) for j in self.indexes]
+            self._scales = tuple(scales)
+        return self._scales
 
-        def __set__(self, value):
-            self._set_all_scales(value)
+    @scales.setter
+    def scales(self, value):
+        self._set_all_scales(value)
 
-    property units:
+    @property
+    def units(self):
         """A list of str: one units string for each dataset band
 
         Possible values include 'meters' or 'degC'. See the Pint
@@ -763,14 +767,14 @@ cdef class DatasetBase:
         -------
         list of str
         """
-        def __get__(self):
-            if not self._units:
-                units = [GDALGetRasterUnitType(self.band(j)) for j in self.indexes]
-                self._units = tuple((u or None) for u in units)
-            return self._units
+        if not self._units:
+            units = [GDALGetRasterUnitType(self.band(j)) for j in self.indexes]
+            self._units = tuple((u or None) for u in units)
+        return self._units
 
-        def __set__(self, value):
-            self._set_all_units(value)
+    @units.setter
+    def units(self, value):
+        self._set_all_units(value)
 
     def block_window(self, bidx, i, j):
         """Returns the window for a particular block
@@ -918,37 +922,37 @@ cdef class DatasetBase:
                 yield (j, i), windows.Window(
                     col_off=col, row_off=row, width=width, height=height)
 
-    property bounds:
+    @property
+    def bounds(self):
         """Returns the lower left and upper right bounds of the dataset
         in the units of its coordinate reference system.
 
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        def __get__(self):
-            a, b, c, d, e, f, _, _, _ = self.transform
-            width = self.width
-            height = self.height
-            if b == d == 0:
-                return BoundingBox(c, f + e * height, c + a * width, f)
-            else:
-                c0x, c0y = c, f
-                c1x, c1y = self.transform * (0, height)
-                c2x, c2y = self.transform * (width, height)
-                c3x, c3y = self.transform * (width, 0)
-                xs = (c0x, c1x, c2x, c3x)
-                ys = (c0y, c1y, c2y, c3y)
-                return BoundingBox(min(xs), min(ys), max(xs), max(ys))
+        a, b, c, d, e, f, _, _, _ = self.transform
+        width = self.width
+        height = self.height
+        if b == d == 0:
+            return BoundingBox(c, f + e * height, c + a * width, f)
+        else:
+            c0x, c0y = c, f
+            c1x, c1y = self.transform * (0, height)
+            c2x, c2y = self.transform * (width, height)
+            c3x, c3y = self.transform * (width, 0)
+            xs = (c0x, c1x, c2x, c3x)
+            ys = (c0y, c1y, c2y, c3y)
+            return BoundingBox(min(xs), min(ys), max(xs), max(ys))
 
-    property res:
+    @property
+    def res(self):
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
-        def __get__(self):
-            a, b, c, d, e, f, _, _, _ = self.transform
-            if b == d == 0:
-                return a, -e
-            else:
-                return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
+        a, b, c, d, e, f, _, _, _ = self.transform
+        if b == d == 0:
+            return a, -e
+        else:
+            return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
 
     @property
     def meta(self):
@@ -1010,29 +1014,29 @@ cdef class DatasetBase:
             else:
                 return blockxsize < self.width or blockxsize > self.width
 
-    property profile:
+    @property
+    def profile(self):
         """Basic metadata and creation options of this dataset.
 
         May be passed as keyword arguments to `rasterio.open()` to
         create a clone of this dataset.
         """
-        def __get__(self):
-            m = Profile(**self.meta)
+        m = Profile(**self.meta)
 
-            if self.is_tiled:
-                m.update(
-                    blockxsize=self.block_shapes[0][1],
-                    blockysize=self.block_shapes[0][0],
-                    tiled=True)
-            else:
-                m.update(tiled=False)
-            if self.compression:
-                m['compress'] = self.compression.name
-            if self.interleaving:
-                m['interleave'] = self.interleaving.name
-            if self.photometric:
-                m['photometric'] = self.photometric.name
-            return m
+        if self.is_tiled:
+            m.update(
+                blockxsize=self.block_shapes[0][1],
+                blockysize=self.block_shapes[0][0],
+                tiled=True)
+        else:
+            m.update(tiled=False)
+        if self.compression:
+            m['compress'] = self.compression.name
+        if self.interleaving:
+            m['interleave'] = self.interleaving.name
+        if self.photometric:
+            m['photometric'] = self.photometric.name
+        return m
 
     def lnglat(self):
         w, s, e, n = self.bounds
@@ -1055,21 +1059,20 @@ cdef class DatasetBase:
             self._transform = self.read_transform()
         return self._transform
 
-    property subdatasets:
+    @property
+    def subdatasets(self):
         """Sequence of subdatasets"""
-
-        def __get__(self):
-            tags = self.tags(ns='SUBDATASETS')
-            subs = defaultdict(dict)
-            for key, val in tags.items():
-                _, idx, fld = key.split('_')
-                fld = fld.lower()
-                if fld == 'desc':
-                    fld = 'description'
-                if fld == 'name':
-                    val = val.replace('NETCDF', 'netcdf')
-                subs[idx][fld] = val.replace('"', '')
-            return [subs[idx]['name'] for idx in sorted(subs.keys())]
+        tags = self.tags(ns='SUBDATASETS')
+        subs = defaultdict(dict)
+        for key, val in tags.items():
+            _, idx, fld = key.split('_')
+            fld = fld.lower()
+            if fld == 'desc':
+                fld = 'description'
+            if fld == 'name':
+                val = val.replace('NETCDF', 'netcdf')
+            subs[idx][fld] = val.replace('"', '')
+        return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
 
     def tag_namespaces(self, bidx=0):
@@ -1205,11 +1208,34 @@ cdef class DatasetBase:
         else:
             return value
 
+    @property
+    def colorinterp(self):
+        """A sequence of ``ColorInterp.<enum>`` in band order.
 
-    property colorinterp:
+        Returns
+        -------
+        tuple
+        """
 
-        """Returns a sequence of ``ColorInterp.<enum>`` representing
-        color interpretation in band order.
+        cdef GDALRasterBandH band = NULL
+
+        out = []
+        for bidx in self.indexes:
+            value = exc_wrap_int(
+                GDALGetRasterColorInterpretation(self.band(bidx)))
+            out.append(ColorInterp(value))
+        return tuple(out)
+
+    @colorinterp.setter
+    def colorinterp(self, value):
+
+        """Set band color interpretation with a sequence of
+        ``ColorInterp.<enum>`` in band order.
+
+        Parameters
+        ----------
+        value : iter
+            A sequence of ``ColorInterp.<enum>``.
 
         Examples
         --------
@@ -1228,53 +1254,20 @@ cdef class DatasetBase:
                     ColorInterp.green,
                     ColorInterp.blue,
                     ColorInterp.alpha)
-
-        Returns
-        -------
-        tuple
         """
+        if self.mode == 'r':
+            raise RasterioIOError(
+                "Can only set color interpretation when dataset is "
+                "opened in 'r+' or 'w' mode, not '{}'.".format(self.mode))
+        if len(value) != len(self.indexes):
+            raise ValueError(
+                "Must set color interpretation for all bands.  Found "
+                "{} bands but attempting to set color interpretation to: "
+                "{}".format(len(self.indexes), value))
 
-        def __get__(self):
-
-            """A sequence of ``ColorInterp.<enum>`` in band order.
-
-            Returns
-            -------
-            tuple
-            """
-
-            cdef GDALRasterBandH band = NULL
-
-            out = []
-            for bidx in self.indexes:
-                value = exc_wrap_int(
-                    GDALGetRasterColorInterpretation(self.band(bidx)))
-                out.append(ColorInterp(value))
-            return tuple(out)
-
-        def __set__(self, value):
-
-            """Set band color interpretation with a sequence of
-            ``ColorInterp.<enum>`` in band order.
-
-            Parameters
-            ----------
-            value : iter
-                A sequence of ``ColorInterp.<enum>``.
-            """
-            if self.mode == 'r':
-                raise RasterioIOError(
-                    "Can only set color interpretation when dataset is "
-                    "opened in 'r+' or 'w' mode, not '{}'.".format(self.mode))
-            if len(value) != len(self.indexes):
-                raise ValueError(
-                    "Must set color interpretation for all bands.  Found "
-                    "{} bands but attempting to set color interpretation to: "
-                    "{}".format(len(self.indexes), value))
-
-            for bidx, ci in zip(self.indexes, value):
-                exc_wrap_int(
-                    GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
+        for bidx, ci in zip(self.indexes, value):
+            exc_wrap_int(
+                GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
 
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band.
@@ -1397,7 +1390,8 @@ cdef class DatasetBase:
     def _set_gcps(self, values):
         raise DatasetAttributeError("read-only attribute")
 
-    property gcps:
+    @property
+    def gcps(self):
         """ground control points and their coordinate reference system.
 
         This property is a 2-tuple, or pair: (gcps, crs).
@@ -1407,14 +1401,14 @@ cdef class DatasetBase:
         crs: CRS
             The coordinate reference system of the ground control points.
         """
-        def __get__(self):
-            if not self._gcps:
-                self._gcps = self.get_gcps()
-            return self._gcps
+        if not self._gcps:
+            self._gcps = self.get_gcps()
+        return self._gcps
 
-        def __set__(self, value):
-            gcps, crs = value
-            self._set_gcps(gcps, crs)
+    @gcps.setter
+    def gcps(self, value):
+        gcps, crs = value
+        self._set_gcps(gcps, crs)
 
     def _get_rpcs(self):
         """Get RPCs if exists"""
@@ -1425,7 +1419,8 @@ cdef class DatasetBase:
     def _set_rpcs(self, values):
         raise DatasetAttributeError("read-only attribute")
 
-    property rpcs:
+    @property
+    def rpcs(self):
         """Rational polynomial coefficients mapping between pixel and geodetic coordinates.
 
         This property is a dict-like object.
@@ -1433,34 +1428,32 @@ cdef class DatasetBase:
         rpcs : RPC instance containing coefficients. Empty if dataset does not have any
         metadata in the "RPC" domain.
         """
-        def __get__(self):
-            if not self._rpcs:
-                self._rpcs = self._get_rpcs()
-            return self._rpcs
+        if not self._rpcs:
+            self._rpcs = self._get_rpcs()
+        return self._rpcs
 
-        def __set__(self, value):
-            rpcs = value.to_gdal()
-            self._set_rpcs(rpcs)
+    @rpcs.setter
+    def rpcs(self, value):
+        rpcs = value.to_gdal()
+        self._set_rpcs(rpcs)
 
-    property files:
-
+    @property
+    def files(self):
         """Returns a sequence of files associated with the dataset.
 
         Returns
         -------
         tuple
         """
-
-        def __get__(self):
-            cdef GDALDatasetH h_dataset = NULL
-            h_dataset = self.handle()
-            with nogil:
-                file_list = GDALGetFileList(h_dataset)
-            num_items = CSLCount(file_list)
-            try:
-                return list([file_list[i] for i in range(num_items)])
-            finally:
-                CSLDestroy(file_list)
+        cdef GDALDatasetH h_dataset = NULL
+        h_dataset = self.handle()
+        with nogil:
+            file_list = GDALGetFileList(h_dataset)
+        num_items = CSLCount(file_list)
+        try:
+            return list([file_list[i] for i in range(num_items)])
+        finally:
+            CSLDestroy(file_list)
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):
