@@ -346,12 +346,11 @@ cdef class DatasetBase:
         # touch self.meta, triggering data type evaluation.
         _ = self.meta
 
-        self._closed = False
         log.debug("Dataset %r is started.", self)
 
     cdef GDALDatasetH handle(self) except NULL:
         """Return the object's GDAL dataset handle"""
-        if self._hds == NULL:
+        if self.closed:
             raise RasterioIOError("Dataset is closed: {}".format(self.name))
         else:
             return self._hds
@@ -406,7 +405,7 @@ cdef class DatasetBase:
         """Return the stored GDAL GeoTransform"""
         cdef double gt[6]
 
-        if self._hds == NULL:
+        if self.closed:
             raise ValueError("Null dataset")
         err = GDALGetGeoTransform(self._hds, gt)
         if err == GDALError.failure and not self._has_gcps_or_rpcs():
@@ -423,7 +422,7 @@ cdef class DatasetBase:
 
     def stop(self):
         """Close the GDAL dataset handle"""
-        if self._hds != NULL:
+        if not self.closed:
             refcount = GDALDereferenceDataset(self._hds)
             if refcount == 0:
                 GDALClose(self._hds)
@@ -432,7 +431,6 @@ cdef class DatasetBase:
     def close(self):
         """Close the dataset"""
         self.stop()
-        self._closed = True
 
     def __enter__(self):
         self._env = env_ctx_if_needed()
@@ -444,7 +442,7 @@ cdef class DatasetBase:
         self._env.__exit__()
 
     def __dealloc__(self):
-        if self._hds != NULL:
+        if not self.closed:
             GDALClose(self._hds)
 
     @property
@@ -455,7 +453,7 @@ cdef class DatasetBase:
         -------
         bool
         """
-        return self._closed
+        return self._hds == NULL
 
     @property
     def count(self):
@@ -466,7 +464,7 @@ cdef class DatasetBase:
         int
         """
         if not self._count:
-            if self._hds == NULL:
+            if self.closed:
                 raise ValueError("Can't read closed raster file")
             self._count = GDALGetRasterCount(self._hds)
         return self._count
