@@ -426,7 +426,7 @@ cdef class DatasetBase:
             refcount = GDALDereferenceDataset(self._hds)
             if refcount == 0:
                 GDALClose(self._hds)
-        self._hds = NULL
+            self._hds = NULL
 
     def close(self):
         """Close the dataset"""
