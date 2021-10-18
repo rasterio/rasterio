@@ -542,7 +542,7 @@ cdef class DatasetReaderBase(DatasetBase):
             if not boundless:
                 window = window.crop(self.height, self.width)
 
-            int_window = window.round_lengths(op="gdal")
+            int_window = window.round_lengths()
             win_shape += (int(int_window.height), int(int_window.width))
 
         else:
@@ -779,7 +779,7 @@ cdef class DatasetReaderBase(DatasetBase):
             if not boundless:
                 window = window.crop(self.height, self.width)
 
-            int_window = window.round_lengths(op="gdal")
+            int_window = window.round_lengths()
             win_shape += (int(int_window.height), int(int_window.width))
 
         else:
