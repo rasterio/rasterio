@@ -1890,7 +1890,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 cdef class MemoryDataset(DatasetWriterBase):
     def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
         """
-        Dataset wrapped around in-memory array.
+        Dataset wrapped around in-memory array. This class is intended for internal use only
+        within rasterio to support IO with GDAL, where a Dataset object is needed.
+
+        MemoryDataset supports the NumPy array interface.
 
         Parameters
         ----------
