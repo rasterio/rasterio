@@ -9,7 +9,7 @@ from rasterio.dtypes import _getnpdtype
 from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._io cimport DatasetReaderBase, InMemoryRasterArray, io_auto
+from rasterio._io cimport DatasetReaderBase, MemoryDataset, io_auto
 
 
 log = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ def _shapes(image, mask, connectivity, transform):
     cdef OGRLayerH layer = NULL
     cdef OGRFieldDefnH fielddefn = NULL
     cdef char **options = NULL
-    cdef InMemoryRasterArray mem_ds = None
-    cdef InMemoryRasterArray mask_ds = None
+    cdef MemoryDataset mem_ds = None
+    cdef MemoryDataset mask_ds = None
     cdef ShapeIterator shape_iter = None
     cdef int fieldtp
 
@@ -74,7 +74,7 @@ def _shapes(image, mask, connectivity, transform):
     try:
 
         if dtypes.is_ndarray(image):
-            mem_ds = InMemoryRasterArray(image, transform=transform)
+            mem_ds = MemoryDataset(image, transform=transform)
             band = mem_ds.band(1)
         elif isinstance(image, tuple):
             rdr = image.ds
@@ -92,7 +92,7 @@ def _shapes(image, mask, connectivity, transform):
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_ds = InMemoryRasterArray(mask.astype('uint8'),
+                mask_ds = MemoryDataset(mask.astype('uint8'),
                                          transform=transform)
                 maskband = mask_ds.band(1)
             elif isinstance(mask, tuple):
@@ -172,9 +172,9 @@ def _sieve(image, size, out, mask, connectivity):
     cdef int retval
     cdef int rows
     cdef int cols
-    cdef InMemoryRasterArray in_mem_ds = None
-    cdef InMemoryRasterArray out_mem_ds = None
-    cdef InMemoryRasterArray mask_mem_ds = None
+    cdef MemoryDataset in_mem_ds = None
+    cdef MemoryDataset out_mem_ds = None
+    cdef MemoryDataset mask_mem_ds = None
     cdef GDALRasterBandH in_band = NULL
     cdef GDALRasterBandH out_band = NULL
     cdef GDALRasterBandH mask_band = NULL
@@ -206,7 +206,7 @@ def _sieve(image, size, out, mask, connectivity):
     try:
 
         if dtypes.is_ndarray(image):
-            in_mem_ds = InMemoryRasterArray(image)
+            in_mem_ds = MemoryDataset(image)
             in_band = in_mem_ds.band(1)
         elif isinstance(image, tuple):
             rdr = image.ds
@@ -216,7 +216,7 @@ def _sieve(image, size, out, mask, connectivity):
 
         if dtypes.is_ndarray(out):
             log.debug("out array: %r", out)
-            out_mem_ds = InMemoryRasterArray(out)
+            out_mem_ds = MemoryDataset(out)
             out_band = out_mem_ds.band(1)
         elif isinstance(out, tuple):
             udr = out.ds
@@ -234,7 +234,7 @@ def _sieve(image, size, out, mask, connectivity):
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_mem_ds = InMemoryRasterArray(mask.astype('uint8'))
+                mask_mem_ds = MemoryDataset(mask.astype('uint8'))
                 mask_band = mask_mem_ds.band(1)
 
             elif isinstance(mask, tuple):
@@ -319,7 +319,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     cdef OGRGeometryH *geoms = NULL
     cdef char **options = NULL
     cdef double *pixel_values = NULL
-    cdef InMemoryRasterArray mem = None
+    cdef MemoryDataset mem = None
     cdef int *band_ids = NULL
 
     try:
@@ -347,7 +347,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                     geometry, i, value)
 
         # TODO: is a vsimem file more memory efficient?
-        with InMemoryRasterArray(image, transform=transform) as mem:
+        with MemoryDataset(image, transform=transform) as mem:
             band_ids = <int *>CPLMalloc(mem.count*sizeof(int))
             for i in range(mem.count):
                 band_ids[i] = i + 1
