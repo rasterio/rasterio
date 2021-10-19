@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    cdef char *info_c = NULL
+    cdef const char *info_c = NULL
     info_c = GDALVersionInfo("RELEASE_NAME")
     info_b = info_c
     return info_b.decode("utf-8")

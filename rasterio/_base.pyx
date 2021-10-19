@@ -124,8 +124,8 @@ def _raster_driver_extensions():
     cdef int iii = 0
     cdef int driver_count = GDALGetDriverCount()
     cdef GDALDriverH driver = NULL
-    cdef char* c_extensions = NULL
-    cdef char* c_drivername = NULL
+    cdef const char* c_extensions = NULL
+    cdef const char* c_drivername = NULL
     driver_extensions = {}
     for iii in range(driver_count):
         driver = GDALGetDriver(iii)
@@ -216,7 +216,7 @@ cdef GDALDatasetH open_dataset(
     flags = flags | 0x02
 
     with nogil:
-        hds = GDALOpenEx(fname, flags, drivers, options, NULL)
+        hds = GDALOpenEx(fname, flags, <const char **>drivers, <const char **>options, NULL)
     try:
         return exc_wrap_pointer(hds)
     finally:
@@ -814,7 +814,7 @@ cdef class DatasetBase:
         int
         """
         cdef GDALMajorObjectH obj = NULL
-        cdef char *value = NULL
+        cdef const char *value = NULL
         cdef const char *key_c = NULL
 
         obj = self.band(bidx)
@@ -1120,7 +1120,7 @@ cdef class DatasetBase:
         cdef char *item = NULL
         cdef const char *domain = NULL
         cdef char *key = NULL
-        cdef char *val = NULL
+        cdef const char *val = NULL
 
         if bidx > 0:
             obj = self.band(bidx)
@@ -1172,7 +1172,7 @@ cdef class DatasetBase:
         """
         cdef GDALMajorObjectH band = NULL
         cdef GDALMajorObjectH obj = NULL
-        cdef char *value = NULL
+        cdef const char *value = NULL
         cdef const char *name = NULL
         cdef const char *domain = NULL
 
