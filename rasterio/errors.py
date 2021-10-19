@@ -59,8 +59,8 @@ class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
-class RPCTransformWarning(UserWarning):
-    """Error raised when GDALRPCTransform fails."""
+class TransformWarning(UserWarning):
+    """Error raised when a GDALRPCTransform or GDALGCPTransform call fails."""
 
 
 class ShapeSkipWarning(UserWarning):
@@ -151,3 +151,7 @@ class WarpedVRTError(RasterioError):
 
 class DatasetIOShapeError(RasterioError):
     """Raised when data buffer shape is a mismatch when reading and writing"""
+
+
+class WarpOperationError(RasterioError):
+    """Raised when a warp operation fails."""

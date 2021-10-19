@@ -1,10 +1,10 @@
 """File translation command"""
 
-
 import click
 import numpy as np
 
 import rasterio
+from rasterio.enums import MaskFlags
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 
@@ -73,7 +73,6 @@ def convert(
 
             profile.update(**creation_options)
 
-            # "tiled" is special
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
                 data = src.read()
@@ -94,3 +93,9 @@ def convert(
                 # Cast to the output dtype and write.
                 result = data.astype(dst_dtype, casting='unsafe', copy=False)
                 dst.write(result)
+
+                if MaskFlags.per_dataset in src.mask_flag_enums[0]:
+                    dst.write_mask(src.read_masks()[0])
+
+                # TODO: copy other properties (GCPs etc). Several other
+                # programs need the same utility.

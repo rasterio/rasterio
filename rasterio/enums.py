@@ -2,6 +2,26 @@
 
 from enum import Enum, IntEnum
 
+class TransformDirection(IntEnum):
+    """Coordinate transform direction
+    
+    Forward transform direction defined as image pixel (row, col) to 
+    geographic/projected (x, y) coordinates. Reverse transform direction defined as
+    geographic/projected (x, y) to image pixel (row, col) coordinates.
+
+    Notes
+    -----
+    The convention for transform direction for RPC based coordinate transform is
+    typically the opposite of what is previously described. For consistency
+    all coordinate transforms methods use the same convention.
+    """
+    forward = 1
+    reverse = 0
+
+class TransformMethod(Enum):
+    affine = 'transform'
+    gcps = 'gcps'
+    rpcs = 'rpcs'
 
 class ColorInterp(IntEnum):
     """Raster band color interpretation."""

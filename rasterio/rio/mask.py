@@ -93,6 +93,8 @@ def mask(
             geometries = [f['geometry'] for f in geojson['features']]
         elif 'geometry' in geojson:
             geometries = (geojson['geometry'], )
+        elif 'coordinates' in geojson:
+            geometries = (geojson, )
         else:
             raise click.BadParameter('Invalid GeoJSON', param=input,
                                      param_hint='input')

@@ -27,6 +27,7 @@ Advanced Topics
    resampling
    switch
    tags
+   transforms
    virtual-warping
    vsi
    windowed-rw

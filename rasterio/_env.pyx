@@ -433,6 +433,6 @@ def set_proj_data_search_path(path):
         path_b = path.encode("utf-8")
         path_c = path_b
         paths = CSLAddString(paths, path_c)
-        OSRSetPROJSearchPaths(paths)
+        OSRSetPROJSearchPaths(<const char *const *>paths)
     ELSE:
         os.environ["PROJ_LIB"] = path

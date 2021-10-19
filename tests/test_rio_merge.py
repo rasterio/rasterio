@@ -451,19 +451,23 @@ def test_merge_tiny_res_bounds(tiffs, runner):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     result = runner.invoke(
-        main_group, ['merge'] + inputs + [outputname, '--res', 2, '--bounds', '1, 0, 5, 4'])
+        main_group,
+        ["merge"]
+        + inputs
+        + [outputname, "--res", 2, "--nodata", 0, "--bounds", "1, 0, 5, 4"],
+    )
     assert result.exit_code == 0
 
     # Output should be
     # [[[120  90]
-    #   [0   0]]]
+    #   [60    0]]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
         print(data)
         assert data[0, 0, 0] == 120
         assert data[0, 0, 1] == 90
-        assert data[0, 1, 0] == 0
+        assert data[0, 1, 0] == 60
         assert data[0, 1, 1] == 0
 
 
@@ -685,3 +689,25 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
         output_raster = dst.read()
 
     np.testing.assert_array_equal(output_raster, expected_raster)
+
+
+@requires_gdal22(reason="This test is sensitive to pixel values and requires GDAL 2.2+")
+@pytest.mark.xfail(
+    sys.version_info < (3,), reason="Test is sensitive to rounding behavior"
+)
+def test_merge_no_gap(tiffs, runner):
+    """This test fails before 1.3a1 using the original window rounding params (op=floor, pixel_precision-=0)."""
+    outputname = str(tiffs.join("merged.tif"))
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    result = runner.invoke(
+        main_group,
+        ["merge"]
+        + inputs
+        + [outputname, "--res", 2 / 123, "--nodata", 0, "--bounds", "1, 0, 5, 4"],
+    )
+    assert result.exit_code == 0
+
+    with rasterio.open(outputname) as src:
+        data = src.read(1)
+        assert data[184, 61] != 0

@@ -2,6 +2,7 @@
 
 from __future__ import division
 import logging
+import shutil
 
 import affine
 import boto3
@@ -388,7 +389,7 @@ def test_hit_ovr(red_green):
     # overviews of green.tif over the red overviews and expect to find
     # green pixels below.
     green_ovr = red_green.join("green.tif.ovr")
-    green_ovr.rename(red_green.join("red.tif.ovr"))
+    shutil.move(green_ovr, red_green.join("red.tif.ovr"))
     assert not green_ovr.exists()
     with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
         data = ovr.read()

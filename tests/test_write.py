@@ -1,16 +1,18 @@
 import re
+from pathlib import Path
 import subprocess
-import sys
 
 import affine
 import numpy as np
 import pytest
 
+from .conftest import requires_gdal31
+
 import rasterio
 from rasterio.drivers import blacklist
+from rasterio.enums import Resampling
 from rasterio.env import Env
-from rasterio.errors import RasterioIOError, DriverRegistrationError
-from rasterio._base import driver_supports_mode
+from rasterio.errors import RasterioIOError
 
 
 def test_validate_dtype_None(tmpdir):
@@ -61,7 +63,7 @@ def test_no_crs(tmpdir):
 
 @pytest.mark.gdalbin
 def test_context(tmpdir):
-    name = str(tmpdir.join("test_context.tif"))
+    name = Path(str(tmpdir.join("test_context.tif"))).as_posix()
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -427,3 +429,13 @@ def test_issue2088(tmpdir, capsys, driver):
     captured = capsys.readouterr()
     assert "ERROR 4" not in captured.err
     assert "ERROR 4" not in captured.out
+
+
+@requires_gdal31
+def test_write_cog(tmpdir, path_rgb_byte_tif):
+    """Show resolution of issue #2102"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        profile = src.profile
+        profile.update(driver="COG", extent=src.bounds, resampling=Resampling.bilinear)
+        with rasterio.open(str(tmpdir.join("test.tif")), "w", **profile) as cog:
+            cog.write(src.read())

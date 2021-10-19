@@ -4,12 +4,44 @@ Changes
 1.3.0 (TBD)
 -----------
 
+1.3a1 (2021-10-14)
+------------------
+
+Note: building from source now requires Cython (#2016).
+
+New features:
+
+- More efficient window intersection and union (#2164).
+- New Affine, GCP, and RFC transformer classes (#2225).
+- Add support for enum and tuple type creation options (#2102)
+
+Bug fixes:
+
+- Standardize rounding of window lengths and offsets to match GDAL (#2311).
+- Allow addition of subdatasets to GPKG rasters opened in "w" mode with the
+  APPEND_SUBDATASET creation option (#2300).
 - WarpedVRT: Remove deprecated dst_* parameters (#2197).
-- Building from source now requires Cython (#2016).
 - Add GDAL DLL directory to DLL search path on Windows and Python >= 3.8.
   DLLs will be loaded from .libs (for wheels) or from directories in PATH
   environment variable.
 - Add version to CRS.to_wkt() for WKT2 support (#2122).
+
+1.2.10 (2021-10-11)
+-------------------
+
+- Raise WarpOperationError if ChunkAndWarp* do not succeed instead of silently
+  failing to write to the warp output dataset (#2305).
+
+1.2.9 (2021-10-01)
+------------------
+
+- Compute geometry_window more accurately and tightly for rotated rasters,
+  fixing a regression introduced in 1.2.1 (#2303).
+- Copy mask to destination in rio-clip and rio-convert (#2232).
+- Use a default 70% confidence threshold when matching CRS to definitions in
+  authority files (#2293). The confidence threshold can be defined when calling
+  to_epsg and to_authority, which partially addressed the issue reported in
+  #2290.
 
 1.2.8 (2021-09-09)
 ------------------

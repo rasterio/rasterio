@@ -21,6 +21,7 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
+import warnings
 
 from affine import Affine
 import attr
@@ -28,7 +29,7 @@ import numpy as np
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio.errors import WindowError
+    from rasterio.errors import WindowError, RasterioDeprecationWarning
     from rasterio.transform import rowcol, guard_transform
 
 
@@ -174,6 +175,20 @@ def get_data_window(arr, nodata=None):
     return Window.from_slices(row_range, col_range)
 
 
+def _compute_union(w1, w2):
+    """Compute the union of two windows"""
+    col_off = min(w1.col_off, w2.col_off)
+    row_off = min(w1.row_off, w2.row_off)
+    width = max(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
+    height = max(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    return col_off, row_off, width, height
+
+
+def _union(w1, w2):
+    coeffs = _compute_union(w1, w2)
+    return Window(*coeffs)
+
+
 @iter_args
 def union(*windows):
     """
@@ -188,15 +203,7 @@ def union(*windows):
     -------
     Window
     """
-    stacked = np.dstack([toranges(w) for w in windows])
-    row_start, row_stop = stacked[0, 0].min(), stacked[0, 1].max()
-    col_start, col_stop = stacked[1, 0].min(), stacked[1, 1].max()
-    return Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=col_stop - col_start,
-        height=row_stop - row_start,
-    )
+    return functools.reduce(_union, windows)
 
 
 @iter_args
@@ -214,18 +221,25 @@ def intersection(*windows):
     -------
     Window
     """
-    if not intersect(windows):
-        raise WindowError("windows do not intersect")
+    return functools.reduce(_intersection, windows)
 
-    stacked = np.dstack([toranges(w) for w in windows])
-    row_start, row_stop = stacked[0, 0].max(), stacked[0, 1].min()
-    col_start, col_stop = stacked[1, 0].max(), stacked[1, 1].min()
-    return Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=col_stop - col_start,
-        height=row_stop - row_start,
-    )
+
+def _compute_intersection(w1, w2):
+    """ Compute intersection of window 1 and window 2"""
+    col_off = max(w1.col_off, w2.col_off)
+    row_off = max(w1.row_off, w2.row_off)
+    width = min(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
+    height = min(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    return col_off, row_off, width, height
+
+
+def _intersection(w1, w2):
+    """ Compute intersection of window 1 and window 2"""
+    coeffs = _compute_intersection(w1, w2)
+    if coeffs[2] > 0 and coeffs[3] > 0:
+        return Window(*coeffs)
+    else:
+        raise WindowError(f"Intersection is empty {w1} {w2}")
 
 
 @iter_args
@@ -242,20 +256,11 @@ def intersect(*windows):
     bool
         True if all windows intersect.
     """
-    from itertools import combinations
-
-    def intersects(range1, range2):
-        return not (
-            range1[0] >= range2[1] or range1[1] <= range2[0])
-
-    windows = np.array([toranges(w) for w in windows])
-
-    for i in (0, 1):
-        for c in combinations(windows[:, i], 2):
-            if not intersects(*c):
-                return False
-
-    return True
+    try:
+        intersection(*windows)
+        return True
+    except WindowError:
+        return False
 
 
 def from_bounds(
@@ -279,7 +284,8 @@ def from_bounds(
         An integer number of decimal points of precision when computing
         inverse transform, or an absolute float precision.
     height, width: int, optional
-        These parameters are unused and will be deprecated.
+        These parameters are unused, deprecated in rasterio 1.3.0, and
+        will be removed in version 2.0.0.
 
     Returns
     -------
@@ -301,9 +307,11 @@ def from_bounds(
     if (bottom - top) / transform.e < 0:
         raise WindowError("Bounds and transform are inconsistent")
 
-    if height is None or width is not None:
-        # TODO: raise a deprecation warning in version 1.3.0.
-        pass
+    if height is not None or width is not None:
+        warnings.warn(
+            "The height and width parameters are unused, deprecated, and will be removed in Rasterio 2.0.0.",
+            RasterioDeprecationWarning,
+        )
 
     rows, cols = rowcol(
         transform,
@@ -677,7 +685,7 @@ class Window:
         return cls(col_off=col_off, row_off=row_off, width=num_cols,
                    height=num_rows)
 
-    def round_lengths(self, op='floor', pixel_precision=None):
+    def round_lengths(self, **kwds):
         """Return a copy with width and height rounded.
 
         Lengths are rounded to the preceding (floor) or succeeding (ceil)
@@ -685,31 +693,27 @@ class Window:
 
         Parameters
         ----------
-        op: str
-            'ceil' or 'floor'
-        pixel_precision: int, optional (default: None)
-            Number of places of rounding precision.
+        kwds : dict
+            Collects keyword arguments that are no longer used.
 
         Returns
         -------
         Window
+
         """
-        if op not in {'ceil', 'floor'}:
-            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
+        operator = lambda x: int(math.floor(x + 0.5))
+        width = operator(self.width)
+        height = operator(self.height)
+        return Window(self.col_off, self.row_off, width, height)
 
-        operator = getattr(math, op)
-        if pixel_precision is None:
-            return Window(self.col_off, self.row_off,
-                          operator(self.width), operator(self.height))
-        else:
-            return Window(self.col_off, self.row_off,
-                          operator(round(self.width, pixel_precision)),
-                          operator(round(self.height, pixel_precision)))
+    def round_shape(self, **kwds):
+        warnings.warn(
+            "round_shape is deprecated and will be removed in Rasterio 2.0.0.",
+            RasterioDeprecationWarning,
+        )
+        return self.round_lengths(**kwds)
 
-    # TODO: deprecate round_shape at 1.3.0, with a warning.
-    round_shape = round_lengths
-
-    def round_offsets(self, op='floor', pixel_precision=None):
+    def round_offsets(self, **kwds):
         """Return a copy with column and row offsets rounded.
 
         Offsets are rounded to the preceding (floor) or succeeding (ceil)
@@ -717,26 +721,18 @@ class Window:
 
         Parameters
         ----------
-        op : str
-            'ceil' or 'floor'
-        pixel_precision : int, optional (default: None)
-            Number of places of rounding precision.
+        kwds : dict
+            Collects keyword arguments that are no longer used.
 
         Returns
         -------
         Window
-        """
-        if op not in {'ceil', 'floor'}:
-            raise WindowError("operator must be 'ceil' or 'floor', got '{}'".format(op))
 
-        operator = getattr(math, op)
-        if pixel_precision is None:
-            return Window(operator(self.col_off), operator(self.row_off),
-                          self.width, self.height)
-        else:
-            return Window(operator(round(self.col_off, pixel_precision)),
-                          operator(round(self.row_off, pixel_precision)),
-                          self.width, self.height)
+        """
+        operator = lambda x: int(math.floor(x + 0.1))
+        row_off = operator(self.row_off)
+        col_off = operator(self.col_off)
+        return Window(col_off, row_off, self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""

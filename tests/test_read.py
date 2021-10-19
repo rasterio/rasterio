@@ -199,36 +199,6 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read(window=((-100, 20000), (-100, 20000)))
             self.assertEqual(a.shape, (3, 100, 100))
 
-    def test_read_out(self):
-        with rasterio.open('tests/data/RGB.byte.tif') as s:
-            # regular array, without mask
-            a = np.empty((3, 718, 791), np.ubyte)
-            b = s.read(out=a)
-            self.assertFalse(hasattr(a, 'mask'))
-            self.assertFalse(hasattr(b, 'mask'))
-            # with masked array
-            a = np.ma.empty((3, 718, 791), np.ubyte)
-            b = s.read(out=a)
-            self.assertEqual(id(a.data), id(b.data))
-            # TODO: is there a way to id(a.mask)?
-            self.assertTrue(hasattr(a, 'mask'))
-            self.assertTrue(hasattr(b, 'mask'))
-            # use all parameters
-            a = np.empty((1, 20, 10), np.ubyte)
-            b = s.read([2], a, ((310, 330), (320, 330)), False)
-            self.assertEqual(id(a), id(b))
-            # pass 2D array with index
-            a = np.empty((20, 10), np.ubyte)
-            b = s.read(2, a, ((310, 330), (320, 330)), False)
-            self.assertEqual(id(a), id(b))
-            self.assertEqual(a.ndim, 2)
-            # different number of array dimensions
-            a = np.empty((20, 10), np.ubyte)
-            self.assertRaises(ValueError, s.read, [2], out=a)
-            # different number of array shape in 3D
-            a = np.empty((2, 20, 10), np.ubyte)
-            self.assertRaises(ValueError, s.read, [2], out=a)
-
     def test_read_nan_nodata(self):
         with rasterio.open('tests/data/float_nan.tif') as s:
             a = s.read(masked=True)
@@ -321,3 +291,31 @@ def test_out_shape_no_segfault(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(DatasetIOShapeError):
             src.read(out_shape=(2, src.height, src.width))
+
+
+def test_read_out_no_mask(path_rgb_byte_tif):
+    """Find no mask when out keyword arg is not masked."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        a = np.empty((3, 718, 791), np.ubyte)
+        b = src.read(out=a)
+        assert not hasattr(a, "mask")
+        assert not hasattr(b, "mask")
+
+
+def test_read_out_mask(path_rgb_byte_tif):
+    """Find a mask when out keyword arg is a masked array."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        a = np.ma.empty((3, 718, 791), np.ubyte)
+        b = src.read(out=a)
+        assert hasattr(a, "mask")
+        assert hasattr(b, "mask")
+
+
+@pytest.mark.parametrize(
+    "out", [np.empty((20, 10), np.ubyte), np.empty((2, 20, 10), np.ubyte)]
+)
+def test_read_out_mask(path_rgb_byte_tif, out):
+    """Raise when out keyword arg has wrong shape."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with pytest.raises(ValueError):
+            src.read(indexes=[2], out=out)
