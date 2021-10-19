@@ -1336,7 +1336,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             options = convert_options(kwargs)
 
-            if CPLFetchBool(options, "APPEND_SUBDATASET", 0):
+            if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
                 log.debug("No deletion, subdataset will be added: path=%r", path)
             else:
                 _delete_dataset_if_exists(path)
@@ -1947,7 +1947,7 @@ cdef class InMemoryRaster:
         :param transform: Affine transform object
         """
         cdef int i = 0  # avoids Cython warning in for loop below
-        cdef const char *srcwkt = NULL
+        cdef char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
