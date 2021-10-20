@@ -140,6 +140,13 @@ IF CTE_GDAL_MAJOR_VERSION >= 3:
 ELSE:
     cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
+    cdef extern from "ogr_srs_api.h" nogil:
+
+        OGRErr OSRExportToPROJJSON(OGRSpatialReferenceH hSRS,
+                                   char ** ppszReturn,
+                                   const char* const* papszOptions)
+
 
 cdef extern from "gdal.h" nogil:
 

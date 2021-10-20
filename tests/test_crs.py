@@ -3,7 +3,6 @@
 import copy
 import json
 import logging
-import os
 import pickle
 import subprocess
 
@@ -22,6 +21,7 @@ from .conftest import (
     requires_gdal22,
     requires_gdal_lt_3,
     requires_gdal3,
+    requires_gdal31,
 )
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -391,6 +391,7 @@ def test_to_wkt__version_invalid():
     with pytest.raises(ValueError):
         CRS.from_epsg(4326).to_wkt(version="INVALID")
 
+
 @requires_gdal_lt_3
 def test_to_wkt__version__warning_gdal2():
     with pytest.warns(UserWarning):
@@ -705,3 +706,46 @@ def test_tmerc_no_match():
     s = "+proj=tmerc +lat_0=0 +lon_0=10.7584 +k=0.9996 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
     crs = CRS.from_string(s)
     assert crs.to_epsg() is None
+
+
+@requires_gdal31
+def test_crs_to_json_dict():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    json_dict = aeqd_crs.to_dict(projjson=True)
+    assert json_dict["type"] == "ProjectedCRS"
+
+
+@requires_gdal31
+def test_crs_to_json_dict__empty():
+    crs = CRS()
+    assert crs.to_dict(projjson=True) == {}
+
+
+@requires_gdal31
+def test_crs_from_json_dict():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_dict(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_from_json_dict__user_input():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_user_input(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_from_json_dict__init():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_proj_json__user_input():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_user_input(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
+
+
+@requires_gdal31
+def test_crs_proj_json__from_string():
+    aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
+    assert CRS.from_string(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
