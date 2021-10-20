@@ -9,7 +9,7 @@ Changes
 
 Bug fixes:
 
-- Enable unsafe casting for copyto in the merge tool (#2179).
+- Enable unsafe casting for copyto in the merge tool (#2265).
 
 1.3a2 (2021-10-19)
 ------------------
