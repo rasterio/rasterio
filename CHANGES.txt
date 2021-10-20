@@ -9,6 +9,8 @@ Changes
 
 New features:
 
+- The InMemoryRaster class in rasterio._io has been removed and replaced by a
+  more direct and efficient wrapper around numpy arrays (#2301).
 - Add support for PROJJSON based interchange for CRS (#2212).
   CRS.to_dict(projjson=True) returns a PROJJSON style dict and CRS.from_dict()
   will accept a PROJJSON style dict. PROJJSON text is accepted by

@@ -1434,7 +1434,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._descriptions = ()
         self._options = kwargs.copy()
 
-        if self.mode in ('r+', 'w', 'w+'):
+        if self.mode in ('w', 'w+'):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
@@ -1907,9 +1907,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
 cdef class MemoryDataset(DatasetWriterBase):
     def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
-        """
-        Dataset wrapped around in-memory array. This class is intended for internal use only
-        within rasterio to support IO with GDAL, where a Dataset object is needed.
+        """Dataset wrapped around in-memory array.
+
+        This class is intended for internal use only within rasterio to
+        support IO with GDAL, where a Dataset object is needed.
 
         MemoryDataset supports the NumPy array interface.
 
@@ -1919,19 +1920,21 @@ cdef class MemoryDataset(DatasetWriterBase):
             Array to use for dataset
         transform : Transform
             Dataset transform
-        gcps : list
-            Dataset ground control points
+        gcps : tuple
+            List of GroundControlPoints, a CRS
         rpcs : list
             Dataset rational polynomial coefficients
         crs : CRS
             Dataset coordinate reference system
         copy : bool, optional
-            Create an internal copy of the array.
-            If set to False, caller must make sure that arr is valid while this object lives.
+            Create an internal copy of the array. If set to False,
+            caller must make sure that arr is valid while this object
+            lives.
+
         """
         self._array = np.array(arr, copy=copy)
-
         dtype = self._array.dtype
+
         if self._array.ndim == 2:
             count = 1
             height, width = arr.shape
@@ -1941,15 +1944,27 @@ cdef class MemoryDataset(DatasetWriterBase):
             raise ValueError("arr must be 2D or 3D array")
 
         arr_info = self._array.__array_interface__
-        info = {"DATAPOINTER": arr_info["data"][0],
-                "PIXELS": width, "LINES": height,
-                "BANDS": count,
-                "DATATYPE": _gdal_typename(arr.dtype.name)}
+        info = {
+			"DATAPOINTER": arr_info["data"][0],
+            "PIXELS": width,
+            "LINES": height,
+            "BANDS": count,
+            "DATATYPE": _gdal_typename(arr.dtype.name)
+		}
         dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
-
         datasetname = f"MEM:::{dataset_options}"
-        super().__init__(parse_path(datasetname), 'r+', 
-                        transform=transform, crs=crs, gcps=gcps, rpcs=rpcs)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            super().__init__(parse_path(datasetname), "r+")
+            if crs is not None:
+                self.crs = crs
+            if transform is not None:
+                self.transform = transform
+            if gcps is not None and crs is not None:
+                self.gcps = (gcps, crs)
+            if rpcs is not None:
+                self.rpcs = rpcs
 
     def __array__(self):
         return self._array
