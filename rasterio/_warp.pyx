@@ -37,7 +37,7 @@ from libc.math cimport HUGE_VAL
 from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
-    DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
+    DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 
 
@@ -360,8 +360,8 @@ def _reproject(
             in_transform = in_transform.translation(eps, eps)
         return in_transform
 
-    cdef InMemoryRaster mem_raster = None
-    cdef InMemoryRaster src_mem = None
+    cdef MemoryDataset mem_raster = None
+    cdef MemoryDataset src_mem = None
 
     try:
 
@@ -381,11 +381,12 @@ def _reproject(
                 source = source.reshape(1, *source.shape)
             src_count = source.shape[0]
             src_bidx = range(1, src_count + 1)
-            src_mem = InMemoryRaster(image=source,
+            src_mem = MemoryDataset(source,
                                          transform=format_transform(src_transform),
                                          gcps=gcps,
                                          rpcs=rpcs,
-                                         crs=src_crs)
+                                         crs=src_crs, 
+                                         copy=True)
             src_dataset = src_mem.handle()
 
         # If the source is a rasterio MultiBand, no copy necessary.
@@ -429,7 +430,7 @@ def _reproject(
                     raise ValueError("Invalid destination shape")
                 dst_bidx = src_bidx
 
-            mem_raster = InMemoryRaster(image=destination, transform=format_transform(dst_transform), crs=dst_crs)
+            mem_raster = MemoryDataset(destination, transform=format_transform(dst_transform), crs=dst_crs)
             dst_dataset = mem_raster.handle()
 
             if dst_alpha:

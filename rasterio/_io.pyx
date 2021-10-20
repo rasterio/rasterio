@@ -25,7 +25,7 @@ from rasterio.errors import (
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
-from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype
+from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, UnparsedPath
@@ -1434,7 +1434,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._descriptions = ()
         self._options = kwargs.copy()
 
-        if self.mode in ('w', 'w+'):
+        if self.mode in ('r+', 'w', 'w+'):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
@@ -1904,208 +1904,55 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self.update_tags(ns='RPC', **rpcs)
         self._rpcs = None
 
-cdef class InMemoryRaster:
-    """
-    Class that manages a single-band in memory GDAL raster dataset.  Data type
-    is determined from the data type of the input numpy 2D array (image), and
-    must be one of the data types supported by GDAL
-    (see rasterio.dtypes.dtype_rev).  Data are populated at create time from
-    the 2D array passed in.
 
-    Use the 'with' pattern to instantiate this class for automatic closing
-    of the memory dataset.
-
-    This class includes attributes that are intended to be passed into GDAL
-    functions:
-    self.dataset
-    self.band
-    self.band_ids  (single element array with band ID of this dataset's band)
-    self.transform (GDAL compatible transform array)
-
-    This class is only intended for internal use within rasterio to support
-    IO with GDAL.  Other memory based operations should use numpy arrays.
-    """
-    def __cinit__(self):
-        self._hds = NULL
-        self.band_ids = NULL
-        self._image = None
-        self.crs = None
-        self.transform = None
-
-    def __init__(self, image=None, dtype='uint8', count=1, width=None,
-                  height=None, transform=None, gcps=None, rpcs=None, crs=None):
+cdef class MemoryDataset(DatasetWriterBase):
+    def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
         """
-        Create in-memory raster dataset, and fill its bands with the
-        arrays in image.
+        Dataset wrapped around in-memory array. This class is intended for internal use only
+        within rasterio to support IO with GDAL, where a Dataset object is needed.
 
-        An empty in-memory raster with no memory allocated to bands,
-        e.g. for use in _calculate_default_transform(), can be created
-        by passing dtype, count, width, and height instead.
+        MemoryDataset supports the NumPy array interface.
 
-        :param image: 2D numpy array.  Must be of supported data type
-        (see rasterio.dtypes.dtype_rev)
-        :param transform: Affine transform object
+        Parameters
+        ----------
+        arr : ndarray
+            Array to use for dataset
+        transform : Transform
+            Dataset transform
+        gcps : list
+            Dataset ground control points
+        rpcs : list
+            Dataset rational polynomial coefficients
+        crs : CRS
+            Dataset coordinate reference system
+        copy : bool, optional
+            Create an internal copy of the array.
+            If set to False, caller must make sure that arr is valid while this object lives.
         """
-        cdef int i = 0  # avoids Cython warning in for loop below
-        cdef char *srcwkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-        cdef GDALDriverH mdriver = NULL
-        cdef GDAL_GCP *gcplist = NULL
-        cdef char **options = NULL
-        cdef char **papszMD = NULL
+        self._array = np.array(arr, copy=copy)
 
-        if image is not None:
-            if image.ndim == 3:
-                count, height, width = image.shape
-            elif image.ndim == 2:
-                count = 1
-                height, width = image.shape
-            dtype = image.dtype.name
+        dtype = self._array.dtype
+        if self._array.ndim == 2:
+            count = 1
+            height, width = arr.shape
+        elif self._array.ndim == 3:
+            count, height, width = arr.shape
+        else:
+            raise ValueError("arr must be 2D or 3D array")
 
-        if height is None or height == 0:
-            raise ValueError("height must be > 0")
+        arr_info = self._array.__array_interface__
+        info = {"DATAPOINTER": arr_info["data"][0],
+                "PIXELS": width, "LINES": height,
+                "BANDS": count,
+                "DATATYPE": _gdal_typename(arr.dtype.name)}
+        dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
 
-        if width is None or width == 0:
-            raise ValueError("width must be > 0")
+        datasetname = f"MEM:::{dataset_options}"
+        super().__init__(parse_path(datasetname), 'r+', 
+                        transform=transform, crs=crs, gcps=gcps, rpcs=rpcs)
 
-        self.band_ids = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(1, count + 1):
-            self.band_ids[i-1] = i
-
-        try:
-            memdriver = exc_wrap_pointer(GDALGetDriverByName("MEM"))
-        except Exception:
-            raise DriverRegistrationError(
-                "'MEM' driver not found. Check that this call is contained "
-                "in a `with rasterio.Env()` or `with rasterio.open()` "
-                "block.")
-
-        if _getnpdtype(dtype) == _getnpdtype("int8"):
-            options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
-
-        datasetname = str(uuid4()).encode('utf-8')
-        self._hds = exc_wrap_pointer(
-            GDALCreate(memdriver, <const char *>datasetname, width, height,
-                       count, <GDALDataType>dtypes.dtype_rev[dtype], options))
-
-        if transform is not None:
-            self.transform = transform
-            gdal_transform = transform.to_gdal()
-            for i in range(6):
-                self.gdal_transform[i] = gdal_transform[i]
-            exc_wrap_int(GDALSetGeoTransform(self._hds, self.gdal_transform))
-            if crs:
-                osr = _osr_from_crs(crs)
-                try:
-                    OSRExportToWkt(osr, &srcwkt)
-                    exc_wrap_int(GDALSetProjection(self._hds, srcwkt))
-                    log.debug("Set CRS on temp dataset: %s", srcwkt)
-                finally:
-                    CPLFree(srcwkt)
-                    _safe_osr_release(osr)
-
-        elif gcps and crs:
-            try:
-                gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
-                for i, obj in enumerate(gcps):
-                    ident = str(i).encode('utf-8')
-                    info = "".encode('utf-8')
-                    gcplist[i].pszId = ident
-                    gcplist[i].pszInfo = info
-                    gcplist[i].dfGCPPixel = obj.col
-                    gcplist[i].dfGCPLine = obj.row
-                    gcplist[i].dfGCPX = obj.x
-                    gcplist[i].dfGCPY = obj.y
-                    gcplist[i].dfGCPZ = obj.z or 0.0
-
-                osr = _osr_from_crs(crs)
-                OSRExportToWkt(osr, &srcwkt)
-                exc_wrap_int(GDALSetGCPs(self._hds, len(gcps), gcplist, srcwkt))
-            finally:
-                CPLFree(gcplist)
-                CPLFree(srcwkt)
-                _safe_osr_release(osr)
-        elif rpcs:
-            try:
-                if hasattr(rpcs, 'to_gdal'):
-                    rpcs = rpcs.to_gdal()
-                for key, val in rpcs.items():
-                    key = key.upper().encode('utf-8')
-                    val = str(val).encode('utf-8')
-                    papszMD = CSLSetNameValue(
-                        papszMD, <const char *>key, <const char *>val)
-                exc_wrap_int(GDALSetMetadata(self._hds, papszMD, "RPC"))
-            finally:
-                CSLDestroy(papszMD)
-
-        if options != NULL:
-            CSLDestroy(options)
-
-        if image is not None:
-            self.write(image)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        self.close()
-
-    def __dealloc__(self):
-        if self.band_ids != NULL:
-            CPLFree(self.band_ids)
-            self.band_ids = NULL
-
-    cdef GDALDatasetH handle(self) except NULL:
-        """Return the object's GDAL dataset handle"""
-        return self._hds
-
-    cdef GDALRasterBandH band(self, int bidx) except NULL:
-        """Return a GDAL raster band handle"""
-        cdef GDALRasterBandH band = NULL
-
-        try:
-            band = exc_wrap_pointer(GDALGetRasterBand(self._hds, bidx))
-        except CPLE_IllegalArgError as exc:
-            raise IndexError(str(exc))
-
-        # Don't get here.
-        if band == NULL:
-            raise ValueError("NULL band")
-
-        return band
-
-    def close(self):
-        if self._hds != NULL:
-            GDALClose(self._hds)
-            self._hds = NULL
-
-    def read(self):
-
-        if self._image is None:
-            raise RasterioIOError("You need to write data before you can read the data.")
-
-        try:
-            if self._image.ndim == 2:
-                io_auto(self._image, self.band(1), False)
-            else:
-                io_auto(self._image, self._hds, False)
-
-        except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
-
-        return self._image
-
-    def write(self, np.ndarray image):
-        self._image = image
-
-        try:
-            if image.ndim == 2:
-                io_auto(self._image, self.band(1), True)
-            else:
-                io_auto(self._image, self._hds, True)
-
-        except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+    def __array__(self):
+        return self._array
 
 
 cdef class BufferedDatasetWriterBase(DatasetWriterBase):
