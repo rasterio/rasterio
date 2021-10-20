@@ -1920,7 +1920,7 @@ cdef class MemoryDataset(DatasetWriterBase):
             Array to use for dataset
         transform : Transform
             Dataset transform
-        gcps : tuple
+        gcps : list
             List of GroundControlPoints, a CRS
         rpcs : list
             Dataset rational polynomial coefficients
@@ -1945,12 +1945,12 @@ cdef class MemoryDataset(DatasetWriterBase):
 
         arr_info = self._array.__array_interface__
         info = {
-			"DATAPOINTER": arr_info["data"][0],
+            "DATAPOINTER": arr_info["data"][0],
             "PIXELS": width,
             "LINES": height,
             "BANDS": count,
             "DATATYPE": _gdal_typename(arr.dtype.name)
-		}
+        }
         dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
         datasetname = f"MEM:::{dataset_options}"
 
