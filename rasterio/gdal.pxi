@@ -148,6 +148,22 @@ IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
                                    const char* const* papszOptions)
 
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
+    cdef extern from "ogr_srs_api.h" nogil:
+
+        int OCTTransformBounds(
+            OGRCoordinateTransformationH hCT,
+            const double xmin,
+            const double ymin,
+            const double xmax,
+            const double ymax,
+            double* out_xmin,
+            double* out_ymin,
+            double* out_xmax,
+            double* out_ymax,
+            const int densify_pts )
+
+
 cdef extern from "gdal.h" nogil:
 
     ctypedef void * GDALMajorObjectH

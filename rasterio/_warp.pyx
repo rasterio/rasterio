@@ -1417,69 +1417,97 @@ def _transform_bounds(
     src_crs = CRS.from_user_input(src_crs)
     dst_crs = CRS.from_user_input(dst_crs)
 
-    if src_crs == dst_crs:
-        return (left, bottom, right, top)
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
+        cdef double out_left = np.inf
+        cdef double out_bottom = np.inf
+        cdef double out_right = np.inf
+        cdef double out_top = np.inf
+        cdef OGRSpatialReferenceH src = NULL
+        cdef OGRSpatialReferenceH dst = NULL
+        cdef OGRCoordinateTransformationH transform = NULL
+        src = _osr_from_crs(src_crs)
+        dst = _osr_from_crs(dst_crs)
+        transform = OCTNewCoordinateTransformation(src, dst)
+        transform = exc_wrap_pointer(transform)
+        # OCTTransformBounds() returns TRUE/FALSE contrary to most GDAL API functions
+        try:
+            exc_wrap_int(
+                OCTTransformBounds(
+                    transform,
+                    left, bottom, right, top,
+                    &out_left, &out_bottom, &out_right, &out_top,
+                    densify_pts
+                ) == 0
+            )
+        finally:
+            OCTDestroyCoordinateTransformation(transform)
+            _safe_osr_release(src)
+            _safe_osr_release(dst)
+        return out_left, out_bottom, out_right, out_top
+    ELSE:
+        if src_crs == dst_crs:
+            return (left, bottom, right, top)
 
-    if densify_pts < 0:
-        raise ValueError("densify_pts must be positive")
+        if densify_pts < 0:
+            raise ValueError("densify_pts must be positive")
 
-    cdef bint degree_output = dst_crs.is_geographic
-    cdef bint degree_input = src_crs.is_geographic
+        cdef bint degree_output = dst_crs.is_geographic
+        cdef bint degree_input = src_crs.is_geographic
 
-    if degree_output and densify_pts < 2:
-        raise ValueError("densify_pts must be 2+ for degree output")
+        if degree_output and densify_pts < 2:
+            raise ValueError("densify_pts must be 2+ for degree output")
 
-    cdef int side_pts = densify_pts + 1  # add one because we are densifying
-    cdef int boundary_len = side_pts * 4
-    x_boundary_array = np.empty(boundary_len, dtype=np.float64)
-    y_boundary_array = np.empty(boundary_len, dtype=np.float64)
-    cdef double delta_x = 0
-    cdef double delta_y = 0
-    cdef int iii = 0
+        cdef int side_pts = densify_pts + 1  # add one because we are densifying
+        cdef int boundary_len = side_pts * 4
+        x_boundary_array = np.empty(boundary_len, dtype=np.float64)
+        y_boundary_array = np.empty(boundary_len, dtype=np.float64)
+        cdef double delta_x = 0
+        cdef double delta_y = 0
+        cdef int iii = 0
 
-    if degree_input and right < left:
-        # handle antimeridian
-        delta_x = (right - left + 360.0) / side_pts
-    else:
-        delta_x = (right - left) / side_pts
-    if degree_input and top < bottom:
-        # handle antimeridian
-        # depending on the axis order, longitude has the potential
-        # to be on the y axis. It shouldn't reach here if it is latitude.
-        delta_y = (top - bottom + 360.0) / side_pts
-    else:
-        delta_y = (top - bottom) / side_pts
+        if degree_input and right < left:
+            # handle antimeridian
+            delta_x = (right - left + 360.0) / side_pts
+        else:
+            delta_x = (right - left) / side_pts
+        if degree_input and top < bottom:
+            # handle antimeridian
+            # depending on the axis order, longitude has the potential
+            # to be on the y axis. It shouldn't reach here if it is latitude.
+            delta_y = (top - bottom + 360.0) / side_pts
+        else:
+            delta_y = (top - bottom) / side_pts
 
-    # build densified bounding box
-    # Note: must be a linear ring for antimeridian logic
-    for iii in range(side_pts):
-        # left boundary
-        y_boundary_array[iii] = top - iii * delta_y
-        x_boundary_array[iii] = left
-        # bottom boundary
-        y_boundary_array[iii + side_pts] = bottom
-        x_boundary_array[iii + side_pts] = left + iii * delta_x
-        # right boundary
-        y_boundary_array[iii + side_pts * 2] = bottom + iii * delta_y
-        x_boundary_array[iii + side_pts * 2] = right
-        # top boundary
-        y_boundary_array[iii + side_pts * 3] = top
-        x_boundary_array[iii + side_pts * 3] = right - iii * delta_x
+        # build densified bounding box
+        # Note: must be a linear ring for antimeridian logic
+        for iii in range(side_pts):
+            # left boundary
+            y_boundary_array[iii] = top - iii * delta_y
+            x_boundary_array[iii] = left
+            # bottom boundary
+            y_boundary_array[iii + side_pts] = bottom
+            x_boundary_array[iii + side_pts] = left + iii * delta_x
+            # right boundary
+            y_boundary_array[iii + side_pts * 2] = bottom + iii * delta_y
+            x_boundary_array[iii + side_pts * 2] = right
+            # top boundary
+            y_boundary_array[iii + side_pts * 3] = top
+            x_boundary_array[iii + side_pts * 3] = right - iii * delta_x
 
-    x_boundary_array, y_boundary_array = _transform(
-        src_crs, dst_crs, x_boundary_array, y_boundary_array, None,
-    )
+        x_boundary_array, y_boundary_array = _transform(
+            src_crs, dst_crs, x_boundary_array, y_boundary_array, None,
+        )
 
-    if degree_output:
-        left = antimeridian_min(x_boundary_array)
-        right = antimeridian_max(x_boundary_array)
-    else:
-        x_boundary_array = np.ma.masked_invalid(x_boundary_array, copy=False)
-        left = x_boundary_array.min()
-        right = x_boundary_array.max()
+        if degree_output:
+            left = antimeridian_min(x_boundary_array)
+            right = antimeridian_max(x_boundary_array)
+        else:
+            x_boundary_array = np.ma.masked_invalid(x_boundary_array, copy=False)
+            left = x_boundary_array.min()
+            right = x_boundary_array.max()
 
-    y_boundary_array = np.ma.masked_invalid(y_boundary_array, copy=False)
-    bottom = y_boundary_array.min()
-    top = y_boundary_array.max()
+        y_boundary_array = np.ma.masked_invalid(y_boundary_array, copy=False)
+        bottom = y_boundary_array.min()
+        top = y_boundary_array.max()
 
-    return left, bottom, right, top
+        return left, bottom, right, top
