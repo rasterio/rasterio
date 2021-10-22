@@ -19,7 +19,7 @@ with rasterio._loading.add_gdal_dll_directories():
 # Methods like `rasterio.open()` may use this blacklist to preempt
 # combinations of drivers and file modes.
 blacklist = {
-    # See https://github.com/mapbox/rasterio/issues/638 for discussion
+    # See https://github.com/rasterio/rasterio/issues/638 for discussion
     # about writing NetCDF files.
     'netCDF': ('r+', 'w')}
 

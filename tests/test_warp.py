@@ -1446,7 +1446,7 @@ def test_resample_no_invert_proj(method):
     ):
         pytest.xfail(
             reason="Some resampling methods succeed but produce blank images. "
-            "See https://github.com/mapbox/rasterio/issues/614"
+            "See https://github.com/rasterio/rasterio/issues/614"
         )
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):

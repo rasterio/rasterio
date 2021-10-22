@@ -694,7 +694,7 @@ To use these plugins with rio, add the commands to the
 and in ``rasterio/rio/main.py``.
 
 See the
-`plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
+`plugin registry <https://github.com/rasterio/rasterio/wiki/Rio-plugin-registry>`__
 for a list of available plugins.
 
 

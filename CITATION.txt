@@ -6,5 +6,5 @@ below:
   organization = {Mapbox},
   title =     {Rasterio: geospatial raster I/O for {Python} programmers},
   year =      {2013--},
-  url = "https://github.com/mapbox/rasterio"
+  url = "https://github.com/rasterio/rasterio"
 }

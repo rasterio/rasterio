@@ -89,7 +89,7 @@ def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
     """Test setting with all color interpretations."""
 
     if ci.value == 1:
-        pytest.xfail("Setting colorinterp to gray fails with GDAL 2.3, see https://github.com/mapbox/rasterio/issues/1234")
+        pytest.xfail("Setting colorinterp to gray fails with GDAL 2.3, see https://github.com/rasterio/rasterio/issues/1234")
 
     with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
         all_ci = list(src.colorinterp)
