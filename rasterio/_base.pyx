@@ -119,7 +119,7 @@ def driver_can_create_copy(drivername):
 
 def _raster_driver_extensions():
     """
-    Logic based on: https://github.com/mapbox/rasterio/issues/265#issuecomment-367044836
+    Logic based on: https://github.com/rasterio/rasterio/issues/265#issuecomment-367044836
     """
     cdef int iii = 0
     cdef int driver_count = GDALGetDriverCount()

@@ -16,13 +16,13 @@ Issue Conventions
 
 The Rasterio issue tracker is for actionable issues.
 
-Questions about installation, distribution, and usage should be taken to 
+Questions about installation, distribution, and usage should be taken to
 the project's `general discussion group
 <https://rasterio.groups.io/g/main>`__. Opened issues which fall into one
 of these three categories may be perfunctorily closed.
 
 Questions about development of Rasterio, brainstorming, requests for comment,
-and not-yet-actionable proposals are welcome in the project's 
+and not-yet-actionable proposals are welcome in the project's
 `developers discussion group <https://rasterio.groups.io/g/dev>`__. Issues
 opened in Rasterio's GitHub repo which haven't been socialized there may be
 perfunctorily closed.
@@ -69,7 +69,7 @@ is *dataset object*. A dataset object might be an instance of `DatasetReader`
 or `DatasetWriter`. The canonical way to create a dataset object is by using the
 `rasterio.open()` function.
 
-This is analogous to Python's use of 
+This is analogous to Python's use of
 `file object <https://docs.python.org/3/glossary.html#term-file-object>`__.
 
 Git Conventions
@@ -104,7 +104,7 @@ Tests are mandatory for new code. We use `pytest <https://pytest.org>`__. Use
 pytest's parameterization feature.
 
 We aspire to 100% coverage for Python modules but coverage of the Cython code is
-a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
+a future aspiration (`#515 <https://github.com/rasterio/rasterio/issues/515>`__).
 
 Use `darker <https://pypi.org/project/darker/>`_ to reformat code as you change it.
 We aren't going to run black on everything all at once.
@@ -132,7 +132,7 @@ First, clone Rasterio's ``git`` repo:
 
 .. code-block:: console
 
-    $ git clone https://github.com/mapbox/rasterio
+    $ git clone https://github.com/rasterio/rasterio
 
 Development should occur within a `virtual environment
 <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__ to better isolate

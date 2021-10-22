@@ -496,7 +496,7 @@ def test_rasterize_geo_interface(geojson_polygon, basic_image_2x2):
 def test_rasterize_geomcollection_no_hole():
     """
     Make sure that bug reported in
-    https://github.com/mapbox/rasterio/issues/1253
+    https://github.com/rasterio/rasterio/issues/1253
     does not recur.  GeometryCollections are flattened to individual parts,
     and should result in no holes where parts overlap.
     """
@@ -519,7 +519,7 @@ def test_rasterize_geomcollection_no_hole():
 def test_rasterize_multipolygon_no_hole():
     """
     Make sure that bug reported in
-    https://github.com/mapbox/rasterio/issues/1253
+    https://github.com/rasterio/rasterio/issues/1253
     does not recur.  MultiPolygons are flattened to individual parts,
     and should result in no holes where parts overlap.
     """

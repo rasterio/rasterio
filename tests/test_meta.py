@@ -14,7 +14,7 @@ def test_copy_meta(tmpdir):
 def test_blacklisted_keys(tmpdir):
     # Some keys were removed from .meta when they were found to clash with
     # creation options.
-    # https://github.com/mapbox/rasterio/issues/402
+    # https://github.com/rasterio/rasterio/issues/402
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         kwds = src.meta
     with rasterio.open(

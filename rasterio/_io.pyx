@@ -1057,7 +1057,7 @@ cdef class DatasetReaderBase(DatasetBase):
             those indexes.
 
         """
-        # In https://github.com/mapbox/rasterio/issues/378 a user has
+        # In https://github.com/rasterio/rasterio/issues/378 a user has
         # found what looks to be a Cython generator bug. Until that can
         # be confirmed and fixed, the workaround is a pure Python
         # generator implemented in sample.py.

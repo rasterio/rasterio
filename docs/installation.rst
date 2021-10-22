@@ -20,7 +20,7 @@ OS X
 ****
 
 Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
-for OS X versions 10.7+ starting with Rasterio version 0.17. To install, 
+for OS X versions 10.7+ starting with Rasterio version 0.17. To install,
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
 a source distribution, run ``pip install rasterio --no-binary`` instead.
@@ -45,7 +45,7 @@ this from the downloads folder:
 
 .. code-block:: console
 
-    $ pip install -U pip 
+    $ pip install -U pip
     $ pip install GDAL-1.11.2-cp27-none-win32.whl
     $ pip install rasterio-0.24.0-cp27-none-win32.whl
 
@@ -56,7 +56,7 @@ Installing with Anaconda
 To install rasterio on the Anaconda Python distribution, please visit the
 `rasterio conda-forge`_ page for install instructions. This build is maintained
 separately from the rasterio distribution on PyPi and packaging issues should
-be addressed on the `rasterio conda-forge`_ issue tracker. 
+be addressed on the `rasterio conda-forge`_ issue tracker.
 
 Installing from the source distribution
 ---------------------------------------
@@ -66,7 +66,7 @@ Rasterio is a Python C extension and to build you'll need a working compiler
 required to run the rasterio setup script. Numpy has to be installed (via the
 indicated requirements file) before rasterio can be installed. See rasterio's
 Travis `configuration
-<https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
+<https://github.com/rasterio/rasterio/blob/master/.travis.yml>`__ for more
 guidance.
 
 Linux
@@ -118,10 +118,10 @@ With pip
     $ pip install --no-use-pep517 --global-option -I<path to gdal include files> -lgdal_i -L<path to gdal library> .
 
 Note: :code:`--no-use-pep517` is required as pip currently hasn't implemented a
-way for optional arguments to be passed to the build backend when using PEP 517. 
+way for optional arguments to be passed to the build backend when using PEP 517.
 See  `here <https://github.com/pypa/pip/issues/5771>`__. for more details.
 
-Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point 
+Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point
 to include directories and library files.
 
 We have had success compiling code using the same version of Microsoft's

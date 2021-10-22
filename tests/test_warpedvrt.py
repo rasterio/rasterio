@@ -285,7 +285,7 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
 
     Permalink to ``GDALCreateWarpedVRT()`` call:
 
-        https://github.com/mapbox/rasterio/blob/1f759e5f67628f163ea2550d8926b91545245712/rasterio/_warp.pyx#L753
+        https://github.com/rasterio/rasterio/blob/1f759e5f67628f163ea2550d8926b91545245712/rasterio/_warp.pyx#L753
 
     """
 
@@ -536,7 +536,7 @@ def test_out_dtype(red_green):
 
 
 def test_sample(red_green):
-    """See https://github.com/mapbox/rasterio/issues/1833."""
+    """See https://github.com/rasterio/rasterio/issues/1833."""
     with rasterio.Env():
         with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
             src,
