@@ -6,16 +6,22 @@ from inspect import getfullargspec as getargspec
 import logging
 import os
 import re
+import sys
 import threading
 import warnings
 
 import rasterio._loading
+
 with rasterio._loading.add_gdal_dll_directories():
     from rasterio._env import (
-            GDALEnv, get_gdal_config, set_gdal_config,
-            GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
-    from rasterio.errors import (
-        EnvError, GDALVersionError, RasterioDeprecationWarning)
+        GDALEnv,
+        get_gdal_config,
+        set_gdal_config,
+        GDALDataFinder,
+        PROJDataFinder,
+        set_proj_data_search_path
+    )
+    from rasterio.errors import EnvError, GDALVersionError, RasterioDeprecationWarning
     from rasterio.session import Session, DummySession
 
 
@@ -52,6 +58,12 @@ class ThreadEnv(threading.local):
 local = ThreadEnv()
 
 log = logging.getLogger(__name__)
+
+_is_gdal_initialized_in_any_thread = False
+"""
+This is used to check if forking is still considered to be safe.
+Whenever GDALAllRegister is called in any thread, we do not allow fork and raise an error to prevent deadlocks.
+"""
 
 
 class Env:
@@ -303,6 +315,8 @@ class Env:
 
 def defenv(**options):
     """Create a default environment if necessary."""
+    global _is_gdal_initialized_in_any_thread
+
     if local._env:
         log.debug("GDAL environment exists: %r", local._env)
     else:
@@ -311,6 +325,7 @@ def defenv(**options):
         local._env.update_config_options(**options)
         log.debug(
             "New GDAL environment %r created", local._env)
+    _is_gdal_initialized_in_any_thread = True
     local._env.start()
 
 
@@ -337,7 +352,10 @@ def setenv(**options):
 
 def hascreds():
     warnings.warn("Please use Env.session.hascreds() instead", RasterioDeprecationWarning)
-    return local._env is not None and all(key in local._env.get_config_options() for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
+    return local._env is not None and all(
+        key in local._env.get_config_options()
+        for key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+    )
 
 
 def delenv():
@@ -380,6 +398,7 @@ def env_ctx_if_needed():
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
+
     @wraps(f)
     def wrapper(*args, **kwds):
         if local._env:
@@ -387,6 +406,7 @@ def ensure_env(f):
         else:
             with Env.from_defaults():
                 return f(*args, **kwds)
+
     return wrapper
 
 
@@ -415,6 +435,7 @@ def ensure_env_with_credentials(f):
     scheme "s3".
 
     """
+
     @wraps(f)
     def wrapper(*args, **kwds):
         if local._env:
@@ -663,3 +684,27 @@ else:
     if path:
         log.debug("PROJ data found in other locations: path=%r.", path)
         set_proj_data_search_path(path)
+
+
+def _check_if_gdal_is_initialized_before_fork():
+    if _is_gdal_initialized_in_any_thread:
+        message = """Using fork after GDAL has been initialized can lead to deadlocks due to the internal thread pool!
+
+Use `spawn` instead of `fork` if you need to do start processes after using rasterio.
+
+With the multiprocessing library, you can tell it to not use fork by calling 
+`multiprocessing.set_start_method('spawn').
+See https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+"""
+        # Since any errors raised here are actually ignored by CPython, try to get the message to the user.
+        log.error(message)
+        sys.stderr.write(message)
+        sys.stderr.flush()
+        # In case CPython will stop ignoring exceptions here in the future.
+        raise RuntimeError(
+            message
+        )
+
+
+if sys.version_info >= (3, 7) and sys.platform != "win32":
+    os.register_at_fork(before=_check_if_gdal_is_initialized_before_fork)

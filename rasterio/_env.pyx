@@ -63,6 +63,13 @@ except ImportError:
 cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 
+cdef bint is_gdal_initialized_in_any_thread = False
+"""
+This is used to check if forking is still considered to be safe.
+Whenever GDALAllRegister is called in any thread, we do not allow fork and raise an error to prevent deadlocks.
+"""
+
+
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
     """Send CPL debug messages and warnings to Python's logger."""
     log = logging.getLogger(__name__)
@@ -341,7 +348,9 @@ cdef class GDALEnv(ConfigEnv):
         if not self._have_registered_drivers:
             with threading.Lock():
                 if not self._have_registered_drivers:
-
+                    # We are setting this as a flag to mark the fact that forking is no longer safe
+                    # and we should now raise an error when fork is called.
+                    is_gdal_initialized_in_any_thread = True
                     GDALAllRegister()
                     OGRRegisterAll()
 
