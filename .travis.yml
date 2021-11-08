@@ -35,13 +35,21 @@ jobs:
         PROJVERSION="7.2.1"
     - python: "3.8"
       env:
-        GDALVERSION="3.3.2"
+        GDALVERSION="3.3.3"
         PROJVERSION="8.0.1"
     - python: "3.9"
       env:
-        GDALVERSION="3.3.2"
+        GDALVERSION="3.3.3"
         PROJVERSION="8.1.1"
     - python: "3.9"
+      env:
+        GDALVERSION="3.4.0"
+        PROJVERSION="8.1.1"
+    - python: "3.10"
+      env:
+        GDALVERSION="3.4.0"
+        PROJVERSION="8.1.1"
+    - python: "3.10"
       env:
         GDALVERSION="master"
         PROJVERSION="8.1.1"
