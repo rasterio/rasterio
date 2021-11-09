@@ -26,3 +26,9 @@ docs:
 
 doctest:
 	py.test --doctest-modules rasterio --doctest-glob='*.rst' docs/*.rst
+
+dockertestimage:
+	docker build --build-arg GDAL=$(GDAL) --target gdal -t rasterio:$(GDAL) .
+
+dockertest: dockertestimage
+	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
