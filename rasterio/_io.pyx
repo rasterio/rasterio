@@ -51,7 +51,7 @@ gdal33_version_met = False
 
 
 def validate_resampling(resampling):
-    """Validate that the resampling method is compatible of reads/writes"""
+    """Validate that the resampling method is compatible of reads/writes."""
 
     if resampling == Resampling.rms:
         global gdal33_version_checked

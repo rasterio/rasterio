@@ -55,7 +55,7 @@ cdef const char *get_driver_name(GDALDriverH driver):
 
 
 def get_dataset_driver(path):
-    """Return the name of the driver that opens a dataset
+    """Get the name of the driver that opens a dataset.
 
     Parameters
     ----------
@@ -65,6 +65,7 @@ def get_dataset_driver(path):
     Returns
     -------
     str
+
     """
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
