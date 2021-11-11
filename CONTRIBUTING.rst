@@ -70,7 +70,7 @@ Dataset Objects
 Our term for the kind of object that allows read and write access to raster data
 is *dataset object*. A dataset object might be an instance of `DatasetReader`
 or `DatasetWriter`. The canonical way to create a dataset object is by using the
-`rasterio.open()` function.
+``rasterio.open()`` function.
 
 This is analogous to Python's use of
 `file object <https://docs.python.org/3/glossary.html#term-file-object>`__.
@@ -80,14 +80,14 @@ Path Objects
 
 A *path object* specifies the name and address of a dataset within some space
 (filesystem, internet, cloud) along with optional parameters. The first
-positional argument of `rasterio.open()` is a path. Some path objects also have
+positional argument of ``rasterio.open()`` is a path. Some path objects also have
 an *open* method which can used used to create a dataset object.
 
 Band Objects
 ------------
 
 Unlike GDAL's original original data model, rasterio has no band objects. In
-this way it's more like GDAL's multi-dimensional API. A dataset's `read()`
+this way it's more like GDAL's multi-dimensional API. A dataset's ``read()``
 method returns N-D arrays.
 
 GDAL Context
