@@ -17,9 +17,9 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
     try:
-        from rasterio._pyvsi import FilePathBase
+        from rasterio._filepath import FilePathBase
     except ImportError:
-        PyVSIFileBase = object
+        FilePathBase = object
 
 
 log = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ This plugin currently only defines the "open" callback. The other features are
 either not needed or have usable default implementations.
 
 The entire filesystem's state is stored in a global dictionary mapping
-in-memory GDAL filenames to :class:`~rasterio._pyvsi.FilePathBase` objects.
+in-memory GDAL filenames to :class:`~rasterio._filepath.FilePathBase` objects.
 
 File Handling
 *************
@@ -72,42 +72,42 @@ cdef _FILESYSTEM_INFO = {}
 
 ## Filesystem Functions
 
-# cdef int pyvsi_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) with gil:
+# cdef int filepath_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) with gil:
 #     # Optional
 #     printf("stat\n")
 #
 #
-# cdef int pyvsi_unlink(void *pUserData, const char *pszFilename) with gil:
+# cdef int filepath_unlink(void *pUserData, const char *pszFilename) with gil:
 #     # Optional
 #     printf("unlink\n")
 #
 #
-# cdef int pyvsi_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
+# cdef int filepath_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
 #     # Optional
 #     printf("rename\n")
 #
 #
-# cdef int pyvsi_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
+# cdef int filepath_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
 #     # Optional
 #     printf("mkdir\n")
 #
 #
-# cdef int pyvsi_rmdir(void *pUserData, const char *pszDirname) with gil:
+# cdef int filepath_rmdir(void *pUserData, const char *pszDirname) with gil:
 #     # Optional
 #     printf("rmdir\n")
 #
 #
-# cdef char** pyvsi_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
+# cdef char** filepath_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
 #     # Optional
 #     printf("read_dir\n")
 #
 #
-# cdef char** pyvsi_siblings_files(void *pUserData, const char *pszDirname) with gil:
+# cdef char** filepath_siblings_files(void *pUserData, const char *pszDirname) with gil:
 #     # Optional (GDAL 3.2+)
 #     printf("siblings_files\n")
 
 
-cdef void* pyvsi_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
+cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
     """Access existing open file-like object in the virtual filesystem.
     
     This function is mandatory in the GDAL Filesystem Plugin API.
@@ -138,14 +138,14 @@ cdef void* pyvsi_open(void *pUserData, const char *pszFilename, const char *pszA
 ## File functions
 
 
-cdef vsi_l_offset pyvsi_tell(void *pFile) with gil:
+cdef vsi_l_offset filepath_tell(void *pFile) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     cdef int pos = file_obj.tell()
     return <vsi_l_offset>pos
 
 
-cdef int pyvsi_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
+cdef int filepath_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     # TODO: Add "seekable" check?
@@ -153,7 +153,7 @@ cdef int pyvsi_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 wi
     return 0
 
 
-cdef size_t pyvsi_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
+cdef size_t filepath_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
     cdef bytes python_data = file_obj.read(nSize * nCount)
@@ -163,42 +163,42 @@ cdef size_t pyvsi_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) 
     return <size_t>(num_bytes / nSize)
 
 
-# cdef int pyvsi_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
+# cdef int filepath_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
 #     # Optional
 #     print("read_multi_range")
 #
 #
-# cdef VSIRangeStatus pyvsi_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
+# cdef VSIRangeStatus filepath_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
 #     # Optional
 #     print("get_range_status")
 #
 #
-# cdef int pyvsi_eof(void *pFile) with gil:
+# cdef int filepath_eof(void *pFile) with gil:
 #     # Mandatory?
 #     print("eof")
 #
 #
-# cdef size_t pyvsi_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
+# cdef size_t filepath_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
 #     print("write")
 #
 #
-# cdef int pyvsi_flush(void *pFile) with gil:
+# cdef int filepath_flush(void *pFile) with gil:
 #     # Optional
 #     print("flush")
 #
 #
-# cdef int pyvsi_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
+# cdef int filepath_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
 #     print("truncate")
 
 
-cdef int pyvsi_close(void *pFile) except -1 with gil:
+cdef int filepath_close(void *pFile) except -1 with gil:
     # Optional
     cdef object file_wrapper = <object>pFile
-    del _FILESYSTEM_INFO[file_wrapper._pyvsi_path]
+    del _FILESYSTEM_INFO[file_wrapper._filepath_path]
     return 0
 
 
-cdef int install_rasterio_pyvsi_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
+cdef int install_rasterio_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
     """Install handlers for python file-like objects if it isn't already installed."""
     cdef int install_status
     if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
@@ -216,13 +216,13 @@ cdef class FilePathBase:
     def __cinit__(self, file_or_bytes, *args, **kwargs):
         self._vsif = VSIAllocFilesystemPluginCallbacksStruct()
         # pUserData will be set later
-        self._vsif.open = <VSIFilesystemPluginOpenCallback>pyvsi_open
+        self._vsif.open = <VSIFilesystemPluginOpenCallback>filepath_open
 
-        self._vsif.tell = <VSIFilesystemPluginTellCallback>pyvsi_tell
-        self._vsif.seek = <VSIFilesystemPluginSeekCallback>pyvsi_seek
-        self._vsif.read = <VSIFilesystemPluginReadCallback>pyvsi_read
-        # self._vsif.eof = <VSIFilesystemPluginEofCallback>pyvsi_eof
-        self._vsif.close = <VSIFilesystemPluginCloseCallback>pyvsi_close
+        self._vsif.tell = <VSIFilesystemPluginTellCallback>filepath_tell
+        self._vsif.seek = <VSIFilesystemPluginSeekCallback>filepath_seek
+        self._vsif.read = <VSIFilesystemPluginReadCallback>filepath_read
+        # self._vsif.eof = <VSIFilesystemPluginEofCallback>filepath_eof
+        self._vsif.close = <VSIFilesystemPluginCloseCallback>filepath_close
 
     def __dealloc__(self):
         if self._vsif is not NULL:
@@ -257,15 +257,15 @@ cdef class FilePathBase:
             self.name = "{0}{1}/{1}".format(FILESYSTEM_PREFIX, self._dirname)
 
         self._path = self.name.encode('utf-8')
-        self._pyvsi_path = self._path[len(FILESYSTEM_PREFIX):]
+        self._filepath_path = self._path[len(FILESYSTEM_PREFIX):]
         self._file_obj = filelike_obj
         self.mode = "r"
         self.closed = False
 
         # TODO: Error checking
-        _FILESYSTEM_INFO[self._pyvsi_path] = self
+        _FILESYSTEM_INFO[self._filepath_path] = self
         self._vsif.pUserData = <void*>_FILESYSTEM_INFO
-        install_rasterio_pyvsi_plugin(self._vsif)
+        install_rasterio_filepath_plugin(self._vsif)
 
     def exists(self):
         """Test if the in-memory file exists.

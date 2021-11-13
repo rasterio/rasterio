@@ -247,7 +247,7 @@ if "clean" not in sys.argv:
         # VSI Plugins are only 3.0+
         extensions.append(
             Extension(
-                'rasterio._pyvsi', ['rasterio/_pyvsi.pyx'], **cpp_ext_options))
+                'rasterio._filepath', ['rasterio/_filepath.pyx'], **cpp_ext_options))
     ext_modules = cythonize(
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options)
 
