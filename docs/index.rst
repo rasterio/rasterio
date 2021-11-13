@@ -49,7 +49,7 @@ Rasterio supports Python versions 3.6 or higher.
    quickstart
    cli
    topics/index
-   api/index
+   Rasterio API Reference <api/modules>
    contributing
    faq
 

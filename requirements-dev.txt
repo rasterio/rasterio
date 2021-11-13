@@ -4,6 +4,7 @@
 cython~=0.29
 delocate
 hypothesis
+mypy
 numpydoc
 packaging
 pytest

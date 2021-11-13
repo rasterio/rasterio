@@ -38,3 +38,6 @@ dockersdist: dockertestimage
 
 dockergdb: dockertestimage
 	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py develop && gdb -ex=r --args /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
+
+dockerdocs: dockertestimage
+	docker run -it -v $(shell pwd):/app --entrypoint=/bin/bash rasterio:$(GDAL) -c 'source /venv/bin/activate && python setup.py develop && cd docs && make clean && make apidocs && make html'
