@@ -116,11 +116,11 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
     cdef object file_wrapper
 
     if pszAccess != b"r" and pszAccess != b"rb":
-        log.error("PyVSI is currently a read-only interface.")
+        log.error("FilePath is currently a read-only interface.")
         return NULL
 
     if pUserData is NULL:
-        log.error("PyVSI filesystem accessed with uninitialized filesystem info.")
+        log.error("FilePath filesystem accessed with uninitialized filesystem info.")
         return NULL
     cdef dict filesystem_info = <object>pUserData
 
@@ -131,7 +131,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
         return NULL
 
     if not hasattr(file_wrapper, "_file_obj"):
-        log.error("Unexpected file object found in PyVSI filesystem.")
+        log.error("Unexpected file object found in FilePath filesystem.")
         return NULL
     return <void *>file_wrapper
 
@@ -202,7 +202,7 @@ cdef int install_rasterio_filepath_plugin(VSIFilesystemPluginCallbacksStruct *ca
     """Install handlers for python file-like objects if it isn't already installed."""
     cdef int install_status
     if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
-        log.debug("Installing PyVSI filesystem handler plugin...")
+        log.debug("Installing FilePath filesystem handler plugin...")
         install_status = VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
         return install_status
     return 0
@@ -243,7 +243,7 @@ cdef class FilePathBase:
 
         """
         if isinstance(filelike_obj, (bytes, str)) or not hasattr(filelike_obj, "read"):
-            raise TypeError("PyVSIFile expects file-like objects only.")
+            raise TypeError("FilePath expects file-like objects only.")
 
         # Make an in-memory directory specific to this dataset to help organize
         # auxiliary files.
