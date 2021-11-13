@@ -83,21 +83,6 @@ def test_closed(rgb_file_object):
         vsifile.open()
 
 
-def test_read(tmpdir, rgb_file_object):
-    """Reading from a FilePath works"""
-    with FilePath(rgb_file_object) as vsifile:
-        tmptiff = tmpdir.join('test.tif')
-
-        while 1:
-            chunk = vsifile.read(8192)
-            if not chunk:
-                break
-            tmptiff.write(chunk, 'ab')
-
-    with rasterio.open(str(tmptiff)) as src:
-        assert src.count == 3
-
-
 def test_file_object_read(rgb_file_object):
     """An example of reading from a file object"""
     with rasterio.open(rgb_file_object) as src:
