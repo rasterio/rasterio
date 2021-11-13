@@ -41,6 +41,12 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.enums
     import rasterio.path
 
+    try:
+        from rasterio.io import FilePath
+        have_vsi_plugin = True
+    except ImportError:
+        have_vsi_plugin = False
+
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.3a2"
 __gdal_version__ = gdal_version()
@@ -179,13 +185,16 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            memfile = MemoryFile(fp.read())
-            dataset = memfile.open(driver=driver, sharing=sharing)
+            if have_vsi_plugin:
+                vsi_file = FilePath(fp)
+            else:
+                vsi_file = MemoryFile(fp.read())
+            dataset = vsi_file.open(driver=driver, sharing=sharing)
             try:
                 yield dataset
             finally:
                 dataset.close()
-                memfile.close()
+                vsi_file.close()
 
         return fp_reader(fp)
 

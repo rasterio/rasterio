@@ -16,6 +16,10 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import ensure_env, env_ctx_if_needed
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
+    try:
+        from rasterio._filepath import FilePathBase
+    except ImportError:
+        FilePathBase = object
 
 
 log = logging.getLogger(__name__)
@@ -146,6 +150,90 @@ class MemoryFile(MemoryFileBase):
     def __exit__(self, *args, **kwargs):
         self.close()
         self._env.__exit__()
+
+
+class _FilePath(FilePathBase):
+    """A BytesIO-like object, backed by an in-memory file.
+
+    This allows formatted files to be read and written without I/O.
+
+    A MemoryFile created with initial bytes becomes immutable. A
+    MemoryFile created without initial bytes may be written to using
+    either file-like or dataset interfaces.
+
+    Examples
+    --------
+
+    A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+    format driver
+
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, FilePath(f) as vsi_file:
+    ...     with vsi_file.open() as src:
+    ...         pprint.pprint(src.profile)
+    ...
+    {'count': 3,
+     'crs': CRS({'init': 'epsg:32618'}),
+     'driver': 'GTiff',
+     'dtype': 'uint8',
+     'height': 718,
+     'interleave': 'pixel',
+     'nodata': 0.0,
+     'tiled': False,
+     'transform': Affine(300.0379266750948, 0.0, 101985.0,
+           0.0, -300.041782729805, 2826915.0),
+     'width': 791}
+
+    """
+
+    def __init__(self, filelike_obj, dirname=None, filename=None):
+        """Create a new wrapper around the provided file-like object.
+
+        Parameters
+        ----------
+        filelike_obj : file-like object
+            Open file-like object. Currently only reading is supported.
+        filename : str, optional
+            An optional filename. A unique one will otherwise be generated.
+
+        Returns
+        -------
+        PythonVSIFile
+        """
+        super().__init__(
+            filelike_obj, dirname=dirname, filename=filename
+        )
+
+    @ensure_env
+    def open(self, driver=None, sharing=False, **kwargs):
+        """Open the file and return a Rasterio dataset object.
+
+        The provided file-like object is assumed to be readable.
+        Writing is currently not supported.
+
+        Parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
+        """
+        mempath = UnparsedPath(self.name)
+
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+        # Assume we were given a non-empty file-like object
+        log.debug("VSI path: {}".format(mempath.path))
+        return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+
+    def __enter__(self):
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
+        self._env.__exit__()
+
+
+if FilePathBase is not object:
+    # only make this object available if the cython extension was compiled
+    FilePath = _FilePath
 
 
 class ZipMemoryFile(MemoryFile):

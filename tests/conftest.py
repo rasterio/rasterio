@@ -470,13 +470,25 @@ def gdalenv(request):
 @pytest.fixture(scope='session')
 def data_dir():
     """Absolute file path to the directory containing test datasets."""
-    return os.path.abspath(os.path.join('tests', 'data'))
+    root = os.path.join(os.path.dirname(__file__), '..')
+    return os.path.abspath(os.path.join(root, 'tests', 'data'))
 
 
 @pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
     """The original RGB test fixture with no sidecar files"""
     return os.path.join(data_dir, 'RGB.byte.tif')
+
+
+@pytest.fixture(scope='session')
+def path_rgb_lzw_byte_tif(data_dir):
+    """The original RGB test fixture with LZW compression."""
+    return os.path.join(data_dir, 'rgb_lzw.tif')
+
+
+@pytest.fixture(scope='session')
+def path_rgb_byte_rpc_vrt(data_dir):
+    return os.path.join(data_dir, 'RGB.byte.rpc.vrt')
 
 
 @pytest.fixture(scope='session')
@@ -494,6 +506,11 @@ def path_rgb_msk_byte_tif(data_dir):
 @pytest.fixture(scope='session')
 def path_cogeo_tif(data_dir):
     return os.path.join(data_dir, 'cogeo.tif')
+
+
+@pytest.fixture(scope='session')
+def path_white_gemini_iv_vrt(data_dir):
+    return os.path.join(data_dir, 'white-gemini-iv.vrt')
 
 
 @pytest.fixture(scope='function')
