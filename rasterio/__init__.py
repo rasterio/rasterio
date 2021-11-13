@@ -81,8 +81,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Parameters
     ----------
-    fp : str, file object, PathLike object, FilePath, or MemoryFile A
-        filename or URL, a file object opened in binary ('rb') mode, a
+    fp : str, file object, PathLike object, FilePath, or MemoryFile
+        A filename or URL, a file object opened in binary ('rb') mode, a
         Path object, or one of the rasterio classes that provides the
         dataset-opening interface (has an open method that returns a
         dataset).
