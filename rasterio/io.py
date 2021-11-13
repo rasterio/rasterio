@@ -17,7 +17,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
     try:
-        from rasterio._pyvsi import PyVSIFileBase
+        from rasterio._pyvsi import FilePathBase
     except ImportError:
         PyVSIFileBase = object
 
@@ -152,7 +152,7 @@ class MemoryFile(MemoryFileBase):
         self._env.__exit__()
 
 
-class _PythonVSIFile(PyVSIFileBase):
+class _FilePath(FilePathBase):
     """A BytesIO-like object, backed by an in-memory file.
 
     This allows formatted files to be read and written without I/O.
@@ -167,7 +167,7 @@ class _PythonVSIFile(PyVSIFileBase):
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, PythonVSIFile(f) as vsi_file:
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, FilePath(f) as vsi_file:
     ...     with vsi_file.open() as src:
     ...         pprint.pprint(src.profile)
     ...
@@ -231,9 +231,9 @@ class _PythonVSIFile(PyVSIFileBase):
         self._env.__exit__()
 
 
-if PyVSIFileBase is not object:
+if FilePathBase is not object:
     # only make this object available if the cython extension was compiled
-    PythonVSIFile = _PythonVSIFile
+    FilePath = _FilePath
 
 
 class ZipMemoryFile(MemoryFile):

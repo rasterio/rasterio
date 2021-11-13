@@ -27,7 +27,7 @@ This plugin currently only defines the "open" callback. The other features are
 either not needed or have usable default implementations.
 
 The entire filesystem's state is stored in a global dictionary mapping
-in-memory GDAL filenames to :class:`~rasterio._pyvsi.PyVSIFileBase` objects.
+in-memory GDAL filenames to :class:`~rasterio._pyvsi.FilePathBase` objects.
 
 File Handling
 *************
@@ -64,7 +64,7 @@ cdef extern from "cpl_vsi_virtual.h":
 cdef str FILESYSTEM_PREFIX = "/vsipythonfilelike/"
 cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
 # This is global state for the Python filesystem plugin. It currently only
-# contains path -> PyVSIFileBase (or subclass) instances. This is used by
+# contains path -> FilePathBase (or subclass) instances. This is used by
 # the plugin to determine what "files" exist on "disk".
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
@@ -208,7 +208,7 @@ cdef int install_rasterio_pyvsi_plugin(VSIFilesystemPluginCallbacksStruct *callb
     return 0
 
 
-cdef class PyVSIFileBase:
+cdef class FilePathBase:
     """Base for a BytesIO-like class backed by a Python file-like object."""
 
     cdef VSIFilesystemPluginCallbacksStruct* _vsif
@@ -305,18 +305,3 @@ cdef class PyVSIFileBase:
 
         """
         self.closed = True
-
-    def seek(self, offset, whence=0):
-        return self._file_obj.seek(offset, whence)
-
-    def tell(self):
-        return self._file_obj.tell()
-
-    def read(self, size=-1):
-        """Read size bytes from PythonVSIFile.
-
-        Note this reads directly from the file-like object without
-        going through GDAL.
-
-        """
-        return self._file_obj.read(size)

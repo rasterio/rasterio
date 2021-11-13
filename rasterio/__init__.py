@@ -42,7 +42,7 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.path
 
     try:
-        from rasterio.io import PythonVSIFile
+        from rasterio.io import FilePath
         have_vsi_plugin = True
     except ImportError:
         have_vsi_plugin = False
@@ -186,7 +186,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         @contextmanager
         def fp_reader(fp):
             if have_vsi_plugin:
-                vsi_file = PythonVSIFile(fp)
+                vsi_file = FilePath(fp)
             else:
                 vsi_file = MemoryFile(fp.read())
             dataset = vsi_file.open(driver=driver, sharing=sharing)
