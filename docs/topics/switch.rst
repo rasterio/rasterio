@@ -121,9 +121,10 @@ Rasterio achieves this with a single Python statement.
 
 .. code-block:: python
 
-   with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512):
+   with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512000000):
        # ...
 
+Please note that to the Env class, ``GDAL_CACHEMAX`` is strictly an integer number of bytes. GDAL's shorthand notation is not supported.
 
 Format Drivers
 --------------
