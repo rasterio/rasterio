@@ -552,7 +552,7 @@ out as GeoJSON.
 
     $ rio shapes tests/data/shade.tif --bidx 1 --precision 6 --collection > shade.geojson
 
-The resulting file looks `like this <https://gist.github.com/wboykinm/bbe1c008d44356f1b27b3094f5700c79>`__.
+The resulting file looks `like this <https://gist.github.com/sgillies/34a2a7f45ef7d8d10488a8382be6042f>`__.
 
 Using the ``--mask`` option you can write out the shapes of a dataset's valid
 data region.
@@ -561,9 +561,9 @@ data region.
 
     $ rio shapes tests/data/RGB.byte.tif --mask --precision 6 --collection > mask.geojson
 
-The output of which looks `like this <https://gist.github.com/wboykinm/e93fd1567898978a2381fdaa5465c3f9>`__.
+The output of which looks `like this <https://gist.github.com/sgillies/429df9c4d0e4d16073dd6e56e097a8eb>`__.
 
-Note: ``rio shapes`` returns line-delimited GeoJSON (``.geojsonl`` or ``.geojsonseq``) by default. Use the ``--collection`` flag as shown here to return a single GeoJSON feature collection.
+Note: ``rio shapes`` returns line-delimited GeoJSONs by default. Use the ``--collection`` flag as shown here to return a single GeoJSON feature collection.
 
 stack
 -----
