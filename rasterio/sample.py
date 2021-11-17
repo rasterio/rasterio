@@ -1,6 +1,6 @@
 # Workaround for issue #378. A pure Python generator.
 
-import numpy
+import numpy as np
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -33,24 +33,26 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     """
     index = dataset.index
     read = dataset.read
+    height = dataset.height
+    width = dataset.width
 
     if indexes is None:
         indexes = dataset.indexes
     elif isinstance(indexes, int):
         indexes = [indexes]
 
+    nodata = np.full(len(indexes), (dataset.nodata or 0),  dtype=dataset.dtypes[0])
+    if masked:
+        # Masks for masked arrays are inverted (False means valid)
+        mask = [~(MaskFlags.all_valid in dataset.mask_flag_enums[i-1]) for i in indexes]
+        nodata = np.ma.array(nodata, mask=mask)
+
     for x, y in xy:
 
         row_off, col_off = index(x, y)
 
-        if row_off < 0 or col_off < 0 or row_off >= dataset.height or col_off >= dataset.width:
-            data = numpy.ones((len(indexes),), dtype=dataset.dtypes[0]) * (dataset.nodata or 0)
-            if masked:
-                mask = [False if MaskFlags.all_valid in dataset.mask_flag_enums[i - 1] else True for i in indexes]
-                yield numpy.ma.array(data, mask=mask)
-            else:
-                yield data
-
+        if row_off < 0 or col_off < 0 or row_off >= height or col_off >= width:
+            yield nodata
         else:
             window = Window(col_off, row_off, 1, 1)
             data = read(indexes, window=window, masked=masked)
