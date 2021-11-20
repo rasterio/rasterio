@@ -65,14 +65,14 @@ def red_green(tmpdir):
 
 @pytest.fixture
 def basic_geometry():
-    """
+    """A Polygon with 2D coordinates.
+
     Returns
     -------
-
-    dict: GeoJSON-style geometry object.
+    dict : GeoJSON-style geometry object.
         Coordinates are in grid coordinates (Affine.identity()).
-    """
 
+    """
     return {
         'type': 'Polygon',
         'coordinates': [[(2, 2), (2, 4.25), (4.25, 4.25), (4.25, 2), (2, 2)]]
@@ -80,15 +80,33 @@ def basic_geometry():
 
 
 @pytest.fixture
-def rotation_geometry():
-    """
+def basic_geometry_3d():
+    """A Polygon with 3D coordinates.
+
     Returns
     -------
-
-    dict: GeoJSON-style geometry object.
+    dict : GeoJSON-style geometry object.
         Coordinates are in grid coordinates (Affine.identity()).
-    """
 
+    """
+    return {
+        "type": "Polygon",
+        "coordinates": [
+            [(2, 2, 0), (2, 4.25, 0), (4.25, 4.25, 0), (4.25, 2, 0), (2, 2, 0)]
+        ],
+    }
+
+
+@pytest.fixture
+def rotation_geometry():
+    """A rotated geometry.
+
+    Returns
+    -------
+    dict : GeoJSON-style geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+
+    """
     return {
         'type': 'Polygon',
         'coordinates': [[(481070, 4481140), (481040, 4481160),
@@ -99,18 +117,15 @@ def rotation_geometry():
 
 @pytest.fixture
 def geojson_point():
-    """
+    """A 2D Point.
+
     Returns
     -------
-
-    dict: GeoJSON-style Point geometry object.
+    dict : GeoJSON-style Point geometry object.
         Coordinates are in grid coordinates (Affine.identity()).
-    """
 
-    return {
-        'type': 'Point',
-        'coordinates': (2, 2)
-    }
+    """
+    return {"type": "Point", "coordinates": (2, 2)}
 
 
 @pytest.fixture

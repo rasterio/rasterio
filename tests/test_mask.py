@@ -215,10 +215,19 @@ def test_mask_all_touched(basic_image, basic_image_file, basic_geometry):
     assert np.array_equal(masked[0], basic_image * nodata)
 
 
-def test_mask_crop(basic_image_2x2, basic_image_file, basic_geometry):
+def test_mask_crop(basic_image_2x2, basic_image_file, basic_geometry_3d):
     """Output should be cropped to extent of geometry"""
+    geometries = [basic_geometry_3d]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True)
 
-    geometries = [basic_geometry]
+    assert masked.shape == (1, 3, 3)
+    assert np.array_equal(masked[0], basic_image_2x2[2:5, 2:5])
+
+
+def test_mask_crop_3d(basic_image_2x2, basic_image_file, basic_geometry_3d):
+    """Output should be cropped to extent of geometry, 3D geom okay."""
+    geometries = [basic_geometry_3d]
     with rasterio.open(basic_image_file) as src:
         masked, transform = mask(src, geometries, crop=True)
 

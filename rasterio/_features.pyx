@@ -314,7 +314,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
 
     """
     cdef int retval
-    cdef size_t i
+    cdef int i
     cdef size_t num_geoms = 0
     cdef OGRGeometryH *geoms = NULL
     cdef char **options = NULL
@@ -348,8 +348,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
 
         # TODO: is a vsimem file more memory efficient?
         with MemoryDataset(image, transform=transform) as mem:
-            band_ids = <int *>CPLMalloc(mem.count*sizeof(int))
-            for i in range(mem.count):
+            band_ids = <int *>CPLMalloc(<int>mem.count*sizeof(int))
+            for i in range(<int>mem.count):
                 band_ids[i] = i + 1
             exc_wrap_int(
                 GDALRasterizeGeometries(
@@ -357,7 +357,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                     NULL, pixel_values, options, NULL, NULL))
 
     finally:
-        for i in range(num_geoms):
+        for i in range(<int>num_geoms):
             _deleteOgrGeom(geoms[i])
         CPLFree(geoms)
         CPLFree(pixel_values)
@@ -429,7 +429,9 @@ def _bounds(geometry, north_up=True, transform=None):
         # Input is a singular geometry object
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
-            xyz_px = [transform * point for point in xyz]
+            # Because the affine transform matrix only applies in 2D we
+            # must slice away any possible Z coordinate from a point.
+            xyz_px = [transform * point[:2] for point in xyz]
             xyz = tuple(zip(*xyz_px))
             return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
         else:
