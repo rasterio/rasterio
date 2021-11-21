@@ -1,0 +1,7 @@
+name: CI using GDAL ubuntu-small-333
+on: [push]
+jobs:
+  "Run tests in container":
+    runs-on: ubuntu-latest
+    steps:
+      - run: GDAL=ubuntu-small-333 make dockertest
