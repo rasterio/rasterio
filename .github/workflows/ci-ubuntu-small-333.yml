@@ -3,6 +3,9 @@ on: [push]
 jobs:
   "run-tests-in-container":
     runs-on: ubuntu-latest
+    env:
+      GDAL: ubuntu-small-3.3.3
     steps:
       - uses: actions/checkout@v2
-      - run: GDAL=ubuntu-small-3.3.3 make dockertest
+      - run: docker build --build-arg GDAL=$GDAL --target gdal -t rasterio:$GDAL .
+      - run: docker run -v $(pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$GDAL -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing'
