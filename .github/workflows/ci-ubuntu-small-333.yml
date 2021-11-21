@@ -5,4 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: GDAL=ubuntu-small-333 make dockertest
+      - run: GDAL=ubuntu-small-3.3.3 make dockertest
