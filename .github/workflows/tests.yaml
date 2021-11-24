@@ -1,0 +1,103 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron:  '0 0 * * 0'
+
+jobs:
+  docker_tests:
+    runs-on: ubuntu-latest
+    name: Docker | GDAL=${{ matrix.gdal-version }} | python=${{ matrix.python-version }}
+    container: osgeo/gdal:ubuntu-full-${{ matrix.gdal-version }}
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9']
+        gdal-version: ['3.4.0', '3.3.3']
+        include:
+          - python-version: '3.8'
+            gdal-version: '3.2.3'
+          - python-version: '3.8'
+            gdal-version: '3.1.3'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: |
+          apt-get update -y
+          apt-get install -y --no-install-recommends \
+            python${{ matrix.python-version }} \
+            python${{ matrix.python-version }}-dev \
+            python${{ matrix.python-version }}-venv \
+            python3-pip \
+            g++
+
+      - name: Install dependencies
+        run: |
+          python${{ matrix.python-version }} -m venv testenv
+          . testenv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip wheel -r requirements-dev.txt
+          python -m pip install -r requirements-dev.txt
+          python setup.py clean
+          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+
+      - name: run tests
+        run: |
+          . testenv/bin/activate
+          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+
+  conda_test:
+    name: Conda | ${{ matrix.os }} | python=${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest]
+        python-version: ['3.8' , '3.9']
+        include:
+          - os: ubuntu-latest
+            python-version: '3.10'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Conda Setup
+        uses: s-weigand/setup-conda@v1
+        with:
+          conda-channels: conda-forge
+
+      - name: Install Env
+        shell: bash
+        run: |
+          conda config --prepend channels conda-forge
+          conda config --set channel_priority strict
+          conda create -n test python=${{ matrix.python-version }} libgdal cython=0.29 numpy
+          source activate test
+          python -m pip install -e . --no-use-pep517 || python -m pip install -e .
+          python -m pip install -r requirements-dev.txt
+
+      - name: Check and Log Environment
+        shell: bash
+        run: |
+          source activate test
+          python -V
+          conda info
+
+      - name: Test with Coverage (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          source activate test
+          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+
+      - name: Test with Coverage (OSX)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          source activate test
+          python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not (test_target_aligned_pixels or test_reproject_error_propagation or test_outer_boundless_pixel_fidelity)" 
+
+      - uses: codecov/codecov-action@v1
