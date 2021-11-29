@@ -9,6 +9,9 @@ Rasterio reads and writes geospatial raster data.
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
+   
+.. image:: https://img.shields.io/pypi/v/rasterio
+   :target: https://pypi.org/project/rasterio/
 
 Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
