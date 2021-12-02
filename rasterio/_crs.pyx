@@ -414,13 +414,13 @@ cdef class _CRS:
 
         # Filter out nonsensical items that might have crept in.
         items_filtered = []
-        items = proj.split()
-        for item in items:
-            parts = item.split('=')
-            if len(parts) == 2 and parts[1] in ('false', 'False'):
+        for key, value in _RE_PROJ_PARAM.findall(proj):
+            if value.lower() == "false":
                 continue
-            items_filtered.append(item)
-
+            if value:
+                items_filtered.append(f"+{key}={value}")
+            else:
+                items_filtered.append(f"+{key}")
         proj = ' '.join(items_filtered)
         proj_b = proj.encode('utf-8')
 
