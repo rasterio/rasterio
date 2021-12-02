@@ -586,12 +586,11 @@ cdef class _CRS:
             CPLFree(proj_c)
             _safe_osr_release(osr)
 
-        parts = [o.lstrip('+') for o in proj.strip().split()]
-
         def parse(v):
-            if v in ('True', 'true'):
+            _v = v.lower()
+            if _v == "true":
                 return True
-            elif v in ('False', 'false'):
+            elif _v == "false":
                 return False
             else:
                 try:
@@ -603,11 +602,13 @@ cdef class _CRS:
                 except ValueError:
                     return v
 
-        items = map(
-            lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
-            (p.split('=') for p in parts))
+        rv = {}
+        for key, value in _RE_PROJ_PARAM.findall(proj):
+            value = parse(value)
+            if key in all_proj_keys and value:
+                rv[key] = value
+        return rv
 
-        return {k: v for k, v in items if k in all_proj_keys and v is not False}
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
