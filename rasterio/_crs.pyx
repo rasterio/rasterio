@@ -723,6 +723,5 @@ _param_data = """
 +zone      UTM zone
 """
 
-_lines = filter(None, _param_data.splitlines())
 all_proj_keys = set(line.split(' ', 1)[0][1:] for line in filter(None, _param_data.splitlines()))
 all_proj_keys.add('no_mayo')
