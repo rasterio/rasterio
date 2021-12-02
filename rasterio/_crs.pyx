@@ -455,8 +455,6 @@ cdef class _CRS:
             # PROJ JSON
             return _CRS.from_user_input(json.dumps(data))
 
-        data = {k: v for k, v in data.items() if k in all_proj_keys}
-
         # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
         # extract the epsg code and dispatch to from_epsg.
         if 'init' in data and data['init'].lower().startswith('epsg:'):
@@ -465,7 +463,8 @@ cdef class _CRS:
 
         # Continue with the general case.
         pjargs = []
-        for key, val in data.items():
+        for key in data.keys() & all_proj_keys:
+            val = data[key]
             if val is None or val is True:
                 pjargs.append('+{}'.format(key))
             elif val is False:
