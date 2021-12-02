@@ -180,3 +180,33 @@ def test_exception_proj4():
 def test_linear_units():
     """CRS linear units can be had"""
     assert _CRS.from_epsg(3857).linear_units == 'metre'
+
+def test_crs_to_dict():
+    x = _CRS.from_proj4("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs")
+    expected = {'proj': 'merc',
+                'a': 6378137,
+                'b': 6378137,
+                'lat_ts': 0,
+                'lon_0': 0,
+                'x_0': 0,
+                'y_0': 0,
+                'k': 1,
+                'units': 'm',
+                'nadgrids': '@null',
+                'wktext': True,
+                'no_defs': True}
+    assert x.to_dict() == expected
+
+def test_crs_from_dict():
+    expected = {'proj': 'lcc',
+                'lat_0': 40,
+                'lon_0': -96,
+                'lat_1': 20,
+                'lat_2': 60,
+                'x_0': 0,
+                'y_0': 0,
+                'datum': 'NAD83',
+                'units': 'm',
+                'no_defs': True}
+    x = _CRS.from_dict(expected)
+    assert x.to_dict() == expected
