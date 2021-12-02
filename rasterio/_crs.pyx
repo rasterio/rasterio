@@ -587,26 +587,24 @@ cdef class _CRS:
             _safe_osr_release(osr)
 
         def parse(v):
-            _v = v.lower()
-            if _v == "true":
-                return True
-            elif _v == "false":
-                return False
-            else:
-                try:
-                    return int(v)
-                except ValueError:
-                    pass
-                try:
-                    return float(v)
-                except ValueError:
-                    return v
+            try:
+                return int(v)
+            except ValueError:
+                pass
+            try:
+                return float(v)
+            except ValueError:
+                return v
 
         rv = {}
         for key, value in _RE_PROJ_PARAM.findall(proj):
-            value = parse(value)
-            if key in all_proj_keys and value:
-                rv[key] = value
+            lvalue = value.lower()
+            if key not in all_proj_keys or lvalue == "false":
+                continue
+            if not value or lvalue == "true":
+                rv[key] = True
+            else:
+                rv[key] = parse(value)
         return rv
 
 
