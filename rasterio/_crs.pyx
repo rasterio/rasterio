@@ -7,6 +7,7 @@ from collections import defaultdict
 import json
 import logging
 import warnings
+import re
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
@@ -20,6 +21,7 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 log = logging.getLogger(__name__)
 
+_RE_PROJ_PARAM = re.compile(r"\+(\w+)\=?(\S*)?\s*?")
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
