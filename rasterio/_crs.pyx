@@ -421,13 +421,15 @@ cdef class _CRS:
 
         # Filter out nonsensical items that might have crept in.
         items_filtered = []
-        for key, value in _RE_PROJ_PARAM.findall(proj):
-            if value.lower() == "false":
+        for param in _RE_PROJ_PARAM.finditer(proj):
+            value = param.group('value')
+            if value is None:
+                items_filtered.append(param.group())
+            elif value.lower() == "false":
                 continue
-            if value:
-                items_filtered.append(f"+{key}={value}")
             else:
-                items_filtered.append(f"+{key}")
+                items_filtered.append(param.group())
+
         proj = ' '.join(items_filtered)
         proj_b = proj.encode('utf-8')
 
@@ -604,12 +606,15 @@ cdef class _CRS:
                 return v
 
         rv = {}
-        for key, value in _RE_PROJ_PARAM.findall(proj):
-            lvalue = value.lower()
-            if key not in all_proj_keys or lvalue == "false":
+        for param in _RE_PROJ_PARAM.finditer(proj):
+            key, value = param.groups()
+            if key not in all_proj_keys:
                 continue
-            if not value or lvalue == "true":
+
+            if value is None or value.lower() == "true":
                 rv[key] = True
+            elif value.lower() == "false":
+                continue
             else:
                 rv[key] = parse(value)
         return rv
