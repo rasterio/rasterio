@@ -21,7 +21,14 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 log = logging.getLogger(__name__)
 
-_RE_PROJ_PARAM = re.compile(r"\+(\w+)\=?(\S*)?\s*?")
+_RE_PROJ_PARAM = re.compile(r"""
+    \+              # parameter starts with '+' character
+    (?P<param>\w+)    # capture parameter name
+    \=?             # match both key only and key-value parameters
+    (?P<value>\S+)? # capture all characters up to next space (None if no value)
+    \s*?            # consume remaining whitespace, if any
+""", re.X)
+
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
