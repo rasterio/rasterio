@@ -610,9 +610,19 @@ def _reproject(
             src_mem.close()
 
 
-def _calculate_default_transform(src_crs, dst_crs, width, height,
-                                 left=None, bottom=None, right=None, top=None,
-                                 gcps=None, rpcs=None, **kwargs):
+def _calculate_default_transform(
+    src_crs,
+    dst_crs,
+    width,
+    height,
+    left=None,
+    bottom=None,
+    right=None,
+    top=None,
+    gcps=None,
+    rpcs=None,
+    **kwargs
+):
     """Wraps GDAL's algorithm."""
     cdef void *hTransformArg = NULL
     cdef int npixels = 0
@@ -627,9 +637,6 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-    # Make an in-memory raster dataset we can pass to
-    # GDALCreateGenImgProjTransformer().
 
     if all(x is not None for x in (left, bottom, right, top)):
         transform = from_bounds(left, bottom, right, top, width, height)
@@ -652,31 +659,43 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     elif isinstance(src_crs, dict):
         src_crs = CRS(**src_crs)
 
-    vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
+    # The transformer at the heart of this function requires a dataset.
+    # We use an in-memory VRT dataset.
+    vrt_doc = _suggested_proxy_vrt_doc(
+        width,
+        height,
+        transform=transform,
+        crs=src_crs,
+        gcps=gcps
+    ).decode('ascii')
+    hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
 
     try:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
+
             if key == b"RPC_DEM":
-                # don't .upper() since might be a path
+                # don't .upper() since might be a path.
                 val = str(val).encode('utf-8')
             else:
                 val = str(val).upper().encode('utf-8')
-            imgProjOptions = CSLSetNameValue(
-                imgProjOptions, <const char *>key, <const char *>val)
-            log.debug("Set _calculate_default_transform Transformer option {0!r}={1!r}".format(key, val))
-        hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+
+            imgProjOptions = CSLSetNameValue(imgProjOptions, <const char *>key, <const char *>val)
+            log.debug("Set image projection option {0!r}={1!r}".format(key, val))
+
         if rpcs:
             if hasattr(rpcs, 'to_gdal'):
                 rpcs = rpcs.to_gdal()
+
             for key, val in rpcs.items():
                 key = key.upper().encode('utf-8')
                 val = str(val).encode('utf-8')
-                papszMD = CSLSetNameValue(
-                    papszMD, <const char *>key, <const char *>val)
+                papszMD = CSLSetNameValue(papszMD, <const char *>key, <const char *>val)
+
             exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
             imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
 
@@ -722,7 +741,6 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         if papszMD != NULL:
             CSLDestroy(papszMD)
 
-    # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
     dst_width = npixels
     dst_height = nlines
@@ -742,7 +760,7 @@ cdef GDALDatasetH auto_create_warped_vrt(
     const GDALWarpOptions *psOptions,
     const char **transformer_options,
 ) nogil:
-
+    """Makes a best-fit WarpedVRT around a dataset."""
     IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
         return GDALAutoCreateWarpedVRTEx(
             hSrcDS,
