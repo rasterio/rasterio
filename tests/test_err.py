@@ -49,3 +49,13 @@ def test_issue2353(caplog, path_rgb_byte_tif):
         )
         assert "Treating error as warning" in caplog.text
         _ = src.colorinterp
+
+
+def test_issue2353bis(caplog, path_rgb_byte_tif):
+    """Ensure VRT doesn't leave errors behind."""
+    from rasterio.vrt import WarpedVRT
+    with rasterio.open("http://static2.skysight.io/demo2.tiff") as src:
+        with WarpedVRT(src, dst_crs="EPSG:3857") as vrt:
+            pass
+        assert "Treating error as warning" in caplog.text
+        _ = src.colorinterp

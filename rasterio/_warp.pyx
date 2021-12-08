@@ -717,8 +717,7 @@ def _calculate_default_transform(
                 extent,
                 0
             )
-
-            _ = exc_wrap_int(retval >= 0)
+            _ = exc_wrap(1)
 
         except CPLE_AppDefinedError as err:
             if retval == 0:
@@ -759,28 +758,54 @@ cdef GDALDatasetH auto_create_warped_vrt(
     double dfMaxError,
     const GDALWarpOptions *psOptions,
     const char **transformer_options,
-) nogil:
-    """Makes a best-fit WarpedVRT around a dataset."""
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
-        return GDALAutoCreateWarpedVRTEx(
-            hSrcDS,
-            pszSrcWKT,
-            pszDstWKT,
-            eResampleAlg,
-            dfMaxError,
-            psOptions,
-            transformer_options,
-        )
+):
+    """Makes a best-fit WarpedVRT around a dataset.
 
+    Returns
+    -------
+    GDALDatasetH
+        Owned by the caller.
+
+    """
+    cdef GDALDatasetH hds_warped = NULL
+
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
+        try:
+            with nogil:
+                hds_warped = GDALAutoCreateWarpedVRTEx(
+                    hSrcDS,
+                    pszSrcWKT,
+                    pszDstWKT,
+                    eResampleAlg,
+                    dfMaxError,
+                    psOptions,
+                    transformer_options,
+                )
+            _ = exc_wrap(0)
+        except CPLE_AppDefinedError as err:
+            if hds_warped != NULL:
+                log.info("Treating error as warning: err=%r", err)
+            else:
+                raise err
     ELSE:
-        return GDALAutoCreateWarpedVRT(
-            hSrcDS,
-            pszSrcWKT,
-            pszDstWKT,
-            eResampleAlg,
-            dfMaxError,
-            psOptions,
-        )
+        try:
+            with nogil:
+                hds_dataset = GDALAutoCreateWarpedVRT(
+                    hSrcDS,
+                    pszSrcWKT,
+                    pszDstWKT,
+                    eResampleAlg,
+                    dfMaxError,
+                    psOptions,
+                )
+            _ = exc_wrap(0)
+        except CPLE_AppDefinedError as err:
+            if hds_warped != NULL:
+                log.info("Treating error as warning: err=%r", err)
+            else:
+                raise err
+
+    return hds_warped
 
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
@@ -1019,8 +1044,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         # Case 4
         if not self.dst_transform and (not self.dst_width or not self.dst_height):
-
-            with nogil:
+            try:
                 hds_warped = auto_create_warped_vrt(
                     hds,
                     src_crs_wkt,
@@ -1030,9 +1054,14 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     psWOptions,
                     <const char **>c_warp_extras,
                 )
+            finally:
+                CPLFree(dst_crs_wkt)
+                CPLFree(src_crs_wkt)
+                CSLDestroy(c_warp_extras)
+                if psWOptions != NULL:
+                    GDALDestroyWarpOptions(psWOptions)
 
         else:
-
             # Case 1
             if self.dst_transform and self.dst_width and self.dst_height:
                 pass
@@ -1047,7 +1076,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 and not self.src_dataset.rpcs
             ):
 
-                self.dst_transform = Affine.scale(self.src_dataset.width / self.dst_width, self.src_dataset.height / self.dst_height) * self.src_transform
+                self.dst_transform = Affine.scale(
+                    self.src_dataset.width / self.dst_width,
+                    self.src_dataset.height / self.dst_height
+                ) * self.src_transform
 
             # Case 3
             elif (
@@ -1056,7 +1088,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 and self.dst_height
                 and not self.dst_transform
             ):
-
                 left, bottom, right, top = self.src_dataset.bounds
                 self.dst_transform, width, height = _calculate_default_transform(
                     self.src_crs,
@@ -1071,13 +1102,23 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     rpcs=self.src_dataset.rpcs,
                     **self.warp_extras,
                 )
-                self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
+                self.dst_transform = Affine.scale(
+                    width / self.dst_width,
+                    height / self.dst_height
+                ) * self.dst_transform
 
-            # If we get here it's because the tests above are buggy. We raise a Python exception to indicate that.
+            # If we get here it's because the tests above are buggy.
+            # We raise a Python exception to indicate that.
             else:
-                raise RuntimeError(
-                    "Parameterization error: src_crs={!r}, dst_crs={!r}, dst_width={!r}, dst_height={!r}, dst_transform={!r}".format(self.src_crs, self.dst_crs, self.dst_width, self.dst_height, self.dst_transform))
+                CPLFree(dst_crs_wkt)
+                CPLFree(src_crs_wkt)
+                CSLDestroy(c_warp_extras)
+                if psWOptions != NULL:
+                    GDALDestroyWarpOptions(psWOptions)
+                raise RuntimeError("Parameterization error")
 
+            # Continue with finishing cases 1-3, which have been
+            # generalized.
             t = self.src_transform.to_gdal()
             for i in range(6):
                 src_gt[i] = t[i]
@@ -1102,19 +1143,18 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     psWOptions.pfnTransformer = GDALApproxTransform
                     GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
 
-            except Exception:
+                psWOptions.pTransformerArg = hTransformArg
+
+                with nogil:
+                    hds_warped = GDALCreateWarpedVRT(hds, c_width, c_height, dst_gt, psWOptions)
+                    GDALSetProjection(hds_warped, dst_crs_wkt)
+
+            finally:
                 CPLFree(dst_crs_wkt)
                 CPLFree(src_crs_wkt)
                 CSLDestroy(c_warp_extras)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
-
-            else:
-                psWOptions.pTransformerArg = hTransformArg
-
-            with nogil:
-                hds_warped = GDALCreateWarpedVRT(hds, c_width, c_height, dst_gt, psWOptions)
-                GDALSetProjection(hds_warped, dst_crs_wkt)
 
         # End of the 4 cases.
 
@@ -1124,12 +1164,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
 
-        finally:
-            CPLFree(dst_crs_wkt)
-            CPLFree(src_crs_wkt)
-            CSLDestroy(c_warp_extras)
-            if psWOptions != NULL:
-                GDALDestroyWarpOptions(psWOptions)
+#        finally:
+#            CPLFree(dst_crs_wkt)
+#            CPLFree(src_crs_wkt)
+#            CSLDestroy(c_warp_extras)
+#            if psWOptions != NULL:
+#                GDALDestroyWarpOptions(psWOptions)
 
         if self.dst_nodata is None:
             for i in self.indexes:
