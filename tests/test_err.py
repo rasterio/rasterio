@@ -50,3 +50,20 @@ def test_issue2353(caplog, path_rgb_byte_tif):
         assert "Point outside of projection domain" in caplog.text
         assert "Encountered points outside of valid dst crs region" in caplog.text
         _ = src.colorinterp
+
+
+def test_issue2353_tolerance(caplog):
+    from rasterio.warp import calculate_default_transform
+
+    with rasterio.open("tests/data/goes.tif") as src:
+        _ = src.colorinterp
+        t, w, h = calculate_default_transform(
+            src.crs,
+            "EPSG:4326",
+            src.width,
+            src.height,
+            *src.bounds,
+        )
+        assert "tolerance condition error" in caplog.text
+        assert "Encountered points outside of valid dst crs region" in caplog.text
+        _ = src.colorinterp

@@ -385,7 +385,7 @@ def _reproject(
                                          transform=format_transform(src_transform),
                                          gcps=gcps,
                                          rpcs=rpcs,
-                                         crs=src_crs, 
+                                         crs=src_crs,
                                          copy=True)
             src_dataset = src_mem.handle()
 
@@ -706,7 +706,11 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         raise CRSError(err.errmsg)
 
     except CPLE_AppDefinedError as err:
-        if "Reprojection failed" in str(err) or "Point outside of projection domain" in str(err):
+        if (
+            "Reprojection failed" in str(err) or
+            "Point outside of projection domain" in str(err) or
+            "tolerance condition error" in str(err)
+        ):
             # This "exception" should be treated as a debug msg, not error
             # "Reprojection failed, err = -14, further errors will be
             # suppressed on the transform object."
@@ -959,7 +963,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 src_alpha_band = bidx
 
         # Adding an alpha band when the source has one is trouble.
-        # It will result in suprisingly unmasked data. We will 
+        # It will result in suprisingly unmasked data. We will
         # raise an exception instead.
 
         if add_alpha:
