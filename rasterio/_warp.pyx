@@ -1164,13 +1164,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
 
-#        finally:
-#            CPLFree(dst_crs_wkt)
-#            CPLFree(src_crs_wkt)
-#            CSLDestroy(c_warp_extras)
-#            if psWOptions != NULL:
-#                GDALDestroyWarpOptions(psWOptions)
-
         if self.dst_nodata is None:
             for i in self.indexes:
                 GDALDeleteRasterNoDataValue(self.band(i))
