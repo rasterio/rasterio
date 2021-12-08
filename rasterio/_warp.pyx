@@ -684,11 +684,11 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
         )
 
-        exc_wrap(
-           # This function may put errors on GDAL's error stack while
-           # still returning 0 (no error). Thus we always check the
-           # stack.
-           GDALSuggestedWarpOutput2(
+        try:
+            # This function may put errors on GDAL's error stack while
+            # still returning 0 (no error). Thus we always check and
+            # clear the stack and treat errors as warnings.
+            retval = GDALSuggestedWarpOutput2(
                 hds,
                 GDALGenImgProjTransform,
                 hTransformArg,
@@ -698,22 +698,18 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
                 extent,
                 0
             )
-        )
 
-        log.debug("Created transformer and warp output.")
+            _ = exc_wrap_int(retval >= 0)
+
+        except CPLE_AppDefinedError as err:
+            if retval == 0:
+                log.info("Treating error as warning: err=%r", err)
+            else:
+                raise err
 
     except CPLE_NotSupportedError as err:
         raise CRSError(err.errmsg)
 
-    except CPLE_AppDefinedError as err:
-        if "Reprojection failed" in str(err) or "Point outside of projection domain" in str(err):
-            # This "exception" should be treated as a debug msg, not error
-            # "Reprojection failed, err = -14, further errors will be
-            # suppressed on the transform object."
-            log.info("Encountered points outside of valid dst crs region")
-            pass
-        else:
-            raise err
     finally:
         if wkt != NULL:
             CPLFree(wkt)
@@ -731,7 +727,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     dst_width = npixels
     dst_height = nlines
 
-    return dst_affine, dst_width, dst_height
+    return (dst_affine, dst_width, dst_height)
 
 
 DEFAULT_NODATA_FLAG = object()

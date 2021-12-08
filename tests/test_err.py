@@ -47,6 +47,5 @@ def test_issue2353(caplog, path_rgb_byte_tif):
             5434894.885056,
             5434894.885056,
         )
-        assert "Point outside of projection domain" in caplog.text
-        assert "Encountered points outside of valid dst crs region" in caplog.text
+        assert "Treating error as warning" in caplog.text
         _ = src.colorinterp
