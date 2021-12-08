@@ -35,7 +35,7 @@ cimport numpy as np
 from libc.math cimport HUGE_VAL
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
-from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
@@ -683,10 +683,22 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
         )
-        exc_wrap_int(
-            GDALSuggestedWarpOutput2(
-                hds, GDALGenImgProjTransform, hTransformArg,
-                geotransform, &npixels, &nlines, extent, 0))
+
+        exc_wrap(
+           # This function may put errors on GDAL's error stack while
+           # still returning 0 (no error). Thus we always check the
+           # stack.
+           GDALSuggestedWarpOutput2(
+                hds,
+                GDALGenImgProjTransform,
+                hTransformArg,
+                geotransform,
+                &npixels,
+                &nlines,
+                extent,
+                0
+            )
+        )
 
         log.debug("Created transformer and warp output.")
 
@@ -694,7 +706,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         raise CRSError(err.errmsg)
 
     except CPLE_AppDefinedError as err:
-        if "Reprojection failed" in str(err):
+        if "Reprojection failed" in str(err) or "Point outside of projection domain" in str(err):
             # This "exception" should be treated as a debug msg, not error
             # "Reprojection failed, err = -14, further errors will be
             # suppressed on the transform object."

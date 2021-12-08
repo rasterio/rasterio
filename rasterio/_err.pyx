@@ -141,6 +141,7 @@ cdef inline object exc_check():
     Returns
     -------
     An Exception, SystemExit, or None
+
     """
     cdef const char *msg_c = NULL
 
@@ -151,21 +152,23 @@ cdef inline object exc_check():
     if err_msg == NULL:
         msg = "No error message."
     else:
-        # Reformat messages.
         msg_b = err_msg
         msg = msg_b.decode('utf-8')
         msg = msg.replace("`", "'")
         msg = msg.replace("\n", " ")
 
     if err_type == 3:
+        exception = exception_map.get(err_no, CPLE_BaseError)(err_type, err_no, msg)
         CPLErrorReset()
-        return exception_map.get(
-            err_no, CPLE_BaseError)(err_type, err_no, msg)
+        raise exception
 
     if err_type == 4:
-        return SystemExit("Fatal error: {0}".format((err_type, err_no, msg)))
+        exception = SystemExit("Fatal error: {0}".format((err_type, err_no, msg)))
+        CPLErrorReset()
+        raise exception
 
     else:
+        CPLErrorReset()
         return
 
 
@@ -181,6 +184,7 @@ cdef int exc_wrap_int(int err) except -1:
     """Wrap a GDAL/OGR function that returns CPLErr or OGRErr (int)
 
     Raises a Rasterio exception if a non-fatal error has be set.
+
     """
     if err:
         exc = exc_check()
@@ -204,6 +208,7 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
     """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
 
     Raises a Rasterio exception if a non-fatal error has be set.
+
     """
     if ptr == NULL:
         exc = exc_check()
@@ -212,13 +217,14 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
     return ptr
 
 
-cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *f) except NULL:
+cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *vsifile) except NULL:
     """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
 
     Raises a Rasterio exception if a non-fatal error has be set.
+
     """
-    if f == NULL:
+    if vsifile == NULL:
         exc = exc_check()
         if exc:
             raise exc
-    return f
+    return vsifile

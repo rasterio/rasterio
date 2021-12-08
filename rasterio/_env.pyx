@@ -64,24 +64,26 @@ cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
-    """Send CPL debug messages and warnings to Python's logger."""
+    """Send CPL errors to Python's logger.
+
+    Because this function is called by GDAL with no Python context, we can't
+    propagate exceptions that we might raise here. They'll be ignored.
+
+    """
     log = logging.getLogger(__name__)
-    if err_class < 3:
-        if err_no in code_map:
-            log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
-        else:
-            log.info("Unknown error number %r", err_no)
+    if err_no in code_map:
+        log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+    else:
+        log.info("Unknown error number %r", err_no)
 
 
 # Definition of GDAL callback functions, one for Windows and one for
 # other platforms. Each calls log_error().
 IF UNAME_SYSNAME == "Windows":
-    cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no,
-                                              const char* msg) with gil:
+    cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
         log_error(err_class, err_no, msg)
 ELSE:
-    cdef void logging_error_handler(CPLErr err_class, int err_no,
-                                    const char* msg) with gil:
+    cdef void logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
         log_error(err_class, err_no, msg)
 
 
