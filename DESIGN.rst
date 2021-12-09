@@ -38,11 +38,15 @@ DataAccessor.
 Array
 -----
 
-DataAccessor trades in not-sparse (dense) unlabeled Numpy arrays with a minimum
-dimension of 2: row and column, or line and pixel. In the case of
+A DataAccessor trades in not-sparse (dense) unlabeled Numpy arrays with a
+minimum dimension of 2: row and column, or line and pixel. In the case of
 multichannel/multiband datasets, like RGB imagery, there can also be a third
 dimension corresponding to the channel or band. For these, the dimensions would
 be: band, row, and column, in that order.
+
+Elements of these arrays generally represent values integrated over an area.
+Gridded point data can be handled, but it is not the default as it is with,
+for example, xarray.
 
 rasterio.path.Path
 ------------------
