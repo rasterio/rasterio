@@ -190,15 +190,16 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
+    # wrap file object with FilePath
+    if have_vsi_plugin and mode == 'r' and hasattr(fp, 'read'):
+        fp = FilePath(fp)
+
     # Special case for file object argument.
-    if mode == 'r' and hasattr(fp, 'read'):
+    if not have_vsi_plugin and mode == 'r' and hasattr(fp, 'read'):
 
         @contextmanager
         def fp_reader(fp):
-            if have_vsi_plugin:
-                vsi_file = FilePath(fp)
-            else:
-                vsi_file = MemoryFile(fp.read())
+            vsi_file = MemoryFile(fp.read())
             dataset = vsi_file.open(driver=driver, sharing=sharing)
             try:
                 yield dataset

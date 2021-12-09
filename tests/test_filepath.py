@@ -92,6 +92,18 @@ def test_file_object_read(rgb_file_object):
         assert src.read().shape == (3, 718, 791)
 
 
+def test_file_object_read__no_with_statement(rgb_file_object):
+    """An example of reading from a file object without with statement"""
+    src = rasterio.open(rgb_file_object)
+    try:
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
+    finally:
+        src.close()
+
+
 def test_file_object_read_variant(rgb_file_object):
     """An example of reading from a FilePath object"""
     with rasterio.open(FilePath(rgb_file_object)) as src:
