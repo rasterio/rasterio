@@ -211,7 +211,7 @@ reference system with a newly computed geotransform.
     When reprojecting a dataset with gcps or rpcs, the src_crs parameter should
     be supplied with the coordinate reference system that the gcps or rpcs are
     referenced against. By definition rpcs are always referenced against WGS84
-    ellipsoid with geographic coordinates (EPSG:4326).
+    ellipsoid with geographic coordinates (EPSG:4326) [2]_.
 
 
 
@@ -219,3 +219,4 @@ References
 ----------
 
 .. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.geometric_transform.html#scipy.ndimage.geometric_transform
+.. [2] http://geotiff.maptools.org/rpc_prop.html

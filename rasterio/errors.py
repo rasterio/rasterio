@@ -60,7 +60,7 @@ class NotGeoreferencedWarning(UserWarning):
 
 
 class TransformWarning(UserWarning):
-    """Error raised when a GDALRPCTransform or GDALGCPTransform call fails."""
+    """Warn that coordinate transformations may behave unexpectedly"""
 
 
 class ShapeSkipWarning(UserWarning):
