@@ -316,7 +316,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
             # warn against reprojecting with rpcs using a CRS that is not EPSG:4326
             if rpcs:
                 if isinstance(src_crs, str):
-                    src_crs_obj = rasterio.crs.CRS.from_user_input(src_crs)
+                    src_crs_obj = rasterio.crs.CRS.from_string(src_crs)
                 else:
                     src_crs_obj = src_crs
                 if src_crs is not None and src_crs_obj.to_epsg() != 4326:
