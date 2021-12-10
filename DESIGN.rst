@@ -72,6 +72,14 @@ that returns a DataAccessor.
 rasterio.io.MemoryFile and rasterio.io.FilePath implement the DataPath
 interface.
 
+Tool
+----
+
+The issue at https://github.com/rasterio/rasterio/issues/1300 describes
+rasterio's higher level tool abstraction. A tool is more or less the guts of a
+command line program, minus the argument and option parsing. It works on named
+datasets, not on arrays or Python objects.
+
 Opening a dataset
 =================
 
@@ -128,3 +136,13 @@ storage when evicted from the cache or when the DataAccessor is closed,
 flushing all the dataset's cached blocks.
 
 Rasterio has no abstraction for this cache.
+
+Command line interface
+======================
+
+Rasterio includes a command line program named "rio". It shares a set of
+options with the "fio" program from the Fiona project (the vector counterpart
+to rasterio). The rio program has one level of subcommands. The subcommands do
+different things, though there is a little bit of overlap so that users don't
+always have to call multiple commands to get a slightly different result.
+Raster operations don't compose as readily as line-oriented text operations do.
