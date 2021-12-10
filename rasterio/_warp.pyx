@@ -706,7 +706,8 @@ def _calculate_default_transform(
         try:
             # This function may put errors on GDAL's error stack while
             # still returning 0 (no error). Thus we always check and
-            # clear the stack and treat errors as warnings.
+            # clear the stack and ignore the error if the function
+            # succeeds.
             retval = GDALSuggestedWarpOutput2(
                 hds,
                 GDALGenImgProjTransform,
@@ -721,7 +722,7 @@ def _calculate_default_transform(
 
         except CPLE_AppDefinedError as err:
             if retval == 0:
-                log.info("Treating error as warning: err=%r", err)
+                log.info("Ignoring error: err=%r", err)
             else:
                 raise err
 
@@ -771,6 +772,10 @@ cdef GDALDatasetH auto_create_warped_vrt(
 
     IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
         try:
+            # This function may put errors on GDAL's error stack while
+            # still returning 0 (no error). Thus we always check and
+            # clear the stack and ignore the error if the function
+            # succeeds.
             with nogil:
                 hds_warped = GDALAutoCreateWarpedVRTEx(
                     hSrcDS,
@@ -784,7 +789,7 @@ cdef GDALDatasetH auto_create_warped_vrt(
             _ = exc_wrap(0)
         except CPLE_AppDefinedError as err:
             if hds_warped != NULL:
-                log.info("Treating error as warning: err=%r", err)
+                log.info("Ignoring error: err=%r", err)
             else:
                 raise err
     ELSE:
@@ -801,7 +806,7 @@ cdef GDALDatasetH auto_create_warped_vrt(
             _ = exc_wrap(0)
         except CPLE_AppDefinedError as err:
             if hds_warped != NULL:
-                log.info("Treating error as warning: err=%r", err)
+                log.info("Ignoring error: err=%r", err)
             else:
                 raise err
 

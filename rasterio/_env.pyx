@@ -7,7 +7,9 @@ utilize CPLSetThreadLocalConfigOption instead. All threads use
 CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
 threads will inherit config options from the main thread unless the
 option is set to a new value inside the thread.
+
 """
+
 from contextlib import contextmanager
 import logging
 import os
@@ -21,13 +23,13 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 
 from libc.stdio cimport stderr
 
-
 level_map = {
     0: 0,
     1: logging.DEBUG,
     2: logging.WARNING,
     3: logging.ERROR,
-    4: logging.CRITICAL }
+    4: logging.CRITICAL
+}
 
 code_map = {
     0: 'CPLE_None',
@@ -41,16 +43,13 @@ code_map = {
     8: 'CPLE_NoWriteAccess',
     9: 'CPLE_UserInterrupt',
     10: 'ObjectNull',
-
-    # error numbers 11-16 are introduced in GDAL 2.1. See
-    # https://github.com/OSGeo/gdal/pull/98.
     11: 'CPLE_HttpResponse',
     12: 'CPLE_AWSBucketNotFound',
     13: 'CPLE_AWSObjectNotFound',
     14: 'CPLE_AWSAccessDenied',
     15: 'CPLE_AWSInvalidCredentials',
-    16: 'CPLE_AWSSignatureDoesNotMatch'}
-
+    16: 'CPLE_AWSSignatureDoesNotMatch'
+}
 
 log = logging.getLogger(__name__)
 
@@ -66,13 +65,24 @@ cdef bint is_64bit = sys.maxsize > 2 ** 32
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
     """Send CPL errors to Python's logger.
 
-    Because this function is called by GDAL with no Python context, we can't
-    propagate exceptions that we might raise here. They'll be ignored.
+    Because this function is called by GDAL with no Python context, we
+    can't propagate exceptions that we might raise here. They'll be
+    ignored.
 
     """
-    log = logging.getLogger(__name__)
     if err_no in code_map:
-        log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+        # We've observed that some GDAL functions may emit multiple
+        # ERROR level messages and yet succeed. We want to see those
+        # messages in our log file, but not at the ERROR level. We
+        # turn the level down to INFO.
+        if err_class == 3:
+            log.info(
+                "GDAL signalled an error: err_no=%r, msg=%r",
+                err_no,
+                msg
+            )
+        else:
+            log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
     else:
         log.info("Unknown error number %r", err_no)
 

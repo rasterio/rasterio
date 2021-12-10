@@ -47,7 +47,7 @@ def test_issue2353(caplog, path_rgb_byte_tif):
             5434894.885056,
             5434894.885056,
         )
-        assert "Treating error as warning" in caplog.text
+        assert "Ignoring error" in caplog.text
         _ = src.colorinterp
 
 
@@ -57,5 +57,5 @@ def test_issue2353bis(caplog, path_rgb_byte_tif):
     with rasterio.open("http://static2.skysight.io/demo2.tiff") as src:
         with WarpedVRT(src, dst_crs="EPSG:3857") as vrt:
             pass
-        assert "Treating error as warning" in caplog.text
+        assert "Ignoring error" in caplog.text
         _ = src.colorinterp

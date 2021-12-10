@@ -1,14 +1,15 @@
 """rasterio._err
 
 Exception-raising wrappers for GDAL API functions.
+
 """
+
 from enum import IntEnum
 import logging
 import sys
 
 log = logging.getLogger(__name__)
 
-# Python exceptions expressing the CPL error numbers.
 
 class CPLE_BaseError(Exception):
     """Base CPL error class
