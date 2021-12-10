@@ -16,6 +16,8 @@ New features:
 
 Bug fixes:
 
+- Exceptions are no longer raised for a category of errors emitted from
+  warp-related GDAL functions (#2353).
 - Enable unsafe casting for copyto in the merge tool (#2265).
 
 1.3a2 (2021-10-19)
