@@ -229,7 +229,7 @@ def test_transformer_options(path_rgb_byte_tif):
 
 
 def test_transformer_options__width_height(path_rgb_byte_tif):
-    transform = affine.Affine(79.1, 0.0, 0.0, 0.0, -71.8, 51552.4)
+    transform = affine.Affine(79.1, 0.0, 0.0, 0.0, -71.8, 718.0)
     transformer_options = {
         "SRC_METHOD": "NO_GEOTRANSFORM",
         "DST_METHOD": "NO_GEOTRANSFORM",
@@ -669,7 +669,7 @@ def test_warpedvrt_gcps__width_height(tmp_path):
             assert vrt.width == 10
             assert vrt.crs == crs
             assert vrt.dst_transform.almost_equals(
-                affine.Affine(22271.389322449897, 0.0, 11882210.275, 0.0, -20016.05875815117, 260167856.0)
+                affine.Affine(22271.389322449897, 0.0, 115698.25, 0.0, -20016.05875815117, 2818720.0)
             )
 
 
@@ -680,5 +680,5 @@ def test_warpedvrt_rpcs__width_height():
             assert vrt.width == 10
             assert vrt.crs == CRS.from_epsg(4326)
             assert vrt.dst_transform.almost_equals(
-                affine.Affine(0.008598908695300157, 0.0, -14127.055592440069, 0.0, -0.0041566403046337285, 2738.897200252146)
+                affine.Affine(0.008598908695300157, 0.0, -123.48824818566573, 0.0, -0.0041566403046337285, 49.52797830474037)
             )

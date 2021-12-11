@@ -16,6 +16,7 @@ New features:
 
 Bug fixes:
 
+- Preserve origin when scaling in creating a WarpedVRT (#).
 - Enable unsafe casting for copyto in the merge tool (#2265).
 
 1.3a2 (2021-10-19)

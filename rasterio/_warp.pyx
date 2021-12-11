@@ -1020,8 +1020,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 and not self.src_gcps
                 and not self.src_dataset.rpcs
             ):
-
-                self.dst_transform = Affine.scale(self.src_dataset.width / self.dst_width, self.src_dataset.height / self.dst_height) * self.src_transform
+                # Note: scaling on the right hand side of multiplication
+                # preserves the origin of the geotransform matrix.
+                self.dst_transform = self.src_transform * Affine.scale(
+                    self.src_dataset.width / self.dst_width,
+                    self.src_dataset.height / self.dst_height
+                )
 
             # Case 3
             elif (
@@ -1045,7 +1049,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     rpcs=self.src_dataset.rpcs,
                     **self.warp_extras,
                 )
-                self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
+                self.dst_transform = self.dst_transform * Affine.scale(
+                    width / self.dst_width, height / self.dst_height
+                )
 
             # If we get here it's because the tests above are buggy. We raise a Python exception to indicate that.
             else:
