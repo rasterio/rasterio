@@ -7,6 +7,12 @@ comprehensible by writing about it in simple language. That's what this
 document is about: describing the abstractions and design of the software to
 project developers.
 
+Rasterio has low level abstractions and higher level abstractions. Let's be
+clear: none of them are as high as some users want. Rasterio has no zonal stats
+feature. No NDVI feature. No interactive mapping features. But it does provide
+low-level abstractions that can be used to build these features in other
+applications.
+
 Interfaces
 ==========
 
@@ -45,13 +51,13 @@ dimension corresponding to the channel or band. For these, the dimensions would
 be: band, row, and column, in that order.
 
 Elements of these arrays generally represent values integrated over an area.
-Gridded point data can be handled, but it is not the default as it is with,
-for example, xarray.
+Gridded, possibly sparse, point data can be handled, but it is not the default
+as it is with, for example, xarray.
 
 rasterio.path.Path
 ------------------
 
-GDAL's GDALOpenEx takes an array of utf-8 encoded bytes as its primary
+GDAL's GDALOpenEx takes an array of UTF-8 encoded bytes as its primary
 argument. These bytes may contain a filename, a URL, an RDBMS connection
 string, XML, or JSON. Almost any kind of dataset address, really. GDAL puts no
 constraint on the content at all. A future format driver might use an array of
@@ -72,13 +78,17 @@ that returns a DataAccessor.
 rasterio.io.MemoryFile and rasterio.io.FilePath implement the DataPath
 interface.
 
-Tool
-----
+Tools
+-----
 
 The issue at https://github.com/rasterio/rasterio/issues/1300 describes
 rasterio's higher level tool abstraction. A tool is more or less the guts of a
 command line program, minus the argument and option parsing. It works on named
 datasets, not on arrays or Python objects.
+
+The tool abstraction is: given names of input and output files and driver and
+environment configuration parameters, the tool transforms pixels quickly and
+efficiently, absorbing the complexity of lazy data loading and concurrency.
 
 Opening a dataset
 =================
@@ -123,7 +133,7 @@ handlers. Instead, users and developers should work with Python's logger.
 Additionally, we check the error stack after calling GDAL functions from Cython
 extension code and raise a Python exception if the last error is of GDAL type
 >= 3. Several functions in rasterio._err exist to help: exc_wrap_int,
->exc_wrap_pointer, etc.
+exc_wrap_pointer, etc.
 
 GDAL raster band cache
 ======================
