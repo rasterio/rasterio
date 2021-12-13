@@ -35,7 +35,7 @@ def get_plt():
 
 
 def show(source, with_bounds=True, contour=False, contour_label_kws=None,
-         ax=None, title=None, transform=None, adjust='linear', **kwargs):
+         ax=None, title=None, transform=None, adjust=False, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -59,11 +59,11 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         Title for the figure.
     transform : Affine, optional
         Defines the affine transform if source is an array
-    adjust : 'linear' | None
+    adjust : bool
         If the plotted data is an RGB image, adjust the values of
         each band so that they fall between 0 and 1 before plotting. If
-        'linear', values will be adjusted by the min / max of each band. If
-        None, no adjustment will be applied.
+        True, values will be adjusted by the min / max of each band. If
+        False, no adjustment will be applied.
     **kwargs : key, value pairings optional
         These will be passed to the matplotlib imshow or contour method
         depending on contour argument.
@@ -120,7 +120,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = source
         if transform and with_bounds:
             kwargs['extent'] = plotting_extent(arr, transform)
-    if adjust is True and arr.ndim >= 3:
+    if adjust and arr.ndim >= 3:
         # Adjust each band by the min/max so it will plot as RGB.
         arr = reshape_as_raster(arr)
         for ii, band in enumerate(arr):
