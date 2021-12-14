@@ -15,6 +15,7 @@ jobs:
     container: osgeo/gdal:ubuntu-full-${{ matrix.gdal-version }}
     strategy:
       matrix:
+        fail-fast: false
         python-version: ['3.8', '3.9']
         gdal-version: ['3.4.0', '3.3.3']
         include:
