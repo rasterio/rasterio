@@ -1264,6 +1264,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Defines the pixel value to be interpreted as not valid data.
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
             modes.
+        gcps : Sequence of GroundControlPoint, optional
+            Zero or more ground control points mapping pixel space to 
+            geographic space locations. Ignored in 'r' or 'r+' modes.
+        rpcs : RPC or dict, optional
+            Rational polynomial coefficients mapping geographic space (x, y, z)
+            coordinates to pixel space coordinates (row, column). If passing a dict,
+            should be in a form suitable as input to `RPC.from_gdal` method.
+            Ignored in 'r' or 'r+' modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
             `False`. Should be set to `False` in a multithreaded:w program.
