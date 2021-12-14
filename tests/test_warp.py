@@ -11,6 +11,7 @@ from numpy.testing import assert_almost_equal
 import pytest
 
 import rasterio
+from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -309,7 +310,10 @@ def test_transform_bounds_no_change():
 
 
 def test_transform_bounds_densify_out_of_bounds():
-    with pytest.raises(ValueError):
+    error = ValueError
+    if gdal_version.at_least('3.4'):
+        error = CPLE_AppDefinedError
+    with pytest.raises(error):
         transform_bounds(
             CRS.from_epsg(4326),
             CRS.from_epsg(32610),
