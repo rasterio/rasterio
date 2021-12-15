@@ -1,4 +1,4 @@
-# distutils: language = c++
+# distutils: language=c++
 
 """Raster and vector warping and reprojection."""
 
@@ -720,7 +720,7 @@ def _calculate_default_transform(
             )
             _ = exc_wrap(1)
 
-        except CPLE_AppDefinedError as err:
+        except Exception as err:
             if retval == 0:
                 log.info("Ignoring error: err=%r", err)
             else:
@@ -759,7 +759,7 @@ cdef GDALDatasetH auto_create_warped_vrt(
     double dfMaxError,
     const GDALWarpOptions *psOptions,
     const char **transformer_options,
-):
+) except NULL:
     """Makes a best-fit WarpedVRT around a dataset.
 
     Returns
@@ -786,7 +786,8 @@ cdef GDALDatasetH auto_create_warped_vrt(
                     psOptions,
                     transformer_options,
                 )
-            _ = exc_wrap(0)
+            _ = exc_wrap(1)
+
         except CPLE_AppDefinedError as err:
             if hds_warped != NULL:
                 log.info("Ignoring error: err=%r", err)
@@ -795,7 +796,7 @@ cdef GDALDatasetH auto_create_warped_vrt(
     ELSE:
         try:
             with nogil:
-                hds_dataset = GDALAutoCreateWarpedVRT(
+                hds_warped = GDALAutoCreateWarpedVRT(
                     hSrcDS,
                     pszSrcWKT,
                     pszDstWKT,
@@ -803,7 +804,8 @@ cdef GDALDatasetH auto_create_warped_vrt(
                     dfMaxError,
                     psOptions,
                 )
-            _ = exc_wrap(0)
+            _ = exc_wrap(1)
+
         except CPLE_AppDefinedError as err:
             if hds_warped != NULL:
                 log.info("Ignoring error: err=%r", err)
@@ -1181,8 +1183,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             GDALSetRasterColorInterpretation(self.band(dst_alpha), <GDALColorInterp>6)
 
         self._set_attrs_from_dataset_handle()
-
-        # This attribute will be used by read().
         self._nodatavals = [self.dst_nodata for i in self.indexes]
 
         if dst_alpha and len(self._nodatavals) == 3:

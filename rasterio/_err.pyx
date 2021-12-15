@@ -148,12 +148,12 @@ cdef inline object exc_check():
 
     err_type = CPLGetLastErrorType()
     err_no = CPLGetLastErrorNo()
-    err_msg = CPLGetLastErrorMsg()
+    msg_c = CPLGetLastErrorMsg()
 
-    if err_msg == NULL:
+    if msg_c == NULL:
         msg = "No error message."
     else:
-        msg_b = err_msg
+        msg_b = msg_c
         msg = msg_b.decode('utf-8')
         msg = msg.replace("`", "'")
         msg = msg.replace("\n", " ")
@@ -161,16 +161,14 @@ cdef inline object exc_check():
     if err_type == 3:
         exception = exception_map.get(err_no, CPLE_BaseError)(err_type, err_no, msg)
         CPLErrorReset()
-        raise exception
-
-    if err_type == 4:
+        return exception
+    elif err_type == 4:
         exception = SystemExit("Fatal error: {0}".format((err_type, err_no, msg)))
         CPLErrorReset()
-        raise exception
-
+        return exception
     else:
         CPLErrorReset()
-        return
+        return None
 
 
 cdef int exc_wrap(int retval) except -1:
