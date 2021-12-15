@@ -54,7 +54,7 @@ def test_issue2353(caplog, path_rgb_byte_tif):
 def test_issue2353bis(caplog, path_rgb_byte_tif):
     """Ensure VRT doesn't leave errors behind."""
     from rasterio.vrt import WarpedVRT
-    with rasterio.open("http://static2.skysight.io/demo2.tiff") as src:
+    with rasterio.open('tests/data/goes.tif') as src:
         with WarpedVRT(src, dst_crs="EPSG:3857") as vrt:
             pass
         assert "Ignoring error" in caplog.text
