@@ -571,7 +571,10 @@ def _reproject(
     try:
 
         exc_wrap_int(oWarper.Initialize(psWOptions))
-        rows, cols = destination.shape[-2:]
+        if isinstance(destination, tuple):
+            rows, cols = destination[3]
+        else:
+            rows, cols = destination.shape[-2:]
 
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
