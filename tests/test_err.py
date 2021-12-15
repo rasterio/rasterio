@@ -6,6 +6,7 @@ import pytest
 import rasterio
 from rasterio._err import CPLE_BaseError
 from rasterio.errors import RasterioIOError
+from rasterio.env import GDALVersion
 
 from .conftest import gdal_version
 
@@ -34,7 +35,7 @@ def test_cplerror_str():
     assert str(err) == "test123"
 
 
-@pytest.mark.xfail(gdal_version.at_least('3.3'), reason="GDAL <3.3 will not warn")
+@pytest.mark.xfail(gdal_version < GDALVersion(3, 3), reason="GDAL <3.3 will not warn")
 def test_issue2353(caplog, path_rgb_byte_tif):
     """Ensure transformer doesn't leave errors behind."""
     from rasterio.warp import calculate_default_transform
@@ -56,7 +57,7 @@ def test_issue2353(caplog, path_rgb_byte_tif):
             _ = src.colorinterp
 
 
-@pytest.mark.xfail(gdal_version.at_least('3.3'), reason="GDAL <3.3 will not warn")
+@pytest.mark.xfail(gdal_version < GDALVersion(3, 3), reason="GDAL <3.3 will not warn")
 def test_issue2353bis(caplog, path_rgb_byte_tif):
     """Ensure VRT doesn't leave errors behind."""
     from rasterio.vrt import WarpedVRT
