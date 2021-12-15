@@ -173,7 +173,7 @@ def test_read_vfs_none():
 
 
 def test_parse_path_accept_get_params():
-    # See https://github.com/mapbox/rasterio/issues/1121
+    # See https://github.com/rasterio/rasterio/issues/1121
     parsed = parse_path('http://example.com/index?a=1')
     assert isinstance(parsed, ParsedPath)
     assert parsed.path == 'example.com/index?a=1'

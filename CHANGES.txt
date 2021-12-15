@@ -4,6 +4,36 @@ Changes
 1.3.0 (TBD)
 -----------
 
+1.3a3 (TBD)
+-----------
+
+New features:
+
+- The CRS class has been added to rasterio.__all__.
+- Python file objects and file-like objects from, for example, fsspec are
+  adapted for opening to get a dataset without copying file data to a
+  MemoryFile (#2141).
+
+Bug fixes:
+
+- Fix the "adjust" keyword argument of rasterio.plot.show (#2359).
+- Preserve origin when scaling in creating a WarpedVRT (#2364).
+- Exceptions are no longer raised for a category of errors emitted from
+  warp-related GDAL functions (#2353).
+- Enable unsafe casting for copyto in the merge tool (#2265).
+
+1.3a2 (2021-10-19)
+------------------
+
+New features:
+
+- The InMemoryRaster class in rasterio._io has been removed and replaced by a
+  more direct and efficient wrapper around numpy arrays (#2301).
+- Add support for PROJ JSON based interchange for CRS (#2212).
+  CRS.to_dict(proj_json=True) returns a PROJ JSON style dict and CRS.from_dict()
+  will accept a PROJ JSON style dict. PROJ JSON text is accepted by
+  CRS.from_user_input().
+
 1.3a1 (2021-10-14)
 ------------------
 

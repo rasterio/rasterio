@@ -54,7 +54,7 @@ transform.
         assert not destination.all()
 
 
-See `examples/reproject.py <https://github.com/mapbox/rasterio/blob/master/examples/reproject.py>`__
+See `examples/reproject.py <https://github.com/rasterio/rasterio/blob/master/examples/reproject.py>`__
 for code that writes the destination array to a GeoTIFF file. I've uploaded the
 resulting file to a Mapbox map to show that the reprojection is
 correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033.
@@ -167,7 +167,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
 Reprojecting with other georeferencing metadata
 ------------------------------------------------
 
-Most geospatial datasets have a geotransform which can be used to reproject a dataset 
+Most geospatial datasets have a geotransform which can be used to reproject a dataset
 from one coordinate reference system to another. Datasets may also be
 georeferenced by alternative metadata, namely Ground Control Points (gcps) or
 Rational Polynomial Coefficients (rpcs). For details on gcps and rpcs, see
@@ -184,7 +184,7 @@ reference system with a newly computed geotransform.
     with rasterio.open('RGB.byte.tif') as source:
         print(source.rpcs)
         src_crs = "EPSG:4326"  # This is the crs of the rpcs
-        
+
         # Optional keyword arguments to be passed to GDAL transformer
         # https://gdal.org/api/gdal_alg.html?highlight=gdalcreategenimgprojtransformer2#_CPPv432GDALCreateGenImgProjTransformer212GDALDatasetH12GDALDatasetHPPc
         kwargs = {

@@ -51,7 +51,6 @@ cdef extern from "cpl_string.h" nogil:
     char **CSLDuplicate(char **papszStrList)
     int CSLFindName(char **papszStrList, const char *pszName)
     int CSLFetchBoolean(char **papszStrList, const char *pszName, int default)
-    int CPLFetchBool(char **papszStrList, const char *pszName, int default)
     const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
     void CSLDestroy(char **list)
@@ -69,6 +68,59 @@ cdef extern from "cpl_vsi.h" nogil:
     ctypedef int vsi_l_offset
     ctypedef FILE VSILFILE
     ctypedef stat VSIStatBufL
+    ctypedef enum VSIRangeStatus:
+        VSI_RANGE_STATUS_UNKNOWN,
+        VSI_RANGE_STATUS_DATA,
+        VSI_RANGE_STATUS_HOLE,
+
+    # GDAL Plugin System (GDAL 3.0+)
+    # Filesystem functions
+    ctypedef int (*VSIFilesystemPluginStatCallback)(void*, const char*, VSIStatBufL*, int)  # Optional
+    ctypedef int (*VSIFilesystemPluginUnlinkCallback)(void*, const char*)  # Optional
+    ctypedef int (*VSIFilesystemPluginRenameCallback)(void*, const char*, const char*)  # Optional
+    ctypedef int (*VSIFilesystemPluginMkdirCallback)(void*, const char*, long)  # Optional
+    ctypedef int (*VSIFilesystemPluginRmdirCallback)(void*, const char*)  # Optional
+    ctypedef char** (*VSIFilesystemPluginReadDirCallback)(void*, const char*, int)  # Optional
+    ctypedef char** (*VSIFilesystemPluginSiblingFilesCallback)(void*, const char*)  # Optional (GDAL 3.2+)
+    ctypedef void* (*VSIFilesystemPluginOpenCallback)(void*, const char*, const char*)
+    # File functions
+    ctypedef vsi_l_offset (*VSIFilesystemPluginTellCallback)(void*)
+    ctypedef int (*VSIFilesystemPluginSeekCallback)(void*, vsi_l_offset, int)
+    ctypedef size_t (*VSIFilesystemPluginReadCallback)(void*, void*, size_t, size_t)
+    ctypedef int (*VSIFilesystemPluginReadMultiRangeCallback)(void*, int, void**, const vsi_l_offset*, const size_t*)  # Optional
+    ctypedef VSIRangeStatus (*VSIFilesystemPluginGetRangeStatusCallback)(void*, vsi_l_offset, vsi_l_offset)  # Optional
+    ctypedef int (*VSIFilesystemPluginEofCallback)(void*)  # Mandatory?
+    ctypedef size_t (*VSIFilesystemPluginWriteCallback)(void*, const void*, size_t, size_t)
+    ctypedef int (*VSIFilesystemPluginFlushCallback)(void*)  # Optional
+    ctypedef int (*VSIFilesystemPluginTruncateCallback)(void*, vsi_l_offset)
+    ctypedef int (*VSIFilesystemPluginCloseCallback)(void*)  # Optional
+    # Plugin function container struct
+    ctypedef struct VSIFilesystemPluginCallbacksStruct:
+        void *pUserData
+        VSIFilesystemPluginStatCallback stat
+        VSIFilesystemPluginUnlinkCallback unlink
+        VSIFilesystemPluginRenameCallback rename
+        VSIFilesystemPluginMkdirCallback mkdir
+        VSIFilesystemPluginRmdirCallback rmdir
+        VSIFilesystemPluginReadDirCallback read_dir
+        VSIFilesystemPluginOpenCallback open
+        VSIFilesystemPluginTellCallback tell
+        VSIFilesystemPluginSeekCallback seek
+        VSIFilesystemPluginReadCallback read
+        VSIFilesystemPluginReadMultiRangeCallback read_multi_range
+        VSIFilesystemPluginGetRangeStatusCallback get_range_status
+        VSIFilesystemPluginEofCallback eof
+        VSIFilesystemPluginWriteCallback write
+        VSIFilesystemPluginFlushCallback flush
+        VSIFilesystemPluginTruncateCallback truncate
+        VSIFilesystemPluginCloseCallback close
+        size_t nBufferSize
+        size_t nCacheSize
+        VSIFilesystemPluginSiblingFilesCallback sibling_files
+
+    int VSIInstallPluginHandler(const char*, const VSIFilesystemPluginCallbacksStruct*)
+    VSIFilesystemPluginCallbacksStruct* VSIAllocFilesystemPluginCallbacksStruct()
+    void VSIFreeFilesystemPluginCallbacksStruct(VSIFilesystemPluginCallbacksStruct*)
 
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
@@ -140,6 +192,29 @@ IF CTE_GDAL_MAJOR_VERSION >= 3:
                                 const char* const* papszOptions)
 ELSE:
     cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
+
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
+    cdef extern from "ogr_srs_api.h" nogil:
+
+        OGRErr OSRExportToPROJJSON(OGRSpatialReferenceH hSRS,
+                                   char ** ppszReturn,
+                                   const char* const* papszOptions)
+
+
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
+    cdef extern from "ogr_srs_api.h" nogil:
+
+        int OCTTransformBounds(
+            OGRCoordinateTransformationH hCT,
+            const double xmin,
+            const double ymin,
+            const double xmax,
+            const double ymax,
+            double* out_xmin,
+            double* out_ymin,
+            double* out_xmax,
+            double* out_ymax,
+            const int densify_pts )
 
 
 cdef extern from "gdal.h" nogil:

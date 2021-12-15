@@ -4,6 +4,7 @@
 """
 
 from collections import defaultdict
+import json
 import logging
 import warnings
 
@@ -22,7 +23,7 @@ log = logging.getLogger(__name__)
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    cdef char *info_c = NULL
+    cdef const char *info_c = NULL
     info_c = GDALVersionInfo("RELEASE_NAME")
     info_b = info_c
     return info_b.decode("utf-8")
@@ -323,6 +324,42 @@ cdef class _CRS:
             OSRFreeSRSArray(matches)
             CPLFree(confidences)
 
+    def projjson(self):
+        """PROJ JSON representation of the CRS
+
+        .. versionadded:: 1.3.0
+
+        .. note:: Requites GDAL 3.1+ and PROJ 6.2+
+
+        Returns
+        -------
+        str
+
+        """
+        cdef char *conv_json = NULL
+        cdef const char* options[2]
+
+        try:
+            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
+                if osr_get_name(self._osr) != NULL:
+                    options[0] = b"MULTILINE=NO"
+                    options[1] = NULL
+                    exc_wrap_ogrerr(OSRExportToPROJJSON(self._osr, &conv_json, options))
+            ELSE:
+                raise CRSError("GDAL 3.1+ required to export to PROJ JSON.")
+
+        except CPLE_BaseError as exc:
+            raise CRSError("Cannot convert to PROJ JSON. {}".format(exc))
+
+        else:
+            if conv_json != NULL:
+                return conv_json.decode('utf-8')
+            else:
+                return ''
+        finally:
+            CPLFree(conv_json)
+
+
     @staticmethod
     def from_epsg(code):
         """Make a CRS from an EPSG code
@@ -395,7 +432,7 @@ cdef class _CRS:
 
     @staticmethod
     def from_dict(initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
+        """Make a CRS from a dict of PROJ parameters or PROJ JSON
 
         Parameters
         ----------
@@ -411,6 +448,11 @@ cdef class _CRS:
         """
         data = dict(initialdata or {})
         data.update(**kwargs)
+
+        if not ("init" in data or "proj" in data):
+            # PROJ JSON
+            return _CRS.from_user_input(json.dumps(data))
+
         data = {k: v for k, v in data.items() if k in all_proj_keys}
 
         # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will

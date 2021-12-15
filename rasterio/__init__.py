@@ -9,6 +9,7 @@ import os
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import gdal_version
+    from rasterio.crs import CRS
     from rasterio.drivers import driver_from_extension, is_blacklisted
     from rasterio.dtypes import (
         bool_,
@@ -41,8 +42,17 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio.enums
     import rasterio.path
 
-__all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.3a1"
+    try:
+        from rasterio.io import FilePath
+        have_vsi_plugin = True
+    except ImportError:
+
+        class FilePath:
+            pass
+        have_vsi_plugin = False
+
+__all__ = ['band', 'open', 'pad', 'Env', 'CRS']
+__version__ = "1.3a3"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -71,9 +81,11 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Parameters
     ----------
-    fp : str, file object or PathLike object
-        A filename or URL, a file object opened in binary ('rb') mode,
-        or a Path object.
+    fp : str, file object, PathLike object, FilePath, or MemoryFile
+        A filename or URL, a file object opened in binary ('rb') mode, a
+        Path object, or one of the rasterio classes that provides the
+        dataset-opening interface (has an open method that returns a
+        dataset).
     mode : str, optional
         'r' (read, the default), 'r+' (read/write), 'w' (write), or
         'w+' (write/read).
@@ -155,7 +167,11 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     """
 
     if not isinstance(fp, str):
-        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, os.PathLike)):
+        if not (
+            hasattr(fp, "read")
+            or hasattr(fp, "write")
+            or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
+        ):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, str):
         raise TypeError("invalid mode: {0!r}".format(mode))
@@ -179,13 +195,16 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         @contextmanager
         def fp_reader(fp):
-            memfile = MemoryFile(fp.read())
-            dataset = memfile.open(driver=driver, sharing=sharing)
+            if have_vsi_plugin:
+                vsi_file = FilePath(fp)
+            else:
+                vsi_file = MemoryFile(fp.read())
+            dataset = vsi_file.open(driver=driver, sharing=sharing)
             try:
                 yield dataset
             finally:
                 dataset.close()
-                memfile.close()
+                vsi_file.close()
 
         return fp_reader(fp)
 
@@ -207,6 +226,25 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         return fp_writer(fp)
 
+    # TODO: test for a shared base class or abstract type.
+    elif isinstance(fp, (FilePath, MemoryFile)):
+        if mode.startswith("r"):
+            dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
+        elif mode.startswith("w"):
+            dataset = fp.open(
+                driver=driver,
+                width=width,
+                height=height,
+                count=count,
+                crs=crs,
+                transform=transform,
+                dtype=dtype,
+                nodata=nodata,
+                sharing=sharing,
+                **kwargs
+            )
+        return dataset
+
     else:
         # If a PathLike instance is given, convert it to a string path.
         fp = os.fspath(fp)
@@ -218,9 +256,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # be taken over by the dataset's context manager if it is not
         # None.
         if mode == 'r':
-            s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+            dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
         elif mode == "r+":
-            s = get_writer_for_path(path, driver=driver)(
+            dataset = get_writer_for_path(path, driver=driver)(
                 path, mode, driver=driver, sharing=sharing, **kwargs
             )
         elif mode.startswith("w"):
@@ -228,13 +266,20 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
                 driver = driver_from_extension(path)
             writer = get_writer_for_driver(driver)
             if writer is not None:
-                s = writer(path, mode, driver=driver,
-                           width=width, height=height,
-                           count=count, crs=crs,
-                           transform=transform,
-                           dtype=dtype, nodata=nodata,
-                           sharing=sharing,
-                           **kwargs)
+                dataset = writer(
+                    path,
+                    mode,
+                    driver=driver,
+                    width=width,
+                    height=height,
+                    count=count,
+                    crs=crs,
+                    transform=transform,
+                    dtype=dtype,
+                    nodata=nodata,
+                    sharing=sharing,
+                    **kwargs
+                )
             else:
                 raise DriverCapabilityError(
                     "Writer does not exist for driver: %s" % str(driver)
@@ -242,7 +287,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         else:
             raise DriverCapabilityError(
                 "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
-        return s
+
+        return dataset
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])

@@ -550,19 +550,20 @@ out as GeoJSON.
 
 .. code-block:: console
 
-    $ rio shapes tests/data/shade.tif --bidx 1 --precision 6 > shade.geojson
+    $ rio shapes tests/data/shade.tif --bidx 1 --precision 6 --collection > shade.geojson
 
-The resulting file, uploaded to Mapbox, looks like this: `sgillies.j1ho338j <https://a.tiles.mapbox.com/v4/sgillies.j1ho338j/page.html?access_token=pk.eyJ1Ijoic2dpbGxpZXMiLCJhIjoiWUE2VlZVcyJ9.OITHkb1GHNh9nvzIfUc9QQ#13/39.6079/-106.4822>`__.
+The resulting file looks `like this <https://gist.github.com/sgillies/34a2a7f45ef7d8d10488a8382be6042f>`__.
 
 Using the ``--mask`` option you can write out the shapes of a dataset's valid
 data region.
 
 .. code-block:: console
 
-    $ rio shapes --mask --precision 6 tests/data/RGB.byte.tif | geojsonio
+    $ rio shapes tests/data/RGB.byte.tif --mask --precision 6 --collection > mask.geojson
 
-See http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/.
+The output of which looks `like this <https://gist.github.com/sgillies/429df9c4d0e4d16073dd6e56e097a8eb>`__.
 
+Note: ``rio shapes`` returns line-delimited GeoJSONs by default. Use the ``--collection`` flag as shown here to return a single GeoJSON feature collection.
 
 stack
 -----
@@ -694,7 +695,7 @@ To use these plugins with rio, add the commands to the
 and in ``rasterio/rio/main.py``.
 
 See the
-`plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
+`plugin registry <https://github.com/rasterio/rasterio/wiki/Rio-plugin-registry>`__
 for a list of available plugins.
 
 

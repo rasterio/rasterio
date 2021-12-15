@@ -1,7 +1,7 @@
 """Rasterio tools module
 
 See this RFC about Rasterio tools:
-https://github.com/mapbox/rasterio/issues/1300.
+https://github.com/rasterio/rasterio/issues/1300.
 """
 
 import json

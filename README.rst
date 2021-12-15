@@ -4,11 +4,14 @@ Rasterio
 
 Rasterio reads and writes geospatial raster data.
 
-.. image:: https://app.travis-ci.com/mapbox/rasterio.svg?branch=master
-   :target: https://app.travis-ci.com/mapbox/rasterio
+.. image:: https://app.travis-ci.com/rasterio/rasterio.svg?branch=master
+   :target: https://app.travis-ci.com/rasterio/rasterio
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
+   
+.. image:: https://img.shields.io/pypi/v/rasterio
+   :target: https://pypi.org/project/rasterio/
 
 Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
@@ -107,7 +110,7 @@ Rasterio CLI
 ============
 
 Rasterio's command line interface, named "rio", is documented at `cli.rst
-<https://github.com/mapbox/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
+<https://github.com/rasterio/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
 insp`` command opens the hood of any raster dataset so you can poke around
 using Python.
 
@@ -151,11 +154,11 @@ Rio Plugins
 -----------
 
 Rio provides the ability to create subcommands using plugins.  See
-`cli.rst <https://github.com/mapbox/rasterio/blob/master/docs/cli.rst#rio-plugins>`__
+`cli.rst <https://github.com/rasterio/rasterio/blob/master/docs/cli.rst#rio-plugins>`__
 for more information on building plugins.
 
 See the
-`plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
+`plugin registry <https://github.com/rasterio/rasterio/wiki/Rio-plugin-registry>`__
 for a list of available plugins.
 
 
@@ -310,7 +313,7 @@ Rasterio is a Python C extension and to build you'll need a working compiler
 required to run the rasterio setup script. Numpy has to be installed (via the
 indicated requirements file) before rasterio can be installed. See rasterio's
 Travis `configuration
-<https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
+<https://github.com/rasterio/rasterio/blob/master/.travis.yml>`__ for more
 guidance.
 
 Linux
@@ -392,12 +395,6 @@ the time to craft a clear question and be patient about responses.
 Please do not bring these questions to Rasterio's issue tracker, which we want
 to reserve for bug reports and other actionable issues.
 
-While Rasterio's repo is in the Mapbox GitHub organization, Mapbox's Support
-team is focused on customer support for its commercial platform and Rasterio
-support requests may be perfunctorily closed with or without a link to
-https://rasterio.groups.io/g/main. It's better to bring questions directly to
-the main Rasterio group at groups.io.
-
 Development and Testing
 =======================
 
@@ -415,6 +412,8 @@ See `LICENSE.txt <LICENSE.txt>`__.
 
 Authors
 =======
+
+The `rasterio` project was begun at Mapbox and was transferred to the `rasterio` Github organization in October 2021.
 
 See `AUTHORS.txt <AUTHORS.txt>`__.
 

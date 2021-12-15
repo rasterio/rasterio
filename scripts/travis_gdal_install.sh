@@ -68,6 +68,7 @@ if [ "$GDALVERSION" = "master" ]; then
     if test "$BUILD" = "yes"; then
         mkdir -p $GDALINST/gdal-$GDALVERSION
         cp newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt
+        ./autogen.sh
         ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
         make -s -j 2
         make install

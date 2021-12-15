@@ -7,7 +7,9 @@ utilize CPLSetThreadLocalConfigOption instead. All threads use
 CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
 threads will inherit config options from the main thread unless the
 option is set to a new value inside the thread.
+
 """
+
 from contextlib import contextmanager
 import logging
 import os
@@ -21,13 +23,13 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 
 from libc.stdio cimport stderr
 
-
 level_map = {
     0: 0,
     1: logging.DEBUG,
     2: logging.WARNING,
     3: logging.ERROR,
-    4: logging.CRITICAL }
+    4: logging.CRITICAL
+}
 
 code_map = {
     0: 'CPLE_None',
@@ -41,16 +43,13 @@ code_map = {
     8: 'CPLE_NoWriteAccess',
     9: 'CPLE_UserInterrupt',
     10: 'ObjectNull',
-
-    # error numbers 11-16 are introduced in GDAL 2.1. See
-    # https://github.com/OSGeo/gdal/pull/98.
     11: 'CPLE_HttpResponse',
     12: 'CPLE_AWSBucketNotFound',
     13: 'CPLE_AWSObjectNotFound',
     14: 'CPLE_AWSAccessDenied',
     15: 'CPLE_AWSInvalidCredentials',
-    16: 'CPLE_AWSSignatureDoesNotMatch'}
-
+    16: 'CPLE_AWSSignatureDoesNotMatch'
+}
 
 log = logging.getLogger(__name__)
 
@@ -64,24 +63,37 @@ cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
-    """Send CPL debug messages and warnings to Python's logger."""
-    log = logging.getLogger(__name__)
-    if err_class < 3:
-        if err_no in code_map:
-            log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+    """Send CPL errors to Python's logger.
+
+    Because this function is called by GDAL with no Python context, we
+    can't propagate exceptions that we might raise here. They'll be
+    ignored.
+
+    """
+    if err_no in code_map:
+        # We've observed that some GDAL functions may emit multiple
+        # ERROR level messages and yet succeed. We want to see those
+        # messages in our log file, but not at the ERROR level. We
+        # turn the level down to INFO.
+        if err_class == 3:
+            log.info(
+                "GDAL signalled an error: err_no=%r, msg=%r",
+                err_no,
+                msg
+            )
         else:
-            log.info("Unknown error number %r", err_no)
+            log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+    else:
+        log.info("Unknown error number %r", err_no)
 
 
 # Definition of GDAL callback functions, one for Windows and one for
 # other platforms. Each calls log_error().
 IF UNAME_SYSNAME == "Windows":
-    cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no,
-                                              const char* msg) with gil:
+    cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
         log_error(err_class, err_no, msg)
 ELSE:
-    cdef void logging_error_handler(CPLErr err_class, int err_no,
-                                    const char* msg) with gil:
+    cdef void logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
         log_error(err_class, err_no, msg)
 
 
@@ -92,7 +104,7 @@ def driver_count():
 
 cpdef get_gdal_config(key, normalize=True):
     """Get the value of a GDAL configuration option.  When requesting
-    ``GDAL_CACHEMAX`` the value is returned unaltered. 
+    ``GDAL_CACHEMAX`` the value is returned unaltered.
 
     Parameters
     ----------
@@ -356,7 +368,7 @@ cdef class GDALEnv(ConfigEnv):
                             log.debug("GDAL data found in package: path=%r.", path)
                             self.update_config_options(GDAL_DATA=path)
 
-                        # See https://github.com/mapbox/rasterio/issues/1631.
+                        # See https://github.com/rasterio/rasterio/issues/1631.
                         elif GDALDataFinder().find_file("header.dxf"):
                             log.debug("GDAL data files are available at built-in paths.")
 
@@ -433,6 +445,6 @@ def set_proj_data_search_path(path):
         path_b = path.encode("utf-8")
         path_c = path_b
         paths = CSLAddString(paths, path_c)
-        OSRSetPROJSearchPaths(paths)
+        OSRSetPROJSearchPaths(<const char *const *>paths)
     ELSE:
         os.environ["PROJ_LIB"] = path

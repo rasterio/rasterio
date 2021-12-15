@@ -16,13 +16,13 @@ Issue Conventions
 
 The Rasterio issue tracker is for actionable issues.
 
-Questions about installation, distribution, and usage should be taken to 
+Questions about installation, distribution, and usage should be taken to
 the project's `general discussion group
 <https://rasterio.groups.io/g/main>`__. Opened issues which fall into one
 of these three categories may be perfunctorily closed.
 
 Questions about development of Rasterio, brainstorming, requests for comment,
-and not-yet-actionable proposals are welcome in the project's 
+and not-yet-actionable proposals are welcome in the project's
 `developers discussion group <https://rasterio.groups.io/g/dev>`__. Issues
 opened in Rasterio's GitHub repo which haven't been socialized there may be
 perfunctorily closed.
@@ -35,7 +35,7 @@ Please search existing issues, open and closed, before creating a new one.
 Rasterio employs C extension modules, so bug reports very often hinge on the
 following details:
 
-- Operating system type and version (Windows? Ubuntu 12.04? 14.04?)
+- Operating system type and version (Windows? Ubuntu 20.04? 18.04?)
 - The version and source of Rasterio (PyPI, Anaconda, or somewhere else?)
 - The version and source of GDAL (UbuntuGIS? Homebrew?)
 
@@ -47,10 +47,12 @@ issue are especially helpful!
 Design Principles
 -----------------
 
-Rasterio's API is different from GDAL's API and this is intentional.
+Rasterio's API is both similar to and different from GDAL's API and this is
+intentional.
 
 - Rasterio is a library for reading and writing raster datasets. Rasterio uses
   GDAL but is not a "Python binding for GDAL."
+- Rasterio aims to hide, or at least contain, the complexity of GDAL.
 - Rasterio always prefers Python's built-in protocols and types or Numpy
   protocols and types over concepts from GDAL's data model.
 - Rasterio keeps I/O separate from other operations. ``rasterio.open()`` is
@@ -60,6 +62,7 @@ Rasterio's API is different from GDAL's API and this is intentional.
 - Rasterio methods and functions should be free of side-effects and hidden
   inputs. This is challenging in practice because GDAL embraces global
   variables.
+- Rasterio leans on analogies to other familiar Python APIs.
 
 Dataset Objects
 ---------------
@@ -67,10 +70,34 @@ Dataset Objects
 Our term for the kind of object that allows read and write access to raster data
 is *dataset object*. A dataset object might be an instance of `DatasetReader`
 or `DatasetWriter`. The canonical way to create a dataset object is by using the
-`rasterio.open()` function.
+``rasterio.open()`` function.
 
-This is analogous to Python's use of 
+This is analogous to Python's use of
 `file object <https://docs.python.org/3/glossary.html#term-file-object>`__.
+
+Path Objects
+------------
+
+A *path object* specifies the name and address of a dataset within some space
+(filesystem, internet, cloud) along with optional parameters. The first
+positional argument of ``rasterio.open()`` is a path. Some path objects also have
+an *open* method which can used used to create a dataset object.
+
+Band Objects
+------------
+
+Unlike GDAL's original original data model, rasterio has no band objects. In
+this way it's more like GDAL's multi-dimensional API. A dataset's ``read()``
+method returns N-D arrays.
+
+GDAL Context
+------------
+
+GDAL depends on some global context: a format driver registry, dataset
+connection pool, a raster block cache, a file header cache. Rasterio depends on
+this, too, but unlike GDAL's official Python bindings, delays initializing this
+context as long as possible and abstracts it with the help of a Python context
+manager.
 
 Git Conventions
 ---------------
@@ -104,7 +131,7 @@ Tests are mandatory for new code. We use `pytest <https://pytest.org>`__. Use
 pytest's parameterization feature.
 
 We aspire to 100% coverage for Python modules but coverage of the Cython code is
-a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
+a future aspiration (`#515 <https://github.com/rasterio/rasterio/issues/515>`__).
 
 Use `darker <https://pypi.org/project/darker/>`_ to reformat code as you change it.
 We aren't going to run black on everything all at once.
@@ -114,11 +141,24 @@ We aren't going to make a large initiative about adding hints to everything.
 
 Changes should be noted in CHANGES.txt. New entries go above older entries.
 
-Development Environment
------------------------
+New Containerized Development Environment
+-----------------------------------------
+
+Rasterio has a new Dockerfile that can be used to create images and containers
+for exploring or testing the package.
+
+The command ``make dockertest`` will build a Docker image based on one of the
+official GDAL images, start a container that mounts the working directory, and
+run ``python setup.py develop && python -m pytest`` in the container.
+
+Historical Development Environment
+----------------------------------
+
+If you prefer not to use the new development environment you may install
+rasterio's dependencies directly onto your computer.
 
 Developing Rasterio requires Python 3.6 or any final release after and
-including 3.9.  We prefer developing with the most recent version of Python
+including 3.10.  We prefer developing with the most recent version of Python
 but recognize this is not possible for all contributors.  A C compiler is also
 required to leverage `existing protocols
 <https://docs.python.org/3.5/extending/extending.html>`__ for extending Python
@@ -132,7 +172,7 @@ First, clone Rasterio's ``git`` repo:
 
 .. code-block:: console
 
-    $ git clone https://github.com/mapbox/rasterio
+    $ git clone https://github.com/rasterio/rasterio
 
 Development should occur within a `virtual environment
 <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__ to better isolate
@@ -227,16 +267,16 @@ Note: rasterio must be installed in editable mode in order to run tests.
 
 .. code-block:: console
 
-    $ py.test --cov rasterio --cov-report term-missing
+    $ python -m pytest --cov rasterio --cov-report term-missing
 
 A single test file:
 
 .. code-block:: console
 
-    $ py.test tests/test_band.py
+    $ python -m pytest tests/test_band.py
 
 A single test:
 
 .. code-block:: console
 
-    $ py.test tests/test_band.py::test_band
+    $ python -m pytest tests/test_band.py::test_band

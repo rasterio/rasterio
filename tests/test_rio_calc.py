@@ -148,7 +148,7 @@ def test_sieve_read(tmpdir, runner):
 
 
 def test_positional_calculation_byindex(tmpdir, runner):
-    # See Issue 947: https://github.com/mapbox/rasterio/issues/947
+    # See Issue 947: https://github.com/rasterio/rasterio/issues/947
     # Prior to fix, 'shade.tif' reliably is read as 2nd input and
     # we should expect this to fail due to array shape error
     # ("operands could not be broadcast together")

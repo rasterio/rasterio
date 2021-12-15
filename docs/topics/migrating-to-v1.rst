@@ -43,7 +43,7 @@ Here's a history of this feature:
 The original plan was to remove the ``affine`` argument + property, and assume
 that the object passed to ``transform`` is an ``Affine()``.
 However, after `further discussion
-<https://github.com/mapbox/rasterio/pull/763>`__ it was determined that
+<https://github.com/rasterio/rasterio/pull/763>`__ it was determined that
 since ``Affine()`` and GDAL geotransforms are both 6 element tuples users may
 experience unexplained errors and outputs, so an exception is raised instead to
 better highlight the error.
@@ -62,9 +62,9 @@ Before 1.0b1:
 
 Tickets
 ```````
-* `#86 <https://github.com/mapbox/rasterio/issues/86>`__ - Announcing the
+* `#86 <https://github.com/rasterio/rasterio/issues/86>`__ - Announcing the
   plan to switch from GDAL geotransforms to ``Affine()``.
-* `#763 <https://github.com/mapbox/rasterio/pull/763>`__ - Implementation of the
+* `#763 <https://github.com/rasterio/rasterio/pull/763>`__ - Implementation of the
   migration and some further discussion.
 
   Beginning in 1.0b1:
@@ -120,7 +120,7 @@ but Rasterio 1.0 contains more interactions with GDAL's environment, so
 Tickets
 ```````
 
-* `#665 <https://github.com/mapbox/rasterio/pull/665>`__ - Deprecation of
+* `#665 <https://github.com/rasterio/rasterio/pull/665>`__ - Deprecation of
   ``rasterio.drivers()`` and introduction of ``rasterio.Env()``.
 
 Removed: ``src.read_band()``
@@ -153,10 +153,10 @@ is now:
 Tickets
 ```````
 
-* `# 83 <https://github.com/mapbox/rasterio/issues/83>`__ - Introduction of
+* `# 83 <https://github.com/rasterio/rasterio/issues/83>`__ - Introduction of
   ``src.read()``.
-* `#96 <https://github.com/mapbox/rasterio/issues/96>`__,
-  `#284 <https://github.com/mapbox/rasterio/pull/284>`__ - Deprecation of
+* `#96 <https://github.com/rasterio/rasterio/issues/96>`__,
+  `#284 <https://github.com/rasterio/rasterio/pull/284>`__ - Deprecation of
   ``src.read_band()``.
 
 
@@ -170,7 +170,7 @@ favor of ``src.read_masks()``, although it has no direct replacement.
 Tickets
 ```````
 
-* `#284 <https://github.com/mapbox/rasterio/pull/284>`__ - Deprecation of
+* `#284 <https://github.com/rasterio/rasterio/pull/284>`__ - Deprecation of
   ``src.read_mask()``.
 
 
@@ -188,7 +188,7 @@ dataset windows have been moved to ``rasterio.windows.*``:
 Tickets
 ```````
 
-* `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Introduction of
+* `#609 <https://github.com/rasterio/rasterio/pull/609>`__ - Introduction of
   ``rasterio.windows``.
 
 
@@ -208,7 +208,7 @@ several different locations:
 Tickets
 ```````
 
-* `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Deprecation of
+* `#609 <https://github.com/rasterio/rasterio/pull/609>`__ - Deprecation of
   ``rasterio.tool``.
 
 
@@ -226,7 +226,7 @@ several different locations:
 Tickets
 ```````
 
-* `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Deprecation of
+* `#609 <https://github.com/rasterio/rasterio/pull/609>`__ - Deprecation of
   ``rasterio.tools``.
 
 

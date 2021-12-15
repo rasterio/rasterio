@@ -46,7 +46,7 @@ def test_sampling_single_index():
 
 
 def test_sampling_type():
-    """See https://github.com/mapbox/rasterio/issues/378."""
+    """See https://github.com/rasterio/rasterio/issues/378."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         sampler = src.sample([(220650.0, 2719200.0)], indexes=[2])
         assert type(sampler)

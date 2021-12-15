@@ -4,6 +4,7 @@ include rasterio/*.pyx
 include rasterio/*.pxd
 include rasterio/*.pxi
 exclude rasterio/*.c
+exclude rasterio/*.cpp
 recursive-include examples *.py
 recursive-include tests *.py *.rst
 recursive-exclude tests/data *.tif

@@ -8,14 +8,14 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 import rasterio
-from rasterio._err import CPLE_BaseError
+from rasterio._err import CPLE_BaseError, CPLE_AppDefinedError
 from rasterio._warp import _calculate_default_transform
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, transform_bounds
-from tests.conftest import requires_gdal3
+from tests.conftest import gdal_version, requires_gdal3
 
 log = logging.getLogger(__name__)
 
@@ -187,7 +187,10 @@ def test_transform_bounds_identity():
 
 
 def test_transform_bounds_densify_out_of_bounds():
-    with pytest.raises(ValueError):
+    error = ValueError
+    if gdal_version.at_least('3.4'):
+        error = CPLE_AppDefinedError
+    with pytest.raises(error):
         transform_bounds(
             "EPSG:4326",
             "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
@@ -201,7 +204,10 @@ def test_transform_bounds_densify_out_of_bounds():
 
 
 def test_transform_bounds_densify_out_of_bounds__geographic_output():
-    with pytest.raises(ValueError):
+    error = ValueError
+    if gdal_version.at_least('3.4'):
+        error = CPLE_AppDefinedError
+    with pytest.raises(error):
         transform_bounds(
             "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
             "+a=6370997 +b=6370997 +units=m +no_defs",

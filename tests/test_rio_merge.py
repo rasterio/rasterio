@@ -516,7 +516,7 @@ def test_merge_tiny_intres(tiffs):
 )
 @pytest.mark.parametrize("precision", [[], ["--precision", "9"]])
 def test_merge_precision(tmpdir, precision):
-    """See https://github.com/mapbox/rasterio/issues/1837"""
+    """See https://github.com/rasterio/rasterio/issues/1837"""
     # TDOD move ascii grids to a fixture?
 
     expected = """\

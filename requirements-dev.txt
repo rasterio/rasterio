@@ -6,7 +6,7 @@ delocate
 hypothesis
 numpydoc
 packaging
-pytest~=4.6.0
+pytest
 pytest-cov>=2.2.0
 pytest-randomly==3.10.1
 shapely

@@ -25,7 +25,7 @@ import rasterio. But if you are using rasterio, you may profit from
 Rasterio's CLI infrastructure and the network of existing commands.
 Please add yours to the registry
 
-  https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry
+  https://github.com/rasterio/rasterio/wiki/Rio-plugin-registry
 
 so that other ``rio`` users may find it.
 """

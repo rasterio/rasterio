@@ -436,7 +436,7 @@ def test_ensure_defaults_teardown(gdalenv):
     would quietly reinstate any ``rasterio.env.default_options`` that was
     not modified by the environment.
 
-    https://github.com/mapbox/rasterio/issues/968
+    https://github.com/rasterio/rasterio/issues/968
     """
 
     def _check_defaults():

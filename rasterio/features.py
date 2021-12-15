@@ -301,7 +301,7 @@ def rasterize(
             if geom_type == 'GeometryCollection':
                 # GeometryCollections need to be handled as individual parts to
                 # avoid holes in output:
-                # https://github.com/mapbox/rasterio/issues/1253.
+                # https://github.com/rasterio/rasterio/issues/1253.
                 # Only 1-level deep since GeoJSON spec discourages nested
                 # GeometryCollections
                 for part in geom['geometries']:
