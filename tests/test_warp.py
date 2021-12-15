@@ -2027,3 +2027,51 @@ def test_reproject_error_propagation(http_error_server, caplog):
             )
 
     assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
+
+
+def test_reproject_to_specified_output_bands():
+    """
+    Reproject multiple input rasters to a single output raster, joining their bands.
+
+    In this example, we concatenate a RGB raster with a mocked NIR image, while reprojecting and resampling both.
+    """
+    with rasterio.open('tests/data/rgb1.tif') as src_rgb, \
+            rasterio.open('tests/data/rgb1_fake_nir_epsg3857.tif') as src_nir:
+        output_crs = CRS.from_epsg(4326)
+        output_transform, output_width, output_height = calculate_default_transform(
+            src_rgb.crs,
+            output_crs,
+            src_rgb.width,
+            src_rgb.height,
+            *src_rgb.bounds)
+        with rasterio.MemoryFile() as mem:
+            with mem.open(
+                    driver="GTiff",
+                    width=output_width,
+                    height=output_height,
+                    count=5,
+                    transform=output_transform,
+                    dtype="uint8",
+                    nodata=0,
+                    crs=output_crs,
+            ) as out:  # type: rasterio.io.DatasetWriter
+                reproject(
+                    rasterio.band(src_rgb, src_rgb.indexes),
+                    rasterio.band(out, src_rgb.indexes),
+                    resampling=Resampling.nearest,
+                )
+                reproject(
+                    rasterio.band(src_nir, 1),
+                    rasterio.band(out, 4),
+                    resampling=Resampling.nearest,
+                )
+
+            with mem.open() as out:  # type: rasterio.DatasetReader
+                assert out.count == 5
+
+                for i in range(1, 5):
+                    band_data = out.read(i)
+                    assert (band_data != 0).any()
+
+                band_data = out.read(5)
+                assert (band_data == 0).all()
