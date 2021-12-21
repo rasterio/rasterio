@@ -19,7 +19,7 @@ from rasterio.errors import (
     CRSError,
     GDALVersionError,
     TransformError,
-    TransformWarning,
+    RPCError,
     WarpOperationError,
 )
 from rasterio.warp import (
@@ -2026,8 +2026,8 @@ def test_reproject_error_propagation(http_error_server, caplog):
     assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
 
 
-def test_rpcs_warn_non_epsg4326():
-    with pytest.warns(TransformWarning):
+def test_rpcs_non_epsg4326():
+    with pytest.raises(RPCError):
         with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
             src_rpcs = src.rpcs
             reproject(
