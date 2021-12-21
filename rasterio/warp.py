@@ -13,7 +13,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import _transform
     from rasterio.enums import Resampling
     from rasterio.env import GDALVersion, ensure_env, require_gdal_version
-    from rasterio.errors import GDALBehaviorChangeException, TransformError, TransformWarning
+    from rasterio.errors import GDALBehaviorChangeException, TransformError, RPCError
     from rasterio.transform import array_bounds
     from rasterio._warp import (
         _calculate_default_transform,
@@ -313,14 +313,14 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
 
             src_crs = src_crs or src_rdr.crs
 
-            # warn against reprojecting with rpcs using a CRS that is not EPSG:4326
+            # raise exception when reprojecting with rpcs using a CRS that is not EPSG:4326
             if rpcs:
                 if isinstance(src_crs, str):
                     src_crs_obj = rasterio.crs.CRS.from_string(src_crs)
                 else:
                     src_crs_obj = src_crs
                 if src_crs is not None and src_crs_obj.to_epsg() != 4326:
-                    warnings.warn("Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326", TransformWarning)
+                    raise RPCError("Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326")
 
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]

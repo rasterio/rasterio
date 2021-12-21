@@ -62,6 +62,9 @@ class NotGeoreferencedWarning(UserWarning):
 class TransformWarning(UserWarning):
     """Warn that coordinate transformations may behave unexpectedly"""
 
+class RPCError(ValueError):
+    """Raised when RPC transformation is invalid"""
+
 
 class ShapeSkipWarning(UserWarning):
     """Warn that an invalid or empty shape in a collection has been skipped"""
