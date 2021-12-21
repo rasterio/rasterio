@@ -1,7 +1,7 @@
 """Rasterio"""
 
 from collections import namedtuple
-from contextlib import contextmanager
+from contextlib import ExitStack
 import logging
 from logging import NullHandler
 import os
@@ -27,7 +27,7 @@ with rasterio._loading.add_gdal_dll_directories():
         check_dtype,
         complex_int16,
     )
-    from rasterio.env import ensure_env_with_credentials, Env
+    from rasterio.env import ensure_env_with_credentials, Env, env_ctx_if_needed
     from rasterio.errors import RasterioIOError, DriverCapabilityError
     from rasterio.io import (
         DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -46,7 +46,6 @@ with rasterio._loading.add_gdal_dll_directories():
         from rasterio.io import FilePath
         have_vsi_plugin = True
     except ImportError:
-
         class FilePath:
             pass
         have_vsi_plugin = False
@@ -190,46 +189,60 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
-    # Special case for file object argument.
+    # If the fp argument is a file-like object and can be adapted by
+    # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
+    # hold fp's contents and store that in an ExitStack attached to the
+    # dataset object that we will return. When a dataset's close method
+    # is called, this ExitStack will be unwound and the MemoryFile's
+    # storage will be cleaned up.
     if mode == 'r' and hasattr(fp, 'read'):
-
-        @contextmanager
-        def fp_reader(fp):
-            if have_vsi_plugin:
-                vsi_file = FilePath(fp)
-            else:
-                vsi_file = MemoryFile(fp.read())
-            dataset = vsi_file.open(driver=driver, sharing=sharing)
-            try:
-                yield dataset
-            finally:
-                dataset.close()
-                vsi_file.close()
-
-        return fp_reader(fp)
+        if have_vsi_plugin:
+            return FilePath(fp).open(driver=driver, sharing=sharing)
+        else:
+            memfile = MemoryFile(fp.read())
+            dataset = memfile.open(driver=driver, sharing=sharing)
+            ctxstack = ExitStack()
+            ctxstack.enter_context(env_ctx_if_needed())
+            ctxstack.enter_context(memfile)
+            dataset._env = ctxstack
+            return dataset
 
     elif mode in ('w', 'w+') and hasattr(fp, 'write'):
+        memfile = MemoryFile()
+        dataset = memfile.open(
+            driver=driver,
+            width=width,
+            height=height,
+            count=count,
+            crs=crs,
+            transform=transform,
+            dtype=dtype,
+            nodata=nodata,
+            sharing=sharing,
+            **kwargs
+        )
+        ctxstack = ExitStack()
+        ctxstack.enter_context(env_ctx_if_needed())
+        ctxstack.enter_context(memfile)
 
-        @contextmanager
-        def fp_writer(fp):
-            memfile = MemoryFile()
-            dataset = memfile.open(driver=driver, width=width, height=height,
-                                   count=count, crs=crs, transform=transform,
-                                   dtype=dtype, nodata=nodata, sharing=sharing, **kwargs)
-            try:
-                yield dataset
-            finally:
-                dataset.close()
-                memfile.seek(0)
-                fp.write(memfile.read())
-                memfile.close()
+        # For the writing case we push an extra callback onto the
+        # ExitStack. It ensures that the MemoryFile's contents are
+        # copied to the open file object.
+        def func(*args, **kwds):
+            memfile.seek(0)
+            fp.write(memfile.read())
 
-        return fp_writer(fp)
+        ctxstack.callback(func)
+        dataset._env = ctxstack
+        return dataset
 
     # TODO: test for a shared base class or abstract type.
     elif isinstance(fp, (FilePath, MemoryFile)):
         if mode.startswith("r"):
             dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
+
+        # Note: FilePath does not support writing and an exception will
+        # result from this.
         elif mode.startswith("w"):
             dataset = fp.open(
                 driver=driver,
@@ -245,17 +258,13 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             )
         return dataset
 
+    # At this point, the fp argument is a string or path-like object
+    # which can be converted to a string.
     else:
-        # If a PathLike instance is given, convert it to a string path.
-        fp = os.fspath(fp)
+        raw_dataset_path = os.fspath(fp)
+        path = parse_path(raw_dataset_path)
 
-        # The 'normal' filename or URL path.
-        path = parse_path(fp)
-
-        # Create dataset instances and pass the given env, which will
-        # be taken over by the dataset's context manager if it is not
-        # None.
-        if mode == 'r':
+        if mode == "r":
             dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
         elif mode == "r+":
             dataset = get_writer_for_path(path, driver=driver)(

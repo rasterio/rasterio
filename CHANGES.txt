@@ -16,6 +16,8 @@ New features:
 
 Bug fixes:
 
+- rasterio.open returns a dataset accessor and never a
+  ontextlib._GeneratorContextManager for all kinds of input (#2360).
 - Fix the "adjust" keyword argument of rasterio.plot.show (#2359).
 - Preserve origin when scaling in creating a WarpedVRT (#2364).
 - Exceptions are no longer raised for a category of errors emitted from

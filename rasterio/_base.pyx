@@ -431,18 +431,21 @@ cdef class DatasetBase:
         self._hds = NULL
 
     def close(self):
-        """Close the dataset"""
+        """Close the dataset and unwind attached exit stack."""
         self.stop()
         self._closed = True
+        if self._env is not None:
+            self._env.__exit__(None, None, None)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
+        if self._env is None:
+            self._env = env_ctx_if_needed()
         self._env.__enter__()
         return self
 
-    def __exit__(self, type, value, traceback):
-        self.close()
-        self._env.__exit__()
+    def __exit__(self, *exc_details):
+        if not self._closed:
+            self.close()
 
     def __dealloc__(self):
         if self._hds != NULL:
