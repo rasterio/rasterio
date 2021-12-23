@@ -365,11 +365,6 @@ class NullContextManager:
         pass
 
 
-def dataset_exit_stack():
-    stack = ExitStack()
-    return stack
-
-
 def env_ctx_if_needed():
     """Return an Env if one does not exist
 
