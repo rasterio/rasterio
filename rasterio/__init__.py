@@ -197,10 +197,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     # storage will be cleaned up.
     if mode == 'r' and hasattr(fp, 'read'):
         if have_vsi_plugin:
-            return FilePath(fp).open(driver=driver, sharing=sharing)
+            return FilePath(fp).open(driver=driver, sharing=sharing, **kwargs)
         else:
             memfile = MemoryFile(fp.read())
-            dataset = memfile.open(driver=driver, sharing=sharing)
+            dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
             dataset._env.enter_context(memfile)
             return dataset
 
