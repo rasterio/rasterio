@@ -201,10 +201,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         else:
             memfile = MemoryFile(fp.read())
             dataset = memfile.open(driver=driver, sharing=sharing)
-            ctxstack = ExitStack()
-            ctxstack.enter_context(env_ctx_if_needed())
-            ctxstack.enter_context(memfile)
-            dataset._env = ctxstack
+            dataset._env.enter_context(memfile)
             return dataset
 
     elif mode in ('w', 'w+') and hasattr(fp, 'write'):
@@ -221,9 +218,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             sharing=sharing,
             **kwargs
         )
-        ctxstack = ExitStack()
-        ctxstack.enter_context(env_ctx_if_needed())
-        ctxstack.enter_context(memfile)
+        dataset._env.enter_context(memfile)
 
         # For the writing case we push an extra callback onto the
         # ExitStack. It ensures that the MemoryFile's contents are
@@ -232,8 +227,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             memfile.seek(0)
             fp.write(memfile.read())
 
-        ctxstack.callback(func)
-        dataset._env = ctxstack
+        dataset._env.callback(func)
         return dataset
 
     # TODO: test for a shared base class or abstract type.

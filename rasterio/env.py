@@ -1,6 +1,6 @@
 """Rasterio's GDAL/AWS environment"""
 
-import attr
+from contextlib import ExitStack
 from functools import wraps, total_ordering
 from inspect import getfullargspec as getargspec
 import logging
@@ -8,6 +8,8 @@ import os
 import re
 import threading
 import warnings
+
+import attr
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -361,6 +363,11 @@ class NullContextManager:
 
     def __exit__(self, *args):
         pass
+
+
+def dataset_exit_stack():
+    stack = ExitStack()
+    return stack
 
 
 def env_ctx_if_needed():

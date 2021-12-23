@@ -3,6 +3,7 @@
 """Numpy-free base classes."""
 
 from collections import defaultdict
+from contextlib import ExitStack
 import logging
 import math
 import os
@@ -22,7 +23,6 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
@@ -326,6 +326,8 @@ cdef class DatasetBase:
         self._read = False
 
         self._set_attrs_from_dataset_handle()
+        self._env = ExitStack()
+        self._closed = False
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -347,7 +349,6 @@ cdef class DatasetBase:
         # touch self.meta, triggering data type evaluation.
         _ = self.meta
 
-        self._closed = False
         log.debug("Dataset %r is started.", self)
 
     cdef GDALDatasetH handle(self) except NULL:
@@ -433,14 +434,10 @@ cdef class DatasetBase:
     def close(self):
         """Close the dataset and unwind attached exit stack."""
         self.stop()
+        self._env.close()
         self._closed = True
-        if self._env is not None:
-            self._env.__exit__(None, None, None)
 
     def __enter__(self):
-        if self._env is None:
-            self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
     def __exit__(self, *exc_details):

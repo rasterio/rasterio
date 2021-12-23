@@ -1,6 +1,7 @@
 """Geospatial transforms"""
 
 from collections.abc import Iterable
+from contextlib import ExitStack
 from functools import partial
 import math
 import sys
@@ -272,6 +273,7 @@ def from_gcps(gcps):
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
+
 class TransformerBase():
     """
     Generic GDAL transformer base class
@@ -281,11 +283,12 @@ class TransformerBase():
     Subclasses must have a _transformer attribute and implement a `_transform` method.
     """
     def __init__(self):
+        self._env = ExitStack()
         self._transformer = None
         self.closed = True
 
     def close(self):
-        raise NotImplementedError
+        self.closed = True
     
     def _ensure_arr_input(self, xs, ys, zs=None):
         """Ensure all input coordinates are mapped to array-like objects
@@ -311,13 +314,12 @@ class TransformerBase():
         return xs, ys, zs
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
+        self._env.enter_context(env_ctx_if_needed())
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *args):
         self.close()
-        self._env.__exit__()
+        self._env.close()
     
     def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
         """
