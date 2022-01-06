@@ -434,7 +434,8 @@ cdef class DatasetBase:
     def close(self):
         """Close the dataset and unwind attached exit stack."""
         self.stop()
-        self._env.close()
+        if self._env:
+            self._env.close()
         self._closed = True
 
     def __enter__(self):
