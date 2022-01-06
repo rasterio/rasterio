@@ -16,6 +16,7 @@ New features:
 
 Bug fixes:
 
+- Fix bug in usage of numpy 1.14 (#2377).
 - rasterio.open returns a dataset accessor and never a
   contextlib._GeneratorContextManager for all kinds of input (#2360).
 - Fix the "adjust" keyword argument of rasterio.plot.show (#2359).
