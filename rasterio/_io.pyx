@@ -4,7 +4,7 @@
 
 from enum import Enum, IntEnum
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 import logging
 import os
 import sys
@@ -1135,6 +1135,7 @@ cdef class MemoryFileBase:
         if self._vsif == NULL:
             raise IOError("Failed to open in-memory file.")
 
+        self._env = ExitStack()
         self.closed = False
 
     def exists(self):
@@ -1463,9 +1464,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-
-        # touch self.meta
         _ = self.meta
+        self._env = ExitStack()
         self._closed = False
 
     def __repr__(self):
@@ -2169,8 +2169,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if options != NULL:
             CSLDestroy(options)
 
-        # touch self.meta
         _ = self.meta
+        self._env = ExitStack()
         self._closed = False
 
     def stop(self):

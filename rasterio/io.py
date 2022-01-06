@@ -13,7 +13,7 @@ with rasterio._loading.add_gdal_dll_directories():
         DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
         MemoryFileBase)
     from rasterio.windows import WindowMethodsMixin
-    from rasterio.env import ensure_env, env_ctx_if_needed
+    from rasterio.env import ensure_env
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
     try:
@@ -143,13 +143,10 @@ class MemoryFile(MemoryFileBase):
                           nodata=nodata, sharing=sharing, **kwargs)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args):
         self.close()
-        self._env.__exit__()
 
 
 class _FilePath(FilePathBase):
@@ -222,13 +219,10 @@ class _FilePath(FilePathBase):
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args):
         self.close()
-        self._env.__exit__()
 
 
 if FilePathBase is not object:
