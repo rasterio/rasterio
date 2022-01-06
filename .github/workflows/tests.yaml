@@ -110,6 +110,6 @@ jobs:
         shell: bash
         run: |
           source activate test
-          python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not (test_target_aligned_pixels or test_reproject_error_propagation or test_outer_boundless_pixel_fidelity or test_isse2353)"
+          python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not (test_target_aligned_pixels or test_reproject_error_propagation or test_outer_boundless_pixel_fidelity or test_issue2353)"
 
       - uses: codecov/codecov-action@v1
