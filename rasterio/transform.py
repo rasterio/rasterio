@@ -354,7 +354,7 @@ class TransformerBase():
         
         if precision is None:
             eps = sys.float_info.epsilon
-        elif isinstance(precision, int):
+        elif isinstance(precision, int) and precision > 0:
             eps = 10.0 ** -precision
         else:
             eps = precision
