@@ -266,6 +266,20 @@ def test_rowcol():
         assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
 
 
+def test_rowcol_precision():
+    t = transform.from_origin(0, 0, 1, 1)
+
+    with pytest.raises(ValueError):
+        # make sure 0 and 0.0 produce same results
+        assert rowcol(t, 1, 1, precision=0.0)
+    
+    # Make sure that float/int of same value produce same result
+    assert rowcol(t, 1, 1, precision=5.0) == rowcol(t, 1, 1, precision=5)
+
+    # Make sure that floats are coerced to ints
+    assert rowcol(t, 1, 1, precision=5.3) == rowcol(t, 1, 1, precision=5)
+    
+
 @pytest.mark.parametrize(
     "xs, ys, exp_rowcol",
     [
