@@ -354,10 +354,10 @@ class TransformerBase():
         
         if precision is None:
             eps = sys.float_info.epsilon
-        elif isinstance(precision, int) and precision > 0:
-            eps = 10.0 ** -precision
+        elif precision > 1:
+            eps = 10.0 ** -int(precision)
         else:
-            eps = precision
+            raise ValueError("Precision must be a positive integer or None")
         
         # If op rounds up, switch the sign of eps.
         if op(0.1) >= 1:
