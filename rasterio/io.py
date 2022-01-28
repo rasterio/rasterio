@@ -16,6 +16,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.env import ensure_env
     from rasterio.transform import TransformMethodsMixin
     from rasterio.path import UnparsedPath
+    from rasterio.errors import DriverCapabilityError
     try:
         from rasterio._filepath import FilePathBase
     except ImportError:
@@ -272,6 +273,8 @@ def get_writer_for_driver(driver):
     if driver_can_create(driver):
         cls = DatasetWriter
     elif driver_can_create_copy(driver):  # pragma: no branch
+        if driver == 'COG':
+            raise DriverCapabilityError("{0} driver only supports CreateCopy capabilities and does not support 'w' or 'w+' modes. ".format(driver))
         cls = BufferedDatasetWriter
     return cls
 
