@@ -162,6 +162,12 @@ def test_from_epsg_string():
         assert CRS.from_string('epsg:xyz')
 
 
+def test_from_epsg_overflow():
+    with pytest.raises(CRSError):
+        # the argument is large enough to cause an overflow in Cython
+        CRS.from_epsg(1111111111111111111111)
+
+
 def test_from_string():
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert wgs84_crs.to_dict() == {'init': 'epsg:4326'}

@@ -346,7 +346,11 @@ class CRS(Mapping):
 
         """
         obj = cls()
-        obj._crs = _CRS.from_epsg(code)
+
+        try:
+            obj._crs = _CRS.from_epsg(code)
+        except OverflowError as err:
+            raise CRSError(f"could not convert EPSG code to int: {err}") from err
         return obj
 
     @classmethod
@@ -571,7 +575,7 @@ def epsg_treats_as_northingeasting(input):
     > Important change of behavior since GDAL 3.0.
     In previous versions, projected CRS with northing, easting axis order
     imported with importFromEPSG() would cause this method to return FALSE
-    on them, whereas now it returns TRUE, since importFromEPSG() is now 
+    on them, whereas now it returns TRUE, since importFromEPSG() is now
     equivalent to importFromEPSGA().
 
     Parameters
