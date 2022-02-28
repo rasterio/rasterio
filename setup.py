@@ -10,7 +10,6 @@
 # binary wheels.
 
 import copy
-from distutils.command.sdist import sdist
 import itertools
 import logging
 import os
@@ -70,7 +69,6 @@ gdal_output = [None] * 4
 gdalversion = None
 gdal_major_version = 0
 gdal_minor_version = 0
-sdist_fill = []
 
 try:
     import numpy as np
@@ -315,32 +313,6 @@ setup_args = dict(
     license="BSD",
     package_dir={"": "."},
     packages=["rasterio", "rasterio.rio"],
-    entry_points="""
-        [console_scripts]
-        rio=rasterio.rio.main:main_group
-
-        [rasterio.rio_commands]
-        blocks=rasterio.rio.blocks:blocks
-        bounds=rasterio.rio.bounds:bounds
-        calc=rasterio.rio.calc:calc
-        clip=rasterio.rio.clip:clip
-        convert=rasterio.rio.convert:convert
-        edit-info=rasterio.rio.edit_info:edit
-        env=rasterio.rio.env:env
-        gcps=rasterio.rio.gcps:gcps
-        info=rasterio.rio.info:info
-        insp=rasterio.rio.insp:insp
-        mask=rasterio.rio.mask:mask
-        merge=rasterio.rio.merge:merge
-        overview=rasterio.rio.overview:overview
-        rasterize=rasterio.rio.rasterize:rasterize
-        rm=rasterio.rio.rm:rm
-        sample=rasterio.rio.sample:sample
-        shapes=rasterio.rio.shapes:shapes
-        stack=rasterio.rio.stack:stack
-        transform=rasterio.rio.transform:transform
-        warp=rasterio.rio.warp:warp
-    """,
     include_package_data=True,
     ext_modules=ext_modules,
     zip_safe=False,

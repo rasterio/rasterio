@@ -6,7 +6,7 @@
 
 A future version of pip will do this for us and we'll remove this script.
 
-This script installs Fiona in develop mode (``pip install -e .[test]``).
+This script installs Rasterio in develop mode (``pip install -e .[test]``).
 """
 
 import subprocess
