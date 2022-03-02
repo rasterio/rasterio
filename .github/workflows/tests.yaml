@@ -3,8 +3,30 @@ name: Tests
 on:
   push:
     branches: [ master ]
+    paths:
+      - '.github/workflows/tests.yaml'
+      - 'requirements*.txt'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'MANIFEST.in'
+      - 'pyproject.toml'
+      - 'pep-508-install'
+      - 'scripts/**'
+      - 'rasterio/**'
+      - 'tests/**'
   pull_request:
     branches: [ master ]
+    paths:
+      - '.github/workflows/tests.yaml'
+      - 'requirements*.txt'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'MANIFEST.in'
+      - 'pyproject.toml'
+      - 'pep-508-install'
+      - 'scripts/**'
+      - 'rasterio/**'
+      - 'tests/**'
   schedule:
     - cron:  '0 0 * * 0'
 
