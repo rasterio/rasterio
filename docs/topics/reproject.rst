@@ -57,7 +57,7 @@ transform.
 See `examples/reproject.py <https://github.com/rasterio/rasterio/blob/master/examples/reproject.py>`__
 for code that writes the destination array to a GeoTIFF file. I've uploaded the
 resulting file to a Mapbox map to show that the reprojection is
-correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033.
+correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033. (dead link)
 
 Estimating optimal output shape
 -------------------------------

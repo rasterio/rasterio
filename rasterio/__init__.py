@@ -91,7 +91,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     driver : str, optional
         A short format driver name (e.g. "GTiff" or "JPEG") or a list of
         such names (see GDAL docs at
-        http://www.gdal.org/formats_list.html). In 'w' or 'w+' modes
+        https://gdal.org/drivers/raster/index.html). In 'w' or 'w+' modes
         a single name is required. In 'r' or 'r+' modes the driver can
         usually be omitted. Registered drivers will be tried
         sequentially until a match is found. When multiple drivers are

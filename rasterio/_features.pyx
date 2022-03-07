@@ -559,7 +559,7 @@ cdef class GeomBuilder:
 cdef class OGRGeomBuilder:
     """
     Builds an OGR geometry from GeoJSON geometry.
-    From Fiona: https://github.com/Toblerity/Fiona/blob/master/src/fiona/ogrext.pyx
+    From Fiona: https://github.com/Toblerity/Fiona/blob/master/fiona/ogrext.pyx
     """
 
     cdef OGRGeometryH _createOgrGeometry(self, int geom_type) except NULL:
