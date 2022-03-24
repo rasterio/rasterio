@@ -83,6 +83,12 @@ def test_read_epsg():
         assert src.crs.to_epsg() == 32618
 
 
+def test_read_compdcs():
+    """Expect no match for a single EPSG for this COMPDCS"""
+    with rasterio.open('zip://tests/data/ak-compdcs.zip!test.tif') as src:
+        assert src.crs.to_epsg() == None
+
+
 @requires_gdal_lt_3
 def test_read_esri_wkt():
     with rasterio.open('tests/data/test_esri_wkt.tif') as src:
