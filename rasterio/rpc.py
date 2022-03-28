@@ -95,7 +95,12 @@ class RPC:
         for key, val in rpcs.items():
             vals = val.split()
             if len(vals) > 1:
-                out[key] = [float(v) for v in vals]
+                out[key] = []
+                for v in vals:
+                    try:
+                        out[key] = float(v)
+                    except ValueError:
+                        pass
             else:
                 out[key] = float(vals[0])
 
