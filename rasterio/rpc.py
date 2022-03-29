@@ -93,16 +93,16 @@ class RPC:
         out = {}
 
         for key, val in rpcs.items():
-            vals = val.split()
+            vals = []
+            for v in val.split():
+                try:
+                    vals.append(float(v))
+                except ValueError:
+                    pass
             if len(vals) > 1:
-                out[key] = []
-                for v in vals:
-                    try:
-                        out[key] = float(v)
-                    except ValueError:
-                        pass
+                out[key] = vals
             else:
-                out[key] = float(vals[0])
+                out[key] = vals[0]
 
         return cls(
             err_bias=out.get("ERR_BIAS"),
