@@ -39,6 +39,14 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 log = logging.getLogger(__name__)
 
 
+def gdal_version():
+    """Return the version as a major.minor.patchlevel string."""
+    cdef const char *info_c = NULL
+    info_c = GDALVersionInfo("RELEASE_NAME")
+    info_b = info_c
+    return info_b.decode("utf-8")
+
+
 cdef class CRS:
     """A geographic or projected coordinate reference system.
 
@@ -494,6 +502,11 @@ cdef class CRS:
 
             return results
 
+        finally:
+            _safe_osr_release(osr)
+            OSRFreeSRSArray(matches)
+            CPLFree(confidences)
+
     def to_string(self):
         """Convert to a PROJ4 or WKT string.
 
@@ -546,13 +559,20 @@ cdef class CRS:
         """
         cdef CRS obj = CRS.__new__(CRS)
 
-        code = int(code)
+        try:
+            code = int(code)
+        except OverflowError as err:
+            raise CRSError(f"Not in the range of valid EPSG codes: {code}") from err
+        except TypeError as err:
+            raise CRSError(f"Not a valid EPSG codes: {code}") from err
 
         if code <= 0:
             raise CRSError("EPSG codes are positive integers")
 
         try:
             exc_wrap_ogrerr(exc_wrap_int(OSRImportFromEPSG(obj._osr, <int>code)))
+        except OverflowError as err:
+            raise CRSError(f"Not in the range of valid EPSG codes: {code}") from err
         except CPLE_BaseError as exc:
             raise CRSError("The EPSG code is unknown. {}".format(exc))
         else:
