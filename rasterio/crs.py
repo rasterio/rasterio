@@ -350,7 +350,7 @@ class CRS(Mapping):
         try:
             obj._crs = _CRS.from_epsg(code)
         except OverflowError as err:
-            raise CRSError(f"could not convert EPSG code to int: {err}") from err
+            raise CRSError(f"Not in the range of valid EPSG codes: {code}") from err
         return obj
 
     @classmethod
