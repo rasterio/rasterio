@@ -53,7 +53,7 @@ import click
 
 import rasterio
 import rasterio.shutil
-from rasterio.path import parse_path, UnparsedPath
+from rasterio._path import _parse_path, _UnparsedPath
 
 
 logger = logging.getLogger(__name__)
@@ -98,9 +98,9 @@ def abspath_forward_slashes(path):
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
-        path = parse_path(value)
+        path = _parse_path(value)
 
-        if isinstance(path, UnparsedPath):
+        if isinstance(path, _UnparsedPath):
 
             if os.path.exists(path.path) and rasterio.shutil.exists(value):
                 return abspath_forward_slashes(path.path)

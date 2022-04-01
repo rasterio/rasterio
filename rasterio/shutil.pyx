@@ -11,7 +11,7 @@ from rasterio.drivers import driver_from_extension
 from rasterio.env import ensure_env_with_credentials
 from rasterio._err import CPLE_OpenFailedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
-from rasterio.path import parse_path
+from rasterio._path import _parse_path
 
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def exists(path):
 
     cdef GDALDatasetH h_dataset = NULL
 
-    vsipath = parse_path(path).as_vsi()
+    vsipath = _parse_path(path).as_vsi()
     b_path = vsipath.encode('utf-8')
     cdef char* c_path = b_path
 
@@ -110,7 +110,7 @@ def copy(src, dst, driver=None, strict=True, **creation_options):
     # Open a new GDAL dataset if src is a string.
     if isinstance(src, str):
 
-        if parse_path(src).as_vsi() == parse_path(dst).as_vsi():
+        if _parse_path(src).as_vsi() == _parse_path(dst).as_vsi():
             raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
 
         src = src.encode('utf-8')
@@ -123,7 +123,7 @@ def copy(src, dst, driver=None, strict=True, **creation_options):
     # Try to use the existing GDAL dataset handle otherwise.
     else:
 
-        if src.name == parse_path(dst).as_vsi():
+        if src.name == _parse_path(dst).as_vsi():
             raise RasterioIOError("{} and {} identify the same dataset.".format(src.name, dst))
 
         src_dataset = (<DatasetReaderBase?>src).handle()
@@ -175,8 +175,8 @@ def copyfiles(src, dst):
     if isinstance(dst, os.PathLike):
         dst = os.fspath(dst)
 
-    src_path = parse_path(src)
-    dst_path = parse_path(dst)
+    src_path = _parse_path(src)
+    dst_path = _parse_path(dst)
     if src_path.as_vsi() == dst_path.as_vsi():
         raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
 
@@ -223,7 +223,7 @@ def delete(path, driver=None):
     cdef GDALDatasetH h_dataset = NULL
     cdef GDALDriverH h_driver = NULL
 
-    gdal_path = parse_path(path).as_vsi()
+    gdal_path = _parse_path(path).as_vsi()
     b_path = gdal_path.encode('utf-8')
     cdef char* c_path = b_path
 
