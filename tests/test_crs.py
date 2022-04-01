@@ -442,12 +442,6 @@ def test_exception_proj4():
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
-def test_crs_private_wkt(projection_string):
-    """Original WKT is saved"""
-    CRS.from_wkt(projection_string)._wkt == projection_string
-
-
-@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_implicit_proj_dict(projection_string):
     """Ensure that old behavior is preserved"""
     assert CRS.from_wkt(projection_string)['proj'] == 'aea'
