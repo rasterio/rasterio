@@ -4,10 +4,15 @@ import pathlib
 import re
 import sys
 from urllib.parse import urlparse
+import warnings
 
 import attr
 
-from rasterio.errors import PathError
+from rasterio.errors import PathError, RasterioDeprecationWarning
+
+warnings.warn(
+    "rasterio.path will be removed in version 1.4.", RasterioDeprecationWarning
+)
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
 # TODO: extend for other cloud plaforms.
