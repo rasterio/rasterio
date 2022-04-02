@@ -825,7 +825,7 @@ cdef class CRS:
         if not value:
             raise CRSError("CRS is empty or invalid: {!r}".format(value))
 
-        elif value.upper().startswith('EPSG:'):
+        elif value.upper().startswith('EPSG:') and "+" not in value:
             auth, val = value.split(':')
             if not val:
                 raise CRSError("Invalid CRS: {!r}".format(value))
