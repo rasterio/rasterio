@@ -15,7 +15,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.windows import WindowMethodsMixin
     from rasterio.env import ensure_env
     from rasterio.transform import TransformMethodsMixin
-    from rasterio.path import UnparsedPath
+    from rasterio._path import _UnparsedPath
     try:
         from rasterio._filepath import FilePathBase
     except ImportError:
@@ -128,7 +128,7 @@ class MemoryFile(MemoryFileBase):
         Other parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        mempath = UnparsedPath(self.name)
+        mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
@@ -210,7 +210,7 @@ class _FilePath(FilePathBase):
         Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        mempath = UnparsedPath(self.name)
+        mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
@@ -257,7 +257,7 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        zippath = UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
+        zippath = _UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
             raise IOError("I/O operation on closed file.")

@@ -29,7 +29,7 @@ from rasterio.errors import (
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.path import parse_path
+from rasterio._path import _parse_path
 from rasterio import windows
 
 cimport cython
@@ -70,7 +70,7 @@ def get_dataset_driver(path):
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = parse_path(path).as_vsi()
+    path = _parse_path(path).as_vsi()
     path = path.encode('utf-8')
 
     try:
@@ -296,7 +296,7 @@ cdef class DatasetBase:
         self._hds = NULL
 
         if path is not None:
-            path = parse_path(path)
+            path = _parse_path(path)
             filename = path.as_vsi()
 
             # driver may be a string or list of strings. If the

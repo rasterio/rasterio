@@ -28,7 +28,7 @@ from rasterio.errors import (
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, UnparsedPath
+from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -643,7 +643,7 @@ cdef class DatasetReaderBase(DatasetBase):
             else:
                 vrt_kwds = {}
 
-            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
+            with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -662,7 +662,7 @@ cdef class DatasetReaderBase(DatasetBase):
                             transform=self.window_transform(window),
                             masked=True)
 
-                        with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                        with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
@@ -825,7 +825,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {}
 
             if all_valid:
-                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
+                blank_path = _UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
                 transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
                 with DatasetWriterBase(
                         blank_path, 'w',
@@ -841,7 +841,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         height=max(self.height, window.height) + 1,
                         transform=self.window_transform(window))
 
-                    with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                    with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
                         out = mask_vrt._read(
                             indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
@@ -852,7 +852,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     height=max(self.height, window.height) + 1,
                     transform=self.window_transform(window))
 
-                with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
+                with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                     out = vrt._read(
                         indexes, out, Window(0, 0, window.width, window.height),
@@ -1321,7 +1321,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 except Exception:
                     raise TypeError("A valid dtype is required.")
 
-        internal_path = parse_path(path)
+        internal_path = _parse_path(path)
 
         # Make and store a GDAL dataset handle.
         filename = internal_path.name
@@ -1966,7 +1966,7 @@ cdef class MemoryDataset(DatasetWriterBase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            super().__init__(parse_path(datasetname), "r+")
+            super().__init__(_parse_path(datasetname), "r+")
             if crs is not None:
                 self.crs = crs
             if transform is not None:

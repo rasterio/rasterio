@@ -33,14 +33,14 @@ with rasterio._loading.add_gdal_dll_directories():
         DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
     from rasterio.profiles import default_gtiff_profile
     from rasterio.transform import Affine, guard_transform
-    from rasterio.path import parse_path
+    from rasterio._path import _parse_path
 
     # These modules are imported from the Cython extensions, but are also import
     # here to help tools like cx_Freeze find them automatically
     import rasterio._err
     import rasterio.coords
     import rasterio.enums
-    import rasterio.path
+    import rasterio._path
 
     try:
         from rasterio.io import FilePath
@@ -256,7 +256,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     # which can be converted to a string.
     else:
         raw_dataset_path = os.fspath(fp)
-        path = parse_path(raw_dataset_path)
+        path = _parse_path(raw_dataset_path)
 
         if mode == "r":
             dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)

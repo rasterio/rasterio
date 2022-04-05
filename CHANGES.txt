@@ -4,6 +4,20 @@ Changes
 1.3.0 (TBD)
 -----------
 
+1.3a4 (TBD)
+-----------
+
+Deprecations:
+
+- The rasterio.path module will be removed in version 1.4 and a deprecation
+  warning is issued when the module is imported (#2423).
+
+Changes:
+
+- The rasterio.path module has been moved to rasterio._path and all its member
+  made private (#2423). A new version of rasterio.path temporarily provides
+  aliases to maintain compatibility.
+
 Bug fixes:
 
 - Allow DatasetReader and DatasetWriter to take string filenames and URLs
