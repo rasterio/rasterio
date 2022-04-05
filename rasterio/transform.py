@@ -71,7 +71,7 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError("Dataset has no {}".format(transform_method))
-        return xy(transform, row, col, z=z, offset=offset, **rpc_options)
+        return xy(transform, row, col, zs=z, offset=offset, **rpc_options)
 
     def index(self, x, y, z=None, op=math.floor, precision=None, transform_method=TransformMethod.affine, **rpc_options):
         """
@@ -111,7 +111,7 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError("Dataset has no {}".format(transform_method))
-        return rowcol(transform, x, y, z=z, op=op, precision=precision, **rpc_options)
+        return rowcol(transform, x, y, zs=z, op=op, precision=precision, **rpc_options)
 
 def get_transformer(transform, **rpc_options):
     """Return the appropriate transformer class"""
