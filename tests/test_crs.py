@@ -755,3 +755,7 @@ def test_crs_proj_json__user_input():
 def test_crs_proj_json__from_string():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_string(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
+
+
+def test_crs_compound_epsg():
+    assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPD")
