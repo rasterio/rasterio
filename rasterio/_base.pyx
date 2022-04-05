@@ -296,7 +296,8 @@ cdef class DatasetBase:
         self._hds = NULL
 
         if path is not None:
-            filename = parse_path(path).as_vsi()
+            path = parse_path(path)
+            filename = path.as_vsi()
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -310,8 +311,11 @@ cdef class DatasetBase:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
+        
+            self.name = path.name
+        else:
+            self.name = None
 
-        self.name = path.name
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []

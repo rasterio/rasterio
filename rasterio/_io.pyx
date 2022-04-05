@@ -1321,10 +1321,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 except Exception:
                     raise TypeError("A valid dtype is required.")
 
+        internal_path = parse_path(path)
+
         # Make and store a GDAL dataset handle.
-        filename = path.name
-        path = path.as_vsi()
-        name_b = path.encode('utf-8')
+        filename = internal_path.name
+        vsi_path = internal_path.as_vsi()
+        name_b = vsi_path.encode('utf-8')
         fname = name_b
 
         # Process dataset opening options.
@@ -1348,7 +1350,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
                 log.debug("No deletion, subdataset will be added: path=%r", path)
             else:
-                _delete_dataset_if_exists(path)
+                _delete_dataset_if_exists(vsi_path)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
@@ -1413,7 +1415,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             flags = 0x01 | sharing_flag | 0x40
 
             try:
-                self._hds = open_dataset(path, flags, driver, kwargs, None)
+                self._hds = open_dataset(vsi_path, flags, driver, kwargs, None)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -2103,8 +2105,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = path.as_vsi()
-        name_b = path.encode('utf-8')
+        vsi_filename = path.as_vsi()
+        name_b = vsi_filename.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")
 
