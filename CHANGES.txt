@@ -18,6 +18,11 @@ Changes:
   made private (#2423). A new version of rasterio.path temporarily provides
   aliases to maintain compatibility.
 
+Bug fixes:
+
+- Allow DatasetReader and DatasetWriter to take string filenames and URLs
+  (#2426).
+
 1.3a3 (2022-02-04)
 ------------------
 
