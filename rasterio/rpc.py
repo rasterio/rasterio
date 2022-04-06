@@ -100,7 +100,7 @@ class RPC:
                 except ValueError:
                     pass
             if len(vals) > 1:
-                out[key] = vals
+                out[key] = vals[:20]
             else:
                 out[key] = vals[0]
 
