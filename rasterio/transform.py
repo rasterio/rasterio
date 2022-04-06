@@ -73,13 +73,19 @@ class TransformMethodsMixin:
             raise AttributeError("Dataset has no {}".format(transform_method))
         return xy(transform, row, col, zs=z, offset=offset, **rpc_options)
 
-    def index(self, x, y, z=None, op=math.floor, precision=None, transform_method=TransformMethod.affine, **rpc_options):
+    def index(
+        self,
+        x,
+        y,
+        z=None,
+        op=math.floor,
+        precision=None,
+        transform_method=TransformMethod.affine,
+        **rpc_options
+    ):
         """
         Returns the (row, col) index of the pixel containing (x, y) given a
         coordinate reference system.
-
-        Use an epsilon, magnitude determined by the precision parameter
-        and sign determined by the op function: positive for floor, negative for ceil.
 
         Parameters
         ----------
@@ -94,12 +100,13 @@ class TransformMethodsMixin:
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
-        precision : int, optional (default: None)
-            Decimal places of precision in indexing, as in `round()`.
         transform_method: TransformMethod, optional 
             The coordinate transformation method. Default: `TransformMethod.affine`.
         rpc_options: dict, optional
             Additional arguments passed to GDALCreateRPCTransformer
+        precision : int, optional
+            This parameter is unused, deprecated in rasterio 1.3.0, and
+            will be removed in version 2.0.0.
 
         Returns
         -------
@@ -111,7 +118,7 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError("Dataset has no {}".format(transform_method))
-        return rowcol(transform, x, y, zs=z, op=op, precision=precision, **rpc_options)
+        return rowcol(transform, x, y, zs=z, op=op, **rpc_options)
 
 def get_transformer(transform, **rpc_options):
     """Return the appropriate transformer class"""
@@ -221,9 +228,6 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
 
-    Use an epsilon, magnitude determined by the precision parameter
-    and sign determined by the op function: positive for floor, negative for ceil.
-
     Parameters
     ----------
     transform : Affine or sequence of GroundControlPoint or RPC
@@ -240,8 +244,8 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round).
     precision : int or float, optional
-        An integer number of decimal points of precision when computing
-        inverse transform, or an absolute float precision.
+        This parameter is unused, deprecated in rasterio 1.3.0, and
+        will be removed in version 2.0.0.
     rpc_options : dict, optional
         Additional arguments passed to GDALCreateRPCTransformer.
 
@@ -255,7 +259,7 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
     """
     transformer_cls = get_transformer(transform, **rpc_options)
     with transformer_cls() as transformer:
-        return transformer.rowcol(xs, ys, zs=zs, op=op, precision=precision)
+        return transformer.rowcol(xs, ys, zs=zs, op=op)
 
 
 def from_gcps(gcps):
@@ -338,7 +342,6 @@ class TransformerBase():
             ceiling, round)
         precision : int, optional (default: None)
             Decimal places of precision in indexing, as in `round()`.
-        
 
         Raises
         ------
@@ -347,26 +350,13 @@ class TransformerBase():
 
         Returns
         -------
-            tuple of float or list of float
+        tuple of float or list of float.
+
         """
         AS_ARR = True if hasattr(xs, "__iter__") else False
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
         
-        if precision is None:
-            eps = sys.float_info.epsilon
-        elif isinstance(precision, int):
-            eps = 10.0 ** -precision
-        else:
-            eps = precision
-        
-        # If op rounds up, switch the sign of eps.
-        if op(0.1) >= 1:
-            eps = -eps
-        f = lambda val: val + eps
-
         try:
-            xs = list(map(f, xs))
-            ys = list(map(f, ys))
             new_cols, new_rows = self._transform(
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )

@@ -280,10 +280,7 @@ def from_bounds(
         Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    precision: int or float, optional
-        An integer number of decimal points of precision when computing
-        inverse transform, or an absolute float precision.
-    height, width: int, optional
+    precision, height, width: int, optional
         These parameters are unused, deprecated in rasterio 1.3.0, and
         will be removed in version 2.0.0.
 
@@ -318,7 +315,6 @@ def from_bounds(
         [left, right, right, left],
         [top, top, bottom, bottom],
         op=float,
-        precision=precision,
     )
     row_start, row_stop = min(rows), max(rows)
     col_start, col_stop = min(cols), max(cols)
@@ -729,7 +725,7 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.1))
+        operator = lambda x: int(math.floor(x + 0.001))
         row_off = operator(self.row_off)
         col_off = operator(self.col_off)
         return Window(col_off, row_off, self.width, self.height)
