@@ -20,6 +20,7 @@ Changes:
 
 Bug fixes:
 
+- Prevent erroneous sign flip in a south-up dataset's res property (#2370).
 - Allow DatasetReader and DatasetWriter to take string filenames and URLs
   (#2426).
 

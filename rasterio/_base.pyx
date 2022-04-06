@@ -951,10 +951,7 @@ cdef class DatasetBase:
         coordinate reference system."""
         def __get__(self):
             a, b, c, d, e, f, _, _, _ = self.transform
-            if b == d == 0:
-                return a, -e
-            else:
-                return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
+            return math.sqrt(a * a + d * d), math.sqrt(b * b + e * e)
 
     @property
     def meta(self):
