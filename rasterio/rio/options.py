@@ -115,14 +115,14 @@ def file_in_handler(ctx, param, value):
                 archive = abspath_forward_slashes(path.archive)
                 return "{}://{}!{}".format(path.scheme, archive, path.path)
             else:
-                raise IOError(
+                raise OSError(
                     "Input archive {} does not exist".format(path.archive))
 
         else:
             if os.path.exists(path.path) and rasterio.shutil.exists(value):
                 return abspath_forward_slashes(path.path)
             else:
-                raise IOError(
+                raise OSError(
                     "Input file {} does not exist".format(path.path))
 
     except Exception:
