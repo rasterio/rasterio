@@ -93,16 +93,12 @@ class RPC:
         out = {}
 
         for key, val in rpcs.items():
-            vals = []
-            for v in val.split():
-                try:
-                    vals.append(float(v))
-                except ValueError:
-                    pass
-            if len(vals) > 1:
-                out[key] = vals[:20]
+            # Four items have 20 floats in their values.
+            if key in {"LINE_NUM_COEFF", "LINE_DEN_COEFF", "SAMP_NUM_COEFF", "SAMP_DEN_COEFF"}:
+                out[key] = [float(v) for v in val.split()[:20]]
+            # All other items have one float in their values but might also contain non-conforming extra text.
             else:
-                out[key] = vals[0]
+                out[key] = float(val.split()[0])
 
         return cls(
             err_bias=out.get("ERR_BIAS"),
