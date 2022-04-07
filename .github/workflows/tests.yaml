@@ -10,7 +10,6 @@ on:
       - 'setup.cfg'
       - 'MANIFEST.in'
       - 'pyproject.toml'
-      - 'pep-508-install'
       - 'scripts/**'
       - 'rasterio/**'
       - 'tests/**'
