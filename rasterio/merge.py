@@ -15,6 +15,7 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio
     from rasterio.coords import disjoint_bounds
     from rasterio.enums import Resampling
+    from rasterio.errors import RasterioDeprecationWarning
     from rasterio import windows
     from rasterio.transform import Affine
 
@@ -108,8 +109,9 @@ def merge(
     dtype: numpy dtype or string
         dtype to use in outputfile. If not set, uses the dtype value in the
         first input raster.
-    precision: float, optional
-        Number of decimal points of precision when computing inverse transform.
+    precision: int, optional
+        This parameters is unused, deprecated in rasterio 1.3.0, and
+        will be removed in version 2.0.0.
     indexes : list of ints or a single int, optional
         bands to read and merge
     output_count: int, optional
@@ -164,6 +166,12 @@ def merge(
                 coordinate system
 
     """
+    if precision is not None:
+        warnings.warn(
+            "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
+            RasterioDeprecationWarning,
+        )
+
     if method in MERGE_METHODS:
         copyto = MERGE_METHODS[method]
     elif callable(method):
@@ -305,13 +313,11 @@ def merge(
             int_n = src_n if src_n < dst_n else dst_n
 
             # 2. Compute the source window
-            src_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, src.transform, precision=precision
-            )
+            src_window = windows.from_bounds(int_w, int_s, int_e, int_n, src.transform)
 
             # 3. Compute the destination window
             dst_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, output_transform, precision=precision
+                int_w, int_s, int_e, int_n, output_transform
             )
 
             # 4. Read data in source window into temp
