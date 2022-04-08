@@ -831,6 +831,46 @@ def test_rasterize_geo_interface_2(geojson_polygon):
     assert rasterize([GeoObj()], out_shape=DEFAULT_SHAPE).sum() == 4
 
 
+def test_rasterize__numpy_coordinates__fail():
+    # https://github.com/rasterio/rasterio/issues/2385
+    shapes = [
+        (
+            {
+                "type": "LineString",
+                "coordinates": np.array(
+                    [
+                        [425596.0123443, 4932971.35636043],
+                        [425598.03434254, 4932966.09916503],
+                        [425592.56573176, 4932963.99585319],
+                        [425590.54373353, 4932969.2530486],
+                        [425596.0123443, 4932971.35636043],
+                    ]
+                ),
+            },
+            2,
+        ),
+        (
+            {
+                "type": "LineString",
+                "coordinates": np.array(
+                    [
+                        [425582.9243515, 4932973.24623693],
+                        [425592.85588065, 4932951.94800393],
+                        [425584.24595668, 4932947.93313045],
+                        [425574.31442752, 4932969.23136344],
+                        [425582.9243515, 4932973.24623693],
+                    ]
+                ),
+            },
+            2,
+        ),
+    ]
+    out = rasterio.features.rasterize(shapes=shapes, out_shape=(100, 100))
+    assert out.shape == (100, 100)
+    # will fail and be filled with 0
+    assert (out == 0).all()
+
+
 def test_shapes(basic_image):
     """Test creation of shapes from pixel values."""
     results = list(shapes(basic_image))
