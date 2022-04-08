@@ -39,7 +39,8 @@ class WindowMethodsMixin:
     `rasterio.windows` module.
 
     A subclass with this mixin MUST provide the following
-    properties: `transform`, `height` and `width`
+    properties: `transform`, `height` and `width`.
+
     """
 
     def window(self, left, bottom, right, top, precision=None):
@@ -59,17 +60,30 @@ class WindowMethodsMixin:
         top: float
             Top (north) bounding coordinate
         precision: int, optional
-            Number of decimal points of precision when computing inverse
-            transform.
+            This parameters is unused, deprecated in rasterio 1.3.0, and
+            will be removed in version 2.0.0.
 
         Returns
         -------
         window: Window
+
         """
+        if precision is not None:
+            warnings.warn(
+                "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
+                RasterioDeprecationWarning,
+            )
+
         transform = guard_transform(self.transform)
         return from_bounds(
-            left, bottom, right, top, transform=transform,
-            height=self.height, width=self.width, precision=precision)
+            left,
+            bottom,
+            right,
+            top,
+            transform=transform,
+            height=self.height,
+            width=self.width,
+        )
 
     def window_transform(self, window):
         """Get the affine transform for a dataset window.
@@ -83,8 +97,8 @@ class WindowMethodsMixin:
         -------
         transform: Affine
             The affine transform matrix for the given window
-        """
 
+        """
         gtransform = guard_transform(self.transform)
         return transform(window, gtransform)
 
@@ -100,8 +114,8 @@ class WindowMethodsMixin:
         -------
         bounds : tuple
             x_min, y_min, x_max, y_max for the given window
-        """
 
+        """
         transform = guard_transform(self.transform)
         return bounds(window, transform)
 
@@ -280,10 +294,7 @@ def from_bounds(
         Top (north) bounding coordinates
     transform: Affine, required
         Affine transform matrix.
-    precision: int or float, optional
-        An integer number of decimal points of precision when computing
-        inverse transform, or an absolute float precision.
-    height, width: int, optional
+    precision, height, width: int, optional
         These parameters are unused, deprecated in rasterio 1.3.0, and
         will be removed in version 2.0.0.
 
@@ -298,27 +309,24 @@ def from_bounds(
         If a window can't be calculated.
 
     """
-    if not isinstance(transform, Affine):  # TODO: RPCs?
-        raise WindowError("A transform object is required to calculate the window")
-
-    if (right - left) / transform.a < 0:
-        raise WindowError("Bounds and transform are inconsistent")
-
-    if (bottom - top) / transform.e < 0:
-        raise WindowError("Bounds and transform are inconsistent")
-
-    if height is not None or width is not None:
+    if height is not None or width is not None or precision is not None:
         warnings.warn(
-            "The height and width parameters are unused, deprecated, and will be removed in Rasterio 2.0.0.",
+            "The height, width, and precision parameters are unused, deprecated, and will be removed in 2.0.0.",
             RasterioDeprecationWarning,
         )
+
+    if not isinstance(transform, Affine):  # TODO: RPCs?
+        raise WindowError("A transform object is required to calculate the window")
+    if (right - left) / transform.a < 0:
+        raise WindowError("Bounds and transform are inconsistent")
+    if (bottom - top) / transform.e < 0:
+        raise WindowError("Bounds and transform are inconsistent")
 
     rows, cols = rowcol(
         transform,
         [left, right, right, left],
         [top, top, bottom, bottom],
         op=float,
-        precision=precision,
     )
     row_start, row_stop = min(rows), max(rows)
     col_start, col_stop = min(cols), max(cols)
@@ -345,9 +353,9 @@ def transform(window, transform):
     -------
     Affine
         The affine transform matrix for the given window
+
     """
     window = evaluate(window, height=0, width=0)
-
     x, y = transform * (window.col_off or 0.0, window.row_off or 0.0)
     return Affine.translation(
         x - transform.c, y - transform.f) * transform
@@ -729,7 +737,7 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.1))
+        operator = lambda x: int(math.floor(x + 0.001))
         row_off = operator(self.row_off)
         col_off = operator(self.col_off)
         return Window(col_off, row_off, self.width, self.height)

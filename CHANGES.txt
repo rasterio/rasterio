@@ -9,6 +9,10 @@ Changes
 
 Deprecations:
 
+- The precision keyword arguments of methods in rasterio.transform,
+  rasterio.windows, and rasterio.merge are unused and will be removed in
+  version 2.0. The --precision option of rio-merge is similarly deprecated
+  (#2432).
 - The rasterio.path module will be removed in version 1.4 and a deprecation
   warning is issued when the module is imported (#2423).
 

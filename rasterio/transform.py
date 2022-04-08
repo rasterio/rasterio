@@ -20,7 +20,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.enums import TransformDirection, TransformMethod
     from rasterio.control import GroundControlPoint
     from rasterio.rpc import RPC
-    from rasterio.errors import TransformError
+    from rasterio.errors import TransformError, RasterioDeprecationWarning
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -36,10 +36,20 @@ class TransformMethodsMixin:
 
     A subclass with this mixin MUST provide a `transform`
     property.
+
     """
 
-    def xy(self, row, col, z=None, offset="center", transform_method=TransformMethod.affine, **rpc_options):
-        """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
+    def xy(
+        self,
+        row,
+        col,
+        z=None,
+        offset="center",
+        transform_method=TransformMethod.affine,
+        **rpc_options
+    ):
+        """Get the coordinates x, y of a pixel at row, col.
+
         The pixel's center is returned by default, but a corner can be returned
         by setting `offset` to one of `ul, ur, ll, lr`.
 
@@ -64,7 +74,8 @@ class TransformMethodsMixin:
         Returns
         -------
         tuple
-            ``(x, y)``
+            x, y
+
         """
         transform = getattr(self, transform_method.value)
         if transform_method is TransformMethod.gcps:
@@ -73,13 +84,17 @@ class TransformMethodsMixin:
             raise AttributeError("Dataset has no {}".format(transform_method))
         return xy(transform, row, col, zs=z, offset=offset, **rpc_options)
 
-    def index(self, x, y, z=None, op=math.floor, precision=None, transform_method=TransformMethod.affine, **rpc_options):
-        """
-        Returns the (row, col) index of the pixel containing (x, y) given a
-        coordinate reference system.
-
-        Use an epsilon, magnitude determined by the precision parameter
-        and sign determined by the op function: positive for floor, negative for ceil.
+    def index(
+        self,
+        x,
+        y,
+        z=None,
+        op=math.floor,
+        precision=None,
+        transform_method=TransformMethod.affine,
+        **rpc_options
+    ):
+        """Get the (row, col) index of the pixel containing (x, y).
 
         Parameters
         ----------
@@ -94,24 +109,33 @@ class TransformMethodsMixin:
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
-        precision : int, optional (default: None)
-            Decimal places of precision in indexing, as in `round()`.
         transform_method: TransformMethod, optional 
             The coordinate transformation method. Default: `TransformMethod.affine`.
         rpc_options: dict, optional
             Additional arguments passed to GDALCreateRPCTransformer
+        precision : int, optional
+            This parameter is unused, deprecated in rasterio 1.3.0, and
+            will be removed in version 2.0.0.
 
         Returns
         -------
         tuple
             (row index, col index)
+
         """
+        if precision is not None:
+            warnings.warn(
+                "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
+                RasterioDeprecationWarning,
+            )
+
         transform = getattr(self, transform_method.value)
         if transform_method is TransformMethod.gcps:
             transform = transform[0]
         if not transform:
             raise AttributeError("Dataset has no {}".format(transform_method))
-        return rowcol(transform, x, y, zs=z, op=op, precision=precision, **rpc_options)
+        return rowcol(transform, x, y, zs=z, op=op, **rpc_options)
+
 
 def get_transformer(transform, **rpc_options):
     """Return the appropriate transformer class"""
@@ -124,6 +148,7 @@ def get_transformer(transform, **rpc_options):
     else:
         transformer_cls = partial(GCPTransformer, transform)
     return transformer_cls
+
 
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
@@ -150,6 +175,7 @@ def from_origin(west, north, xsize, ysize):
     Return an Affine transformation for a georeferenced raster given
     the coordinates of its upper left corner `west`, `north` and pixel
     sizes `xsize`, `ysize`.
+
     """
     return Affine.translation(west, north) * Affine.scale(xsize, -ysize)
 
@@ -160,6 +186,7 @@ def from_bounds(west, south, east, north, width, height):
     Return an Affine transformation for a georeferenced raster given
     its bounds `west`, `south`, `east`, `north` and its `width` and
     `height` in number of pixels.
+
     """
     return Affine.translation(west, north) * Affine.scale(
         (east - west) / width, (south - north) / height)
@@ -170,6 +197,7 @@ def array_bounds(height, width, transform):
 
     Return the `west, south, east, north` bounds of an array given
     its height, width, and an affine transform.
+
     """
     w, n = transform.xoff, transform.yoff
     e, s = transform * (width, height)
@@ -177,7 +205,7 @@ def array_bounds(height, width, transform):
 
 
 def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
-    """Returns the x and y coordinates of pixels at `rows` and `cols`.
+    """Get the x and y coordinates of pixels at `rows` and `cols`.
 
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
@@ -217,12 +245,7 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
 
 
 def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_options):
-    """
-    Returns the rows and cols of the pixels containing (x, y) given a
-    coordinate reference system.
-
-    Use an epsilon, magnitude determined by the precision parameter
-    and sign determined by the op function: positive for floor, negative for ceil.
+    """Get rows and cols of the pixels containing (x, y).
 
     Parameters
     ----------
@@ -240,8 +263,8 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round).
     precision : int or float, optional
-        An integer number of decimal points of precision when computing
-        inverse transform, or an absolute float precision.
+        This parameter is unused, deprecated in rasterio 1.3.0, and
+        will be removed in version 2.0.0.
     rpc_options : dict, optional
         Additional arguments passed to GDALCreateRPCTransformer.
 
@@ -253,9 +276,15 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
         list of column indices
 
     """
+    if precision is not None:
+        warnings.warn(
+            "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
+            RasterioDeprecationWarning,
+        )
+
     transformer_cls = get_transformer(transform, **rpc_options)
     with transformer_cls() as transformer:
-        return transformer.rowcol(xs, ys, zs=zs, op=op, precision=precision)
+        return transformer.rowcol(xs, ys, zs=zs, op=op)
 
 
 def from_gcps(gcps):
@@ -275,12 +304,12 @@ def from_gcps(gcps):
 
 
 class TransformerBase():
-    """
-    Generic GDAL transformer base class
+    """Generic GDAL transformer base class
 
     Notes
     -----
     Subclasses must have a _transformer attribute and implement a `_transform` method.
+
     """
     def __init__(self):
         self._env = ExitStack()
@@ -322,8 +351,7 @@ class TransformerBase():
         self._env.close()
     
     def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
-        """
-        Returns rows and cols coordinates given geographic coordinates
+        """Get rows and cols coordinates given geographic coordinates.
 
         Parameters
         ----------
@@ -337,8 +365,8 @@ class TransformerBase():
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
         precision : int, optional (default: None)
-            Decimal places of precision in indexing, as in `round()`.
-        
+            This parameter is unused, deprecated in rasterio 1.3.0, and
+            will be removed in version 2.0.0.
 
         Raises
         ------
@@ -347,26 +375,19 @@ class TransformerBase():
 
         Returns
         -------
-            tuple of float or list of float
+        tuple of float or list of float.
+
         """
+        if precision is not None:
+            warnings.warn(
+                "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
+                RasterioDeprecationWarning,
+            )
+
         AS_ARR = True if hasattr(xs, "__iter__") else False
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
         
-        if precision is None:
-            eps = sys.float_info.epsilon
-        elif isinstance(precision, int):
-            eps = 10.0 ** -precision
-        else:
-            eps = precision
-        
-        # If op rounds up, switch the sign of eps.
-        if op(0.1) >= 1:
-            eps = -eps
-        f = lambda val: val + eps
-
         try:
-            xs = list(map(f, xs))
-            ys = list(map(f, ys))
             new_cols, new_rows = self._transform(
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
@@ -400,7 +421,8 @@ class TransformerBase():
 
         Returns
         -------
-            tuple of float or list of float
+        tuple of float or list of float
+
         """
         AS_ARR = True if hasattr(rows, "__iter__") else False
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
@@ -483,6 +505,7 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
     for GDALCreateRPCTransformer may be passed using `rpc_options`.
     Ensure that GDAL transformer objects are destroyed by calling `close()` 
     method or using context manager interface.
+
     """
     def __init__(self, rpcs, **rpc_options):
         if not isinstance(rpcs, (RPC, dict)):
@@ -502,6 +525,7 @@ class GCPTransformer(GCPTransformerBase, TransformerBase):
     Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
     Ensure that GDAL transformer objects are destroyed by calling `close()` 
     method or using context manager interface.
+
     """
     def __init__(self, gcps):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
