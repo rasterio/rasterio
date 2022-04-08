@@ -95,18 +95,34 @@ def test_window_toranges(col_off, row_off, width, height):
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
-@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
-def test_window_toslices(col_off, row_off, width, height):
-    """window.toslices() should match inputs"""
-
-    expected_slices = (slice(row_off, row_off + height),
-                       slice(col_off, col_off + width))
-
-    slices = Window(col_off, row_off, width, height).toslices()
-
-    assert np.allclose(
-        [(s.start, s.stop) for s in slices],
-        [(s.start, s.stop) for s in expected_slices]
+@given(
+    col_off=F_OFF,
+    row_off=F_OFF,
+    width=F_LEN,
+    height=F_LEN,
+    arr_width=I_LEN,
+    arr_height=I_LEN,
+)
+def test_window_toslices(col_off, row_off, width, height, arr_width, arr_height):
+    """window.toslices() should match inputs and be properly end indexed (see gh-2378)"""
+    row_slice, col_slice = Window(col_off, row_off, width, height).toslices(
+        shape=(arr_height, arr_width)
+    )
+    assert isinstance(row_slice.start, int)
+    assert row_slice.start == int(math.floor(row_off)) or row_slice.start == int(
+        math.floor(row_off - arr_height)
+    )
+    assert isinstance(row_slice.stop, int)
+    assert row_slice.stop == int(math.ceil(row_off + height)) or row_slice.stop == int(
+        math.ceil(row_off + height - arr_height)
+    )
+    assert isinstance(col_slice.start, int)
+    assert col_slice.start == int(math.floor(col_off)) or col_slice.start == int(
+        math.floor(col_off - arr_width)
+    )
+    assert isinstance(col_slice.stop, int)
+    assert col_slice.stop == int(math.ceil(col_off + width)) or col_slice.stop == int(
+        math.ceil(col_off + width - arr_width)
     )
 
 

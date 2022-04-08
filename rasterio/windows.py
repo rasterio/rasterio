@@ -592,7 +592,8 @@ class Window:
 
         Parameters
         ----------
-        arr: ndarray
+        shape: tuple
+            The number of rows and cols of an array to be sliced.
 
         Returns
         -------
@@ -600,20 +601,23 @@ class Window:
             A pair of slices in row, column order
 
         """
-        if shape is None:
-            return tuple(slice(*rng) for rng in self.toranges())
-        else:
+        (r0, r1), (c0, c1) = self.toranges()
+
+        if shape is not None:
             height, width = shape
-            return (
-                slice(
-                    int(math.floor(self.row_off - height)),
-                    int(math.ceil(self.row_off - height + self.height)),
-                ),
-                slice(
-                    int(math.floor(self.col_off - width)),
-                    int(math.ceil(self.col_off - width + self.width)),
-                ),
-            )
+            if r0 < 0:
+                r0 = r0 - height
+            if r1 < 0:
+                r1 = r1 - height
+            if c0 < 0:
+                c0 = c0 - width
+            if c1 < 0:
+                c1 = c1 - width
+
+        return (
+            slice(int(math.floor(r0)), int(math.ceil(r1))),
+            slice(int(math.floor(c0)), int(math.ceil(c1))),
+        )
 
     @classmethod
     def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):
