@@ -61,7 +61,7 @@ def sample(ctx, files, bidx):
     # Handle the case of file, stream, or string input.
     try:
         points = click.open_file(input).readlines()
-    except IOError:
+    except OSError:
         points = [input]
 
     try:

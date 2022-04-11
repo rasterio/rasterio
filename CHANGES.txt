@@ -4,8 +4,34 @@ Changes
 1.3.0 (TBD)
 -----------
 
-1.3a3 (TBD)
+1.3a4 (TBD)
 -----------
+
+Deprecations:
+
+- The precision keyword arguments of methods in rasterio.transform,
+  rasterio.windows, and rasterio.merge are unused and will be removed in
+  version 2.0. The --precision option of rio-merge is similarly deprecated
+  (#2432).
+- The rasterio.path module will be removed in version 1.4 and a deprecation
+  warning is issued when the module is imported (#2423).
+
+Changes:
+
+- The rasterio.path module has been moved to rasterio._path and all its member
+  made private (#2423). A new version of rasterio.path temporarily provides
+  aliases to maintain compatibility.
+
+Bug fixes:
+
+- Erroneously overlapping slices (reported in #2378) are now prevented by
+  ensuring that slice indexes with negative values are set to zero (#2434).
+- Prevent erroneous sign flip in a south-up dataset's res property (#2370).
+- Allow DatasetReader and DatasetWriter to take string filenames and URLs
+  (#2426).
+
+1.3a3 (2022-02-04)
+------------------
 
 New features:
 
@@ -16,11 +42,19 @@ New features:
 
 Bug fixes:
 
+- Fix bug in usage of numpy 1.14 (#2377).
+- rasterio.open returns a dataset accessor and never a
+  contextlib._GeneratorContextManager for all kinds of input (#2360).
 - Fix the "adjust" keyword argument of rasterio.plot.show (#2359).
 - Preserve origin when scaling in creating a WarpedVRT (#2364).
 - Exceptions are no longer raised for a category of errors emitted from
   warp-related GDAL functions (#2353).
 - Enable unsafe casting for copyto in the merge tool (#2265).
+
+Packaging:
+
+Wheels for 1.3a3 are built using the version of rasterio-wheels dated
+2022-02-04. Library versions include GDAL 3.4.1, PROJ 8.2.1, and GEOS 3.10.2.
 
 1.3a2 (2021-10-19)
 ------------------

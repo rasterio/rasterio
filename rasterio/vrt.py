@@ -8,8 +8,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._warp import WarpedVRTReaderBase
     from rasterio.dtypes import _gdal_typename
     from rasterio.enums import MaskFlags
-    from rasterio.env import env_ctx_if_needed
-    from rasterio.path import parse_path
+    from rasterio._path import _parse_path
     from rasterio.transform import TransformMethodsMixin
     from rasterio.windows import WindowMethodsMixin
 
@@ -112,17 +111,16 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         self.start()
         return self
 
     def __exit__(self, *args, **kwargs):
-        self._env.__exit__()
-        self.close()
+        if not self._closed:
+            self.close()
 
     def __del__(self):
-        self.close()
+        if not self._closed:
+            self.close()
 
 
 def _boundless_vrt_doc(
@@ -178,7 +176,7 @@ def _boundless_vrt_doc(
         sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.attrib["shared"] = "0"
-        sourcefilename.text = parse_path(src_dataset.name).as_vsi()
+        sourcefilename.text = _parse_path(src_dataset.name).as_vsi()
         sourceband = ET.SubElement(complexsource, 'SourceBand')
         sourceband.text = str(bidx)
         sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
@@ -227,7 +225,7 @@ def _boundless_vrt_doc(
         sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.attrib["shared"] = "0"
-        sourcefilename.text = parse_path(src_dataset.name).as_vsi()
+        sourcefilename.text = _parse_path(src_dataset.name).as_vsi()
 
         sourceband = ET.SubElement(simplesource, 'SourceBand')
         sourceband.text = 'mask,1'

@@ -57,7 +57,7 @@ transform.
 See `examples/reproject.py <https://github.com/rasterio/rasterio/blob/master/examples/reproject.py>`__
 for code that writes the destination array to a GeoTIFF file. I've uploaded the
 resulting file to a Mapbox map to show that the reprojection is
-correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033.
+correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033. (dead link)
 
 Estimating optimal output shape
 -------------------------------
@@ -211,7 +211,7 @@ reference system with a newly computed geotransform.
     When reprojecting a dataset with gcps or rpcs, the src_crs parameter should
     be supplied with the coordinate reference system that the gcps or rpcs are
     referenced against. By definition rpcs are always referenced against WGS84
-    ellipsoid with geographic coordinates (EPSG:4326).
+    ellipsoid with geographic coordinates (EPSG:4326) [2]_.
 
 
 
@@ -219,3 +219,4 @@ References
 ----------
 
 .. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.geometric_transform.html#scipy.ndimage.geometric_transform
+.. [2] http://geotiff.maptools.org/rpc_prop.html

@@ -5,7 +5,7 @@ import os
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio.path import parse_path, UnparsedPath
+    from rasterio._path import _parse_path, _UnparsedPath
 
 
 log = logging.getLogger(__name__)
@@ -97,9 +97,9 @@ class Session:
         if not path:
             return DummySession
 
-        path = parse_path(path)
+        path = _parse_path(path)
 
-        if isinstance(path, UnparsedPath) or path.is_local:
+        if isinstance(path, _UnparsedPath) or path.is_local:
             return DummySession
 
         elif (

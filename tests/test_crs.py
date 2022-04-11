@@ -83,6 +83,12 @@ def test_read_epsg():
         assert src.crs.to_epsg() == 32618
 
 
+def test_read_compdcs():
+    """Expect no match for a single EPSG for this COMPDCS"""
+    with rasterio.open('zip://tests/data/ak-compdcs.zip!test.tif') as src:
+        assert src.crs.to_epsg() == None
+
+
 @requires_gdal_lt_3
 def test_read_esri_wkt():
     with rasterio.open('tests/data/test_esri_wkt.tif') as src:
@@ -160,6 +166,12 @@ def test_from_epsg_string():
     # Test with invalid EPSG code
     with pytest.raises(ValueError):
         assert CRS.from_string('epsg:xyz')
+
+
+def test_from_epsg_overflow():
+    with pytest.raises(CRSError):
+        # the argument is large enough to cause an overflow in Cython
+        CRS.from_epsg(1111111111111111111111)
 
 
 def test_from_string():
@@ -430,12 +442,6 @@ def test_exception_proj4():
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
-def test_crs_private_wkt(projection_string):
-    """Original WKT is saved"""
-    CRS.from_wkt(projection_string)._wkt == projection_string
-
-
-@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_implicit_proj_dict(projection_string):
     """Ensure that old behavior is preserved"""
     assert CRS.from_wkt(projection_string)['proj'] == 'aea'
@@ -510,6 +516,14 @@ def test_linear_units_factor():
     assert CRS.from_epsg(2261).linear_units_factor[1] == pytest.approx(0.3048006096012192)
     with pytest.raises(CRSError):
         CRS.from_epsg(4326).linear_units_factor
+
+
+@pytest.mark.parametrize("epsg_code, units_factor", [
+    (3857, ("metre", 1.0)),
+    (4326, ("degree", pytest.approx(0.017453292519943295))),
+])
+def test_units_factor(epsg_code, units_factor):
+    assert CRS.from_epsg(epsg_code).units_factor == units_factor
 
 
 def test_crs_copy():
@@ -749,3 +763,7 @@ def test_crs_proj_json__user_input():
 def test_crs_proj_json__from_string():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_string(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
+
+
+def test_crs_compound_epsg():
+    assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPD")

@@ -4,6 +4,7 @@
 
 from collections import UserDict
 from collections.abc import Mapping
+from contextlib import ExitStack
 import logging
 import uuid
 import warnings
@@ -1187,6 +1188,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         if dst_alpha and len(self._nodatavals) == 3:
             self._nodatavals[dst_alpha - 1] = None
+
+        self._env = ExitStack()
+        self._closed = False
 
     @property
     def crs(self):

@@ -3,6 +3,7 @@
 """Numpy-free base classes."""
 
 from collections import defaultdict
+from contextlib import ExitStack
 import logging
 import math
 import os
@@ -22,14 +23,13 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.path import parse_path
+from rasterio._path import _parse_path
 from rasterio import windows
 
 cimport cython
@@ -70,7 +70,7 @@ def get_dataset_driver(path):
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = parse_path(path).as_vsi()
+    path = _parse_path(path).as_vsi()
     path = path.encode('utf-8')
 
     try:
@@ -296,7 +296,8 @@ cdef class DatasetBase:
         self._hds = NULL
 
         if path is not None:
-            filename = parse_path(path).as_vsi()
+            path = _parse_path(path)
+            filename = path.as_vsi()
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -310,8 +311,11 @@ cdef class DatasetBase:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
+        
+            self.name = path.name
+        else:
+            self.name = None
 
-        self.name = path.name
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []
@@ -326,6 +330,8 @@ cdef class DatasetBase:
         self._read = False
 
         self._set_attrs_from_dataset_handle()
+        self._env = ExitStack()
+        self._closed = False
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -347,7 +353,6 @@ cdef class DatasetBase:
         # touch self.meta, triggering data type evaluation.
         _ = self.meta
 
-        self._closed = False
         log.debug("Dataset %r is started.", self)
 
     cdef GDALDatasetH handle(self) except NULL:
@@ -431,18 +436,18 @@ cdef class DatasetBase:
         self._hds = NULL
 
     def close(self):
-        """Close the dataset"""
+        """Close the dataset and unwind attached exit stack."""
         self.stop()
+        if self._env:
+            self._env.close()
         self._closed = True
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
-    def __exit__(self, type, value, traceback):
-        self.close()
-        self._env.__exit__()
+    def __exit__(self, *exc_details):
+        if not self._closed:
+            self.close()
 
     def __dealloc__(self):
         if self._hds != NULL:
@@ -950,10 +955,7 @@ cdef class DatasetBase:
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
         a, b, c, d, e, f, _, _, _ = self.transform
-        if b == d == 0:
-            return a, -e
-        else:
-            return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
+        return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
 
     @property
     def meta(self):
