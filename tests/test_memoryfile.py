@@ -172,6 +172,7 @@ def test_read(tmpdir, rgb_file_bytes):
         assert src.count == 3
 
 
+@pytest.mark.skipif(not rasterio.have_vsi_plugin, reason="Test requires FilePath")
 def test_file_object_read_filepath(monkeypatch, request, capfd, rgb_file_object):
     """Opening a file object with FilePath returns a dataset with no attached MemoryFile."""
     with rasterio.open(rgb_file_object) as src:
