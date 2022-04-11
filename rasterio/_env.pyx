@@ -20,6 +20,7 @@ import threading
 from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
+from rasterio._filepath cimport install_filepath_plugin, uninstall_filepath_plugin
 
 from libc.stdio cimport stderr
 
@@ -60,6 +61,8 @@ except ImportError:
     pass
 
 cdef bint is_64bit = sys.maxsize > 2 ** 32
+
+cdef VSIFilesystemPluginCallbacksStruct* filepath_plugin = NULL
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
@@ -351,11 +354,13 @@ cdef class GDALEnv(ConfigEnv):
         # lock when the environment starts, and the inner avoids a
         # potential race condition.
         if not self._have_registered_drivers:
-            with threading.Lock():
-                if not self._have_registered_drivers:
 
+            with threading.Lock():
+
+                if not self._have_registered_drivers:
                     GDALAllRegister()
                     OGRRegisterAll()
+                    install_filepath_plugin(filepath_plugin)
 
                     if 'GDAL_DATA' in os.environ:
                         log.debug("GDAL_DATA found in environment.")

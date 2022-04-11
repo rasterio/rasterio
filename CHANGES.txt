@@ -18,6 +18,8 @@ Deprecations:
 
 Changes:
 
+- The Python file VSI plugin is now created and installed at the same time
+  other GDAL drivers are registered (#).
 - The rasterio.path module has been moved to rasterio._path and all its member
   made private (#2423). A new version of rasterio.path temporarily provides
   aliases to maintain compatibility.
