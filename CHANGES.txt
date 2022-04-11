@@ -18,17 +18,25 @@ Deprecations:
 
 Changes:
 
+- Various optimizations for sample_gen() (#2338).
+- Update Cython property declarations to modern style (#2316).
 - The rasterio.path module has been moved to rasterio._path and all its member
   made private (#2423). A new version of rasterio.path temporarily provides
   aliases to maintain compatibility.
 
 Bug fixes:
 
+- Rasterio's warper is fixed such that it can support reprojection to a
+  specific dataset band (#2369). 
 - Erroneously overlapping slices (reported in #2378) are now prevented by
   ensuring that slice indexes with negative values are set to zero (#2434).
 - Prevent erroneous sign flip in a south-up dataset's res property (#2370).
 - Allow DatasetReader and DatasetWriter to take string filenames and URLs
   (#2426).
+- Support for compound EPSG CRS has been added (#2425).
+- Z coordinates are no longer ignored when transforming using RPCs (#2422).
+- Integer overflow errors in CRS.from_epsg are caught and CRSError is raised
+  (#2395).
 
 1.3a3 (2022-02-04)
 ------------------
