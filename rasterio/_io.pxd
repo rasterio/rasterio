@@ -27,6 +27,7 @@ cdef class MemoryDataset(DatasetWriterBase):
 
 cdef class MemoryFileBase:
     cdef VSILFILE * _vsif
+    cdef public object _env
 
 
 ctypedef np.uint8_t DTYPE_UBYTE_t

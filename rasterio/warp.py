@@ -1,6 +1,7 @@
 """Raster warping and reprojection."""
 
 from math import ceil, floor
+import warnings
 
 from affine import Affine
 import numpy as np
@@ -12,7 +13,7 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import _transform
     from rasterio.enums import Resampling
     from rasterio.env import GDALVersion, ensure_env, require_gdal_version
-    from rasterio.errors import GDALBehaviorChangeException, TransformError
+    from rasterio.errors import GDALBehaviorChangeException, TransformError, RPCError
     from rasterio.transform import array_bounds
     from rasterio._warp import (
         _calculate_default_transform,
@@ -312,12 +313,21 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
 
             src_crs = src_crs or src_rdr.crs
 
+            # raise exception when reprojecting with rpcs using a CRS that is not EPSG:4326
+            if rpcs:
+                if isinstance(src_crs, str):
+                    src_crs_obj = rasterio.crs.CRS.from_string(src_crs)
+                else:
+                    src_crs_obj = src_crs
+                if src_crs is not None and src_crs_obj.to_epsg() != 4326:
+                    raise RPCError("Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326")
+
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
 
             src_count = len(src_bidx)
             src_height, src_width = src_shape
-            gcps = src_rdr.gcps[0] if src_rdr.gcps[0] else None
+            gcps = src_rdr.gcps[0] if src_rdr.gcps[0] and not rpcs else None
 
         dst_height = None
         dst_width = None

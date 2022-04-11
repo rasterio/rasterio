@@ -1,11 +1,21 @@
 """$ rio merge"""
 
+import warnings
 
 import click
 
 from rasterio.enums import Resampling
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
+
+
+def deprecated_precision(*args):
+    warnings.warn(
+        "The --precision option is unused, deprecated, and will be removed in 2.0.0.",
+        RasterioDeprecationWarning,
+    )
+    return None
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
@@ -25,7 +35,8 @@ from rasterio.rio.helpers import resolve_inout
     "--precision",
     type=int,
     default=None,
-    help="Number of decimal places of precision in alignment of pixels",
+    callback=deprecated_precision,
+    help="Unused, deprecated, and will be removed in 2.0.0.",
 )
 @options.creation_options
 @click.pass_context
@@ -49,6 +60,7 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
     \b
       --res 0.1 0.1  => --res 0.1 (square)
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
+
     """
     from rasterio.merge import merge as merge_tool
 
@@ -63,7 +75,6 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
             bounds=bounds,
             res=res,
             nodata=nodata,
-            precision=precision,
             indexes=(bidx or None),
             resampling=resampling,
             dst_path=output,

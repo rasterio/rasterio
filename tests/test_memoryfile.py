@@ -96,7 +96,7 @@ def test_closed():
     """A closed MemoryFile can not be opened"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(IOError):
+    with pytest.raises(OSError):
         memfile.open()
 
 
@@ -172,13 +172,53 @@ def test_read(tmpdir, rgb_file_bytes):
         assert src.count == 3
 
 
-def test_file_object_read(rgb_file_object):
-    """An example of reading from a file object"""
+@pytest.mark.skipif(not rasterio.have_vsi_plugin, reason="Test requires FilePath")
+def test_file_object_read_filepath(monkeypatch, request, capfd, rgb_file_object):
+    """Opening a file object with FilePath returns a dataset with no attached MemoryFile."""
     with rasterio.open(rgb_file_object) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
         assert src.dtypes == ('uint8', 'uint8', 'uint8')
         assert src.read().shape == (3, 718, 791)
+
+
+def test_file_object_read_memfile(monkeypatch, request, capfd, rgb_file_object):
+    """Opening a file object without FilePath returns a dataset with attached MemoryFile."""
+    monkeypatch.setattr(rasterio, "have_vsi_plugin", False)
+    with rasterio.Env() as env:
+        with rasterio.open(rgb_file_object) as src:
+            assert src.driver == 'GTiff'
+            assert src.count == 3
+            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.read().shape == (3, 718, 791)
+
+        # Exiting src causes the attached MemoryFile context to be
+        # exited and the temporary in-memory file is deleted.
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert "/vsimem/{}".format(request.node.name) not in captured.err
+
+
+def test_issue2360_no_with(monkeypatch, request, capfd, rgb_file_object):
+    """Opening a file object without FilePath returns a dataset with attached MemoryFile."""
+    monkeypatch.setattr(rasterio, "have_vsi_plugin", False)
+    with rasterio.Env() as env:
+        src = rasterio.open(rgb_file_object)
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
+
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert "/vsimem/{}".format(request.node.name) in captured.err
+
+        # Closing src causes the attached MemoryFile context to be
+        # exited and the temporary in-memory file is deleted.
+        src.close()
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert "/vsimem/{}".format(request.node.name) not in captured.err
 
 
 def test_file_object_read_variant(rgb_file_bytes):
@@ -213,23 +253,11 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
         assert src.read().shape == (3, 718, 791)
 
 
-def test_nonpersistemt_memfile_fail_example(rgb_data_and_profile):
-    """An example of writing to a file object"""
-    data, profile = rgb_data_and_profile
-    with BytesIO() as fout:
-        with rasterio.open(fout, 'w', **profile) as dst:
-            dst.write(data)
-
-        # This fails because the MemoryFile created in open() is
-        # gone.
-        rasterio.open(fout)
-
-
 def test_zip_closed():
     """A closed ZipMemoryFile can not be opened"""
     with ZipMemoryFile() as zipmemfile:
         pass
-    with pytest.raises(IOError):
+    with pytest.raises(OSError):
         zipmemfile.open('foo')
 
 

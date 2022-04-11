@@ -401,3 +401,11 @@ def test_dataset_mixins(dataset, transform_method, expected):
     with rasterio.open(dataset) as src:
         assert src.xy(0, 0, transform_method=transform_method) == pytest.approx(expected)
         assert src.index(*expected, transform_method=transform_method) == (0, 0)
+
+def test_2421_rpc_height_ignored():
+    transform_method = rasterio.enums.TransformMethod.rpcs
+    with rasterio.open("tests/data/RGB.byte.rpc.vrt") as src:
+        x1, y1 = src.xy(0, 0, z=0, transform_method=transform_method)
+        x2, y2 = src.xy(0, 0, z=2000, transform_method=transform_method)
+        assert abs(x2 - x1) > 0
+        assert abs(y2 - y1) > 0

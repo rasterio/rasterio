@@ -9,6 +9,7 @@ from hypothesis import given, assume, settings, HealthCheck
 from hypothesis.strategies import floats, integers
 
 import rasterio
+from rasterio.transform import from_origin
 from rasterio.errors import WindowError
 from rasterio.windows import (
     crop, from_bounds, bounds, transform, evaluate, window_index, shape,
@@ -34,8 +35,7 @@ def assert_window_almost_equals(a, b):
 
 
 def test_window_repr():
-    assert str(Window(0, 1, 4, 2)) == ('Window(col_off=0, row_off=1, width=4, '
-                                       'height=2)')
+    assert str(Window(0, 1, 4, 2)) == ('Window(col_off=0, row_off=1, width=4, height=2)')
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -95,19 +95,25 @@ def test_window_toranges(col_off, row_off, width, height):
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
-@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
-def test_window_toslices(col_off, row_off, width, height):
-    """window.toslices() should match inputs"""
-
-    expected_slices = (slice(row_off, row_off + height),
-                       slice(col_off, col_off + width))
-
-    slices = Window(col_off, row_off, width, height).toslices()
-
-    assert np.allclose(
-        [(s.start, s.stop) for s in slices],
-        [(s.start, s.stop) for s in expected_slices]
-    )
+@given(
+    col_off=F_OFF,
+    row_off=F_OFF,
+    width=F_LEN,
+    height=F_LEN,
+    arr_width=I_LEN,
+    arr_height=I_LEN,
+)
+def test_window_toslices(col_off, row_off, width, height, arr_width, arr_height):
+    """window.toslices() should match inputs and be properly end indexed (see gh-2378)"""
+    row_slice, col_slice = Window(col_off, row_off, width, height).toslices()
+    assert isinstance(row_slice.start, int)
+    assert row_slice.start == int(math.floor(row_off)) or row_slice.start == 0
+    assert isinstance(row_slice.stop, int)
+    assert row_slice.stop == int(math.ceil(row_off + height)) or row_slice.stop == 0
+    assert isinstance(col_slice.start, int)
+    assert col_slice.start == int(math.floor(col_off)) or col_slice.start == 0
+    assert isinstance(col_slice.stop, int)
+    assert col_slice.stop == int(math.ceil(col_off + width)) or col_slice.stop == 0
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -649,3 +655,13 @@ def test_union_boundless_above():
     assert uw.height == 4
     assert uw.width == 2
     assert uw.col_off == 0
+
+
+def test_nonintersecting_window_index():
+    """See gh-2378"""
+    t = from_origin(0, 0, 1, 1)
+    w = from_bounds(-3, -3, -1, -1, t)
+    data = np.arange(25).reshape(5, 5)
+    selection = data[window_index(w, height=5, width=5)]
+    assert selection.shape == (2, 0)
+    assert selection.flatten().tolist() == []

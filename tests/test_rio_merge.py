@@ -460,14 +460,13 @@ def test_merge_tiny_res_bounds(tiffs, runner):
 
     # Output should be
     # [[[120  90]
-    #   [60    0]]]
+    #   [40    0]]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        print(data)
         assert data[0, 0, 0] == 120
         assert data[0, 0, 1] == 90
-        assert data[0, 1, 0] == 60
+        assert data[0, 1, 0] == 40
         assert data[0, 1, 1] == 0
 
 

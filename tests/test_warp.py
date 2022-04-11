@@ -20,6 +20,7 @@ from rasterio.errors import (
     CRSError,
     GDALVersionError,
     TransformError,
+    RPCError,
     WarpOperationError,
 )
 from rasterio.warp import (
@@ -2075,3 +2076,16 @@ def test_reproject_to_specified_output_bands():
 
                 band_data = out.read(5)
                 assert (band_data == 0).all()
+
+
+def test_rpcs_non_epsg4326():
+    with pytest.raises(RPCError):
+        with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+            src_rpcs = src.rpcs
+            reproject(
+                rasterio.band(src, src.indexes),
+                src_crs="EPSG:3857",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:4326",
+                resampling=Resampling.nearest,
+            )

@@ -4,6 +4,7 @@
 
 include "gdal.pxi"
 
+from contextlib import ExitStack
 import logging
 import warnings
 
@@ -124,6 +125,8 @@ cdef class RPCTransformerBase:
             CSLDestroy(options)
             CSLDestroy(papszMD)
 
+        self._env = ExitStack()
+
     def _transform(self, xs, ys, zs, transform_direction):
         """
         General computation of dataset pixel/line <-> lon/lat/height coordinates using RPCs
@@ -222,6 +225,7 @@ cdef class RPCTransformerBase:
         """
         return self._closed
 
+
 cdef class GCPTransformerBase:
     cdef void *_transformer
     cdef bint _closed
@@ -267,6 +271,8 @@ cdef class GCPTransformerBase:
             self._closed = False
         finally:
             CPLFree(gcplist)
+
+        self._env = ExitStack()
 
     def _transform(self, xs, ys, zs, transform_direction):
         """

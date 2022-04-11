@@ -338,13 +338,19 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
             num_geoms * sizeof(OGRGeometryH))
         pixel_values = <double *>CPLMalloc(num_geoms * sizeof(double))
 
+        # initialize all geoms to NULL
+        for i in range(<int>num_geoms):
+            geoms[i] = NULL
+
         for i, (geometry, value) in enumerate(all_shapes):
             try:
                 geoms[i] = OGRGeomBuilder().build(geometry)
                 pixel_values[i] = <double>value
-            except:
-                log.error("Geometry %r at index %d with value %d skipped",
-                    geometry, i, value)
+            except Exception as error:
+                log.error(
+                    "Geometry %r at index %d with value %d skipped due to error: %r",
+                    geometry, i, value, error
+                )
 
         # TODO: is a vsimem file more memory efficient?
         with MemoryDataset(image, transform=transform) as mem:
@@ -357,13 +363,13 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                     NULL, pixel_values, options, NULL, NULL))
 
     finally:
-        for i in range(<int>num_geoms):
-            _deleteOgrGeom(geoms[i])
+        if geoms != NULL:
+            for i in range(<int>num_geoms):
+                _deleteOgrGeom(geoms[i])
         CPLFree(geoms)
         CPLFree(pixel_values)
         CPLFree(band_ids)
-        if options:
-            CSLDestroy(options)
+        CSLDestroy(options)
 
 
 def _explode(coords):
@@ -559,7 +565,7 @@ cdef class GeomBuilder:
 cdef class OGRGeomBuilder:
     """
     Builds an OGR geometry from GeoJSON geometry.
-    From Fiona: https://github.com/Toblerity/Fiona/blob/master/src/fiona/ogrext.pyx
+    From Fiona: https://github.com/Toblerity/Fiona/blob/master/fiona/ogrext.pyx
     """
 
     cdef OGRGeometryH _createOgrGeometry(self, int geom_type) except NULL:

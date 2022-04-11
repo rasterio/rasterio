@@ -1,6 +1,6 @@
 """Rasterio's GDAL/AWS environment"""
 
-import attr
+from contextlib import ExitStack
 from functools import wraps, total_ordering
 from inspect import getfullargspec as getargspec
 import logging
@@ -8,6 +8,8 @@ import os
 import re
 import threading
 import warnings
+
+import attr
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():

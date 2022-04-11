@@ -13,9 +13,9 @@ with rasterio._loading.add_gdal_dll_directories():
         DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
         MemoryFileBase)
     from rasterio.windows import WindowMethodsMixin
-    from rasterio.env import ensure_env, env_ctx_if_needed
+    from rasterio.env import ensure_env
     from rasterio.transform import TransformMethodsMixin
-    from rasterio.path import UnparsedPath
+    from rasterio._path import _UnparsedPath
     try:
         from rasterio._filepath import FilePathBase
     except ImportError:
@@ -128,10 +128,10 @@ class MemoryFile(MemoryFileBase):
         Other parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        mempath = UnparsedPath(self.name)
+        mempath = _UnparsedPath(self.name)
 
         if self.closed:
-            raise IOError("I/O operation on closed file.")
+            raise OSError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug("VSI path: {}".format(mempath.path))
             return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
@@ -143,13 +143,10 @@ class MemoryFile(MemoryFileBase):
                           nodata=nodata, sharing=sharing, **kwargs)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args):
         self.close()
-        self._env.__exit__()
 
 
 class _FilePath(FilePathBase):
@@ -213,7 +210,7 @@ class _FilePath(FilePathBase):
         Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        mempath = UnparsedPath(self.name)
+        mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
@@ -222,13 +219,10 @@ class _FilePath(FilePathBase):
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
     def __enter__(self):
-        self._env = env_ctx_if_needed()
-        self._env.__enter__()
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args):
         self.close()
-        self._env.__exit__()
 
 
 if FilePathBase is not object:
@@ -263,10 +257,10 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        zippath = UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
+        zippath = _UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
-            raise IOError("I/O operation on closed file.")
+            raise OSError("I/O operation on closed file.")
         return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
 
 

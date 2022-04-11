@@ -4,7 +4,7 @@
 
 from enum import Enum, IntEnum
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 import logging
 import os
 import sys
@@ -28,7 +28,7 @@ from rasterio.errors import (
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, UnparsedPath
+from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -643,7 +643,7 @@ cdef class DatasetReaderBase(DatasetBase):
             else:
                 vrt_kwds = {}
 
-            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
+            with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -662,7 +662,7 @@ cdef class DatasetReaderBase(DatasetBase):
                             transform=self.window_transform(window),
                             masked=True)
 
-                        with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                        with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
@@ -825,7 +825,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {}
 
             if all_valid:
-                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
+                blank_path = _UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
                 transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
                 with DatasetWriterBase(
                         blank_path, 'w',
@@ -841,7 +841,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         height=max(self.height, window.height) + 1,
                         transform=self.window_transform(window))
 
-                    with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                    with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
                         out = mask_vrt._read(
                             indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
@@ -852,7 +852,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     height=max(self.height, window.height) + 1,
                     transform=self.window_transform(window))
 
-                with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
+                with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                     out = vrt._read(
                         indexes, out, Window(0, 0, window.width, window.height),
@@ -1133,8 +1133,9 @@ cdef class MemoryFileBase:
             self.mode = "w+"
 
         if self._vsif == NULL:
-            raise IOError("Failed to open in-memory file.")
+            raise OSError("Failed to open in-memory file.")
 
+        self._env = ExitStack()
         self.closed = False
 
     def exists(self):
@@ -1320,10 +1321,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 except Exception:
                     raise TypeError("A valid dtype is required.")
 
+        internal_path = _parse_path(path)
+
         # Make and store a GDAL dataset handle.
-        filename = path.name
-        path = path.as_vsi()
-        name_b = path.encode('utf-8')
+        filename = internal_path.name
+        vsi_path = internal_path.as_vsi()
+        name_b = vsi_path.encode('utf-8')
         fname = name_b
 
         # Process dataset opening options.
@@ -1347,7 +1350,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
                 log.debug("No deletion, subdataset will be added: path=%r", path)
             else:
-                _delete_dataset_if_exists(path)
+                _delete_dataset_if_exists(vsi_path)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
@@ -1412,7 +1415,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             flags = 0x01 | sharing_flag | 0x40
 
             try:
-                self._hds = open_dataset(path, flags, driver, kwargs, None)
+                self._hds = open_dataset(vsi_path, flags, driver, kwargs, None)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1463,9 +1466,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-
-        # touch self.meta
         _ = self.meta
+        self._env = ExitStack()
         self._closed = False
 
     def __repr__(self):
@@ -1964,7 +1966,7 @@ cdef class MemoryDataset(DatasetWriterBase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            super().__init__(parse_path(datasetname), "r+")
+            super().__init__(_parse_path(datasetname), "r+")
             if crs is not None:
                 self.crs = crs
             if transform is not None:
@@ -2103,8 +2105,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = path.as_vsi()
-        name_b = path.encode('utf-8')
+        vsi_filename = path.as_vsi()
+        name_b = vsi_filename.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")
 
@@ -2169,8 +2171,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if options != NULL:
             CSLDestroy(options)
 
-        # touch self.meta
         _ = self.meta
+        self._env = ExitStack()
         self._closed = False
 
     def stop(self):

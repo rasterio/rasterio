@@ -1,11 +1,21 @@
 # Workaround for issue #378. A pure Python generator.
 
-import numpy
+import numpy as np
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
     from rasterio.enums import MaskFlags
     from rasterio.windows import Window
+    from rasterio.transform import rowcol
+
+from itertools import zip_longest
+
+def _grouper(iterable, n, fillvalue=None):
+    "Collect data into non-overlapping fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
+    # from itertools recipes
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
 
 
 def sample_gen(dataset, xy, indexes=None, masked=False):
@@ -31,27 +41,29 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
         those indexes.
 
     """
-    index = dataset.index
+    dt = dataset.transform
     read = dataset.read
+    height = dataset.height
+    width = dataset.width
 
     if indexes is None:
         indexes = dataset.indexes
     elif isinstance(indexes, int):
         indexes = [indexes]
 
-    for x, y in xy:
+    nodata = np.full(len(indexes), (dataset.nodata or 0),  dtype=dataset.dtypes[0])
+    if masked:
+        # Masks for masked arrays are inverted (False means valid)
+        mask = [MaskFlags.all_valid not in dataset.mask_flag_enums[i-1] for i in indexes]
+        nodata = np.ma.array(nodata, mask=mask)
 
-        row_off, col_off = index(x, y)
+    for pts in _grouper(xy, 256):
+        pts = zip(*filter(None, pts))
 
-        if row_off < 0 or col_off < 0 or row_off >= dataset.height or col_off >= dataset.width:
-            data = numpy.ones((len(indexes),), dtype=dataset.dtypes[0]) * (dataset.nodata or 0)
-            if masked:
-                mask = [False if MaskFlags.all_valid in dataset.mask_flag_enums[i - 1] else True for i in indexes]
-                yield numpy.ma.array(data, mask=mask)
+        for row_off, col_off in zip(*rowcol(dt, *pts)):
+            if row_off < 0 or col_off < 0 or row_off >= height or col_off >= width:
+                yield nodata
             else:
-                yield data
-
-        else:
-            window = Window(col_off, row_off, 1, 1)
-            data = read(indexes, window=window, masked=masked)
-            yield data[:, 0, 0]
+                window = Window(col_off, row_off, 1, 1)
+                data = read(indexes, window=window, masked=masked)
+                yield data[:, 0, 0]
