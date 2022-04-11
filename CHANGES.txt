@@ -24,6 +24,8 @@ Changes:
 
 Bug fixes:
 
+- Erroneously overlapping slices (reported in #2378) are now prevented by
+  ensuring that slice indexes with negative values are set to zero (#2434).
 - Prevent erroneous sign flip in a south-up dataset's res property (#2370).
 - Allow DatasetReader and DatasetWriter to take string filenames and URLs
   (#2426).
