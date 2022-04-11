@@ -481,7 +481,7 @@ def window_index(window, height=0, width=0):
 
     """
     window = evaluate(window, height=height, width=width)
-    return window.toslices(shape=(height, width))
+    return window.toslices()
 
 
 def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
@@ -587,13 +587,8 @@ class Window:
             (self.row_off, self.row_off + self.height),
             (self.col_off, self.col_off + self.width))
 
-    def toslices(self, shape=None):
+    def toslices(self):
         """Slice objects for use as an ndarray indexer.
-
-        Parameters
-        ----------
-        shape: tuple
-            The number of rows and cols of an array to be sliced.
 
         Returns
         -------
@@ -603,16 +598,14 @@ class Window:
         """
         (r0, r1), (c0, c1) = self.toranges()
 
-        if shape is not None:
-            height, width = shape
-            if r0 < 0:
-                r0 = r0 - height
-            if r1 < 0:
-                r1 = r1 - height
-            if c0 < 0:
-                c0 = c0 - width
-            if c1 < 0:
-                c1 = c1 - width
+        if r0 < 0:
+            r0 = 0
+        if r1 < 0:
+            r1 = 0
+        if c0 < 0:
+            c0 = 0
+        if c1 < 0:
+            c1 = 0
 
         return (
             slice(int(math.floor(r0)), int(math.ceil(r1))),
