@@ -478,13 +478,10 @@ def window_index(window, height=0, width=0):
     -------
     row_slice, col_slice: slice
         A pair of slices in row, column order
+
     """
     window = evaluate(window, height=height, width=width)
-
-    (row_start, row_stop), (col_start, col_stop) = window.toranges()
-    return (
-        slice(int(math.floor(row_start)), int(math.ceil(row_stop))),
-        slice(int(math.floor(col_start)), int(math.ceil(col_stop))))
+    return window.toslices()
 
 
 def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
@@ -597,8 +594,23 @@ class Window:
         -------
         row_slice, col_slice: slice
             A pair of slices in row, column order
+
         """
-        return tuple(slice(*rng) for rng in self.toranges())
+        (r0, r1), (c0, c1) = self.toranges()
+
+        if r0 < 0:
+            r0 = 0
+        if r1 < 0:
+            r1 = 0
+        if c0 < 0:
+            c0 = 0
+        if c1 < 0:
+            c1 = 0
+
+        return (
+            slice(int(math.floor(r0)), int(math.ceil(r1))),
+            slice(int(math.floor(c0)), int(math.ceil(c1))),
+        )
 
     @classmethod
     def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):

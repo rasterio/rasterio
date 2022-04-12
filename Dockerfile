@@ -8,7 +8,8 @@ WORKDIR /app
 COPY requirements*.txt ./
 RUN python3 -m venv /venv && \
     /venv/bin/python -m pip install -U pip && \
-    /venv/bin/python -m pip install -r requirements-dev.txt
+    /venv/bin/python -m pip install -r requirements-dev.txt && \
+    /venv/bin/python -m pip list
 
 FROM gdal
 COPY . .
