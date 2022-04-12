@@ -1,12 +1,15 @@
 """Test of boundless reads"""
 
+from affine import Affine
 import shutil
-from hypothesis import given
+from hypothesis import example, given
 import hypothesis.strategies as st
 import numpy
+from numpy.testing import assert_almost_equal
 import pytest
 
 import rasterio
+from rasterio.io import MemoryFile
 from rasterio.windows import Window
 
 from .conftest import requires_gdal21, gdal_version
@@ -36,6 +39,43 @@ def test_outer_boundless_pixel_fidelity(
 
 
 @pytest.mark.xfail(reason="The bug reported in gh-2382")
+@given(height=st.integers(min_value=500, max_value=20000))
+@example(height=9508)
+def test_issue2382(height):
+    data_array = numpy.arange(height, dtype="f4").reshape((height, 1))
+
+    with MemoryFile() as memfile:
+        with memfile.open(
+            driver='GTiff',
+            count=1,
+            height=height,
+            width=1,
+            dtype=data_array.dtype,
+            transform=Affine(1.0, 0.0, 0, 0.0, -1.0, 0),
+        ) as dataset:
+            dataset.write(data_array[numpy.newaxis, ...])
+
+        with memfile.open(driver='GTiff') as dataset:
+            # read first column, rows 0-388
+            a = dataset.read(
+                1,
+                window=Window(col_off=0, row_off=0, width=1, height=388),
+                boundless=True,
+                fill_value=-9999,
+            )[:, 0]
+            assert_almost_equal(a, numpy.arange(388))
+
+            b = dataset.read(
+                1,
+                window=Window(col_off=0, row_off=-12, width=1, height=400),
+                boundless=True,
+                fill_value=-9999,
+            )[:, 0]
+            # the expected result is 12 * -9999 and then the same as above
+            assert_almost_equal(b, numpy.concatenate([[-9999] * 12, a]))
+
+
+@pytest.mark.xfail(reason="Likely the bug reported in gh-2382")
 @requires_gdal21(reason="Pixel equality tests require float windows and GDAL 2.1")
 @given(
     col_start=st.integers(min_value=-700, max_value=0),
@@ -46,7 +86,7 @@ def test_outer_boundless_pixel_fidelity(
 def test_outer_upper_left_boundless_pixel_fidelity(
     path_rgb_byte_tif, col_start, row_start, col_stop, row_stop
 ):
-    """An outer boundless read doesn't change pixels"""
+    """A partially outer boundless read doesn't change pixels"""
     with rasterio.open(path_rgb_byte_tif) as dataset:
         width = dataset.width - col_stop - col_start
         height = dataset.height - row_stop - row_start
