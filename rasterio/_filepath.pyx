@@ -70,42 +70,32 @@ cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _FILESYSTEM_INFO = {}
 
+
+cdef int install_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
+    """Install handlers for python file-like objects if it isn't already installed."""
+    callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
+    callbacks_struct.open = <VSIFilesystemPluginOpenCallback>filepath_open
+    callbacks_struct.tell = <VSIFilesystemPluginTellCallback>filepath_tell
+    callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>filepath_seek
+    callbacks_struct.read = <VSIFilesystemPluginReadCallback>filepath_read
+    callbacks_struct.close = <VSIFilesystemPluginCloseCallback>filepath_close
+    callbacks_struct.pUserData = <void*>_FILESYSTEM_INFO
+
+    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
+        log.debug("Installing FilePath filesystem handler plugin...")
+        return VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
+    else:
+        return 0
+
+
+cdef void uninstall_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
+    if callbacks_struct is not NULL:
+        callbacks_struct.pUserData = NULL
+        VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
+    callbacks_struct = NULL
+
+
 ## Filesystem Functions
-
-# cdef int filepath_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) with gil:
-#     # Optional
-#     printf("stat\n")
-#
-#
-# cdef int filepath_unlink(void *pUserData, const char *pszFilename) with gil:
-#     # Optional
-#     printf("unlink\n")
-#
-#
-# cdef int filepath_rename(void *pUserData, const char *oldpath, const char *newpath) with gil:
-#     # Optional
-#     printf("rename\n")
-#
-#
-# cdef int filepath_mkdir(void *pUserData, const char *pszDirname, long nMode) with gil:
-#     # Optional
-#     printf("mkdir\n")
-#
-#
-# cdef int filepath_rmdir(void *pUserData, const char *pszDirname) with gil:
-#     # Optional
-#     printf("rmdir\n")
-#
-#
-# cdef char** filepath_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) with gil:
-#     # Optional
-#     printf("read_dir\n")
-#
-#
-# cdef char** filepath_siblings_files(void *pUserData, const char *pszDirname) with gil:
-#     # Optional (GDAL 3.2+)
-#     printf("siblings_files\n")
-
 
 cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
     """Access existing open file-like object in the virtual filesystem.
@@ -137,7 +127,6 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
 
 ## File functions
 
-
 cdef vsi_l_offset filepath_tell(void *pFile) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
@@ -163,34 +152,6 @@ cdef size_t filepath_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
     return <size_t>(num_bytes / nSize)
 
 
-# cdef int filepath_read_multi_range(void *pFile, int, void **ppData, const vsi_l_offset *panOffsets, const size_t *panSizes) with gil:
-#     # Optional
-#     print("read_multi_range")
-#
-#
-# cdef VSIRangeStatus filepath_get_range_status(void *pFile, vsi_l_offset nOffset, vsi_l_offset nLength) with gil:
-#     # Optional
-#     print("get_range_status")
-#
-#
-# cdef int filepath_eof(void *pFile) with gil:
-#     # Mandatory?
-#     print("eof")
-#
-#
-# cdef size_t filepath_write(void *pFile, const void *pBuffer, size_t nSize, size_t nCount) with gil:
-#     print("write")
-#
-#
-# cdef int filepath_flush(void *pFile) with gil:
-#     # Optional
-#     print("flush")
-#
-#
-# cdef int filepath_truncate(void *pFile, vsi_l_offset nNewSize) with gil:
-#     print("truncate")
-
-
 cdef int filepath_close(void *pFile) except -1 with gil:
     # Optional
     cdef object file_wrapper = <object>pFile
@@ -198,37 +159,8 @@ cdef int filepath_close(void *pFile) except -1 with gil:
     return 0
 
 
-cdef int install_rasterio_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
-    """Install handlers for python file-like objects if it isn't already installed."""
-    cdef int install_status
-    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
-        log.debug("Installing FilePath filesystem handler plugin...")
-        install_status = VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
-        return install_status
-    return 0
-
-
 cdef class FilePathBase:
     """Base for a BytesIO-like class backed by a Python file-like object."""
-
-    cdef VSIFilesystemPluginCallbacksStruct* _vsif
-
-    def __cinit__(self, file_or_bytes, *args, **kwargs):
-        self._vsif = VSIAllocFilesystemPluginCallbacksStruct()
-        # pUserData will be set later
-        self._vsif.open = <VSIFilesystemPluginOpenCallback>filepath_open
-
-        self._vsif.tell = <VSIFilesystemPluginTellCallback>filepath_tell
-        self._vsif.seek = <VSIFilesystemPluginSeekCallback>filepath_seek
-        self._vsif.read = <VSIFilesystemPluginReadCallback>filepath_read
-        # self._vsif.eof = <VSIFilesystemPluginEofCallback>filepath_eof
-        self._vsif.close = <VSIFilesystemPluginCloseCallback>filepath_close
-
-    def __dealloc__(self):
-        if self._vsif is not NULL:
-            self._vsif.pUserData = NULL
-            VSIFreeFilesystemPluginCallbacksStruct(self._vsif)
-            self._vsif = NULL
 
     def __init__(self, filelike_obj, dirname=None, filename=None):
         """A file in an in-memory filesystem.
@@ -261,11 +193,7 @@ cdef class FilePathBase:
         self._file_obj = filelike_obj
         self.mode = "r"
         self.closed = False
-
-        # TODO: Error checking
         _FILESYSTEM_INFO[self._filepath_path] = self
-        self._vsif.pUserData = <void*>_FILESYSTEM_INFO
-        install_rasterio_filepath_plugin(self._vsif)
 
     def exists(self):
         """Test if the in-memory file exists.
