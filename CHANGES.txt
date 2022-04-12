@@ -18,6 +18,8 @@ Deprecations:
 
 Changes:
 
+- The Python file VSI plugin is now created and installed at the same time
+  other GDAL drivers are registered (#2435).
 - Various optimizations for sample_gen() (#2338).
 - Update Cython property declarations to modern style (#2316).
 - The rasterio.path module has been moved to rasterio._path and all its member
