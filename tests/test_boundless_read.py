@@ -28,8 +28,36 @@ def test_outer_boundless_pixel_fidelity(
         assert rgb_padded.shape == (dataset.count, height, width)
         rgb = dataset.read()
         assert numpy.all(
-            rgb == rgb_padded[:, -row_start:height - row_stop,
-                              -col_start:width - col_stop])
+            rgb
+            == rgb_padded[
+                :, -row_start : height - row_stop, -col_start : width - col_stop
+            ]
+        )
+
+
+@pytest.mark.xfail(reason="The bug reported in gh-2382")
+@requires_gdal21(reason="Pixel equality tests require float windows and GDAL 2.1")
+@given(
+    col_start=st.integers(min_value=-700, max_value=0),
+    row_start=st.integers(min_value=-700, max_value=0),
+    col_stop=st.integers(min_value=0, max_value=700),
+    row_stop=st.integers(min_value=0, max_value=700),
+)
+def test_outer_upper_left_boundless_pixel_fidelity(
+    path_rgb_byte_tif, col_start, row_start, col_stop, row_stop
+):
+    """An outer boundless read doesn't change pixels"""
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        width = dataset.width - col_stop - col_start
+        height = dataset.height - row_stop - row_start
+        window = Window(col_start, row_start, width, height)
+        rgb_boundless = dataset.read(window=window, boundless=True)
+        assert rgb_boundless.shape == (dataset.count, height, width)
+        rgb = dataset.read()
+        assert numpy.all(
+            rgb[:, 0 : height + row_start, 0 : width + col_start]
+            == rgb_boundless[:, -row_start:height, -col_start:width]
+        )
 
 
 def test_image(red_green):
@@ -121,10 +149,6 @@ def test_boundless_masked_fill_value_overview_masks():
     assert data.mask[:, 0].all()
 
 
-@pytest.mark.xfail(
-    gdal_version.major == 1,
-    reason="GDAL versions < 2 do not support OVERVIEW_LEVEL open option",
-)
 def test_boundless_open_options():
     """Open options are taken into account"""
     with rasterio.open("tests/data/cogeo.tif", overview_level=1) as src:
