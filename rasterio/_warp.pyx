@@ -457,6 +457,8 @@ def _reproject(
             dst_dataset = (<DatasetReaderBase?>udr).handle()
             if dst_nodata is None:
                 dst_nodata = udr.nodata
+
+
         else:
             raise ValueError("Invalid destination")
 
@@ -476,6 +478,10 @@ def _reproject(
 
     try:
         resampling_opt_value = Resampling(resampling).name
+
+        if resampling_opt_value == "cubic_spline":
+            resampling_opt_value = "cubicspline"
+
         argv = CSLAddString(argv, <const char *>"-r")
         argv = CSLAddString(argv, <const char *>resampling_opt_value)
 
