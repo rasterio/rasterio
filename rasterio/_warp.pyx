@@ -1,3 +1,4 @@
+# cython: c_string_type=unicode, c_string_encoding=utf8
 # distutils: language=c++
 
 """Raster and vector warping and reprojection."""
@@ -29,6 +30,7 @@ from rasterio.errors import (
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError,
     WarpOperationError)
+from rasterio.dtypes import typename_fwd
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport cython
@@ -87,8 +89,7 @@ cdef object _transform_single_geom(
 
     if precision >= 0:
         # TODO: Geometry collections.
-        result['coordinates'] = recursive_round(result['coordinates'],
-                                                precision)
+        result['coordinates'] = recursive_round(result['coordinates'], precision)
 
     return result
 
@@ -111,14 +112,6 @@ def _transform_geom(
     finally:
         _safe_osr_release(src)
         _safe_osr_release(dst)
-
-    # GDAL cuts on the antimeridian by default and using different
-    # logic in versions >= 2.2.
-    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
-        valb = str(antimeridian_offset).encode('utf-8')
-        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
-        if antimeridian_cutting:
-            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
 
     factory = new OGRGeometryFactory()
     try:
@@ -143,7 +136,7 @@ cdef GDALWarpOptions * create_warp_options(
     """Return a pointer to a GDALWarpOptions composed from input params
 
     This is used in _reproject() and the WarpedVRT constructor. It sets
-    up warp options in almost exactly the same way as gdawarp.
+    up warp options in almost exactly the same way as gdalwarp.
 
     Parameters
     ----------
@@ -326,6 +319,7 @@ def _reproject(
     ---------
     out: None
         Output is written to destination.
+
     """
     cdef int src_count
     cdef GDALDatasetH src_dataset = NULL
@@ -382,18 +376,19 @@ def _reproject(
                 source = source.reshape(1, *source.shape)
             src_count = source.shape[0]
             src_bidx = range(1, src_count + 1)
-            src_mem = MemoryDataset(source,
-                                         transform=format_transform(src_transform),
-                                         gcps=gcps,
-                                         rpcs=rpcs,
-                                         crs=src_crs, 
-                                         copy=True)
+            src_mem = MemoryDataset(
+                source,
+                transform=format_transform(src_transform),
+                gcps=gcps,
+                rpcs=rpcs,
+                crs=src_crs,
+                copy=True
+            )
             src_dataset = src_mem.handle()
 
         # If the source is a rasterio MultiBand, no copy necessary.
         # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d))
         elif isinstance(source, tuple):
-
             rdr, src_bidx, dtype, shape = source
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
@@ -401,7 +396,6 @@ def _reproject(
             src_dataset = (<DatasetReaderBase?>rdr).handle()
             if src_nodata is None:
                 src_nodata = rdr.nodata
-
         else:
             raise ValueError("Invalid source")
 
@@ -413,12 +407,13 @@ def _reproject(
 
     # Next, do the same for the destination raster.
     try:
-
         if dtypes.is_ndarray(destination):
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
+
             # ensure data converted to numpy array
             destination = np.array(destination, copy=False)
+
             if len(destination.shape) == 2:
                 destination = destination.reshape(1, *destination.shape)
 
@@ -431,7 +426,11 @@ def _reproject(
                     raise ValueError("Invalid destination shape")
                 dst_bidx = src_bidx
 
-            mem_raster = MemoryDataset(destination, transform=format_transform(dst_transform), crs=dst_crs)
+            mem_raster = MemoryDataset(
+                destination,
+                transform=format_transform(dst_transform),
+                crs=dst_crs
+            )
             dst_dataset = mem_raster.handle()
 
             if dst_alpha:
@@ -442,7 +441,6 @@ def _reproject(
 
             GDALSetDescription(
                 dst_dataset, "Temporary destination dataset for _reproject()")
-
             log.debug("Created temp destination dataset.")
 
             if dst_nodata is None:
@@ -471,145 +469,99 @@ def _reproject(
             mem_raster = None
         raise
 
-    # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
-    cdef char **imgProjOptions = NULL
-    imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
-    if rpcs:
-        imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
-
-    # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
-    # for a list of supported options. I (Sean) don't see harm in
-    # copying all the function's keyword arguments to the image to
-    # image transformer options mapping; unsupported options should be
-    # okay.
-    for key, val in kwargs.items():
-        key = key.upper().encode('utf-8')
-        if key == b"RPC_DEM":
-            # don't .upper() since might be a path
-            val = str(val).encode('utf-8')
-
-            if rpcs:
-                bUseApproxTransformer = False
-        else:
-            val = str(val).upper().encode('utf-8')
-        imgProjOptions = CSLSetNameValue(
-            imgProjOptions, <const char *>key, <const char *>val)
-        log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
+    cdef GDALDatasetH output_ds = NULL
+    cdef GDALDatasetH *src_datasets = [src_dataset]
+    cdef GDALWarpAppOptions *warp_options = NULL
+    cdef char **argv = NULL
 
     try:
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer2(
-                src_dataset, dst_dataset, imgProjOptions))
-        if bUseApproxTransformer:
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateApproxTransformer(
-                    GDALGenImgProjTransform, hTransformArg, tolerance))
-            pfnTransformer = GDALApproxTransform
-            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
-            log.debug("Created approximate transformer")
-        else:
-            pfnTransformer = GDALGenImgProjTransform
-            log.debug("Created exact transformer")
+        resampling_opt_value = Resampling(resampling).name
+        argv = CSLAddString(argv, <const char *>"-r")
+        argv = CSLAddString(argv, <const char *>resampling_opt_value)
 
-        log.debug("Created transformer and options.")
+        argv = CSLAddString(argv, <const char *>"-multi")
 
-    except:
-        if bUseApproxTransformer:
-            GDALDestroyApproxTransformer(hTransformArg)
-        else:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
-        CPLFree(imgProjOptions)
-        if src_mem is not None:
-            src_mem.close()
-            src_mem = None
-        if mem_raster is not None:
-            mem_raster.close()
-            mem_raster = None
-        raise
+        if working_data_type:
+            wt_opt_val = typename_fwd[working_data_type]
+            argv = CSLAddString(argv, <const char *>"-wt")
+            argv = CSLAddString(argv, <const char *>wt_opt_val)
 
-    valb = str(num_threads).encode('utf-8')
-    warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
+        if src_nodata is not None:
+            opt_val = "{}".format(src_nodata)
+            argv = CSLAddString(argv, <const char *>"-srcnodata")
+            argv = CSLAddString(argv, <const char *>opt_val)
 
-    log.debug("Setting NUM_THREADS option: %d", num_threads)
+        if dst_nodata is not None:
+            opt_val = "{}".format(dst_nodata)
+            argv = CSLAddString(argv, <const char *>"-dstnodata")
+            argv = CSLAddString(argv, <const char *>opt_val)
 
-    if init_dest_nodata:
-        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
+        if src_alpha:
+            opt_val = "{}".format(src_alpha)
+            argv = CSLAddString(argv, <const char *>"-srcalpha")
+            argv = CSLAddString(argv, <const char *>opt_val)
 
-    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
-    # for a list of supported options. Copying unsupported options
-    # is fine.
-    for key, val in kwargs.items():
-        key = key.upper().encode('utf-8')
-        val = str(val).upper().encode('utf-8')
-        warp_extras = CSLSetNameValue(
-            warp_extras, <const char *>key, <const char *>val)
+        if dst_alpha:
+            opt_val = "{}".format(dst_alpha)
+            argv = CSLAddString(argv, <const char *>"-dstalpha")
+            argv = CSLAddString(argv, <const char *>opt_val)
+ 
+        # Set up transformer options.
+        argv = CSLAddString(argv, <const char *>"-to")
+        argv = CSLAddString(argv, <const char *>"GCPS_OK=TRUE")
 
-    cdef GDALRasterBandH hBand = NULL
+        if rpcs:
+            argv = CSLAddString(argv, <const char *>"-to")
+            argv = CSLAddString(argv, <const char *>"SRC_METHOD=RPC")
 
-    psWOptions = create_warp_options(
-        <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit, <GDALDataType>working_data_type,
-        <const char **>warp_extras)
+        for key, val in kwargs.items():
+            key = key.upper()
 
-    psWOptions.pfnTransformer = pfnTransformer
-    psWOptions.pTransformerArg = hTransformArg
-    psWOptions.hSrcDS = src_dataset
-    psWOptions.hDstDS = dst_dataset
+            if key == "RPC_DEM":
+                # don't .upper() since might be a path
+                val = str(val)
+            else:
+                val = str(val).upper()
 
-    for idx, (s, d) in enumerate(zip(src_bidx, dst_bidx)):
-        psWOptions.panSrcBands[idx] = s
-        psWOptions.panDstBands[idx] = d
-        log.debug('Configured to warp src band %d to destination band %d' % (s, d))
+            opt_val = "{}={}".format(key, val)
+            argv = CSLAddString(argv, <const char *>"-to")
+            argv = CSLAddString(argv, <const char *>opt_val)
 
-    log.debug("Set transformer options")
+        # Set up warp options.
+        num_threads_opt_val = "NUM_THREADS={}".format(num_threads)
+        argv = CSLAddString(argv, <const char *>"-wo")
+        argv = CSLAddString(argv, <const char *>num_threads_opt_val)
 
-    # Now that the transformer and warp options are set up, we init
-    # and run the warper.
-    cdef GDALWarpOperation oWarper
-    cdef int rows
-    cdef int cols
+        if init_dest_nodata:
+            argv = CSLAddString(argv, <const char *>"-wo")
+            argv = CSLAddString(argv, <const char *>"INIT_DEST=NO_DATA")
 
-    try:
+        for key, val in kwargs.items():
+            key = key.upper()
+            val = str(val).upper()
+            opt_val = "{}={}".format(key, val)
+            argv = CSLAddString(argv, <const char *>"-wo")
+            argv = CSLAddString(argv, <const char *>opt_val)
 
-        exc_wrap_int(oWarper.Initialize(psWOptions))
-        if isinstance(destination, tuple):
-            rows, cols = destination[3]
-        else:
-            rows, cols = destination.shape[-2:]
+        warp_options = <GDALWarpAppOptions *>exc_wrap_pointer(GDALWarpAppOptionsNew(argv, NULL))
 
-        log.debug(
-            "Chunk and warp window: %d, %d, %d, %d.",
-            0, 0, cols, rows)
+        # Run the warper.
+        output_ds = <GDALDatasetH>exc_wrap_pointer(
+            GDALWarp(
+                NULL,
+                dst_dataset,
+                1,
+                src_datasets,
+                warp_options,
+                NULL
+            )
+        )
 
-        if num_threads > 1:
-            with nogil:
-                err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-        else:
-            with nogil:
-                err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
-
-        try:
-            exc_wrap_int(err)
-        except CPLE_BaseError as base:
-            raise WarpOperationError("Chunk and warp failed") from base
-
-        if dtypes.is_ndarray(destination):
-            exc_wrap_int(io_auto(destination, dst_dataset, 0))
-
-    # Clean up transformer, warp options, and dataset handles.
     finally:
-
-        if bUseApproxTransformer:
-            GDALDestroyApproxTransformer(hTransformArg)
-        else:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
-
-        GDALDestroyWarpOptions(psWOptions)
-        CPLFree(imgProjOptions)
-
+        GDALWarpAppOptionsFree(warp_options)
+        CSLDestroy(argv)
         if mem_raster is not None:
             mem_raster.close()
-
         if src_mem is not None:
             src_mem.close()
 

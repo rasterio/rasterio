@@ -56,6 +56,7 @@ cdef extern from "cpl_string.h" nogil:
     void CSLDestroy(char **list)
     char **CSLMerge(char **first, char **second)
     const char* CPLParseNameValue(const char *pszNameValue, char **ppszKey)
+    int CSLPrint(char **list, FILE *fpout)
 
 
 cdef extern from "sys/stat.h" nogil:
@@ -714,3 +715,14 @@ cdef extern from "gdal_alg.h" nogil:
 cdef extern from "ogr_core.h" nogil:
 
     char *OGRGeometryTypeToName(int type)
+
+
+cdef extern from "gdal_utils.h" nogil:
+
+    ctypedef struct GDALWarpAppOptions
+    ctypedef struct GDALWarpAppOptionsForBinary
+
+    GDALDatasetH GDALWarp(const char *pszDest, GDALDatasetH hDstDS, int nSrcCount, GDALDatasetH *pahSrcDS, const GDALWarpAppOptions *psOptions, int *pbUsageError)
+    GDALWarpAppOptions *GDALWarpAppOptionsNew(char **papszArgv, GDALWarpAppOptionsForBinary *psOptionsForBinary)
+    void GDALWarpAppOptionsSetWarpOption(GDALWarpAppOptions *psOptions, const char *pszKey, const char *pszValue)
+    void GDALWarpAppOptionsFree(GDALWarpAppOptions *psOptions)
