@@ -25,6 +25,7 @@ import logging
 import pickle
 import typing
 import warnings
+import re
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
@@ -37,6 +38,15 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 
 log = logging.getLogger(__name__)
+
+
+_RE_PROJ_PARAM = re.compile(r"""
+    \+              # parameter starts with '+' character
+    (?P<param>\w+)    # capture parameter name
+    \=?             # match both key only and key-value parameters
+    (?P<value>\S+)? # capture all characters up to next space (None if no value)
+    \s*?            # consume remaining whitespace, if any
+""", re.X)
 
 
 def gdal_version():
@@ -309,28 +319,29 @@ cdef class CRS:
                 CPLFree(proj_c)
                 _safe_osr_release(osr)
 
-            parts = [o.lstrip('+') for o in proj.strip().split()]
-
             def parse(v):
-                if v in ('True', 'true'):
-                    return True
-                elif v in ('False', 'false'):
-                    return False
+                try:
+                    return int(v)
+                except ValueError:
+                    pass
+                try:
+                    return float(v)
+                except ValueError:
+                    return v
+
+            rv = {}
+            for param in _RE_PROJ_PARAM.finditer(proj):
+                key, value = param.groups()
+                if key not in all_proj_keys:
+                    continue
+
+                if value is None or value.lower() == "true":
+                    rv[key] = True
+                elif value.lower() == "false":
+                    continue
                 else:
-                    try:
-                        return int(v)
-                    except ValueError:
-                        pass
-                    try:
-                        return float(v)
-                    except ValueError:
-                        return v
-
-            items = map(
-                lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
-                (p.split('=') for p in parts))
-
-            return {k: v for k, v in items if k in all_proj_keys and v is not False}
+                    rv[key] = parse(value)
+            return rv
 
     def to_proj4(self):
         """Convert to a PROJ4 representation.
@@ -627,13 +638,15 @@ cdef class CRS:
 
         # Filter out nonsensical items that might have crept in.
         items_filtered = []
-        items = proj.split()
-        for item in items:
-            parts = item.split('=')
-            if len(parts) == 2 and parts[1] in ('false', 'False'):
+        for param in _RE_PROJ_PARAM.finditer(proj):
+            value = param.group('value')
+            if value is None:
+                items_filtered.append(param.group())
+            elif value.lower() == "false":
                 continue
-            items_filtered.append(item)
-
+            else:
+                items_filtered.append(param.group())
+                
         proj = ' '.join(items_filtered)
         proj_b = proj.encode('utf-8')
 
@@ -675,8 +688,6 @@ cdef class CRS:
             # We've been given a PROJ JSON-encoded text.
             return CRS.from_user_input(json.dumps(data))
 
-        data = {k: v for k, v in data.items() if k in all_proj_keys}
-
         # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
         # extract the epsg code and dispatch to from_epsg.
         if 'init' in data and data['init'].lower().startswith('epsg:'):
@@ -685,7 +696,8 @@ cdef class CRS:
 
         # Continue with the general case.
         pjargs = []
-        for key, val in data.items():
+        for key in data.keys() & all_proj_keys:
+            val = data[key]
             if val is None or val is True:
                 pjargs.append('+{}'.format(key))
             elif val is False:
@@ -1276,5 +1288,5 @@ _param_data = """
 +zone      UTM zone
 """
 
-_lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
-all_proj_keys = list(set(line.split()[0].lstrip("+").strip() for line in _lines)) + ['no_mayo']
+all_proj_keys = set(line.split(' ', 1)[0][1:] for line in filter(None, _param_data.splitlines()))
+all_proj_keys.add('no_mayo')
