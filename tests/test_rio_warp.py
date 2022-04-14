@@ -620,3 +620,27 @@ def test_unrotate(runner, tmp_path):
     with rasterio.open(outputname) as src:
         assert src.transform.b == 0.0
         assert src.transform.d == 0.0
+
+
+def test_coordinate_operation(runner, tmp_path):
+    """Verify that transformer coordinate operations are activated."""
+    outputname = tmp_path.joinpath("test.tif").as_posix()
+    pipeline = "+proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
+    result = runner.invoke(
+        main_group,
+        [
+            "warp",
+            "--dst-crs",
+            "EPSG:4326",
+            "--resampling",
+            "cubic",
+            "--to",
+            "coordinate_operation={}".format(pipeline),
+            "tests/data/byte.tif",
+            outputname,
+        ],
+    )
+    assert result.exit_code == 0
+
+    with rasterio.open(outputname) as src:
+        assert src.checksum(1) == 4705
