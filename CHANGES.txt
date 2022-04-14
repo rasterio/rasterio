@@ -20,7 +20,8 @@ New features:
 
 - The rio-warp CLI command now takes --wo (--warper-option) and --to
   (--transformer-option) options, allowing the use of PROJ coordinate
-  transformation pipelines like "--to coordinate_operation=proj=pipeline ...".
+  transformation pipelines like "--to coordinate_operation=proj=pipeline"
+  (#2438).
 
 Changes:
 
