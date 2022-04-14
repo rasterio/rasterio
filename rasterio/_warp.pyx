@@ -484,7 +484,7 @@ def _reproject(
     # okay.
     for key, val in kwargs.items():
         key = key.upper().encode('utf-8')
-        if key == b"RPC_DEM":
+        if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
             # don't .upper() since might be a path
             val = str(val).encode('utf-8')
 
@@ -547,9 +547,16 @@ def _reproject(
     cdef GDALRasterBandH hBand = NULL
 
     psWOptions = create_warp_options(
-        <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit, <GDALDataType>working_data_type,
-        <const char **>warp_extras)
+        <GDALResampleAlg>resampling,
+        src_nodata,
+        dst_nodata,
+        src_count,
+        dst_alpha,
+        src_alpha,
+        warp_mem_limit,
+        <GDALDataType>working_data_type,
+        <const char **>warp_extras
+    )
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
@@ -570,7 +577,6 @@ def _reproject(
     cdef int cols
 
     try:
-
         exc_wrap_int(oWarper.Initialize(psWOptions))
         if isinstance(destination, tuple):
             rows, cols = destination[3]
@@ -598,7 +604,6 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-
         if bUseApproxTransformer:
             GDALDestroyApproxTransformer(hTransformArg)
         else:
@@ -638,6 +643,7 @@ def _calculate_default_transform(
     cdef GDALDatasetH hds = NULL
     cdef char **imgProjOptions = NULL
     cdef char **papszMD = NULL
+    cdef bint bUseApproxTransformer = True
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -682,7 +688,7 @@ def _calculate_default_transform(
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
 
-            if key == b"RPC_DEM":
+            if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
                 # don't .upper() since might be a path.
                 val = str(val).encode('utf-8')
             else:
@@ -702,10 +708,27 @@ def _calculate_default_transform(
 
             exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
             imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
+            bUseApproxTransformer = False
 
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
         )
+
+        if bUseApproxTransformer:
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateApproxTransformer(
+                    GDALGenImgProjTransform,
+                    hTransformArg,
+                    0.125
+                )
+            )
+
+            pfnTransformer = GDALApproxTransform
+            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+            log.debug("Created approximate transformer")
+        else:
+            pfnTransformer = GDALGenImgProjTransform
+            log.debug("Created exact transformer")
 
         try:
             # This function may put errors on GDAL's error stack while
@@ -714,7 +737,7 @@ def _calculate_default_transform(
             # succeeds.
             retval = GDALSuggestedWarpOutput2(
                 hds,
-                GDALGenImgProjTransform,
+                pfnTransformer,
                 hTransformArg,
                 geotransform,
                 &npixels,
@@ -737,7 +760,10 @@ def _calculate_default_transform(
         if wkt != NULL:
             CPLFree(wkt)
         if hTransformArg != NULL:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
+            if bUseApproxTransformer:
+                GDALDestroyApproxTransformer(hTransformArg)
+            else:
+                GDALDestroyGenImgProjTransformer(hTransformArg)
         if hds != NULL:
             GDALClose(hds)
         if imgProjOptions != NULL:

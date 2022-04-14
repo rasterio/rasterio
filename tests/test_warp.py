@@ -1993,8 +1993,6 @@ def http_error_server(data):
     import functools
     import multiprocessing
     import http.server
-    import os
-
 
     PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
@@ -2089,3 +2087,38 @@ def test_rpcs_non_epsg4326():
                 dst_crs="EPSG:4326",
                 resampling=Resampling.nearest,
             )
+
+
+def test_coordinate_pipeline(tmp_path):
+    """Transformer COORDINATE_OPERATION option is activated."""
+    pipeline = "proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
+    with rasterio.open("tests/data/byte.tif") as src:
+        output_transform, output_width, output_height = calculate_default_transform(
+            src.crs,
+            "EPSG:4326",
+            src.width,
+            src.height,
+            *src.bounds,
+            coordinate_operation=pipeline
+        )
+
+        assert output_height == 18
+        assert output_width == 22
+
+        profile = src.profile
+        profile.update(
+            driver="GTiff",
+            height=output_height,
+            width=output_width,
+            transform=output_transform,
+            crs="EPSG:4326",
+        )
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            reproject(
+                rasterio.band(src, src.indexes),
+                rasterio.band(dst, dst.indexes),
+                resampling=Resampling.cubic,
+                coordinate_operation=pipeline,
+            )
+            # This is the same value as in GDAL's test_gdalwarp_lib_ct.
+            assert dst.checksum(1) == 4705

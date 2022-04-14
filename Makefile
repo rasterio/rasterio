@@ -34,7 +34,7 @@ dockertest: dockertestimage
 	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
 
 dockershell: dockertestimage
-	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py develop && /venv/bin/python'
+	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py develop && /bin/bash'
 
 dockersdist: dockertestimage
 	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL) -c '/venv/bin/python setup.py sdist'
