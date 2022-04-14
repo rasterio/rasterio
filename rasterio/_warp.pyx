@@ -714,21 +714,8 @@ def _calculate_default_transform(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
         )
 
-        if bUseApproxTransformer:
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateApproxTransformer(
-                    GDALGenImgProjTransform,
-                    hTransformArg,
-                    0.125
-                )
-            )
-
-            pfnTransformer = GDALApproxTransform
-            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
-            log.debug("Created approximate transformer")
-        else:
-            pfnTransformer = GDALGenImgProjTransform
-            log.debug("Created exact transformer")
+        pfnTransformer = GDALGenImgProjTransform
+        log.debug("Created exact transformer")
 
         try:
             # This function may put errors on GDAL's error stack while
@@ -760,10 +747,7 @@ def _calculate_default_transform(
         if wkt != NULL:
             CPLFree(wkt)
         if hTransformArg != NULL:
-            if bUseApproxTransformer:
-                GDALDestroyApproxTransformer(hTransformArg)
-            else:
-                GDALDestroyGenImgProjTransformer(hTransformArg)
+            GDALDestroyGenImgProjTransformer(hTransformArg)
         if hds != NULL:
             GDALClose(hds)
         if imgProjOptions != NULL:
