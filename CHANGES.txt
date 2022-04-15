@@ -16,6 +16,13 @@ Deprecations:
 - The rasterio.path module will be removed in version 1.4 and a deprecation
   warning is issued when the module is imported (#2423).
 
+New features:
+
+- The rio-warp CLI command now takes --wo (--warper-option) and --to
+  (--transformer-option) options, allowing the use of PROJ coordinate
+  transformation pipelines like "--to coordinate_operation=proj=pipeline"
+  (#2438).
+
 Changes:
 
 - The Python file VSI plugin is now created and installed at the same time
