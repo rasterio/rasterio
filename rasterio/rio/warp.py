@@ -65,22 +65,15 @@ MAX_OUTPUT_HEIGHT = 100000
 @options.overwrite_opt
 @options.creation_options
 @click.option(
+    "--to",
     "--wo",
+    "--transformer-option",
     "--warper-option",
     "warper_options",
     metavar="NAME=VALUE",
     multiple=True,
     callback=_cb_key_val,
-    help="GDAL warper options.",
-)
-@click.option(
-    "--to",
-    "--transformer-option",
-    "transformer_options",
-    metavar="NAME=VALUE",
-    multiple=True,
-    callback=_cb_key_val,
-    help="GDAL coordinate transformer options.",
+    help="GDAL warper and coordinate transformer options.",
 )
 @click.pass_context
 def warp(
@@ -103,7 +96,6 @@ def warp(
     creation_options,
     target_aligned_pixels,
     warper_options,
-    transformer_options,
 ):
     """
     Warp a raster dataset.
@@ -261,8 +253,14 @@ def warp(
                             src_crs = src.crs
                             kwargs = src.bounds._asdict()
                         dst_transform, dst_width, dst_height = calcdt(
-                            src_crs, dst_crs, src.width, src.height,
-                            resolution=res, **kwargs, **transformer_options)
+                            src_crs,
+                            dst_crs,
+                            src.width,
+                            src.height,
+                            resolution=res,
+                            **kwargs,
+                            **warper_options
+                        )
                     except CRSError as err:
                         raise click.BadParameter(
                             str(err), param='dst_crs', param_hint='dst_crs')
@@ -387,6 +385,5 @@ def warp(
                     dst_nodata=dst_nodata,
                     resampling=resampling,
                     num_threads=threads,
-                    **transformer_options,
                     **warper_options
                 )

@@ -622,8 +622,10 @@ def test_unrotate(runner, tmp_path):
         assert src.transform.d == 0.0
 
 
-@pytest.mark.parametrize("topt", ["--to", "--transformer-option"])
-def test_coordinate_operation(runner, tmp_path, topt):
+@pytest.mark.parametrize(
+    "wotopt", ["--to", "--transformer-option", "--wo", "--warper-option"]
+)
+def test_coordinate_operation(runner, tmp_path, wotopt):
     """Verify that transformer coordinate operations are activated."""
     outputname = tmp_path.joinpath("test.tif").as_posix()
     pipeline = "+proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
@@ -635,7 +637,7 @@ def test_coordinate_operation(runner, tmp_path, topt):
             "EPSG:4326",
             "--resampling",
             "cubic",
-            topt,
+            wotopt,
             "coordinate_operation={}".format(pipeline),
             "tests/data/byte.tif",
             outputname,
