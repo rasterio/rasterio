@@ -3,7 +3,7 @@
 """Rasterio input/output."""
 
 from enum import Enum, IntEnum
-from collections import Counter, namedtuple
+from collections import Counter
 from contextlib import contextmanager, ExitStack
 import logging
 import os
@@ -1093,8 +1093,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         Returns
         -------
-        namedtuple
-            (min, max, mean, std)
+        Statistics
 
         Notes
         -----
