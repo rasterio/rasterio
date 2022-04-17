@@ -318,7 +318,7 @@ setup_args = dict(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
 )
 
 if os.environ.get('PACKAGE_DATA'):
