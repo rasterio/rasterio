@@ -153,8 +153,7 @@ def test_info_stats(runner):
         main_group, ['info', 'tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
     assert '"max": 255.0' in result.output
-    assert '"min": 1.0' in result.output
-    assert '"mean": 44.4344' in result.output
+    assert '"min": 0.0' in result.output
 
 
 def test_info_stats_only(runner):
@@ -162,7 +161,7 @@ def test_info_stats_only(runner):
         main_group,
         ['info', 'tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
-    assert result.output.startswith('1.000000 255.000000 66.02')
+    assert result.output.startswith("0.0 255.0")
 
 
 def test_info_colorinterp(runner):

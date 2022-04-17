@@ -311,7 +311,7 @@ cdef class DatasetBase:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
-        
+
             self.name = path.name
         else:
             self.name = None

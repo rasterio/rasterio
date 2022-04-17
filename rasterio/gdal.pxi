@@ -361,7 +361,8 @@ cdef extern from "gdal.h" nogil:
     int GDALRasterIO(GDALRasterBandH band, int, int xoff, int yoff, int xsize,
                      int ysize, void *buffer, int width, int height, int,
                      int poff, int loff)
-
+    CPLErr GDALGetRasterStatistics(GDALRasterBandH band, int approx, int force, double *min, double*max, double *mean, double *std)
+    void GDALDatasetClearStatistics(GDALDatasetH hDS)
     ctypedef struct GDALRasterIOExtraArg:
         int nVersion
         GDALRIOResampleAlg eResampleAlg

@@ -7,6 +7,7 @@ try:
 except ImportError:
     from mock import MagicMock
 
+from numpy.testing import assert_almost_equal
 import pytest
 
 import rasterio
@@ -69,3 +70,13 @@ def test_dataset_readonly_attributes(path_rgb_byte_tif):
     with pytest.raises(NotImplementedError):
         with rasterio.open(path_rgb_byte_tif) as dataset:
             dataset.crs = "foo"
+
+
+def test_statistics(path_rgb_byte_tif):
+    """Compute, store, and return basic statistics."""
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        stats = dataset.statistics(1)
+        assert stats.min == 0
+        assert stats.max == 255
+        assert_almost_equal(stats.mean, 29.947726688477)
+        assert_almost_equal(stats.std, 52.340921626611)
