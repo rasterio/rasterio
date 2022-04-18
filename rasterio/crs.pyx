@@ -33,7 +33,7 @@ from rasterio.errors import CRSError
 from rasterio.enums import WktVersion
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
-from rasterio._base cimport _safe_osr_release, osr_get_name, osr_set_traditional_axis_mapping_strategy
+from rasterio._base cimport _safe_osr_release, osr_set_traditional_axis_mapping_strategy
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 
@@ -304,7 +304,6 @@ cdef class CRS:
         else:
             try:
                 osr = exc_wrap_pointer(OSRClone(self._osr))
-                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
                 exc_wrap_ogrerr(OSRExportToProj4(osr, &proj_c))
 
             except CPLE_BaseError as exc:
@@ -378,31 +377,22 @@ cdef class CRS:
 
         """
         cdef char *conv_wkt = NULL
-        IF CTE_GDAL_MAJOR_VERSION >= 3:
-            cdef const char* options_wkt[2]
-            options_wkt[0] = NULL
-            options_wkt[1] = NULL
+        cdef const char* options_wkt[2]
+        options_wkt[0] = NULL
+        options_wkt[1] = NULL
 
         try:
-            if osr_get_name(self._osr) != NULL:
-                IF CTE_GDAL_MAJOR_VERSION >= 3:
-                    if morph_to_esri_dialect:
-                        warnings.warn(
-                            "'morph_to_esri_dialect' ignored with GDAL 3+. "
-                            "Use 'version=WktVersion.WKT1_ESRI' instead."
-                        )
-                    if version:
-                        version = WktVersion(version).value
-                        wkt_format = "FORMAT={}".format(version).encode("utf-8")
-                        options_wkt[0] = wkt_format
-                    exc_wrap_ogrerr(OSRExportToWktEx(self._osr, &conv_wkt, options_wkt))
-                ELSE:
-                    if version is not None:
-                        warnings.warn("'version' requires GDAL 3+")
-                    if morph_to_esri_dialect:
-                        exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
-                    exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
-
+            if OSRGetName(self._osr) != NULL:
+                if morph_to_esri_dialect:
+                    warnings.warn(
+                        "'morph_to_esri_dialect' ignored with GDAL 3+. "
+                        "Use 'version=WktVersion.WKT1_ESRI' instead."
+                    )
+                if version:
+                    version = WktVersion(version).value
+                    wkt_format = "FORMAT={}".format(version).encode("utf-8")
+                    options_wkt[0] = wkt_format
+                exc_wrap_ogrerr(OSRExportToWktEx(self._osr, &conv_wkt, options_wkt))
         except CPLE_BaseError as exc:
             raise CRSError("Cannot convert to WKT. {}".format(exc))
 
@@ -505,37 +495,25 @@ cdef class CRS:
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
 
-            if gdal_version().startswith("3"):
-                matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
+            matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
 
-                for i in range(num_matches):
-                    confidence = confidences[i]
-                    c_code = OSRGetAuthorityCode(matches[i], NULL)
-                    c_name = OSRGetAuthorityName(matches[i], NULL)
+            for i in range(num_matches):
+                confidence = confidences[i]
+                c_code = OSRGetAuthorityCode(matches[i], NULL)
+                c_name = OSRGetAuthorityName(matches[i], NULL)
 
-                    if c_code == NULL:
-                        log.debug("returned authority code was null")
-                    if c_name == NULL:
-                        log.debug("returned authority name was null")
+                if c_code == NULL:
+                    log.debug("returned authority code was null")
+                if c_name == NULL:
+                    log.debug("returned authority name was null")
 
-                    if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
-                        log.debug(
-                            "Matched. confidence=%r, c_code=%r, c_name=%r",
-                            confidence, c_code, c_name)
-                        code = c_code.decode('utf-8')
-                        name = c_name.decode('utf-8')
-                        results[name].append(code)
-
-            else:
-                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-                if OSRAutoIdentifyEPSG(osr) == 0:
-                    c_code = OSRGetAuthorityCode(osr, NULL)
-                    c_name = OSRGetAuthorityName(osr, NULL)
-                    if c_code != NULL and c_name != NULL:
-                        code = c_code.decode('utf-8')
-                        name = c_name.decode('utf-8')
-                        results[name].append(code)
-
+                if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
+                    log.debug(
+                        "Matched. confidence=%r, c_code=%r, c_name=%r",
+                        confidence, c_code, c_name)
+                    code = c_code.decode('utf-8')
+                    name = c_name.decode('utf-8')
+                    results[name].append(code)
             return results
 
         finally:
@@ -751,8 +729,6 @@ cdef class CRS:
 
         try:
             errcode = exc_wrap_ogrerr(OSRImportFromWkt(obj._osr, &wkt_c))
-            if morph_from_esri_dialect and not _gdal_version().startswith("3"):
-                exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(exc))
         else:
@@ -798,8 +774,6 @@ cdef class CRS:
             obj = CRS.__new__(CRS)
             try:
                 errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
-                if morph_from_esri_dialect and not _gdal_version().startswith("3"):
-                    exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
             except CPLE_BaseError as exc:
                 raise CRSError("The WKT could not be parsed. {}".format(exc))
             else:
@@ -962,9 +936,7 @@ cdef class CRS:
         else:
             try:
                 osr_s = exc_wrap_pointer(OSRClone(self._osr))
-                exc_wrap_ogrerr(OSRMorphFromESRI(osr_s))
                 osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-                exc_wrap_ogrerr(OSRMorphFromESRI(osr_o))
                 return bool(OSRIsSame(osr_s, osr_o) == 1)
 
             finally:
@@ -999,32 +971,21 @@ cdef class CRS:
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
 
-            if _gdal_version().startswith("3"):
-                matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
+            matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
 
-                for i in range(num_matches):
-                    confidence = confidences[i]
-                    c_code = OSRGetAuthorityCode(matches[i], NULL)
-                    c_name = OSRGetAuthorityName(matches[i], NULL)
+            for i in range(num_matches):
+                confidence = confidences[i]
+                c_code = OSRGetAuthorityCode(matches[i], NULL)
+                c_name = OSRGetAuthorityName(matches[i], NULL)
 
-                    log.debug(
-                        "Matched. confidence=%r, c_code=%r, c_name=%r",
-                        confidence, c_code, c_name)
+                log.debug(
+                    "Matched. confidence=%r, c_code=%r, c_name=%r",
+                    confidence, c_code, c_name)
 
-                    if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
-                        code = c_code.decode('utf-8')
-                        name = c_name.decode('utf-8')
-                        results[name].append(code)
-
-            else:
-                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-                if OSRAutoIdentifyEPSG(osr) == 0:
-                    c_code = OSRGetAuthorityCode(osr, NULL)
-                    c_name = OSRGetAuthorityName(osr, NULL)
-                    if c_code != NULL and c_name != NULL:
-                        code = c_code.decode('utf-8')
-                        name = c_name.decode('utf-8')
-                        results[name].append(code)
+                if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
+                    code = c_code.decode('utf-8')
+                    name = c_name.decode('utf-8')
+                    results[name].append(code)
 
             return results
 
@@ -1057,7 +1018,7 @@ cdef class CRS:
 
         try:
             IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
-                if osr_get_name(self._osr) != NULL:
+                if OSRGetName(self._osr) != NULL:
                     options[0] = b"MULTILINE=NO"
                     options[1] = NULL
                     exc_wrap_ogrerr(OSRExportToPROJJSON(self._osr, &conv_json, options))

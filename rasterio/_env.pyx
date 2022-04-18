@@ -444,12 +444,9 @@ cdef class GDALEnv(ConfigEnv):
 
 def set_proj_data_search_path(path):
     """Set PROJ data search path"""
-    IF CTE_GDAL_MAJOR_VERSION >= 3:
-        cdef char **paths = NULL
-        cdef const char *path_c = NULL
-        path_b = path.encode("utf-8")
-        path_c = path_b
-        paths = CSLAddString(paths, path_c)
-        OSRSetPROJSearchPaths(<const char *const *>paths)
-    ELSE:
-        os.environ["PROJ_LIB"] = path
+    cdef char **paths = NULL
+    cdef const char *path_c = NULL
+    path_b = path.encode("utf-8")
+    path_c = path_b
+    paths = CSLAddString(paths, path_c)
+    OSRSetPROJSearchPaths(<const char *const *>paths)

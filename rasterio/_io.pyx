@@ -638,11 +638,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window))
 
-            if not gdal_version().startswith('1'):
-                vrt_kwds = {'driver': 'VRT'}
-            else:
-                vrt_kwds = {}
-
+            vrt_kwds = {'driver': 'VRT'}
             with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
@@ -818,11 +814,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
             enums = self.mask_flag_enums
             all_valid = all([MaskFlags.all_valid in flags for flags in enums])
-
-            if not gdal_version().startswith('1'):
-                vrt_kwds = {'driver': 'VRT'}
-            else:
-                vrt_kwds = {}
+            vrt_kwds = {'driver': 'VRT'}
 
             if all_valid:
                 blank_path = _UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))

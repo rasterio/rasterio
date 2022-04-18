@@ -1542,8 +1542,6 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         _safe_osr_release(osr)
         raise CRSError(str(exc))
     else:
-        if not gdal_version().startswith("3"):
-            exc_wrap_int(OSRMorphFromESRI(osr))
         osr_set_traditional_axis_mapping_strategy(osr)
         return osr
 
@@ -1592,15 +1590,5 @@ def _can_create_osr(crs):
         CPLFree(wkt)
 
 
-cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
-    IF CTE_GDAL_MAJOR_VERSION >= 3:
-        return OSRGetName(hSrs)
-    ELSE:
-        return ''
-
-
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
-    IF CTE_GDAL_MAJOR_VERSION >= 3:
-        OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)
-    ELSE:
-        pass
+    OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)
