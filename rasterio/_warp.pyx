@@ -14,7 +14,7 @@ from affine import Affine, identity
 import numpy as np
 
 import rasterio
-from rasterio._base import gdal_version, _transform
+from rasterio._base import _transform
 from rasterio._base cimport open_dataset
 from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,

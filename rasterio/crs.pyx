@@ -49,14 +49,6 @@ _RE_PROJ_PARAM = re.compile(r"""
 """, re.X)
 
 
-def gdal_version():
-    """Return the version as a major.minor.patchlevel string."""
-    cdef const char *info_c = NULL
-    info_c = GDALVersionInfo("RELEASE_NAME")
-    info_b = info_c
-    return info_b.decode("utf-8")
-
-
 cdef class CRS:
     """A geographic or projected coordinate reference system.
 
@@ -1035,14 +1027,6 @@ cdef class CRS:
                 return ''
         finally:
             CPLFree(conv_json)
-
-
-def _gdal_version():
-    """Return the version as a major.minor.patchlevel string."""
-    cdef const char *info_c = NULL
-    info_c = GDALVersionInfo("RELEASE_NAME")
-    info_b = info_c
-    return info_b.decode("utf-8")
 
 
 def epsg_treats_as_latlong(input_crs):

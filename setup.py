@@ -19,6 +19,7 @@ import shutil
 from subprocess import check_output
 import sys
 
+from pkg_resources import parse_version
 from setuptools import setup
 from setuptools.extension import Extension
 
@@ -69,6 +70,7 @@ gdal_output = [None] * 4
 gdalversion = None
 gdal_major_version = 0
 gdal_minor_version = 0
+gdal_patch_version = 0
 
 try:
     import numpy as np
@@ -127,9 +129,12 @@ if "clean" not in sys.argv:
                  "to gdal-config using a GDAL_CONFIG environment variable "
                  "or use a GDAL_VERSION environment variable.")
 
-    gdal_version_parts = gdalversion.split('.')
-    gdal_major_version = int(gdal_version_parts[0])
-    gdal_minor_version = int(gdal_version_parts[1])
+    gdal_major_version, gdal_minor_version, gdal_patch_version = parse_version(
+        gdalversion
+    ).base_version.split(".", maxsplit=3)
+    gdal_major_version = int(gdal_major_version)
+    gdal_minor_version = int(gdal_minor_version)
+    gdal_patch_version = int(gdal_patch_version)
 
     if (gdal_major_version, gdal_minor_version) < (3, 0):
         raise SystemExit("ERROR: GDAL >= 3.0 is required for rasterio. "
@@ -160,6 +165,7 @@ if os.environ.get('PACKAGE_DATA'):
 compile_time_env = {
     "CTE_GDAL_MAJOR_VERSION": gdal_major_version,
     "CTE_GDAL_MINOR_VERSION": gdal_minor_version,
+    "CTE_GDAL_PATCH_VERSION": gdal_patch_version,
 }
 
 ext_options = {
@@ -236,6 +242,8 @@ if "clean" not in sys.argv:
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
+        Extension(
+            'rasterio._version', ['rasterio/_version.pyx'], **ext_options),
         Extension(
             'rasterio.crs', ['rasterio/crs.pyx'], **ext_options),
         Extension(

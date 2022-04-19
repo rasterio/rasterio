@@ -39,16 +39,6 @@ include "gdal.pxi"
 log = logging.getLogger(__name__)
 
 
-def check_gdal_version(major, minor):
-    """Return True if the major and minor versions match."""
-    return bool(GDALCheckVersion(int(major), int(minor), NULL))
-
-
-def gdal_version():
-    """Return the version as a major.minor.patchlevel string."""
-    return GDALVersionInfo("RELEASE_NAME")
-
-
 cdef const char *get_driver_name(GDALDriverH driver):
     """Return Python name of the driver"""
     return GDALGetDriverShortName(driver)
