@@ -8,7 +8,7 @@ import os
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._base import gdal_version
+    from rasterio._version import gdal_version, get_geos_version, get_proj_version
     from rasterio.crs import CRS
     from rasterio.drivers import driver_from_extension, is_blacklisted
     from rasterio.dtypes import (
@@ -53,6 +53,8 @@ with rasterio._loading.add_gdal_dll_directories():
 __all__ = ['band', 'open', 'pad', 'Env', 'CRS']
 __version__ = "1.3a3"
 __gdal_version__ = gdal_version()
+__proj_version__ = ".".join([str(version) for version in get_proj_version()])
+__geos_version__ = ".".join([str(version) for version in get_geos_version()])
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
 # descendents. See

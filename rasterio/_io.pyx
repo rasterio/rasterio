@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from rasterio._base import tastes_like_gdal, gdal_version
+from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)

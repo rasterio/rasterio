@@ -400,9 +400,6 @@ cdef extern from "gdal.h" nogil:
                            int nOverviews, int *overviews, int nBands,
                            int *bands, void *progress_func,
                            void *progress_data)
-    int GDALCheckVersion(int nVersionMajor, int nVersionMinor,
-                         const char *pszCallingComponentName)
-    const char* GDALVersionInfo(const char *pszRequest)
     CPLErr GDALSetGCPs(GDALDatasetH hDS, int nGCPCount, const GDAL_GCP *pasGCPList,
                        const char *pszGCPProjection)
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)

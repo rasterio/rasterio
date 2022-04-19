@@ -21,6 +21,7 @@ from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 from rasterio._filepath cimport install_filepath_plugin, uninstall_filepath_plugin
+from rasterio._version import gdal_version
 
 from libc.stdio cimport stderr
 
@@ -270,7 +271,7 @@ class GDALDataFinder:
 
     def search_debian(self, prefix=sys.prefix):
         """Check Debian locations"""
-        gdal_release_name = GDALVersionInfo("RELEASE_NAME")
+        gdal_release_name = gdal_version()
         datadir = os.path.join(prefix, 'share', 'gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
         return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
 
