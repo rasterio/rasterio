@@ -925,10 +925,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
-        if add_alpha and gdal_version().startswith('1'):
-            warnings.warn("Alpha addition not supported by GDAL 1.x")
-            add_alpha = False
-
         # kwargs become warp options.
         self.src_dataset = src_dataset
         self.src_crs = src_dataset.crs if src_crs is None else CRS.from_user_input(src_crs)

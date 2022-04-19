@@ -153,9 +153,6 @@ cdef extern from "ogr_srs_api.h" nogil:
         OGRCoordinateTransformationH source)
     int OCTTransform(OGRCoordinateTransformationH ct, int nCount, double *x,
                      double *y, double *z)
-    int OSRAutoIdentifyEPSG(OGRSpatialReferenceH srs)
-    int OSRMorphFromESRI(OGRSpatialReferenceH srs)
-    int OSRMorphToESRI(OGRSpatialReferenceH srs)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
@@ -178,21 +175,15 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSREPSGTreatsAsNorthingEasting(OGRSpatialReferenceH srs)
     OGRSpatialReferenceH *OSRFindMatches(OGRSpatialReferenceH srs, char **options, int *entries, int **matchConfidence)
     void OSRFreeSRSArray(OGRSpatialReferenceH *srs)
+    ctypedef enum OSRAxisMappingStrategy:
+        OAMS_TRADITIONAL_GIS_ORDER
 
+    const char* OSRGetName(OGRSpatialReferenceH hSRS)
+    void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
+    void OSRSetPROJSearchPaths(const char *const *papszPaths)
+    OGRErr OSRExportToWktEx(OGRSpatialReferenceH, char ** ppszResult,
+                            const char* const* papszOptions)
 
-IF CTE_GDAL_MAJOR_VERSION >= 3:
-    cdef extern from "ogr_srs_api.h" nogil:
-
-        ctypedef enum OSRAxisMappingStrategy:
-            OAMS_TRADITIONAL_GIS_ORDER
-
-        const char* OSRGetName(OGRSpatialReferenceH hSRS)
-        void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
-        void OSRSetPROJSearchPaths(const char *const *papszPaths)
-        OGRErr OSRExportToWktEx(OGRSpatialReferenceH, char ** ppszResult,
-                                const char* const* papszOptions)
-ELSE:
-    cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
 
 IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
     cdef extern from "ogr_srs_api.h" nogil:

@@ -131,8 +131,8 @@ if "clean" not in sys.argv:
     gdal_major_version = int(gdal_version_parts[0])
     gdal_minor_version = int(gdal_version_parts[1])
 
-    if (gdal_major_version, gdal_minor_version) < (2, 3):
-        raise SystemExit("ERROR: GDAL >= 2.3 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (3, 0):
+        raise SystemExit("ERROR: GDAL >= 3.0 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
