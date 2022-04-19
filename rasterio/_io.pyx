@@ -1114,7 +1114,7 @@ cdef class DatasetReaderBase(DatasetBase):
             IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
                 GDALDatasetClearStatistics(self._hds)
             ELSE:
-                pass
+                warnings.warn("Statistics cache not cleared. This option requires GDAL 3.2.")
 
         try:
             exc_wrap_int(
