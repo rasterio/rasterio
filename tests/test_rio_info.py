@@ -427,6 +427,7 @@ def test_info_aws_unsigned(runner):
 
 @requires_gdal32(reason="Unsigned Azure requests require GDAL ~= 3.2")
 @pytest.mark.network
+@pytest.mark.skip(reason="Undiagnosed problem accessing this file")
 def test_info_azure_unsigned(monkeypatch, runner):
     """Unsigned access to public dataset works"""
     monkeypatch.setenv('AZURE_NO_SIGN_REQUEST', 'YES')
