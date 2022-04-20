@@ -92,6 +92,7 @@ def main_group(
     aws_no_sign_requests,
     aws_requester_pays,
     gdal_version,
+    show_versions,
 ):
     """Rasterio command line interface.
     """
