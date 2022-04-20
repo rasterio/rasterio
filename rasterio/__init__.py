@@ -51,7 +51,7 @@ with rasterio._loading.add_gdal_dll_directories():
         have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Env', 'CRS']
-__version__ = "1.3a3"
+__version__ = "1.3a4"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])

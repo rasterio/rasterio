@@ -160,8 +160,6 @@ if os.environ.get('PACKAGE_DATA'):
         log.info("Copying proj_data from %s" % projdatadir)
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
-
-
 compile_time_env = {
     "CTE_GDAL_MAJOR_VERSION": gdal_major_version,
     "CTE_GDAL_MINOR_VERSION": gdal_minor_version,
@@ -306,7 +304,6 @@ setup_args = dict(
         "License :: OSI Approved :: BSD License",
         "Programming Language :: C",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -326,7 +323,7 @@ setup_args = dict(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
 
 if os.environ.get('PACKAGE_DATA'):
