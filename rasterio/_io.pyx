@@ -11,6 +11,7 @@ import sys
 from uuid import uuid4
 import warnings
 
+import attr
 import numpy as np
 
 from rasterio._base import tastes_like_gdal
@@ -52,7 +53,6 @@ gdal33_version_met = False
 
 def validate_resampling(resampling):
     """Validate that the resampling method is compatible of reads/writes."""
-
     if resampling == Resampling.rms:
         global gdal33_version_checked
         global gdal33_version_met
@@ -373,6 +373,22 @@ cdef char **convert_options(kwargs):
         options = CSLSetNameValue(options, key_c, val_c)
 
     return options
+
+
+@attr.s(slots=True, frozen=True)
+class Statistics:
+    """Raster band statistics.
+
+    Attributes
+    ----------
+    min, max, mean, std : float
+        Basic stats of a raster band.
+
+    """
+    min = attr.ib()
+    max = attr.ib()
+    mean = attr.ib()
+    std = attr.ib()
 
 
 cdef class DatasetReaderBase(DatasetBase):
@@ -855,7 +871,6 @@ cdef class DatasetReaderBase(DatasetBase):
 
         return out
 
-
     def _read(self, indexes, out, window, dtype, masks=False, resampling=Resampling.nearest):
         """Read raster bands as a multidimensional array
 
@@ -913,7 +928,6 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
-
             if masks:
                 # Warn if nodata attribute is shadowing an alpha band.
                 if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
@@ -1054,6 +1068,54 @@ cdef class DatasetReaderBase(DatasetBase):
         # be confirmed and fixed, the workaround is a pure Python
         # generator implemented in sample.py.
         return sample_gen(self, xy, indexes=indexes, masked=masked)
+
+    def statistics(self, bidx, approx=False, clear_cache=False):
+        """Get min, max, mean, and standard deviation of a raster band.
+
+        Parameters
+        ----------
+        bidx : int
+            The band's index (1-indexed).
+        approx : bool, optional
+            If True, statistics will be calculated from reduced
+            resolution data.
+        clear_cache : bool, optional
+            If True, saved stats will be deleted and statistics will be
+            recomputed. Requires GDAL version >= 3.2.
+
+        Returns
+        -------
+        Statistics
+
+        Notes
+        -----
+        GDAL will preferentially use statistics kept in raster metadata
+        like images tags or an XML sidecar. If that metadata is out of
+        date, the statistics may not correspond to the actual data.
+
+        Additionally, GDAL will save statistics to file metadata as a
+        side effect if that metadata does not already exist.
+
+        """
+        cdef double min, max, mean, std
+        cdef GDALRasterBandH band = NULL
+
+        band = self.band(bidx)
+
+        if clear_cache:
+            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
+                GDALDatasetClearStatistics(self._hds)
+            ELSE:
+                warnings.warn("Statistics cache not cleared. This option requires GDAL 3.2.")
+
+        try:
+            exc_wrap_int(
+                GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
+            )
+        except CPLE_BaseError:
+            raise
+        else:
+            return Statistics(min, max, mean, std)
 
 
 @contextmanager

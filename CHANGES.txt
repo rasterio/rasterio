@@ -18,6 +18,9 @@ Deprecations:
 
 New features:
 
+- Datasets have a new statistics method that computes the minimum, maximum,
+  mean, and standard deviation of a raster band's data, matching the output of
+  gdalinfo (#2441).
 - The rio-warp CLI command now takes --wo (--warper-option) and --to
   (--transformer-option) options, allowing the use of PROJ coordinate
   transformation pipelines like "--to coordinate_operation=proj=pipeline"
