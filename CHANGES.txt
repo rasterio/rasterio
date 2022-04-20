@@ -4,8 +4,8 @@ Changes
 1.3.0 (TBD)
 -----------
 
-1.3a4 (TBD)
------------
+1.3a4 (2022-04-20)
+------------------
 
 Deprecations:
 
@@ -36,7 +36,7 @@ Changes:
 Bug fixes:
 
 - Rasterio's warper is fixed such that it can support reprojection to a
-  specific dataset band (#2369). 
+  specific dataset band (#2369).
 - Erroneously overlapping slices (reported in #2378) are now prevented by
   ensuring that slice indexes with negative values are set to zero (#2434).
 - Prevent erroneous sign flip in a south-up dataset's res property (#2370).
