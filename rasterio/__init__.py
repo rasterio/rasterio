@@ -8,6 +8,7 @@ import os
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
+    from rasterio._show_versions import show_versions
     from rasterio._version import gdal_version, get_geos_version, get_proj_version
     from rasterio.crs import CRS
     from rasterio.drivers import driver_from_extension, is_blacklisted
@@ -50,7 +51,7 @@ with rasterio._loading.add_gdal_dll_directories():
             pass
         have_vsi_plugin = False
 
-__all__ = ['band', 'open', 'pad', 'Env', 'CRS']
+__all__ = ['band', 'open', 'pad', 'Env', 'CRS', 'show_versions']
 __version__ = "1.3a3"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])

@@ -181,6 +181,7 @@ cdef extern from "ogr_srs_api.h" nogil:
     const char* OSRGetName(OGRSpatialReferenceH hSRS)
     void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
     void OSRSetPROJSearchPaths(const char *const *papszPaths)
+    char ** OSRGetPROJSearchPaths()
     OGRErr OSRExportToWktEx(OGRSpatialReferenceH, char ** ppszResult,
                             const char* const* papszOptions)
 

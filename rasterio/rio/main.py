@@ -56,6 +56,14 @@ def gdal_version_cb(ctx, param, value):
     click.echo("{0}".format(rasterio.__gdal_version__), color=ctx.color)
     ctx.exit()
 
+def show_versions_cb(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+
+    rasterio.show_versions()
+    ctx.exit()
+
+
 
 @with_plugins(
     ep
@@ -74,6 +82,7 @@ def gdal_version_cb(ctx, param, value):
 )
 @click.version_option(version=rasterio.__version__, message="%(version)s")
 @click.option("--gdal-version", is_eager=True, is_flag=True, callback=gdal_version_cb)
+@click.option("--show-versions", help="Show dependency versions", is_eager=True, is_flag=True, callback=show_versions_cb)
 @click.pass_context
 def main_group(
     ctx,
