@@ -451,3 +451,37 @@ def set_proj_data_search_path(path):
     path_c = path_b
     paths = CSLAddString(paths, path_c)
     OSRSetPROJSearchPaths(<const char *const *>paths)
+
+
+def get_proj_data_search_paths():
+    """
+    Get the PROJ DATA search paths
+
+    Requires GDAL 3.0.3+
+
+    Returns
+    -------
+    List[str]
+    """
+    path_list = []
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 0, 3):
+        cdef char **paths = OSRGetPROJSearchPaths()
+        cdef int iii = 0
+        while paths[iii] != NULL:
+            path_list.append(paths[iii])
+            iii += 1
+    return path_list
+
+
+def get_gdal_data():
+    """
+    Get the GDAL DATA path
+
+    Returns
+    -------
+    str
+    """
+    cdef const char *gdal_data = CPLGetConfigOption("GDAL_DATA", NULL)
+    if gdal_data != NULL:
+        return gdal_data
+    return None
