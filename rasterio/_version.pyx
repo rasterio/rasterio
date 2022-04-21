@@ -60,8 +60,7 @@ def get_proj_version():
         int major = 0
         int minor = 0
         int patch = 0
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 0, 1):
-        OSRGetPROJVersion(&major, &minor, &patch)
+    OSRGetPROJVersion(&major, &minor, &patch)
     return major, minor, patch
 
 

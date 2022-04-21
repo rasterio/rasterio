@@ -184,14 +184,9 @@ cdef extern from "ogr_srs_api.h" nogil:
     char ** OSRGetPROJSearchPaths()
     OGRErr OSRExportToWktEx(OGRSpatialReferenceH, char ** ppszResult,
                             const char* const* papszOptions)
-
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
-    cdef extern from "ogr_srs_api.h" nogil:
-
-        OGRErr OSRExportToPROJJSON(OGRSpatialReferenceH hSRS,
-                                   char ** ppszReturn,
-                                   const char* const* papszOptions)
+    OGRErr OSRExportToPROJJSON(OGRSpatialReferenceH hSRS,
+                                char ** ppszReturn,
+                                const char* const* papszOptions)
 
 
 IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
