@@ -261,6 +261,7 @@ def merge(
     out_profile["height"] = output_height
     out_profile["width"] = output_width
     out_profile["count"] = output_count
+    out_profile["dtype"] = dt
     if nodata is not None:
         out_profile["nodata"] = nodata
 
