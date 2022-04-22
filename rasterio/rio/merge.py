@@ -29,6 +29,7 @@ def deprecated_precision(*args):
               default='nearest', help="Resampling method.",
               show_default=True)
 @options.nodata_opt
+@options.dtype_opt
 @options.bidx_mult_opt
 @options.overwrite_opt
 @click.option(
@@ -40,8 +41,21 @@ def deprecated_precision(*args):
 )
 @options.creation_options
 @click.pass_context
-def merge(ctx, files, output, driver, bounds, res, resampling,
-          nodata, bidx, overwrite, precision, creation_options):
+def merge(
+    ctx,
+    files,
+    output,
+    driver,
+    bounds,
+    res,
+    resampling,
+    nodata,
+    dtype,
+    bidx,
+    overwrite,
+    precision,
+    creation_options,
+):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -75,6 +89,7 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
             bounds=bounds,
             res=res,
             nodata=nodata,
+            dtype=dtype,
             indexes=(bidx or None),
             resampling=resampling,
             dst_path=output,
