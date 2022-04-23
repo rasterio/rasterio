@@ -82,6 +82,8 @@ def merge(
         files=files, output=output, overwrite=overwrite)
 
     resampling = Resampling[resampling]
+    if driver:
+        creation_options.update(driver=driver)
 
     with ctx.obj["env"]:
         merge_tool(
