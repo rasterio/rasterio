@@ -4,19 +4,11 @@
 import json
 import os
 
-import affine
 import numpy as np
 import pytest
 
 import rasterio
-from rasterio.crs import CRS
-from rasterio.env import GDALVersion
 from rasterio.rio.main import main_group
-
-from .conftest import requires_gdal22
-
-
-gdal_version = GDALVersion.runtime()
 
 
 def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
@@ -164,51 +156,6 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
     assert 'Invalid GeoJSON' in result.output
 
 
-@pytest.mark.xfail(
-    gdal_version.at_least('2.3'),
-    reason="Test only applicable to GDAL < 2.3")
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
-def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
-    """
-    In order to test --crop option, we need to use a transform more similar to
-    a normal raster, with a negative y pixel size.
-    """
-
-    image = pixelated_image
-    outfilename = str(tmpdir.join('pixelated_image.tif'))
-    kwargs = {
-        "crs": CRS({'init': 'epsg:4326'}),
-        "transform": affine.Affine(1.0, 0, 0, 0, -1.0, 0),
-        "count": 1,
-        "dtype": rasterio.uint8,
-        "driver": "GTiff",
-        "width": image.shape[1],
-        "height": image.shape[0],
-        "nodata": 255}
-    with rasterio.open(outfilename, 'w', **kwargs) as out:
-        out.write(image, indexes=1)
-
-    output = str(tmpdir.join('test.tif'))
-
-    truth = np.zeros((3, 3))
-    truth[0:2, 0:2] = 1
-
-    result = runner.invoke(
-        main_group,
-        ['mask', outfilename, output, '--crop', '--geojson-mask', '-'],
-        input=json.dumps(basic_feature))
-
-    assert result.exit_code == 0
-    assert os.path.exists(output)
-    with rasterio.open(output) as out:
-        assert np.array_equal(
-            truth,
-            out.read(1, masked=True).filled(0))
-
-
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_file):
     """
     --crop option should also work if raster has a positive y pixel size

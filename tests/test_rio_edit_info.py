@@ -15,8 +15,6 @@ from rasterio.rio.edit_info import (
 from rasterio.rio.main import main_group
 import rasterio.shutil
 
-from .conftest import requires_gdal21
-
 
 PARAM_HANDLER = {
     'crs': crs_handler,
@@ -61,7 +59,6 @@ def test_edit_nodata_err(data, runner):
     assert result.exit_code == 2
 
 
-@requires_gdal21
 def test_delete_nodata(data, runner):
     """Delete a dataset's nodata value"""
     inputfile = str(data.join('RGB.byte.tif'))
@@ -167,7 +164,6 @@ def test_edit_tags(data, runner):
         assert src.tags()['wut'] == '2'
 
 
-@requires_gdal21(reason="decription setting requires GDAL 2.1+")
 def test_edit_band_description(data, runner):
     """Edit band descriptions"""
     inputfile = str(data.join('RGB.byte.tif'))
@@ -379,7 +375,6 @@ def test_like_band_count_mismatch(runner, data):
     assert "When using '--like' for color interpretation" in result.output
 
 
-@requires_gdal21
 def test_colorinterp_like_all(
         runner, path_4band_no_colorinterp, path_rgba_byte_tif, tmpdir):
     """Test setting colorinterp via '--like template --all'."""

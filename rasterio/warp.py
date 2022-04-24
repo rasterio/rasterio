@@ -1,7 +1,6 @@
 """Raster warping and reprojection."""
 
 from math import ceil, floor
-import warnings
 
 from affine import Affine
 import numpy as np
@@ -12,28 +11,16 @@ with rasterio._loading.add_gdal_dll_directories():
 
     from rasterio._base import _transform
     from rasterio.enums import Resampling
-    from rasterio.env import GDALVersion, ensure_env, require_gdal_version
-    from rasterio.errors import GDALBehaviorChangeException, TransformError, RPCError
+    from rasterio.env import ensure_env, require_gdal_version
+    from rasterio.errors import TransformError, RPCError
     from rasterio.transform import array_bounds
     from rasterio._warp import (
         _calculate_default_transform,
         _reproject,
         _transform_bounds,
         _transform_geom,
+        SUPPORTED_RESAMPLING
     )
-
-# Gauss (7) is not supported for warp
-SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
-GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
-if GDALVersion.runtime().at_least('2.0'):
-    SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
-# sum supported since GDAL 3.1
-if GDALVersion.runtime().at_least('3.1'):
-    SUPPORTED_RESAMPLING.append(Resampling.sum)
-# rms supported since GDAL 3.3
-if GDALVersion.runtime().at_least('3.3'):
-    SUPPORTED_RESAMPLING.append(Resampling.rms)
-
 
 @ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
@@ -170,7 +157,6 @@ def transform_bounds(
 
 
 @ensure_env
-@require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,

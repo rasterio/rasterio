@@ -2,10 +2,7 @@
 
 import rasterio
 
-from .conftest import requires_gdal2
 
-
-@requires_gdal2
 def test_overview_levels(path_cogeo_tif):
     """With sharing turned off, problem noted in #1504 vanishes"""
     olevel = 0

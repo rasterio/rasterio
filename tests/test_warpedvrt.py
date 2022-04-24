@@ -20,7 +20,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import gdal_version, requires_gdal21, requires_gdal2
+from .conftest import gdal_version
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +56,6 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
-@requires_gdal21
 def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
     """A VirtualVRT has expected nondefault nodata values."""
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -70,7 +69,6 @@ def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.all_valid],) * 3
 
 
-@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.Env() as env:
@@ -99,7 +97,6 @@ def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
         assert "1 N GTiff" in records[0]
 
 
-@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
@@ -122,7 +119,6 @@ def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
         assert "RGB2.byte.tif.msk" in caplog.text
 
 
-@requires_gdal21(reason="nodata deletion requires gdal 2.1+")
 def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
     """Specifying dst nodata also works for source with .msk"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
@@ -246,7 +242,6 @@ def test_transformer_options__width_height(path_rgb_byte_tif):
         assert vrt.transform.almost_equals(transform)
 
 
-@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
 @credentials
 @pytest.mark.network
 def test_wrap_s3():
@@ -382,7 +377,6 @@ def test_image_nodata_mask(red_green):
             assert image[64, 64, 0] == 255
 
 
-@requires_gdal2(reason="Warped VRT overviews require GDAL 2")
 def test_hit_ovr(red_green):
     """Zoomed out read hits the overviews"""
     # GDAL doesn't log overview hits for local files , so we copy the
@@ -402,7 +396,6 @@ def test_hit_ovr(red_green):
         assert image[0, 0, 1] == 204
 
 
-@requires_gdal21(reason="add_alpha requires GDAL 2.1+")
 def test_warped_vrt_1band_add_alpha():
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
     with rasterio.open('tests/data/shade.tif') as src:
@@ -414,7 +407,6 @@ def test_warped_vrt_1band_add_alpha():
         )
 
 
-@requires_gdal21(reason="add_alpha requires GDAL 2.1+")
 def test_invalid_add_alpha():
     """Adding an alpha band to a VRT that already has one fails"""
     with rasterio.open('tests/data/RGBA.byte.tif') as src:
@@ -463,7 +455,6 @@ def test_warpedvrt_issue1744(data):
             assert src.dtypes == vrt.dtypes == ("float32",)
 
 
-@requires_gdal2
 def test_open_datasets(capfd, path_rgb_byte_tif):
     """Number of open datasets is expected"""
     with rasterio.Env() as env:
@@ -484,7 +475,6 @@ def test_open_datasets(capfd, path_rgb_byte_tif):
         assert "1 N GTiff" not in captured.err
 
 
-@requires_gdal2
 def test_warp_warp(dsrec, path_rgb_byte_tif):
     """Vincent! :P"""
     with rasterio.Env() as env:
