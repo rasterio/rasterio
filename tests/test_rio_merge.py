@@ -103,6 +103,21 @@ def test_data_dir_3(tmpdir):
     return tmpdir
 
 
+def test_rio_merge_dtype(test_data_dir_1, runner):
+    outputname = str(test_data_dir_1.join("merged.tif"))
+    inputs = [str(x) for x in test_data_dir_1.listdir()]
+    inputs.sort()
+
+    result = runner.invoke(
+        main_group, ["merge", "--dtype", "uint16"] + inputs + [outputname]
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(outputname) as out:
+        assert all(dt == "uint16" for dt in out.dtypes)
+
+
 def test_merge_with_colormap(test_data_dir_1, runner):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
