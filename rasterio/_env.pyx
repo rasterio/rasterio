@@ -57,7 +57,9 @@ log = logging.getLogger(__name__)
 
 try:
     import certifi
-    os.environ.setdefault("CURL_CA_BUNDLE", certifi.where())
+    ca_bundle = certifi.where()
+    os.environ.setdefault("GDAL_CURL_CA_BUNDLE", ca_bundle)
+    os.environ.setdefault("PROJ_CURL_CA_BUNDLE", ca_bundle)
 except ImportError:
     pass
 
