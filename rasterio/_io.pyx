@@ -679,7 +679,6 @@ cdef class DatasetReaderBase(DatasetBase):
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
 
-
                     else:
                         mask = np.zeros(out.shape, 'uint8')
                         mask = ~vrt._read(
@@ -1320,7 +1319,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
             modes.
         gcps : Sequence of GroundControlPoint, optional
-            Zero or more ground control points mapping pixel space to 
+            Zero or more ground control points mapping pixel space to
             geographic space locations. Ignored in 'r' or 'r+' modes.
         rpcs : RPC or dict, optional
             Rational polynomial coefficients mapping geographic space (x, y, z)
@@ -1616,23 +1615,47 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
 
-    def write(self, arr, indexes=None, window=None):
+    def write(self, arr, indexes=None, window=None, masked=False):
         """Write the arr array into indexed bands of the dataset.
 
         If `indexes` is a list, the src must be a 3D array of
         matching shape. If an int, the src must be a 2D array.
 
         See `read()` for usage of the optional `window` argument.
+
+        If arr is a masked array, and masked is False (the default),
+        arr.filled() will be called before data is written. If masked
+        is True, self.write_mask() will be called with the given mask.
+
         """
         cdef int height, width, xoff, yoff, indexes_count
         cdef int retval = 0
 
         if self._hds == NULL:
             raise ValueError("can't write to closed raster file")
+
         if not is_ndarray(arr):
             raise InvalidArrayError("Positional argument arr must be an array-like object")
 
-        arr = np.array(arr, copy=False)
+        # If the input array is masked, we either write data and mask
+        # (at the end of this method) or we collapse the masked array
+        # by filling it.
+        if isinstance(arr, np.ma.MaskedArray):
+            if masked:
+                self.write_mask(~arr.mask, window=window)
+            else:
+                # Fill masked arrays before writing. If the dataset has a
+                # defined nodata value, that will be used as the fill value.
+                # Otherwise, the masked array's own fill value with be used.
+                if len(set(self.nodatavals)) == 1 and self.nodatavals[0] is not None:
+                    fill_value = self.nodatavals[0]
+                else:
+                    fill_value = None
+
+                arr = arr.filled(fill_value)
+
+        else:
+            arr = np.array(arr, copy=False)
 
         if indexes is None:
             indexes = self.indexes
@@ -1647,12 +1670,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 .format(arr.shape, len(indexes)))
 
         check_dtypes = set()
+
         # Check each index before processing 3D array
         for bidx in indexes:
             if bidx not in self.indexes:
                 raise IndexError("band index {} out of range (not in {})".format(bidx, self.indexes))
             idx = self.indexes.index(bidx)
             check_dtypes.add(self.dtypes[idx])
+
         if len(check_dtypes) > 1:
             raise ValueError("more than one 'dtype' found")
         elif len(check_dtypes) == 0:
@@ -1672,6 +1697,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if window:
             if isinstance(window, tuple):
                 window = Window.from_slices(*window, self.height, self.width)
+
             yoff = window.row_off
             xoff = window.col_off
             height = window.height

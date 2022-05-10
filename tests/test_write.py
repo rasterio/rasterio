@@ -439,3 +439,71 @@ def test_write_cog(tmpdir, path_rgb_byte_tif):
         profile.update(driver="COG", extent=src.bounds, resampling=Resampling.bilinear)
         with rasterio.open(str(tmpdir.join("test.tif")), "w", **profile) as cog:
             cog.write(src.read())
+
+
+def test_write_masked(tmp_path):
+    """Verify that masked arrays are filled when written."""
+    data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
+    data.fill_value = 3
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+    ) as dst:
+        dst.write(data, indexes=1)
+
+    # Expect to see the masked array's fill_value in the first two
+    # pixels of the raster.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        arr = src.read()
+        assert list(arr.flatten()) == [3, 3, 2]
+
+
+def test_write_masked_nodata(tmp_path):
+    """Verify that masked arrays are filled with nodata when written."""
+    data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+        nodata=0,
+    ) as dst:
+        dst.write(data, indexes=1)
+
+    # Expect to see the dataset's nodata value in the first two
+    # pixels of the raster.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        arr = src.read()
+        assert list(arr.flatten()) == [0, 0, 2]
+
+
+def test_write_masked_mask(tmp_path):
+    """Verify that a mask is written when we write a masked array."""
+    data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+    ) as dst:
+        dst.write(data, indexes=1, masked=True)
+
+    # Expect to see the dataset's nodata value in the first two
+    # pixels of the raster.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        arr = src.read(masked=True)
+        assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]

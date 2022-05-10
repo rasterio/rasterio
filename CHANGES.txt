@@ -4,6 +4,17 @@ Changes
 1.3.0 (TBD)
 -----------
 
+1.3b1 (2022-05-10)
+------------------
+
+New features:
+
+- A dataset's write method now accepts Numpy masked arrays and has a "masked"
+  keyword argument. In this case, if masked is False, the masked array's filled
+  method is called with the dataset's nodata value or else the masked array's
+  fill value. If the masked argument is True, the dataset's write_mask method
+  is called.
+
 1.3a4 (2022-04-20)
 ------------------
 
