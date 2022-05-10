@@ -15,6 +15,16 @@ New features:
   fill value. If the masked argument is True, the dataset's write_mask method
   is called.
 
+Changes:
+
+- Various decorators requiring a GDAL version of 2+ have been deleted. Rasterio
+  now absolutely requires GDAL 3.1+ (#2452).
+
+Packaging:
+
+Wheels for 1.3b1 are built using the version of rasterio-wheels dated
+2022-05-10.
+
 1.3a4 (2022-04-20)
 ------------------
 
