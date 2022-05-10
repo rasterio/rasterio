@@ -457,8 +457,7 @@ def test_write_masked(tmp_path):
     ) as dst:
         dst.write(data, indexes=1)
 
-    # Expect to see the masked array's fill_value in the first two
-    # pixels of the raster.
+    # Expect the masked array's fill_value in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
         arr = src.read()
         assert list(arr.flatten()) == [3, 3, 2]
@@ -480,14 +479,13 @@ def test_write_masked_nodata(tmp_path):
     ) as dst:
         dst.write(data, indexes=1)
 
-    # Expect to see the dataset's nodata value in the first two
-    # pixels of the raster.
+    # Expect the dataset's nodata value in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
         arr = src.read()
         assert list(arr.flatten()) == [0, 0, 2]
 
 
-def test_write_masked_mask(tmp_path):
+def test_write_masked_true(tmp_path):
     """Verify that a mask is written when we write a masked array."""
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
 
@@ -502,8 +500,7 @@ def test_write_masked_mask(tmp_path):
     ) as dst:
         dst.write(data, indexes=1, masked=True)
 
-    # Expect to see the dataset's nodata value in the first two
-    # pixels of the raster.
+    # Expect masked values in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
         arr = src.read(masked=True)
         assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]

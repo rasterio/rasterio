@@ -1618,14 +1618,32 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def write(self, arr, indexes=None, window=None, masked=False):
         """Write the arr array into indexed bands of the dataset.
 
-        If `indexes` is a list, the src must be a 3D array of
-        matching shape. If an int, the src must be a 2D array.
+        If given a Numpy MaskedArray and masked is True, the input's
+        data and mask will be written to the dataset's bands and band
+        mask. If masked is False, no band mask is written. Instead, the
+        input array's masked values are filled with the dataset's nodata
+        value (if defined) or the input's own fill value.
 
-        See `read()` for usage of the optional `window` argument.
+        Parameters
+        ----------
+        arr : array-like
+            This may be a numpy MaskedArray.
+        indexes : int or list, optional
+            Which bands of the dataset to write to. The default is all.
+        window : Window, optional
+            The region (slice) of the dataset to which arr will be
+            written. The default is the entire dataset.
+        masked : bool, optional
+            Whether or not to write to the dataset's band mask.
 
-        If arr is a masked array, and masked is False (the default),
-        arr.filled() will be called before data is written. If masked
-        is True, self.write_mask() will be called with the given mask.
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RasterioIOError
+            If the write fails.
 
         """
         cdef int height, width, xoff, yoff, indexes_count
@@ -1637,16 +1655,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if not is_ndarray(arr):
             raise InvalidArrayError("Positional argument arr must be an array-like object")
 
-        # If the input array is masked, we either write data and mask
-        # (at the end of this method) or we collapse the masked array
-        # by filling it.
         if isinstance(arr, np.ma.MaskedArray):
             if masked:
                 self.write_mask(~arr.mask, window=window)
             else:
-                # Fill masked arrays before writing. If the dataset has a
-                # defined nodata value, that will be used as the fill value.
-                # Otherwise, the masked array's own fill value with be used.
                 if len(set(self.nodatavals)) == 1 and self.nodatavals[0] is not None:
                     fill_value = self.nodatavals[0]
                 else:
