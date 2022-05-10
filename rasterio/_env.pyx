@@ -466,12 +466,11 @@ def get_proj_data_search_paths():
     List[str]
     """
     path_list = []
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 0, 3):
-        cdef char **paths = OSRGetPROJSearchPaths()
-        cdef int iii = 0
-        while paths[iii] != NULL:
-            path_list.append(paths[iii])
-            iii += 1
+    cdef char **paths = OSRGetPROJSearchPaths()
+    cdef int iii = 0
+    while paths[iii] != NULL:
+        path_list.append(paths[iii])
+        iii += 1
     return path_list
 
 

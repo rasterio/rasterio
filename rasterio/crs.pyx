@@ -1009,14 +1009,10 @@ cdef class CRS:
         cdef const char* options[2]
 
         try:
-            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 1):
-                if OSRGetName(self._osr) != NULL:
-                    options[0] = b"MULTILINE=NO"
-                    options[1] = NULL
-                    exc_wrap_ogrerr(OSRExportToPROJJSON(self._osr, &conv_json, options))
-            ELSE:
-                raise CRSError("GDAL 3.1+ required to export to PROJ JSON.")
-
+            if OSRGetName(self._osr) != NULL:
+                options[0] = b"MULTILINE=NO"
+                options[1] = NULL
+                exc_wrap_ogrerr(OSRExportToPROJJSON(self._osr, &conv_json, options))
         except CPLE_BaseError as exc:
             raise CRSError("Cannot convert to PROJ JSON. {}".format(exc))
 
