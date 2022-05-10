@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from .conftest import requires_gdal2, requires_gdal33
+from .conftest import requires_gdal33
 
 import rasterio
 from rasterio.enums import _OverviewResampling as OverviewResampling
@@ -92,7 +92,6 @@ def test_issue1333(data):
                 overview_factors, resampling=OverviewResampling.average)
 
 
-@requires_gdal2
 def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
     """Confirm fix of #1497"""
     dst_file = str(tmpdir.join('test.tif'))

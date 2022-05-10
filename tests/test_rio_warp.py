@@ -1,21 +1,16 @@
 """Unittests for $ rio warp"""
 
 
-import logging
 import os
-import sys
 
 import affine
 import numpy as np
 import pytest
 
 import rasterio
-from rasterio.env import GDALVersion
-from rasterio.warp import SUPPORTED_RESAMPLING, GDAL2_RESAMPLING
+from rasterio.warp import SUPPORTED_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
-
-from .conftest import requires_gdal_lt_3
 
 
 def test_dst_crs_error(runner, tmpdir):
@@ -541,25 +536,6 @@ def test_warp_reproject_check_invert_true(runner, tmpdir):
         assert output.shape == output2.shape
 
 
-@requires_gdal_lt_3
-def test_warp_reproject_check_invert_false(runner, tmpdir):
-    outputname = str(tmpdir.join('test.tif'))
-    output2name = str(tmpdir.join('test2.tif'))
-    srcname = 'tests/data/world.rgb.tif'
-
-    # default True
-    runner.invoke(main_group, [
-        'warp', srcname, outputname, '--dst-crs', 'EPSG:3759'])
-
-    # explicit False
-    runner.invoke(main_group, [
-        'warp', srcname, output2name, '--no-check-invert-proj',
-        '--dst-crs', 'EPSG:3759'])
-
-    with rasterio.open(outputname) as output, rasterio.open(output2name) as output2:
-        assert output.shape != output2.shape
-
-
 def test_warp_vrt_gcps(runner, tmpdir):
     """A VRT with GCPs can be warped."""
     srcname = 'tests/data/white-gemini-iv.vrt'
@@ -590,25 +566,6 @@ def test_warp_resampling(runner, path_rgb_byte_tif, tmpdir, method):
 
     print(result.output)
     assert result.exit_code == 0
-
-
-@pytest.mark.skipif(
-    GDALVersion.runtime().at_least('2.0'),
-    reason="Test only applicable to GDAL < 2.0")
-@pytest.mark.parametrize("method", GDAL2_RESAMPLING)
-def test_warp_resampling_not_yet_supported(
-        runner, path_rgb_byte_tif, tmpdir, method):
-    """Resampling methods not yet supported should fail with error"""
-
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(main_group, [
-        'warp', path_rgb_byte_tif, outputname,
-        '--dst-crs', 'epsg:3857',
-        '--resampling', method.name])
-
-    assert result.exit_code == 2
-    assert "Invalid value for" in result.output
-    assert "--resampling" in result.output
 
 
 def test_unrotate(runner, tmp_path):

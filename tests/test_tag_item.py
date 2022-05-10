@@ -4,8 +4,6 @@ import sys
 
 import pytest
 
-from .conftest import requires_gdal22
-
 import rasterio
 from rasterio.errors import BandOverviewError
 
@@ -17,7 +15,6 @@ def test_get_tag_item():
         assert src.get_tag_item('INTERLEAVE', 'IMAGE_STRUCTURE') == 'PIXEL'
 
 
-@requires_gdal22(reason="Access to IFD tags requires GDAL 2.2+")
 def test_get_tag_item_Tiff():
     with rasterio.open('tests/data/cogeo.tif') as src:
         assert src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1) == '8'
@@ -28,7 +25,6 @@ def test_get_tag_item_Tiff():
             src.get_tag_item('IFD_OFFSET', 'TIFF', ovr=1)
 
 
-@requires_gdal22(reason="Access to IFD tags requires GDAL 2.2+")
 def test_get_tag_item_noOverview():
     with rasterio.open('tests/data/rgb3.tif') as src:
         with pytest.raises(BandOverviewError):

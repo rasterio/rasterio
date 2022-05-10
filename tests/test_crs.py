@@ -15,14 +15,7 @@ from rasterio.enums import WktVersion
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import (
-    gdal_version,
-    requires_gdal21,
-    requires_gdal22,
-    requires_gdal_lt_3,
-    requires_gdal3,
-    requires_gdal31,
-)
+from .conftest import requires_gdal31
 
 # Items like "D_North_American_1983" characterize the Esri dialect
 # of WKT SRS.
@@ -87,25 +80,6 @@ def test_read_compdcs():
     """Expect no match for a single EPSG for this COMPDCS"""
     with rasterio.open('zip://tests/data/ak-compdcs.zip!test.tif') as src:
         assert src.crs.to_epsg() == None
-
-
-@requires_gdal_lt_3
-def test_read_esri_wkt():
-    with rasterio.open('tests/data/test_esri_wkt.tif') as src:
-        assert 'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",' in src.crs.wkt
-        assert 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",' in src.crs.wkt
-        assert src.crs.to_dict() == {
-            'datum': 'NAD83',
-            'lat_0': 23,
-            'lat_1': 29.5,
-            'lat_2': 45.5,
-            'lon_0': -96,
-            'no_defs': True,
-            'proj': 'aea',
-            'units': 'm',
-            'x_0': 0,
-            'y_0': 0,
-        }
 
 
 def test_read_no_crs():
@@ -209,13 +183,11 @@ def test_is_projected():
     assert CRS(wgs84_crs).is_projected is False
 
 
-@requires_gdal21(reason="CRS equality is buggy pre-2.1")
 @pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
 def test_equality_from_epsg(epsg_code):
     assert CRS.from_epsg(epsg_code) == CRS.from_epsg(epsg_code)
 
 
-@requires_gdal21(reason="CRS equality is buggy pre-2.1")
 @pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
 def test_equality_from_dict(epsg_code):
     assert CRS.from_dict(init='epsg:{}'.format(epsg_code)) == CRS.from_dict(init='epsg:{}'.format(epsg_code))
@@ -285,8 +257,6 @@ def test_can_create_osr_invalid(arg):
         assert not _can_create_osr(arg)
 
 
-@requires_gdal22(
-    reason="GDAL bug resolved in 2.2+ allowed invalid CRS to be created")
 def test_can_create_osr_invalid_epsg_0():
     assert not _can_create_osr('epsg:')
 
@@ -346,7 +316,6 @@ def test_safe_osr_release(tmpdir):
     assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
 
 
-@requires_gdal21(reason="CRS equality is buggy pre-2.1")
 def test_from_wkt():
     wgs84 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     from_wkt = CRS.from_wkt(wgs84.wkt)
@@ -362,52 +331,19 @@ def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('epsg:4326')
 
 
-@requires_gdal_lt_3
-@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
-def test_from_esri_wkt_no_fix(projection_string):
-    """Test ESRI CRS morphing with no datum fixing"""
-    with Env():
-        crs = CRS.from_wkt(projection_string)
-        assert 'DATUM["D_North_American_1983"' in crs.wkt
-
-
-@requires_gdal_lt_3
-@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
-def test_from_esri_wkt_fix_datum(projection_string):
-    """Test ESRI CRS morphing with datum fixing"""
-    with Env(GDAL_FIX_ESRI_WKT='DATUM'):
-        crs = CRS.from_wkt(projection_string, morph_from_esri_dialect=True)
-        assert 'DATUM["North_American_Datum_1983"' in crs.wkt
-
-
-@requires_gdal_lt_3
-def test_to_esri_wkt_fix_datum():
-    """Morph to Esri form"""
-    assert 'DATUM["D_North_American_1983"' in CRS(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)
-
-
-@requires_gdal3
 @pytest.mark.parametrize("version", ["WKT2_2019", WktVersion.WKT2_2019])
 def test_to_wkt__version(version):
     assert CRS.from_epsg(4326).to_wkt(version=version).startswith('GEOGCRS["WGS 84",')
 
 
-@requires_gdal3
 def test_to_wkt__env_version():
     with Env(OSR_WKT_FORMAT="WKT2_2018"):
         assert CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",')
 
 
-@requires_gdal3
 def test_to_wkt__version_invalid():
     with pytest.raises(ValueError):
         CRS.from_epsg(4326).to_wkt(version="INVALID")
-
-
-@requires_gdal_lt_3
-def test_to_wkt__version__warning_gdal2():
-    with pytest.warns(UserWarning):
-        CRS.from_epsg(4326).to_wkt(version=WktVersion.WKT2_2019)
 
 
 def test_compound_crs():
@@ -465,22 +401,6 @@ def test_issue1609_wktext_a():
     wkt = CRS(src_proj).wkt
     assert 'PROJECTION["Polar_Stereographic"]' in wkt
     assert 'PARAMETER["latitude_of_origin",-70]' in wkt
-
-
-@requires_gdal_lt_3
-def test_issue1609_wktext_b():
-    """Check on fix of issue 1609"""
-    dst_proj = {'ellps': 'WGS84',
-               'h': 9000000.0,
-               'lat_0': -78.0,
-               'lon_0': 0.0,
-               'proj': 'nsper',
-               'units': 'm',
-               'x_0': 0,
-               'y_0': 0,
-               'wktext': True}
-    wkt = CRS(dst_proj).wkt
-    assert '+wktext' in wkt
 
 
 def test_empty_crs_str():
@@ -561,12 +481,7 @@ def test_from_user_input_custom_crs_class():
     "crs_obj",
     [
         CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"),
-        pytest.param(
-            CRS.from_epsg(4326),
-            marks=pytest.mark.xfail(
-                gdal_version.major < 3, reason="GDAL 2 always returns False"
-            ),
-        ),
+        CRS.from_epsg(4326),
     ],
 )
 def test_epsg_treats_as_latlong(crs_obj):
@@ -592,12 +507,7 @@ def test_epsg_treats_as_latlong_not(crs_obj):
     "crs_obj",
     [
         CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"),
-        pytest.param(
-            CRS.from_epsg(2193),
-            marks=pytest.mark.xfail(
-                gdal_version.major < 3, reason="GDAL 2 always returns False"
-            ),
-        ),
+        CRS.from_epsg(2193),
     ],
 )
 def test_epsg_treats_as_northingeasting(crs_obj):
@@ -648,17 +558,14 @@ def test_from_string__wkt_with_proj():
     assert CRS.from_string(wkt).to_epsg() == 3857
 
 
-@requires_gdal3
 def test_esri_auth__from_string():
     assert CRS.from_string('ESRI:54009').to_string() == 'ESRI:54009'
 
 
-@requires_gdal3
 def test_esri_auth__to_epsg():
     assert CRS.from_user_input('ESRI:54009').to_epsg() is None
 
 
-@requires_gdal3
 def test_esri_auth__to_authority():
     assert CRS.from_user_input('ESRI:54009').to_authority() == ('ESRI', '54009')
 
@@ -699,22 +606,12 @@ def test_is_northingeasting(crs_obj, result):
     assert epsg_treats_as_northingeasting(crs_obj) == result
 
 
-@requires_gdal_lt_3
-@pytest.mark.parametrize('crs_obj', [CRS.from_epsg(4326), CRS.from_epsg(2193)])
-def test_latlong_northingeasting_gdal2(crs_obj):
-    """Check CRS created from epsg with GDAL 2 always return False."""
-    assert not epsg_treats_as_latlong(crs_obj)
-    assert not epsg_treats_as_northingeasting(crs_obj)
-
-
-@requires_gdal3
 def test_latlong_northingeasting_gdal3():
     """Check CRS created from epsg with GDAL 3."""
     assert epsg_treats_as_latlong(CRS.from_epsg(4326))
     assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))
 
 
-@requires_gdal3
 def test_tmerc_no_match():
     """Should not match an authority, see issue #2293."""
     s = "+proj=tmerc +lat_0=0 +lon_0=10.7584 +k=0.9996 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"

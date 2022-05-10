@@ -6,7 +6,7 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-from .conftest import requires_gdal21, requires_gdal23, requires_gdal32
+from .conftest import requires_gdal32
 
 
 with rasterio.Env() as env:
@@ -395,7 +395,6 @@ def test_info_checksums_only(runner):
     assert result.output.strip() == '29131'
 
 
-@requires_gdal21(reason="NetCDF requires GDAL 2.1+")
 @pytest.mark.skipif(not HAVE_NETCDF,
                     reason="GDAL not compiled with NetCDF driver.")
 def test_info_subdatasets(runner):
@@ -417,7 +416,6 @@ def test_info_no_credentials(tmpdir, monkeypatch, runner):
     assert result.exit_code == 0
 
 @pytest.mark.skipif(not(boto3.Session().get_credentials()), reason="S3 raster access requires credentials")
-@requires_gdal23(reason="Unsigned S3 requests require GDAL ~= 2.3")
 @pytest.mark.network
 def test_info_aws_unsigned(runner):
     """Unsigned access to public dataset works (see #1637)"""

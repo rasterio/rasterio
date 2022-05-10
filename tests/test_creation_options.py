@@ -5,10 +5,7 @@ import logging
 import rasterio
 from rasterio.profiles import DefaultGTiffProfile
 
-from .conftest import requires_gdal2
 
-
-@requires_gdal2(reason="GDAL 1.x warning text is obsolete")
 def test_warning(tmpdir, caplog):
     """Be warned about invalid creation options"""
     profile = DefaultGTiffProfile(

@@ -14,7 +14,7 @@ import os
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
     from rasterio._base import _raster_driver_extensions
-    from rasterio.env import GDALVersion, ensure_env, require_gdal_version
+    from rasterio.env import GDALVersion, ensure_env
 
 # Methods like `rasterio.open()` may use this blacklist to preempt
 # combinations of drivers and file modes.
@@ -25,7 +25,6 @@ blacklist = {
 
 
 @ensure_env
-@require_gdal_version("2.0")
 def raster_driver_extensions():
     """
     Returns

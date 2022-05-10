@@ -11,7 +11,7 @@ from rasterio.enums import Resampling
 from rasterio.errors import ResamplingAlgorithmError
 from rasterio.windows import Window
 
-from .conftest import requires_gdal2, requires_gdal33
+from .conftest import requires_gdal33
 
 
 # Rasterio's test dataset is 718 rows by 791 columns.
@@ -55,7 +55,6 @@ def test_read_downsample_alpha():
             src.read(4, out=out, masked=False)
 
 
-@requires_gdal2
 def test_resample_alg_effect_1():
     """default (nearest) and cubic produce different results"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -68,7 +67,6 @@ def test_resample_alg_effect_1():
         assert np.any(nearest != cubic)
 
 
-@requires_gdal2
 def test_resample_alg_effect_2():
     """Average and bilinear produce different results"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -81,7 +79,6 @@ def test_resample_alg_effect_2():
         assert np.any(avg != bilin)
 
 
-@requires_gdal2
 def test_float_window():
     """floating point windows work"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -90,7 +87,6 @@ def test_float_window():
         s.read(1, window=window, out_shape=out_shape)
 
 
-@requires_gdal2
 def test_resampling_alg_error():
     """Get an exception instead of a crash when using warp-only algs for read or write, see issue #1930"""
     with pytest.raises(ResamplingAlgorithmError):

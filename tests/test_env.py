@@ -3,14 +3,10 @@
 
 import os
 import sys
+from unittest import mock
 
 import boto3
 import pytest
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 
 import rasterio
 from rasterio import _env
@@ -20,8 +16,6 @@ from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
 from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession, AzureSession
-
-from .conftest import requires_gdal21
 
 
 # Custom markers.
@@ -319,7 +313,6 @@ def test_skip_gtiff(gdalenv):
             rasterio.open('tests/data/RGB.byte.tif')
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
@@ -329,7 +322,6 @@ def test_s3_open_with_env(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_implicit_env(gdalenv):
@@ -338,7 +330,6 @@ def test_s3_open_with_implicit_env(gdalenv):
         assert dataset.count == 1
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
@@ -349,7 +340,6 @@ def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3(gdalenv):
@@ -361,7 +351,6 @@ def test_env_open_s3(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3_credentials(gdalenv):
@@ -372,7 +361,6 @@ def test_env_open_s3_credentials(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_ensured_env_no_credentializing(gdalenv):
@@ -383,7 +371,6 @@ def test_ensured_env_no_credentializing(gdalenv):
             rasterio.open(L8TIFB2)
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
@@ -394,7 +381,6 @@ def test_open_https_vsicurl(gdalenv):
 
 # CLI tests.
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_rio_info(runner):
@@ -403,7 +389,6 @@ def test_s3_rio_info(runner):
     assert result.exit_code == 0
 
 
-@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_https_rio_info(runner):

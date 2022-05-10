@@ -18,8 +18,6 @@ from rasterio.merge import merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
-from .conftest import requires_gdal22, gdal_version
-
 
 # Fixture to create test datasets within temporary directory
 @fixture(scope='function')
@@ -137,8 +135,6 @@ def test_merge_with_colormap(test_data_dir_1, runner):
         assert cmap[255] == (0, 0, 0, 255)
 
 
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_merge_with_nodata(test_data_dir_1, runner):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
@@ -182,8 +178,6 @@ def test_merge_bidx(test_data_dir_3, runner):
         assert out.count == 1
 
 
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_merge_without_nodata(test_data_dir_2, runner):
     outputname = str(test_data_dir_2.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_2.listdir()]
@@ -355,8 +349,6 @@ def test_data_dir_float(tmpdir):
     return tmpdir
 
 
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_merge_float(test_data_dir_float, runner):
     outputname = str(test_data_dir_float.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_float.listdir()]
@@ -457,8 +449,6 @@ def test_merge_tiny_output_opt(tiffs, runner):
         assert data[0][3][0] == 40
 
 
-@requires_gdal22(
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 @pytest.mark.xfail(sys.version_info < (3,),
                    reason="Test is sensitive to rounding behavior")
 def test_merge_tiny_res_bounds(tiffs, runner):
@@ -498,10 +488,6 @@ def test_merge_out_of_range_nodata(tiffs):
         rv, transform = merge(datasets, nodata=9999)
     assert not (rv == np.uint8(9999)).any()
 
-@pytest.mark.xfail(
-    gdal_version.major == 1,
-    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
-)
 def test_merge_rgb(tmpdir, runner):
     """Get back original image"""
     outputname = str(tmpdir.join('merged.tif'))
@@ -524,10 +510,6 @@ def test_merge_tiny_intres(tiffs):
     merge(datasets, res=2)
 
 
-@pytest.mark.xfail(
-    gdal_version.major == 1,
-    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
-)
 @pytest.mark.parametrize("precision", [[], ["--precision", "9"]])
 def test_merge_precision(tmpdir, precision):
     """See https://github.com/rasterio/rasterio/issues/1837"""
@@ -675,9 +657,6 @@ def test_data_dir_resampling(tmpdir):
     return tmpdir
 
 
-@pytest.mark.xfail(
-    gdal_version.major == 1, reason="Mode resampling is unreliable for GDAL 1.11"
-)
 @pytest.mark.parametrize(
     "resampling",
     [resamp for resamp in Resampling if resamp < 7]
@@ -705,10 +684,6 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
     np.testing.assert_array_equal(output_raster, expected_raster)
 
 
-@requires_gdal22(reason="This test is sensitive to pixel values and requires GDAL 2.2+")
-@pytest.mark.xfail(
-    sys.version_info < (3,), reason="Test is sensitive to rounding behavior"
-)
 def test_merge_no_gap(tiffs, runner):
     """This test fails before 1.3a1 using the original window rounding params (op=floor, pixel_precision-=0)."""
     outputname = str(tiffs.join("merged.tif"))

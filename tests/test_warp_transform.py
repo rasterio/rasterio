@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, transform_bounds
-from tests.conftest import gdal_version, requires_gdal3
+from tests.conftest import gdal_version
 
 log = logging.getLogger(__name__)
 
@@ -251,7 +251,6 @@ def test_transform_bounds__beyond_global_bounds():
     )
 
 
-@requires_gdal3
 def test_transform_bounds__ignore_inf():
     # Depending on the GDAL version we might get an exception or inf values
     try:

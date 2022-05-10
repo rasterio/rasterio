@@ -1,11 +1,8 @@
 """Tests of session module"""
 
-import pytest
+from unittest import mock
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+import pytest
 
 from rasterio.session import (
     DummySession,

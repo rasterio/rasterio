@@ -18,8 +18,6 @@ from rasterio.enums import Resampling
 from rasterio.errors import NodataShadowWarning
 from rasterio.crs import CRS
 
-from .conftest import requires_gdal2
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
@@ -204,7 +202,6 @@ def test_indexes_not_supported(tiffs):
             src.dataset_mask(indexes=1)
 
 
-@requires_gdal2(reason="GDAL 2+ required for resampling")
 def test_kwargs_resampling(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         other = src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.bilinear) != 0
