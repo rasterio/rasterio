@@ -10,7 +10,7 @@ from .conftest import requires_gdal31
 
 import rasterio
 from rasterio.drivers import blacklist
-from rasterio.enums import Resampling
+from rasterio.enums import MaskFlags, Resampling
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError
 
@@ -459,6 +459,7 @@ def test_write_masked(tmp_path):
 
     # Expect the masked array's fill_value in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.all_valid],)
         arr = src.read()
         assert list(arr.flatten()) == [3, 3, 2]
 
@@ -481,6 +482,7 @@ def test_write_masked_nodata(tmp_path):
 
     # Expect the dataset's nodata value in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.nodata],)
         arr = src.read()
         assert list(arr.flatten()) == [0, 0, 2]
 
@@ -502,5 +504,6 @@ def test_write_masked_true(tmp_path):
 
     # Expect masked values in the first two pixels.
     with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.per_dataset],)
         arr = src.read(masked=True)
         assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]
