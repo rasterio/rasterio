@@ -392,71 +392,56 @@ class Statistics:
 
 
 cdef class DatasetReaderBase(DatasetBase):
+    """Provides data and metadata reading methods."""
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
             fill_value=None, out_dtype=None):
-        """Read a dataset's raw pixels as an N-d array
+        """Read band data and, optionally, mask as an array.
 
-        This data is read from the dataset's band cache, which means
-        that repeated reads of the same windows may avoid I/O.
+        A smaller (or larger) region of the dataset may be specified and
+        it may be resampled and/or converted to a different data type.
 
         Parameters
         ----------
-        indexes : list of ints or a single int, optional
+        indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-
         out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
             window (see below), the raster image will be decimated or
             replicated using the specified resampling method (also see
-            below).
+            below). This parameter cannot be combined with `out_shape`.
 
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
-
-            This parameter cannot be combined with `out_shape`.
-
         out_dtype : str or numpy dtype
             The desired output data type. For example: 'uint8' or
             rasterio.uint16.
-
         out_shape : tuple, optional
             A tuple describing the shape of a new output array. See
-            `out` (above) for notes on image decimation and
-            replication.
-
-            Cannot combined with `out`.
-
-        window : a pair (tuple) of pairs of ints or Window, optional
-            The optional `window` argument is a 2 item tuple. The first
-            item is a tuple containing the indexes of the rows at which
-            the window starts and stops and the second is a tuple
-            containing the indexes of the columns at which the window
-            starts and stops. For example, ((0, 2), (0, 2)) defines
-            a 2x2 window at the upper left of the raster dataset.
-
+            `out` (above) for notes on image decimation and replication.
+            This parameter cannot be combined with `out`.
+        window : Window, optional
+            The region (slice) of the dataset from which data will be
+            read. The default is the entire dataset.
         masked : bool, optional
             If `masked` is `True` the return value will be a masked
             array. Otherwise (the default) the return value will be a
             regular array. Masks will be exactly the inverse of the
             GDAL RFC 15 conforming arrays returned by read_masks().
-
         boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
-
         resampling : Resampling
             By default, pixel values are read raw or interpolated using
             a nearest neighbor algorithm from the band cache. Other
             resampling algorithms may be specified. Resampled pixels
             are not cached.
-
         fill_value : scalar
             Fill value applied in the `boundless=True` case only. Like
             the fill_value of numpy.ma.MaskedArray, should be value
@@ -466,11 +451,21 @@ cdef class DatasetReaderBase(DatasetBase):
         -------
         Numpy ndarray or a view on a Numpy ndarray
 
-        Note: as with Numpy ufuncs, an object is returned even if you
-        use the optional `out` argument and the return value shall be
-        preferentially used by callers.
-        """
+        Raises
+        ------
+        RasterioIOError
+            If the write fails.
 
+        Notes
+        -----
+        This data is read from the dataset's band cache, which means
+        that repeated reads of the same windows may avoid I/O.
+
+        As with Numpy ufuncs, an object is returned even if you use the
+        optional `out` argument and the return value shall be
+        preferentially used by callers.
+
+        """
         cdef GDALRasterBandH band = NULL
 
         if self.mode == "w":
@@ -705,47 +700,38 @@ cdef class DatasetReaderBase(DatasetBase):
 
     def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
                    boundless=False, resampling=Resampling.nearest):
-        """Read raster band masks as a multidimensional array
+        """Read band masks as an array.
 
-        This data is read from the dataset's band cache, which means
-        that repeated reads of the same windows may avoid I/O.
+        A smaller (or larger) region of the dataset may be specified and
+        it may be resampled and/or converted to a different data type.
 
         Parameters
         ----------
-        indexes : list of ints or a single int, optional
+        indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-
         out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
-            output array with the same dimensions and shape into which
-            data will be placed.
+            output array into which data will be placed. If the height
+            and width of `out` differ from that of the specified
+            window (see below), the raster image will be decimated or
+            replicated using the specified resampling method (also see
+            below). This parameter cannot be combined with `out_shape`.
 
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
-
-            Cannot combine with `out_shape`.
-
         out_shape : tuple, optional
-            A tuple describing the output array's shape.  Allows for decimated
-            reads without constructing an output Numpy array.
-
-            Cannot combined with `out`.
-
-        window : a pair (tuple) of pairs of ints or Window, optional
-            The optional `window` argument is a 2 item tuple. The first
-            item is a tuple containing the indexes of the rows at which
-            the window starts and stops and the second is a tuple
-            containing the indexes of the columns at which the window
-            starts and stops. For example, ((0, 2), (0, 2)) defines
-            a 2x2 window at the upper left of the raster dataset.
-
+            A tuple describing the shape of a new output array. See
+            `out` (above) for notes on image decimation and replication.
+            This parameter cannot be combined with `out`.
+        window : Window, optional
+            The region (slice) of the dataset from which data will be
+            read. The default is the entire dataset.
         boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
-
         resampling : Resampling
             By default, pixel values are read raw or interpolated using
             a nearest neighbor algorithm from the band cache. Other
@@ -756,11 +742,21 @@ cdef class DatasetReaderBase(DatasetBase):
         -------
         Numpy ndarray or a view on a Numpy ndarray
 
-        Note: as with Numpy ufuncs, an object is returned even if you
-        use the optional `out` argument and the return value shall be
-        preferentially used by callers.
-        """
+        Raises
+        ------
+        RasterioIOError
+            If the write fails.
 
+        Notes
+        -----
+        This data is read from the dataset's band cache, which means
+        that repeated reads of the same windows may avoid I/O.
+
+        As with Numpy ufuncs, an object is returned even if you use the
+        optional `out` argument and the return value shall be
+        preferentially used by callers.
+
+        """
         if self.mode == "w":
             raise UnsupportedOperation("not readable")
 
@@ -1244,7 +1240,19 @@ cdef class MemoryFileBase:
             return 0
 
     def read(self, size=-1):
-        """Read size bytes from MemoryFile."""
+        """Read bytes from MemoryFile.
+
+        Parameters
+        ----------
+        size : int
+            Number of bytes to read. Default is -1 (all bytes).
+
+        Returns
+        -------
+        bytes
+            String of bytes read.
+
+        """
         cdef bytes result
         cdef unsigned char *buffer = NULL
         cdef vsi_l_offset buffer_len = 0
@@ -1265,7 +1273,18 @@ cdef class MemoryFileBase:
         return result
 
     def write(self, data):
-        """Write data bytes to MemoryFile"""
+        """Write data bytes to MemoryFile.
+
+        Parameters
+        ----------
+        data : bytes
+
+        Returns
+        -------
+        int
+            Number of bytes written.
+
+        """
         cdef const unsigned char *view = <bytes>data
         n = len(data)
         result = VSIFWriteL(view, 1, n, self._vsif)
