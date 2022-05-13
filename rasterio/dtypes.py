@@ -132,6 +132,8 @@ def get_minimum_dtype(values):
             return int16
         elif min_value >= -2147483648 and max_value <= 2147483647:
             return int32
+        else:
+            return float64
 
     else:
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
