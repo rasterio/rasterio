@@ -22,6 +22,8 @@ with rasterio._loading.add_gdal_dll_directories():
         int16,
         uint32,
         int32,
+        int64,
+        uint64,
         float32,
         float64,
         complex_,

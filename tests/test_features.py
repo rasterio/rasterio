@@ -14,7 +14,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface
+from .conftest import MockGeoInterface, gdal_version, requires_gdal_lt_35
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -565,11 +565,14 @@ def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     assert np.array_equal(basic_image_2x2, out)
 
 
-def test_rasterize_invalid_out_dtype(basic_geometry):
+def test_rasterize_int64_out_dtype(basic_geometry):
     """A non-supported data type for out should raise an exception."""
     out = np.zeros(DEFAULT_SHAPE, dtype=np.int64)
-    with pytest.raises(ValueError):
+    if gdal_version.at_least("3.5"):
         rasterize([basic_geometry], out=out)
+    else:
+        with pytest.raises(ValueError):
+            rasterize([basic_geometry], out=out)
 
 
 def test_rasterize_shapes_out_dtype_mismatch(basic_geometry):
@@ -638,13 +641,19 @@ def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
     )
 
 
-def test_rasterize_invalid_default_value(basic_geometry):
+def test_rasterize_int64_default_value(basic_geometry):
     """A default value that requires an int64 should raise an exception."""
-    with pytest.raises(ValueError):
-        rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE,
-            default_value=1000000000000
-        )
+    if gdal_version.at_least("3.5"):
+            rasterize(
+                [basic_geometry], out_shape=DEFAULT_SHAPE,
+                default_value=1000000000000
+            )
+    else:
+        with pytest.raises(ValueError):
+            rasterize(
+                [basic_geometry], out_shape=DEFAULT_SHAPE,
+                default_value=1000000000000
+            )
 
 
 def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
@@ -661,11 +670,17 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
 
 def test_rasterize_invalid_fill_value(basic_geometry):
     """A fill value that requires an int64 should raise an exception."""
-    with pytest.raises(ValueError):
+    if gdal_version.at_least("3.5"):
         rasterize(
             [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000000000,
             default_value=2
         )
+    else:
+        with pytest.raises(ValueError):
+            rasterize(
+                [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000000000,
+                default_value=2
+            )
 
 
 def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
@@ -714,14 +729,13 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     )
 
 
+@requires_gdal_lt_35
 def test_rasterize_invalid_value(basic_geometry):
     """A shape value that requires an int64 should raise an exception."""
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
         rasterize(
             [(basic_geometry, 1000000000000)], out_shape=DEFAULT_SHAPE
         )
-
-    assert 'dtype must be one of' in str(ex.value)
 
 
 def test_rasterize_supported_dtype(basic_geometry):
@@ -764,9 +778,10 @@ def test_rasterize_unsupported_dtype(basic_geometry):
     """Unsupported types should all raise exceptions."""
     unsupported_types = (
         ('int8', -127),
-        ('int64', 20439845334323),
         ('float16', -9343.232)
     )
+    if not gdal_version.at_least("3.5"):
+        unsupported_types += (('int64', 20439845334323),)
 
     for dtype, default_value in unsupported_types:
         with pytest.raises(ValueError):

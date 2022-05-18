@@ -639,3 +639,12 @@ requires_gdal32 = pytest.mark.skipif(
 requires_gdal33 = pytest.mark.skipif(
     not gdal_version.at_least('3.3'),
     reason="Requires GDAL 3.3.x")
+
+requires_gdal35 = pytest.mark.skipif(
+    not gdal_version.at_least('3.5'),
+    reason="Requires GDAL 3.5.x")
+
+requires_gdal_lt_35 = pytest.mark.skipif(
+    gdal_version.at_least('3.5'),
+    reason="Requires GDAL before 3.5",
+)

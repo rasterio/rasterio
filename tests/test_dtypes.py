@@ -1,14 +1,18 @@
 import numpy as np
 import pytest
 
+from .conftest import gdal_version
+
 import rasterio
 from rasterio import (
     ubyte,
     uint8,
     uint16,
     uint32,
+    uint64,
     int16,
     int32,
+    int64,
     float32,
     float64,
     complex_,
@@ -23,6 +27,7 @@ from rasterio.dtypes import (
     validate_dtype,
     _is_complex_int,
     _getnpdtype,
+    _get_gdal_dtype,
 )
 
 
@@ -74,6 +79,22 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([-1, 0, 1], dtype=int)) == int16
     assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
     assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
+
+
+def test_get_minimum_dtype__int64():
+    if gdal_version.at_least("3.5"):
+        assert get_minimum_dtype([-1, 0, 2147483648]) == int64
+    else:
+        with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
+            get_minimum_dtype([-1, 0, 2147483648])
+
+
+def test_get_minimum_dtype__uint64():
+    if gdal_version.at_least("3.5"):
+        assert get_minimum_dtype([0, 4294967296]) == uint64
+    else:
+        with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
+            get_minimum_dtype([0, 4294967296])
 
 
 def test_can_cast_dtype():
@@ -128,3 +149,11 @@ def test_get_npdtype():
     npdtype = _getnpdtype("complex_int16")
     assert npdtype == np.complex64
     assert npdtype.kind == "c"
+
+
+def test__get_gdal_dtype__int64():
+    if gdal_version.at_least("3.5"):
+        assert _get_gdal_dtype("int64") == 12
+    else:
+        with pytest.raises(TypeError, match="Unsupported data type"):
+            _get_gdal_dtype("int64")

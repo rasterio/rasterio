@@ -225,6 +225,8 @@ cdef extern from "gdal.h" nogil:
         GDT_Int16
         GDT_UInt32
         GDT_Int32
+        GDT_UInt64
+        GDT_Int64
         GDT_Float32
         GDT_Float64
         GDT_CInt16
