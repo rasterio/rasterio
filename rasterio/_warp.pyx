@@ -45,10 +45,7 @@ from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 log = logging.getLogger(__name__)
 
 # Gauss (7) is not supported for warp
-SUPPORTED_RESAMPLING = [r for r in Resampling if r.value != 7 and r.value <= 12]
-# sum supported since GDAL 3.1
-if GDALVersion.runtime().at_least('3.1'):
-    SUPPORTED_RESAMPLING.append(Resampling.sum)
+SUPPORTED_RESAMPLING = [r for r in Resampling if r.value != 7 and r.value <= 13]
 # rms supported since GDAL 3.3
 if GDALVersion.runtime().at_least('3.3'):
     SUPPORTED_RESAMPLING.append(Resampling.rms)
