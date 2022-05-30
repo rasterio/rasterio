@@ -738,40 +738,44 @@ def test_rasterize_invalid_value(basic_geometry):
         )
 
 
-def test_rasterize_supported_dtype(basic_geometry):
+@pytest.mark.parametrize(
+    "dtype,default_value",
+    [
+        ("int16", -32768),
+        ("int32", -2147483648),
+        pytest.param(
+            "uint32",
+            4294967295,
+            marks=pytest.mark.xfail(
+                gdal_version.at_least("3.5"), reason="GDAL regression? Works with 3.4.3"
+            ),
+        ),
+        ("uint8", 255),
+        ("uint16", 65535),
+        ("float32", 1.434532),
+        ("float64", -98332.133422114),
+    ],
+)
+def test_rasterize_supported_dtype(dtype, default_value, basic_geometry):
     """Supported data types should return valid results."""
-    supported_types = (
-        ('int16', -32768),
-        ('int32', -2147483648),
-        ('uint8', 255),
-        ('uint16', 65535),
-        ('uint32', 4294967295),
-        ('float32', 1.434532),
-        ('float64', -98332.133422114)
+    truth = np.zeros(DEFAULT_SHAPE, dtype=dtype)
+    truth[2:4, 2:4] = default_value
+
+    result = rasterize(
+        [basic_geometry],
+        out_shape=DEFAULT_SHAPE,
+        default_value=default_value,
+        dtype=dtype,
     )
+    assert np.array_equal(result, truth)
+    assert np.dtype(result.dtype) == np.dtype(truth.dtype)
 
-    for dtype, default_value in supported_types:
-        truth = np.zeros(DEFAULT_SHAPE, dtype=dtype)
-        truth[2:4, 2:4] = default_value
-
-        result = rasterize(
-            [basic_geometry],
-            out_shape=DEFAULT_SHAPE,
-            default_value=default_value,
-            dtype=dtype
-        )
+    result = rasterize([(basic_geometry, default_value)], out_shape=DEFAULT_SHAPE)
+    if np.dtype(dtype).kind == "f":
+        assert np.allclose(result, truth)
+    else:
         assert np.array_equal(result, truth)
-        assert np.dtype(result.dtype) == np.dtype(truth.dtype)
-
-        result = rasterize(
-            [(basic_geometry, default_value)],
-            out_shape=DEFAULT_SHAPE
-        )
-        if np.dtype(dtype).kind == 'f':
-            assert np.allclose(result, truth)
-        else:
-            assert np.array_equal(result, truth)
-        # Since dtype is auto-detected, it may not match due to upcasting
+    # Since dtype is auto-detected, it may not match due to upcasting
 
 
 def test_rasterize_unsupported_dtype(basic_geometry):

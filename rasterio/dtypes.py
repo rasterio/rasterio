@@ -96,7 +96,7 @@ dtype_ranges = {
 
 if _GDAL_AT_LEAST_35:
     dtype_ranges['int64'] = (-9223372036854775808, 9223372036854775807)
-    dtype_ranges['unt64'] = (0, 18446744073709551615)
+    dtype_ranges['uint64'] = (0, 18446744073709551615)
 
 
 def in_dtype_range(value, dtype):
