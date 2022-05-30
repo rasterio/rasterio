@@ -7,6 +7,10 @@ not break.
 """
 import numpy
 
+from rasterio.env import GDALVersion
+
+_GDAL_AT_LEAST_35 = GDALVersion.runtime().at_least("3.5")
+
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
 sbyte = int8 = 'int8'
@@ -14,6 +18,8 @@ uint16 = 'uint16'
 int16 = 'int16'
 uint32 = 'uint32'
 int32 = 'int32'
+uint64 = 'uint32'
+int64 = 'int64'
 float32 = 'float32'
 float64 = 'float64'
 complex_ = 'complex'
@@ -37,12 +43,26 @@ dtype_fwd = {
     11: complex128,  # GDT_CFloat64
 }
 
+if _GDAL_AT_LEAST_35:
+    dtype_fwd[12] = int64 # GDT_Int64
+    dtype_fwd[13] = uint64 # GDT_UInt64
+
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 
 dtype_rev["uint8"] = 1
 dtype_rev["int8"] = 1
 dtype_rev["complex"] = 11
 dtype_rev["complex_int16"] = 8
+
+
+def _get_gdal_dtype(type_name):
+    try:
+        return dtype_rev[type_name]
+    except KeyError:
+        raise TypeError(
+            f"Unsupported data type {type_name}. "
+            f"Allowed data types: {list(dtype_rev)}."
+        )
 
 typename_fwd = {
     0: 'Unknown',
@@ -58,6 +78,10 @@ typename_fwd = {
     10: 'CFloat32',
     11: 'CFloat64'}
 
+if _GDAL_AT_LEAST_35:
+    typename_fwd[12] = 'Int64'
+    typename_fwd[13] = 'UInt64'
+
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
 dtype_ranges = {
@@ -69,6 +93,10 @@ dtype_ranges = {
     'int32': (-2147483648, 2147483647),
     'float32': (-3.4028235e+38, 3.4028235e+38),
     'float64': (-1.7976931348623157e+308, 1.7976931348623157e+308)}
+
+if _GDAL_AT_LEAST_35:
+    dtype_ranges['int64'] = (-9223372036854775808, 9223372036854775807)
+    dtype_ranges['uint64'] = (0, 18446744073709551615)
 
 
 def in_dtype_range(value, dtype):
@@ -128,10 +156,16 @@ def get_minimum_dtype(values):
                 return uint16
             elif max_value <= 4294967295:
                 return uint32
+            if not _GDAL_AT_LEAST_35:
+                raise ValueError("Values out of range for supported dtypes")
+            return uint64
         elif min_value >= -32768 and max_value <= 32767:
             return int16
         elif min_value >= -2147483648 and max_value <= 2147483647:
             return int32
+        if not _GDAL_AT_LEAST_35:
+            raise ValueError("Values out of range for supported dtypes")
+        return int64
 
     else:
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:

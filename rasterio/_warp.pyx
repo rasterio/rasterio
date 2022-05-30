@@ -1031,10 +1031,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if src_alpha:
             src_alpha_band = src_alpha
 
+        gdal_dtype = dtypes._get_gdal_dtype(self.working_dtype)
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, src_dataset.count, dst_alpha,
-            src_alpha_band, warp_mem_limit, <GDALDataType>dtypes.dtype_rev[self.working_dtype],
+            src_alpha_band, warp_mem_limit, <GDALDataType>gdal_dtype,
             <const char **>c_warp_extras)
 
         if psWOptions == NULL:

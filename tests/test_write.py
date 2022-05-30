@@ -6,7 +6,7 @@ import affine
 import numpy as np
 import pytest
 
-from .conftest import requires_gdal31
+from .conftest import requires_gdal31, requires_gdal35, gdal_version
 
 import rasterio
 from rasterio.drivers import blacklist
@@ -507,3 +507,43 @@ def test_write_masked_true(tmp_path):
         assert src.mask_flag_enums == ([MaskFlags.per_dataset],)
         arr = src.read(masked=True)
         assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]
+
+
+@requires_gdal35
+def test_write_int64(tmp_path):
+    test_file = tmp_path / "test.tif"
+    data = np.array([np.ones((100, 100), dtype=rasterio.int64) * 127])
+    with rasterio.open(
+        test_file,
+        'w',
+        driver='GTiff',
+        width=100,
+        height=100,
+        count=1,
+        dtype=data.dtype
+    ) as file:
+        file.write(data, [1])
+        assert file.dtypes == (rasterio.int64,)
+    
+    with rasterio.open(test_file) as file:
+        assert file.dtypes == (rasterio.int64,)
+
+
+@pytest.mark.skipif(
+    gdal_version.at_least('3.5'),
+    reason="Validate behavior before GDAL 3.5",
+)
+def test_write_int64__unsupported(tmp_path):
+    test_file = tmp_path / "test.tif"
+    data = np.array([np.ones((100, 100), dtype=rasterio.int64) * 127])
+    with pytest.raises(TypeError, match="invalid dtype"):
+        with rasterio.open(
+            test_file,
+            'w',
+            driver='GTiff',
+            width=100,
+            height=100,
+            count=1,
+            dtype=data.dtype
+        ) as file:
+            file.write(data, [1])

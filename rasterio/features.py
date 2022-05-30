@@ -13,7 +13,7 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio
     from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
     from rasterio.enums import MergeAlg
-    from rasterio.env import ensure_env
+    from rasterio.env import ensure_env, GDALVersion
     from rasterio.errors import ShapeSkipWarning
     from rasterio._features import _shapes, _sieve, _rasterize, _bounds
     from rasterio import warp
@@ -253,6 +253,8 @@ def rasterize(
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
+    if GDALVersion.runtime().at_least("3.5"):
+        valid_dtypes = valid_dtypes + ("int64", "uint64")
 
     def format_invalid_dtype(param):
         return '{0} dtype must be one of: {1}'.format(

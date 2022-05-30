@@ -32,13 +32,15 @@ jobs:
   docker_tests:
     runs-on: ubuntu-latest
     name: Docker | GDAL=${{ matrix.gdal-version }} | python=${{ matrix.python-version }}
-    container: osgeo/gdal:ubuntu-full-${{ matrix.gdal-version }}
+    container: osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9']
-        gdal-version: ['3.4.2', '3.3.3']
+        python-version: ['3.9', '3.10']
+        gdal-version: ['3.5.0', '3.4.3']
         include:
+          - python-version: '3.8'
+            gdal-version: '3.3.3'
           - python-version: '3.8'
             gdal-version: '3.2.3'
 

@@ -26,7 +26,7 @@ from rasterio.errors import (
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
 )
-from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename
+from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio._path import _parse_path, _UnparsedPath
@@ -35,7 +35,6 @@ from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
 
-from rasterio import dtypes
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
@@ -85,7 +84,7 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     cdef void *buf = <void *>np.PyArray_DATA(data)
     cdef int bufxsize = data.shape[1]
     cdef int bufysize = data.shape[0]
-    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GDALDataType buftype = _get_gdal_dtype(data.dtype.name)
     cdef GSpacing bufpixelspace = data.strides[1]
     cdef GSpacing buflinespace = data.strides[0]
 
@@ -136,7 +135,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     cdef void *buf = <void *>np.PyArray_DATA(data)
     cdef int bufxsize = data.shape[2]
     cdef int bufysize = data.shape[1]
-    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GDALDataType buftype = _get_gdal_dtype(data.dtype.name)
     cdef GSpacing bufpixelspace = data.strides[2]
     cdef GSpacing buflinespace = data.strides[1]
     cdef GSpacing bufbandspace = data.strides[0]
@@ -202,7 +201,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     cdef void *buf = NULL
     cdef int bufxsize = data.shape[2]
     cdef int bufysize = data.shape[1]
-    cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef GDALDataType buftype = _get_gdal_dtype(data.dtype.name)
     cdef GSpacing bufpixelspace = data.strides[2]
     cdef GSpacing buflinespace = data.strides[1]
     cdef int count = len(indexes)
@@ -1435,11 +1434,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
-            if self._init_dtype not in dtypes.dtype_rev:
-                raise TypeError(
-                    "Unsupported dtype: %s" % self._init_dtype)
-            else:
-                gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
+            gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
             if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
                 options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
@@ -2230,13 +2225,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                     options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
                 tp = self._init_dtype.type
-                if tp not in dtypes.dtype_rev:
-                    raise ValueError(
-                        "Unsupported dtype: %s" % self._init_dtype)
-                else:
-                    gdal_dtype = dtypes.dtype_rev.get(tp)
+                gdal_dtype = _get_gdal_dtype(tp)
             else:
-                gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
+                gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
             self._hds = exc_wrap_pointer(
                 GDALCreate(memdrv, "temp", self.width, self.height,
