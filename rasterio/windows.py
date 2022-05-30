@@ -60,7 +60,7 @@ class WindowMethodsMixin:
         top: float
             Top (north) bounding coordinate
         precision: int, optional
-            This parameters is unused, deprecated in rasterio 1.3.0, and
+            This parameter is unused, deprecated in rasterio 1.3.0, and
             will be removed in version 2.0.0.
 
         Returns
@@ -74,15 +74,12 @@ class WindowMethodsMixin:
                 RasterioDeprecationWarning,
             )
 
-        transform = guard_transform(self.transform)
         return from_bounds(
             left,
             bottom,
             right,
             top,
-            transform=transform,
-            height=self.height,
-            width=self.width,
+            transform=guard_transform(self.transform),
         )
 
     def window_transform(self, window):
