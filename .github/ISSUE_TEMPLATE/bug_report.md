@@ -33,10 +33,6 @@ issues to one of the following trackers:
 - https://github.com/ContinuumIO/anaconda-issues/issues
 - https://github.com/conda-forge/rasterio-feedstock
 
-Also please note: we are currently working on 1.0 and pre-releases. Bugs found
-in version 0.36 will not be fixed except in a 1.0 alpha or beta release. In 
-some cases, 0.36 bugs have already been fixed in recent pre-releases.
-
 You think you've found a bug? We believe you!
 -->
 
