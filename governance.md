@@ -117,7 +117,7 @@ An Institutional Partner is free to pursue funding for their work on The Project
 
 Institutional Partner benefits are:
 
-* Acknowledgement on the NumPy websites, in talks and T-shirts.
+* Acknowledgement on the rasterio websites, in talks and T-shirts.
 * Ability to acknowledge their own funding sources on the NumPy websites, in talks and T-shirts.
 * Ability to influence the project through the participation of their Council Member.
 * Council Members invited to Rasterio Developer Meetings.
