@@ -3,4 +3,4 @@ channels:
 - defaults
 dependencies:
 - python=3.8.*
-- libgdal=3.4.*
+- libgdal=3.5.*
