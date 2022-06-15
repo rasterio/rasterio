@@ -1,6 +1,7 @@
 name: _rasterio
 channels:
-- defaults
+- conda-forge
+- nodefaults
 dependencies:
 - python=3.8.*
 - libgdal=3.5.*
