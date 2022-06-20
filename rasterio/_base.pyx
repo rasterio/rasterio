@@ -14,7 +14,7 @@ from libc.string cimport strncmp
 from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
-from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap, getexc
 
 from rasterio.control import GroundControlPoint
 from rasterio.rpc import RPC
@@ -1500,6 +1500,14 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
+
+        # Coordinate transformer may put errors on the stack even if it
+        # succeeds. We'll fetch and log them.
+        exc = getexc()
+        while exc:
+            log.warning(str(exc))
+            exc = getexc()
+
         OCTDestroyCoordinateTransformation(transform)
         _safe_osr_release(src)
         _safe_osr_release(dst)

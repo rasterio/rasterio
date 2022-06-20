@@ -136,6 +136,14 @@ class GDALError(IntEnum):
     fatal = CE_Fatal
 
 
+cdef object getexc():
+    return exc_check()
+
+
+def _getexc():
+    return getexc()
+
+
 cdef inline object exc_check():
     """Checks GDAL error stack for fatal or non-fatal errors
 

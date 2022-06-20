@@ -36,7 +36,7 @@ cimport numpy as np
 from libc.math cimport HUGE_VAL
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
-from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport getexc, exc_wrap, exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
@@ -69,6 +69,7 @@ cdef object _transform_single_geom(
 ):
     cdef OGRGeometryH src_geom = NULL
     cdef OGRGeometryH dst_geom = NULL
+
     try:
         src_geom = OGRGeomBuilder().build(single_geom)
         dst_geom = exc_wrap_pointer(
@@ -76,16 +77,21 @@ cdef object _transform_single_geom(
                 <const OGRGeometry *>src_geom,
                 <OGRCoordinateTransformation *>transform,
                 options))
-
         result = GeomBuilder().build(dst_geom)
     finally:
+        # Coordinate transformer may put errors on the stack even if it
+        # succeeds. We'll fetch and log them.
+        exc = getexc()
+        while exc:
+            log.warning(str(exc))
+            exc = getexc()
+
         OGR_G_DestroyGeometry(dst_geom)
         OGR_G_DestroyGeometry(src_geom)
 
     if precision >= 0:
         # TODO: Geometry collections.
-        result['coordinates'] = recursive_round(result['coordinates'],
-                                                precision)
+        result['coordinates'] = recursive_round(result['coordinates'], precision)
 
     return result
 
@@ -1505,21 +1511,32 @@ def _transform_bounds(
         dst = _osr_from_crs(dst_crs)
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
+
         # OCTTransformBounds() returns TRUE/FALSE contrary to most GDAL API functions
+        cdef int status = 0
+
         try:
-            exc_wrap_int(
-                OCTTransformBounds(
-                    transform,
-                    left, bottom, right, top,
-                    &out_left, &out_bottom, &out_right, &out_top,
-                    densify_pts
-                ) == 0
+            status = OCTTransformBounds(
+                transform,
+                left, bottom, right, top,
+                &out_left, &out_bottom, &out_right, &out_top,
+                densify_pts
             )
+            exc_wrap_int(status == 0)
         finally:
+            # OCTTransformBounds may put errors on the stack even if it
+            # succeeds. We'll fetch and log them.
+            exc = getexc()
+            while exc:
+                log.warning(str(exc))
+                exc = getexc()
+
             OCTDestroyCoordinateTransformation(transform)
             _safe_osr_release(src)
             _safe_osr_release(dst)
+
         return out_left, out_bottom, out_right, out_top
+
     ELSE:
         if src_crs == dst_crs:
             return (left, bottom, right, top)
