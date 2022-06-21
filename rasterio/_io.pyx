@@ -38,8 +38,7 @@ from libc.stdio cimport FILE
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
-from rasterio._base cimport (
-    _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
+from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 
 cimport numpy as np
@@ -2001,15 +2000,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 gcplist[i].dfGCPZ = obj.z or 0.0
 
             # Try to use the primary crs if possible.
-            if not crs:
+            if crs is None:
                 crs = self.crs
-
-            osr = _osr_from_crs(crs)
-            OSRExportToWkt(osr, <char**>&srcwkt)
+            else:
+                crs = CRS.from_user_input(crs)
+            srcwkt_b = crs.to_wkt().encode('utf-8')
+            srcwkt = srcwkt_b
             GDALSetGCPs(self.handle(), len(gcps), gcplist, srcwkt)
         finally:
             CPLFree(gcplist)
-            CPLFree(srcwkt)
 
         # Invalidate cached value.
         self._gcps = None

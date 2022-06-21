@@ -10,6 +10,7 @@ with rasterio._loading.add_gdal_dll_directories():
     import rasterio
 
     from rasterio._base import _transform
+    from rasterio.crs import CRS
     from rasterio.enums import Resampling
     from rasterio.env import ensure_env, require_gdal_version
     from rasterio.errors import TransformError, RPCError
@@ -145,6 +146,8 @@ def transform_bounds(
     left, bottom, right, top: float
         Outermost coordinates in target coordinate reference system.
     """
+    src_crs = CRS.from_user_input(src_crs)
+    dst_crs = CRS.from_user_input(dst_crs)
     return _transform_bounds(
         src_crs,
         dst_crs,

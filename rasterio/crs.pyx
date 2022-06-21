@@ -32,8 +32,7 @@ from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
 from rasterio.errors import CRSError
 from rasterio.enums import WktVersion
 
-from rasterio._base cimport _osr_from_crs as osr_from_crs
-from rasterio._base cimport _safe_osr_release, osr_set_traditional_axis_mapping_strategy
+from rasterio._base cimport osr_set_traditional_axis_mapping_strategy
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 
@@ -47,6 +46,14 @@ _RE_PROJ_PARAM = re.compile(r"""
     (?P<value>\S+)? # capture all characters up to next space (None if no value)
     \s*?            # consume remaining whitespace, if any
 """, re.X)
+
+
+
+cdef _safe_osr_release(OGRSpatialReferenceH srs):
+    """Wrapper to handle OSR release when NULL."""
+    if srs != NULL:
+        OSRRelease(srs)
+    srs = NULL
 
 
 cdef class CRS:
