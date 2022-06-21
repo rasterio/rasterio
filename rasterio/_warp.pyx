@@ -69,14 +69,15 @@ cdef object _transform_single_geom(
 ):
     cdef OGRGeometryH src_geom = NULL
     cdef OGRGeometryH dst_geom = NULL
+
     try:
-        src_geom = OGRGeomBuilder().build(single_geom)
+        src_geom = exc_wrap_pointer(OGRGeomBuilder().build(single_geom))
         dst_geom = exc_wrap_pointer(
             factory.transformWithOptions(
                 <const OGRGeometry *>src_geom,
                 <OGRCoordinateTransformation *>transform,
                 options))
-
+    else:
         result = GeomBuilder().build(dst_geom)
     finally:
         OGR_G_DestroyGeometry(dst_geom)
@@ -84,8 +85,7 @@ cdef object _transform_single_geom(
 
     if precision >= 0:
         # TODO: Geometry collections.
-        result['coordinates'] = recursive_round(result['coordinates'],
-                                                precision)
+        result['coordinates'] = recursive_round(result['coordinates'], precision)
 
     return result
 
@@ -714,12 +714,8 @@ def _calculate_default_transform(
         pfnTransformer = GDALGenImgProjTransform
         log.debug("Created exact transformer")
 
-        try:
-            # This function may put errors on GDAL's error stack while
-            # still returning 0 (no error). Thus we always check and
-            # clear the stack and ignore the error if the function
-            # succeeds.
-            retval = GDALSuggestedWarpOutput2(
+        exc_wrap_int(
+            GDALSuggestedWarpOutput2(
                 hds,
                 pfnTransformer,
                 hTransformArg,
@@ -729,13 +725,7 @@ def _calculate_default_transform(
                 extent,
                 0
             )
-            _ = exc_wrap(1)
-
-        except Exception as err:
-            if retval == 0:
-                log.info("Ignoring error: err=%r", err)
-            else:
-                raise err
+        )
 
     except CPLE_NotSupportedError as err:
         raise CRSError(err.errmsg)
@@ -1505,21 +1495,25 @@ def _transform_bounds(
         dst = _osr_from_crs(dst_crs)
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
+
         # OCTTransformBounds() returns TRUE/FALSE contrary to most GDAL API functions
+        cdef int status = 0
+
         try:
-            exc_wrap_int(
-                OCTTransformBounds(
-                    transform,
-                    left, bottom, right, top,
-                    &out_left, &out_bottom, &out_right, &out_top,
-                    densify_pts
-                ) == 0
+            status = OCTTransformBounds(
+                transform,
+                left, bottom, right, top,
+                &out_left, &out_bottom, &out_right, &out_top,
+                densify_pts
             )
+            exc_wrap_int(status == 0)
         finally:
             OCTDestroyCoordinateTransformation(transform)
             _safe_osr_release(src)
             _safe_osr_release(dst)
+
         return out_left, out_bottom, out_right, out_top
+
     ELSE:
         if src_crs == dst_crs:
             return (left, bottom, right, top)

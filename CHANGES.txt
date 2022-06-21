@@ -11,6 +11,12 @@ Changes:
 
 - The merge tool has new "sum" and "count" merge methods (#2457).
 
+Bug fixes:
+
+- Some GDAL methods may set a failure level error while also succeeding,
+  according to their return value. We now ensure that callers of these methods
+  can clear any leftover errors (#2487).
+
 1.3b1 (2022-05-10)
 ------------------
 

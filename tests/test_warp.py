@@ -2058,3 +2058,16 @@ def test_coordinate_pipeline(tmp_path):
             )
             # This is the same value as in GDAL's test_gdalwarp_lib_ct.
             assert dst.checksum(1) == 4705
+
+
+
+@pytest.mark.skipif(
+    not gdal_version.at_least('3.4'),
+    reason="Requires GDAL 3.4.x")
+def test_issue2353bis(caplog):
+    """Errors left by a successful transformation are cleaned up."""
+    caplog.set_level(logging.INFO)
+    bounds = [458872.4197335826, -2998046.478919534, 584059.8115540259, -2883810.102037343]
+    with rasterio.Env():
+        transform_bounds("EPSG:6931", "EPSG:4326", *bounds)
+        assert "Point outside of" in caplog.text
