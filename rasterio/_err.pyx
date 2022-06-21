@@ -136,14 +136,6 @@ class GDALError(IntEnum):
     fatal = CE_Fatal
 
 
-cdef object getexc():
-    return exc_check()
-
-
-def _getexc():
-    return getexc()
-
-
 cdef inline object exc_check():
     """Checks GDAL error stack for fatal or non-fatal errors
 
@@ -197,6 +189,7 @@ cdef int exc_wrap_int(int err) except -1:
         exc = exc_check()
         if exc:
             raise exc
+    CPLErrorReset()
     return err
 
 
@@ -206,6 +199,7 @@ cdef OGRErr exc_wrap_ogrerr(OGRErr err) except -1:
 
     """
     if err == 0:
+        CPLErrorReset()
         return err
     else:
         raise CPLE_BaseError(3, err, "OGR Error code {}".format(err))
@@ -221,6 +215,7 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
         exc = exc_check()
         if exc:
             raise exc
+    CPLErrorReset()
     return ptr
 
 
@@ -234,4 +229,5 @@ cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *vsifile) except NULL:
         exc = exc_check()
         if exc:
             raise exc
+    CPLErrorReset()
     return vsifile

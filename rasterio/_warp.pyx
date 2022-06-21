@@ -36,7 +36,7 @@ cimport numpy as np
 from libc.math cimport HUGE_VAL
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
-from rasterio._err cimport getexc, exc_wrap, exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
@@ -80,10 +80,6 @@ cdef object _transform_single_geom(
     else:
         result = GeomBuilder().build(dst_geom)
     finally:
-        # Coordinate transformer may put errors on the stack even if it
-        # succeeds. We'll clear them.
-        CPLErrorReset()
-
         OGR_G_DestroyGeometry(dst_geom)
         OGR_G_DestroyGeometry(src_geom)
 
@@ -1522,13 +1518,6 @@ def _transform_bounds(
             )
             exc_wrap_int(status == 0)
         finally:
-            # OCTTransformBounds may put errors on the stack even if it
-            # succeeds. We'll fetch and log them.
-            exc = getexc()
-            while exc:
-                log.warning(str(exc))
-                exc = getexc()
-
             OCTDestroyCoordinateTransformation(transform)
             _safe_osr_release(src)
             _safe_osr_release(dst)

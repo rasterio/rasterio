@@ -11,7 +11,7 @@ from numpy.testing import assert_almost_equal
 import pytest
 
 import rasterio
-from rasterio._err import _getexc, CPLE_AppDefinedError
+from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -2066,8 +2066,8 @@ def test_coordinate_pipeline(tmp_path):
     reason="Requires GDAL 3.4.x")
 def test_issue2353bis(caplog):
     """Errors left by a successful transformation are cleaned up."""
+    caplog.set_level(logging.INFO)
     bounds = [458872.4197335826, -2998046.478919534, 584059.8115540259, -2883810.102037343]
     with rasterio.Env():
         transform_bounds("EPSG:6931", "EPSG:4326", *bounds)
-        assert _getexc() == None
         assert "Point outside of" in caplog.text
