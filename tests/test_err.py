@@ -35,8 +35,6 @@ def test_cplerror_str():
     assert str(err) == "test123"
 
 
-@pytest.mark.xfail(gdal_version < GDALVersion(3, 3), reason="GDAL < 3.3 will not warn")
-@pytest.mark.xfail(gdal_version > GDALVersion(3, 3), reason="GDAL > 3.3 will not warn")
 def test_issue2353(caplog, path_rgb_byte_tif):
     """Ensure transformer doesn't leave errors behind."""
     from rasterio.warp import calculate_default_transform
@@ -54,7 +52,6 @@ def test_issue2353(caplog, path_rgb_byte_tif):
                 5434894.885056,
                 5434894.885056,
             )
-            assert "Ignoring error" in caplog.text
             _ = src.colorinterp
 
 

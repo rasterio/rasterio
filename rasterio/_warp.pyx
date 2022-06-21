@@ -714,12 +714,8 @@ def _calculate_default_transform(
         pfnTransformer = GDALGenImgProjTransform
         log.debug("Created exact transformer")
 
-        try:
-            # This function may put errors on GDAL's error stack while
-            # still returning 0 (no error). Thus we always check and
-            # clear the stack and ignore the error if the function
-            # succeeds.
-            retval = GDALSuggestedWarpOutput2(
+        exc_wrap_int(
+            GDALSuggestedWarpOutput2(
                 hds,
                 pfnTransformer,
                 hTransformArg,
@@ -729,13 +725,7 @@ def _calculate_default_transform(
                 extent,
                 0
             )
-            _ = exc_wrap(1)
-
-        except Exception as err:
-            if retval == 0:
-                log.info("Ignoring error: err=%r", err)
-            else:
-                raise err
+        )
 
     except CPLE_NotSupportedError as err:
         raise CRSError(err.errmsg)
