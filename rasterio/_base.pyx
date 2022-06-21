@@ -1482,7 +1482,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         transform = exc_wrap_pointer(transform)
         # OCTTransform() returns TRUE/FALSE contrary to most GDAL API functions
         exc_wrap_int(OCTTransform(transform, n, x, y, z) == 0)
-
+    else:
         res_xs = [0]*n
         res_ys = [0]*n
         for i in range(n):
@@ -1495,18 +1495,14 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             return (res_xs, res_ys, res_zs)
         else:
             return (res_xs, res_ys)
-
     finally:
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
 
         # Coordinate transformer may put errors on the stack even if it
-        # succeeds. We'll fetch and log them.
-        exc = getexc()
-        while exc:
-            log.warning(str(exc))
-            exc = getexc()
+        # succeeds. We'll clear them.
+        CPLErrorReset()
 
         OCTDestroyCoordinateTransformation(transform)
         _safe_osr_release(src)

@@ -71,20 +71,18 @@ cdef object _transform_single_geom(
     cdef OGRGeometryH dst_geom = NULL
 
     try:
-        src_geom = OGRGeomBuilder().build(single_geom)
+        src_geom = exc_wrap_pointer(OGRGeomBuilder().build(single_geom))
         dst_geom = exc_wrap_pointer(
             factory.transformWithOptions(
                 <const OGRGeometry *>src_geom,
                 <OGRCoordinateTransformation *>transform,
                 options))
+    else:
         result = GeomBuilder().build(dst_geom)
     finally:
         # Coordinate transformer may put errors on the stack even if it
-        # succeeds. We'll fetch and log them.
-        exc = getexc()
-        while exc:
-            log.warning(str(exc))
-            exc = getexc()
+        # succeeds. We'll clear them.
+        CPLErrorReset()
 
         OGR_G_DestroyGeometry(dst_geom)
         OGR_G_DestroyGeometry(src_geom)
