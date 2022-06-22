@@ -1,6 +1,7 @@
 ARG GDAL=ubuntu-small-3.3.3
 ARG PYTHON_VERSION=3.8
-FROM osgeo/gdal:${GDAL} AS gdal 
+FROM osgeo/gdal:${GDAL} AS gdal
+ARG PYTHON_VERSION
 ENV LANG="C.UTF-8" LC_ALL="C.UTF-8"
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository -y ppa:deadsnakes/ppa
