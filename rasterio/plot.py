@@ -68,9 +68,9 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         These will be passed to the matplotlib imshow or contour method
         depending on contour argument.
         See full lists at:
-        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.imshow
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
         or
-        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.contour
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
 
     Returns
     -------
