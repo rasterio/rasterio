@@ -6,7 +6,7 @@ import affine
 import numpy as np
 import pytest
 
-from .conftest import requires_gdal31, requires_gdal35, gdal_version
+from .conftest import requires_gdal35, gdal_version
 
 import rasterio
 from rasterio.drivers import blacklist
@@ -431,7 +431,6 @@ def test_issue2088(tmpdir, capsys, driver):
     assert "ERROR 4" not in captured.out
 
 
-@requires_gdal31
 def test_write_cog(tmpdir, path_rgb_byte_tif):
     """Show resolution of issue #2102"""
     with rasterio.open(path_rgb_byte_tif) as src:

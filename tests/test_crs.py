@@ -15,8 +15,6 @@ from rasterio.enums import WktVersion
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal31
-
 # Items like "D_North_American_1983" characterize the Esri dialect
 # of WKT SRS.
 ESRI_PROJECTION_STRING = (
@@ -619,44 +617,37 @@ def test_tmerc_no_match():
     assert crs.to_epsg() is None
 
 
-@requires_gdal31
 def test_crs_to_json_dict():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     json_dict = aeqd_crs.to_dict(projjson=True)
     assert json_dict["type"] == "ProjectedCRS"
 
 
-@requires_gdal31
 def test_crs_to_json_dict__empty():
     crs = CRS()
     assert crs.to_dict(projjson=True) == {}
 
 
-@requires_gdal31
 def test_crs_from_json_dict():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_dict(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
 
 
-@requires_gdal31
 def test_crs_from_json_dict__user_input():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_user_input(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
 
 
-@requires_gdal31
 def test_crs_from_json_dict__init():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS(aeqd_crs.to_dict(projjson=True)) == aeqd_crs
 
 
-@requires_gdal31
 def test_crs_proj_json__user_input():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_user_input(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
 
 
-@requires_gdal31
 def test_crs_proj_json__from_string():
     aeqd_crs = CRS(proj="aeqd", lon_0=-80, lat_0=40.5)
     assert CRS.from_string(json.dumps(aeqd_crs.to_dict(projjson=True))) == aeqd_crs
