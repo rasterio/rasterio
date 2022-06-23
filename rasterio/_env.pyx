@@ -17,7 +17,6 @@ import os.path
 import sys
 import threading
 
-from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 from rasterio._filepath cimport install_filepath_plugin, uninstall_filepath_plugin
@@ -312,7 +311,8 @@ class PROJDataFinder:
         else:
             return True
         finally:
-            _safe_osr_release(osr)
+            if osr != NULL:
+                OSRRelease(osr)
 
 
     def search(self, prefix=None):

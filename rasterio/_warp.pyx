@@ -35,12 +35,12 @@ cimport cython
 cimport numpy as np
 from libc.math cimport HUGE_VAL
 
-from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
+from rasterio._base cimport get_driver_name
 from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
-
+from rasterio.crs cimport CRS
 
 log = logging.getLogger(__name__)
 
@@ -92,19 +92,13 @@ def _transform_geom(
         int precision):
     """Return a transformed geometry."""
     cdef char **options = NULL
-    cdef OGRSpatialReferenceH src = NULL
-    cdef OGRSpatialReferenceH dst = NULL
     cdef OGRCoordinateTransformationH transform = NULL
     cdef OGRGeometryFactory *factory = NULL
 
-    src = _osr_from_crs(src_crs)
-    dst = _osr_from_crs(dst_crs)
+    cdef CRS src = CRS.from_user_input(src_crs)
+    cdef CRS dst = CRS.from_user_input(dst_crs)
 
-    try:
-        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
-    finally:
-        _safe_osr_release(src)
-        _safe_osr_release(dst)
+    transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src._osr, dst._osr))
 
     # GDAL cuts on the antimeridian by default and using different
     # logic in versions >= 2.2.
@@ -632,7 +626,6 @@ def _calculate_default_transform(
     cdef int nlines = 0
     cdef double extent[4]
     cdef double geotransform[6]
-    cdef OGRSpatialReferenceH osr = NULL
     cdef char *wkt = NULL
     cdef GDALDatasetH hds = NULL
     cdef char **imgProjOptions = NULL
@@ -650,19 +643,11 @@ def _calculate_default_transform(
     else:
         transform = None
 
-    try:
-        osr = _osr_from_crs(dst_crs)
-        exc_wrap_int(OSRExportToWkt(osr, &wkt))
-    except CPLE_BaseError as exc:
-        raise CRSError("Could not convert to WKT. {}".format(str(exc)))
-    finally:
-        _safe_osr_release(osr)
-
-    if isinstance(src_crs, str):
-        src_crs = CRS.from_string(src_crs)
-    elif isinstance(src_crs, dict):
-        src_crs = CRS(**src_crs)
-
+    dst_crs = CRS.from_user_input(dst_crs)
+    wkt_b = dst_crs.to_wkt().encode('utf-8')
+    wkt = wkt_b
+    if src_crs is not None:
+        src_crs = CRS.from_user_input(src_crs)
     # The transformer at the heart of this function requires a dataset.
     # We use an in-memory VRT dataset.
     vrt_doc = _suggested_proxy_vrt_doc(
@@ -671,14 +656,12 @@ def _calculate_default_transform(
         transform=transform,
         crs=src_crs,
         gcps=gcps
-    ).decode('ascii')
+    ).decode('utf-8')
     hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
-
     try:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
-
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
 
@@ -728,8 +711,6 @@ def _calculate_default_transform(
         raise CRSError(err.errmsg)
 
     finally:
-        if wkt != NULL:
-            CPLFree(wkt)
         if hTransformArg != NULL:
             GDALDestroyGenImgProjTransformer(hTransformArg)
         if hds != NULL:
@@ -963,23 +944,13 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_crs = CRS.from_user_input(crs) if crs is not None else self.src_crs
 
         # Convert CRSes to C WKT strings.
-        try:
-            if not self.src_crs:
-                src_crs_wkt = NULL
-            else:
-                osr = _osr_from_crs(self.src_crs)
-                OSRExportToWkt(osr, &src_crs_wkt)
-        finally:
-            if osr != NULL:
-                OSRRelease(osr)
-            osr = NULL
+        if self.src_crs is not None:
+            src_crs_wkt_b = self.src_crs.to_wkt().encode("utf-8")
+            src_crs_wkt = src_crs_wkt_b
 
         if self.dst_crs is not None:
-            try:
-                osr = _osr_from_crs(self.dst_crs)
-                OSRExportToWkt(osr, &dst_crs_wkt)
-            finally:
-                _safe_osr_release(osr)
+            dst_crs_wkt_b = self.dst_crs.to_wkt().encode("utf-8")
+            dst_crs_wkt = dst_crs_wkt_b
 
         log.debug("Exported CRS to WKT.")
 
@@ -1057,8 +1028,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     <const char **>c_warp_extras,
                 )
             finally:
-                CPLFree(dst_crs_wkt)
-                CPLFree(src_crs_wkt)
                 CSLDestroy(c_warp_extras)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
@@ -1112,8 +1081,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             # If we get here it's because the tests above are buggy.
             # We raise a Python exception to indicate that.
             else:
-                CPLFree(dst_crs_wkt)
-                CPLFree(src_crs_wkt)
                 CSLDestroy(c_warp_extras)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
@@ -1152,8 +1119,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     GDALSetProjection(hds_warped, dst_crs_wkt)
 
             finally:
-                CPLFree(dst_crs_wkt)
-                CPLFree(src_crs_wkt)
                 CSLDestroy(c_warp_extras)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
@@ -1469,28 +1434,21 @@ cdef double antimeridian_max(data):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def _transform_bounds(
-    src_crs,
-    dst_crs,
+    CRS src_crs,
+    CRS dst_crs,
     double left,
     double bottom,
     double right,
     double top,
     int densify_pts,
 ):
-    src_crs = CRS.from_user_input(src_crs)
-    dst_crs = CRS.from_user_input(dst_crs)
-
     IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
         cdef double out_left = np.inf
         cdef double out_bottom = np.inf
         cdef double out_right = np.inf
         cdef double out_top = np.inf
-        cdef OGRSpatialReferenceH src = NULL
-        cdef OGRSpatialReferenceH dst = NULL
         cdef OGRCoordinateTransformationH transform = NULL
-        src = _osr_from_crs(src_crs)
-        dst = _osr_from_crs(dst_crs)
-        transform = OCTNewCoordinateTransformation(src, dst)
+        transform = OCTNewCoordinateTransformation(src_crs._osr, dst_crs._osr)
         transform = exc_wrap_pointer(transform)
 
         # OCTTransformBounds() returns TRUE/FALSE contrary to most GDAL API functions
@@ -1506,9 +1464,6 @@ def _transform_bounds(
             exc_wrap_int(status == 0)
         finally:
             OCTDestroyCoordinateTransformation(transform)
-            _safe_osr_release(src)
-            _safe_osr_release(dst)
-
         return out_left, out_bottom, out_right, out_top
 
     ELSE:
