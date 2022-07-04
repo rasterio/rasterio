@@ -21,8 +21,6 @@ from rasterio import (
     float32,
     float64,
     complex_,
-    complex64,
-    complex128,
     complex_int16,
 )
 from rasterio.dtypes import (
@@ -52,8 +50,6 @@ DTYPES = [
     float32,
     float64,
     complex_,
-    complex64,
-    complex128,
 ]
 
 
