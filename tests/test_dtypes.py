@@ -34,23 +34,27 @@ from rasterio.dtypes import (
     _getnpdtype,
     _get_gdal_dtype,
 )
+from rasterio.env import GDALVersion
 
+
+_GDAL_AT_LEAST_35 = GDALVersion.runtime().at_least("3.5")
 
 DTYPES = [
     ubyte,
     uint8,
     uint16,
     uint32,
-    uint64,
     sbyte,
     int8,
     int16,
     int32,
-    int64,
     float32,
     float64,
     complex_,
 ]
+
+if _GDAL_AT_LEAST_35:
+    DTYPES.extend([uint64, int64])
 
 
 def test_is_ndarray():
