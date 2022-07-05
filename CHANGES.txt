@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Temporarily restore rasterio.parse_path (wrapper with a warning).
 - In 1.3b3, rasterio.dtypes.uint64 mapped to 'uint32'. Now it correctly maps to
   'uint64' (reported in #2502).
 
