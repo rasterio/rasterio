@@ -5,6 +5,7 @@ from contextlib import ExitStack
 import logging
 from logging import NullHandler
 import os
+import warnings
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -66,6 +67,15 @@ __geos_version__ = ".".join([str(version) for version in get_geos_version()])
 # See rasterio/rio/main.py for an example.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
+
+# Remove this in 1.4.0 (see comment on gh-2423).
+def parse_path(path):
+    warnings.warn(
+        "rasterio.parse_path will be removed in version 1.4.",
+        RasterioDeprecationWarning,
+        stacklevel=2,
+    )
+    return _parse_path(path)
 
 
 @ensure_env_with_credentials
