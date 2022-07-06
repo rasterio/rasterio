@@ -9,7 +9,7 @@ Rasterio reads and writes geospatial raster data.
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
-   
+
 .. image:: https://img.shields.io/pypi/v/rasterio
    :target: https://pypi.org/project/rasterio/
 
@@ -17,11 +17,10 @@ Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
-Rasterio 1.3 works with Python versions 3.8 through 3.10, Numpy versions 1.18
-and newer, and GDAL versions 3.1 through 3.4. Official binary packages for
-Linux and Mac OS X with most built-in format drivers plus HDF5, netCDF, and
-OpenJPEG2000 are available on PyPI. Unofficial binary packages for Windows are
-available through other channels.
+Rasterio 1.3 works with Python 3.8+, Numpy 1.18+, and GDAL 3.1+. Official
+binary packages for Linux, macOS, and Windows with most built-in format
+drivers plus HDF5, netCDF, and OpenJPEG2000 are available on PyPI. Unofficial
+binary packages for Windows are available through other channels.
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
@@ -186,9 +185,9 @@ system set the variable as shown below.
 Dependencies
 ------------
 
-Rasterio has a C library dependency: GDAL >= 2.3. GDAL itself depends on some
+Rasterio has a C library dependency: GDAL >= 3.1. GDAL itself depends on some
 other libraries provided by most major operating systems and also depends on
-the non standard GEOS and PROJ4 libraries. How to meet these requirement will
+the non standard GEOS and PROJ libraries. How to meet these requirement will
 be explained below.
 
 Rasterio's Python dependencies are (see the package metadata file):
@@ -200,7 +199,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     certifi
     click>=4.0
     cligj>=0.5
-    numpy
+    numpy>=1.18
     snuggs>=1.4.1
     click-plugins
     setuptools
@@ -209,7 +208,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     hypothesis
     pytest-cov>=2.2.0
     matplotlib
-    boto3>=1.3.1
+    boto3>=1.2.4
     numpydoc
     pytest>=2.8.2
     shapely
@@ -232,10 +231,10 @@ Rasterio's Python dependencies are (see the package metadata file):
     matplotlib
 
     [s3]
-    boto3>=1.3.1
+    boto3>=1.2.4
 
     [test]
-    boto3>=1.3.1
+    boto3>=1.2.4
     hypothesis
     packaging
     pytest-cov>=2.2.0
