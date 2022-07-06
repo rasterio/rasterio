@@ -6,16 +6,19 @@ Authors
 * Aldo Culquicondor
 * Alessandro Amici
 * Alex Shepherd
-* Alexander
 * Alexander Ivanov
 * Alfred-Mountfield
 * Amit Kapadia
+* Andrea Giardini
 * Andrew Annex
 * Andrew Catellier
+* Andrew Nisbet
 * Ariel Zerahia
+* Arno Gobbin
 * AsgerPetersen
 * Bas Couwenberg
 * Ben Lewis
+* Bill Morris
 * Brendan Ward
 * Caleb Robinson
 * Charlie Loyd
@@ -28,11 +31,14 @@ Authors
 * Dan Baston
 * Daniel J. H
 * Darren Weber
+* David Hoese
 * Denis Rykov
+* Dr Martin Black
 * Elliott Sales de Andrade
 * Erik Seglem
 * Etienne B. Racine
 * Even Rouault
+* Ewout ter Hoeven
 * Felix Divo
 * Filipe Fernandes
 * Florian
@@ -41,7 +47,9 @@ Authors
 * Gregory Raevski
 * Guillaume Lostis
 * Guy Doulberg
+* Howard Butler
 * Ian Schneider
+* Idan Miara
 * Ismail Sunni
 * Jacques Tardie
 * James Hiebert
@@ -55,7 +63,9 @@ Authors
 * Jonas Sølvsteen
 * Joris Van den Bossche
 * Joshua Arnott
+* João Santos
 * Juan Luis Cano Rodríguez
+* Keith Jenkins
 * Kelsey Jordahl
 * Kevin Wurster
 * Kirill Kouzoubov
@@ -74,21 +84,27 @@ Authors
 * Mike Taves
 * Nat Wilson
 * Nick Grue
+* Nico Mandery
 * Nikolai Janakiev
 * Norman Barker
+* Olivier Cloux
 * Pablo Sanfilippo
 * Patrick Young
 * Pratik Yadav
 * RK Aranas
 * Raaj Tilak Sarma
+* RichardScottOZ
 * Robert Sare
 * Robin Wilson
 * Ryan Grout
 * Sam Murphy
+* Samuel Kogler
 * Sean Gillies
 * Seth Fitzsimmons
 * Seth Miller
+* Steven Pestana
 * Tim Gates
+* Tomáš Hrnčiar
 * Trevor R.H. Clarke
 * Tyler Erickson
 * Vincent Sarago
@@ -106,4 +122,6 @@ Authors
 * ljburtz
 * morrme
 * ngrue
+* ryan
 * sshuair
+* ungarj
