@@ -453,6 +453,41 @@ def test_reproject_ndarray():
     )
     assert (out > 0).sum() == 438113
 
+    
+def test_reproject_ndarray_slice():
+    """Test for issue #2511, destination with strides"""
+
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = dict(
+        proj="merc",
+        a=6378137,
+        b=6378137,
+        lat_ts=0.0,
+        lon_0=0.0,
+        x_0=0.0,
+        y_0=0,
+        k=1.0,
+        units="m",
+        nadgrids="@null",
+        wktext=True,
+        no_defs=True,
+    )
+
+    out = np.zeros((src.count, src.height, src.width+2), dtype=np.uint8)[..., 1:-1]
+    assert out.__array_interface__["strides"] is not None
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 438113
+
 
 def test_reproject_view():
     """Source views are reprojected properly"""

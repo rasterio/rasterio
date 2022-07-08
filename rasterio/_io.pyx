@@ -2066,6 +2066,16 @@ cdef class MemoryDataset(DatasetWriterBase):
             "BANDS": count,
             "DATATYPE": _gdal_typename(arr.dtype.name)
         }
+        strides = arr_info.get("strides", None)
+
+        if strides is not None:
+            if len(strides) == 2:
+                lineoffset, pixeloffset = strides
+                info.update(LINEOFFSET=lineoffset, PIXELOFFSET=pixeloffset)
+            else:
+                bandoffset, lineoffset, pixeloffset = strides
+                info.update(BANDOFFSET=bandoffset, LINEOFFSET=lineoffset, PIXELOFFSET=pixeloffset)
+
         dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
         datasetname = f"MEM:::{dataset_options}"
 
