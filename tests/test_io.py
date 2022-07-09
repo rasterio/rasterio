@@ -6,7 +6,7 @@ from rasterio.io import DatasetReader, DatasetWriter
 
 
 httpstif = (
-    "https://github.com/rasterio/rasterio/blob/master/tests/data/float32.tif?raw=true"
+    "https://github.com/rasterio/rasterio/blob/main/tests/data/float32.tif?raw=true"
 )
 
 
