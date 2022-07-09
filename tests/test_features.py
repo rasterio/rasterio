@@ -1239,3 +1239,15 @@ def test_zz_no_dataset_leaks(capfd):
         env._dump_open_datasets()
         captured = capfd.readouterr()
         assert not captured.err
+
+
+def test_issue2509():
+    """shapes can handle non-contiguous data."""
+    data = np.zeros((20, 15), dtype=np.uint8)
+    data[4:8, 3:7] = 1
+    data = data[:, :12]
+    extracted = list(shapes(data, mask=data))
+    assert len(extracted) == 1
+    polygon, value = extracted[0]
+    assert polygon["coordinates"] == [[(3.0, 4.0), (3.0, 8.0), (7.0, 8.0), (7.0, 4.0), (3.0, 4.0)]]
+    assert value == 1.0

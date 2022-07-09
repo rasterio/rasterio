@@ -2021,18 +2021,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
 
 cdef class MemoryDataset(DatasetWriterBase):
+
     def __init__(self, arr, transform=None, gcps=None, rpcs=None, crs=None, copy=False):
         """Dataset wrapped around in-memory array.
 
         This class is intended for internal use only within rasterio to
         support IO with GDAL, where a Dataset object is needed.
 
+        MemoryDataset always generalizes input to 3-D. A 2-D arr input
+        will be reshaped to a 3-D array.
+
         MemoryDataset supports the NumPy array interface.
 
         Parameters
         ----------
         arr : ndarray
-            Array to use for dataset
+            Array to use for dataset. May be 2 (single band) or 3-D.
         transform : Transform
             Dataset transform
         gcps : list
@@ -2046,28 +2050,39 @@ cdef class MemoryDataset(DatasetWriterBase):
             caller must make sure that arr is valid while this object
             lives.
 
+        Attributes
+        ----------
+        __array__ : ndarry
+            The Dataset's array.
+
         """
-        self._array = np.array(arr, copy=copy)
-        dtype = self._array.dtype
+        working_arr = np.array(arr, copy=copy)
+        if working_arr.ndim not in (2, 3):
+            raise ValueError("working_arr must be 2D or 3D working_array")
 
-        if self._array.ndim == 2:
-            count = 1
-            height, width = arr.shape
-        elif self._array.ndim == 3:
-            count, height, width = arr.shape
-        else:
-            raise ValueError("arr must be 2D or 3D array")
+        # Generalize the 2-D working_array to 3-D.
+        shape = working_arr.shape
+        if len(shape) == 2:
+            working_arr = working_arr.reshape(1, *shape)
 
-        arr_info = self._array.__array_interface__
+        count, height, width = working_arr.shape
+        bandoffset, lineoffset, pixeloffset = working_arr.strides
+
         info = {
-            "DATAPOINTER": arr_info["data"][0],
+            "DATAPOINTER": working_arr.__array_interface__["data"][0],
             "PIXELS": width,
             "LINES": height,
             "BANDS": count,
-            "DATATYPE": _gdal_typename(arr.dtype.name)
+            "PIXELOFFSET": pixeloffset,
+            "LINEOFFSET": lineoffset,
+            "BANDOFFSET": bandoffset,
+            "DATATYPE": _gdal_typename(working_arr.dtype.name)
         }
-        dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
+
+        dataset_options = ",".join(f"{name}={val}" for name, val in info.items() if val is not None)
         datasetname = f"MEM:::{dataset_options}"
+
+        self._array = working_arr
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

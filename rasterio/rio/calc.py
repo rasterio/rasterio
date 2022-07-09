@@ -178,7 +178,6 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
 
                 res = snuggs.eval(command, **ctxkwds)
                 results = res.astype(dtype)
-
                 if isinstance(results, np.ma.core.MaskedArray):
                     results = results.filled(float(kwargs['nodata']))
                     if len(results.shape) == 2:

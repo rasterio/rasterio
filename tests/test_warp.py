@@ -460,7 +460,6 @@ def test_reproject_view():
         source = src.read(1)
 
     window = windows.Window(100, 100, 500, 500)
-    # window = windows.get_data_window(source)
     reduced_array = source[window.toslices()]
     reduced_transform = windows.transform(window, src.transform)
 
