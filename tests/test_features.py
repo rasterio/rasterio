@@ -910,6 +910,30 @@ def test_shapes(basic_image):
     assert value == 0
 
 
+def test_shapes_2509(basic_image):
+    """Test creation of shapes from pixel values, issue #2509."""
+    image_with_strides = np.pad(basic_image, 1)[1:-1, 1:-1]
+    np.testing.assert_array_equal(basic_image, image_with_strides)
+    assert image_with_strides.__array_interface__["strides"] is not None
+
+    results = list(shapes(image_with_strides))
+
+    assert len(results) == 2
+
+    shape, value = results[0]
+    assert shape == {
+        'coordinates': [
+            [(2, 2), (2, 5), (5, 5), (5, 2), (2, 2)]
+        ],
+        'type': 'Polygon'
+    }
+    assert value == 1
+
+    shape, value = results[1]
+    assert shapely.geometry.shape(shape).area == 91.0
+    assert value == 0
+
+
 def test_shapes_band(pixelated_image, pixelated_image_file):
     """Shapes from a band should match shapes from an array."""
     truth = list(shapes(pixelated_image))
