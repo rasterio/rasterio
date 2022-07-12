@@ -185,7 +185,6 @@ def test__get_gdal_dtype__int64():
             _get_gdal_dtype("int64")
 
 
-@pytest.mark.xfail(reason="Likely upstream bug")
 @pytest.mark.parametrize("dtype,nodata", itertools.product(DTYPES, [1, 127]))
 def test_write_mem(dtype, nodata):
     profile = {
