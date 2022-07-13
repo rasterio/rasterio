@@ -1,6 +1,10 @@
 # Workaround for issue #378. A pure Python generator.
 
 import numpy as np
+import operator
+from functools import partial
+from collections import defaultdict
+from itertools import chain
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -18,6 +22,35 @@ def _grouper(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 
+def get_block(dataset, row, col):
+    bshapes = dataset.block_shapes
+    if len(bshapes) > 0:
+        xs, ys = bshapes[0]
+        return (divmod(row, xs), divmod(col, ys))
+    else:
+        raise RuntimeError
+
+
+def groupby_block(dataset, xy):
+    block_map = defaultdict(list)
+    for i, pt in enumerate(xy):
+        block = get_block(dataset, *pt)
+        blocknum = (block[0][0], block[1][0])
+        blockcoord = (block[0][1], block[1][1])
+        block_map[dataset.block_window(1, *blocknum)].append((i, blockcoord))
+    block_map.default_factory = None
+    return block_map
+
+def transform_xy(dataset, xy):
+    notNone = partial(operator.is_not, None)
+    dt = dataset.transform
+    rv = []
+    for pts in _grouper(xy, 256):
+        pts = zip(*filter(notNone, pts))
+        rv.extend(zip(*rowcol(dt, *pts)))
+    return rv
+
+
 def sample_gen(dataset, xy, indexes=None, masked=False):
     """Sample pixels from a dataset
 
@@ -32,6 +65,10 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     masked : bool, default: False
         Whether to mask samples that fall outside the extent of the
         dataset.
+    sort : bool, default: False
+        Sort coordinates for hopefully better performance.
+        This will hold all the points in memory at once and may be
+        memory intensive.
 
     Yields
     ------
@@ -41,10 +78,7 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
         those indexes.
 
     """
-    dt = dataset.transform
     read = dataset.read
-    height = dataset.height
-    width = dataset.width
 
     if indexes is None:
         indexes = dataset.indexes
@@ -57,13 +91,17 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
         mask = [MaskFlags.all_valid not in dataset.mask_flag_enums[i-1] for i in indexes]
         nodata = np.ma.array(nodata, mask=mask)
 
-    for pts in _grouper(xy, 256):
-        pts = zip(*filter(None, pts))
+    # Intermediate conversion to row/col coordinates
+    samples = transform_xy(dataset, xy)
 
-        for row_off, col_off in zip(*rowcol(dt, *pts)):
-            if row_off < 0 or col_off < 0 or row_off >= height or col_off >= width:
-                yield nodata
+    # group access by block
+    block_map = groupby_block(dataset, samples)
+    for win, pixels in block_map.items():
+        data = read(indexes, window=win, masked=masked)
+        for (i, pixel) in pixels:
+            if pixel[0] >= data.shape[-2] or pixel[1] >= data.shape[-1]:
+                samples[i] = nodata
             else:
-                window = Window(col_off, row_off, 1, 1)
-                data = read(indexes, window=window, masked=masked)
-                yield data[:, 0, 0]
+                samples[i] = data[:, pixel[0], pixel[1]]
+
+    return samples
