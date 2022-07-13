@@ -252,7 +252,7 @@ Geotransforms
 The ``transform`` attribute of a Rasterio dataset object is comparable to the
 ``GeoTransform`` attribute of a GDAL dataset, but Rasterio's has more power.
 It's not just an array of affine transformation matrix elements, it's an
-instance of an ``Afine`` class and has many handy methods. For example, the
+instance of an ``Affine`` class and has many handy methods. For example, the
 spatial coordinates of the upper left corner of any raster element is the
 product of the dataset's ``transform`` matrix and the ``(column, row)`` index
 of the element.
