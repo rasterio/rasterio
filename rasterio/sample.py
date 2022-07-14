@@ -4,7 +4,7 @@ import numpy as np
 import operator
 from functools import partial
 from collections import defaultdict
-from itertools import chain
+from itertools import zip_longest
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -12,7 +12,6 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.windows import Window
     from rasterio.transform import rowcol
 
-from itertools import zip_longest
 
 def _grouper(iterable, n, fillvalue=None):
     "Collect data into non-overlapping fixed-length chunks or blocks"
@@ -20,26 +19,7 @@ def _grouper(iterable, n, fillvalue=None):
     # from itertools recipes
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
-
-
-def get_block(dataset, row, col):
-    bshapes = dataset.block_shapes
-    if len(bshapes) > 0:
-        xs, ys = bshapes[0]
-        return (divmod(row, xs), divmod(col, ys))
-    else:
-        raise RuntimeError
-
-
-def groupby_block(dataset, xy):
-    block_map = defaultdict(list)
-    for i, pt in enumerate(xy):
-        block = get_block(dataset, *pt)
-        blocknum = (block[0][0], block[1][0])
-        blockcoord = (block[0][1], block[1][1])
-        block_map[dataset.block_window(1, *blocknum)].append((i, blockcoord))
-    block_map.default_factory = None
-    return block_map
+    
 
 def transform_xy(dataset, xy):
     notNone = partial(operator.is_not, None)
@@ -79,6 +59,8 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
 
     """
     read = dataset.read
+    height = dataset.height
+    width = dataset.width
 
     if indexes is None:
         indexes = dataset.indexes
@@ -95,13 +77,13 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     samples = transform_xy(dataset, xy)
 
     # group access by block
-    block_map = groupby_block(dataset, samples)
-    for win, pixels in block_map.items():
-        data = read(indexes, window=win, masked=masked)
-        for (i, pixel) in pixels:
-            if pixel[0] >= data.shape[-2] or pixel[1] >= data.shape[-1]:
-                samples[i] = nodata
-            else:
-                samples[i] = data[:, pixel[0], pixel[1]]
-
+    sorted_samples = np.lexsort(list(reversed(tuple(zip(*samples)))))
+    for i in sorted_samples:
+        row, col = samples[i]
+        if 0 <= row < height and 0 <= col < width:
+            win = Window(col, row, 1, 1)
+            data = read(indexes, window=win, masked=masked)
+            samples[i] = data[:, 0, 0]
+        else:
+            samples[i] = nodata
     return samples
