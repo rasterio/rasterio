@@ -32,7 +32,9 @@ cdef extern from "cpl_error.h" nogil:
     int CPLGetLastErrorNo()
     const char* CPLGetLastErrorMsg()
     CPLErr CPLGetLastErrorType()
+    void *CPLGetErrorHandlerUserData()
     void CPLPushErrorHandler(CPLErrorHandler handler)
+    void CPLPushErrorHandlerEx(CPLErrorHandler handler, void *userdata)
     void CPLPopErrorHandler()
     void CPLQuietErrorHandler(CPLErr eErrClass, CPLErrorNum nError, const char *pszErrorMsg)
 

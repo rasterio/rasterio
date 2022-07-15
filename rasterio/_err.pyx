@@ -4,7 +4,9 @@ Exception-raising wrappers for GDAL API functions.
 
 """
 
+import contextlib
 from enum import IntEnum
+from itertools import zip_longest
 import logging
 import sys
 
@@ -179,11 +181,19 @@ cdef int exc_wrap(int retval) except -1:
     return retval
 
 
+cdef void chaining_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
+    msg_b = msg
+    message = msg_b.decode("utf-8")
+    exception = exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message)
+    error_stack = <object>CPLGetErrorHandlerUserData()
+    if err_class == 3:
+        error_stack.append(exception)
+
+
 cdef int exc_wrap_int(int err) except -1:
     """Wrap a GDAL/OGR function that returns CPLErr or OGRErr (int)
 
     Raises a Rasterio exception if a non-fatal error has be set.
-
     """
     if err:
         exc = exc_check()
@@ -205,11 +215,40 @@ cdef OGRErr exc_wrap_ogrerr(OGRErr err) except -1:
         raise CPLE_BaseError(3, err, "OGR Error code {}".format(err))
 
 
+@contextlib.contextmanager
+def stack_errors():
+    """TODO: better name."""
+    # Set up.
+    CPLErrorReset()
+    error_stack = []
+
+    # chaining_error_handler (better name a TODO) records GDAL errors
+    # in the order they occur and converts to exceptions.
+    CPLPushErrorHandlerEx(chaining_error_handler, <void *>error_stack)
+
+    # Run code in the `with` block.
+    yield
+
+    # Link errors via __cause__.
+    for error, cause in zip_longest(error_stack[::-1], error_stack[::-1][1:]):
+        if error is not None and cause is not None:
+            error.__cause__ = cause
+
+    # Tear down.
+    CPLPopErrorHandler()
+    CPLErrorReset()
+
+    # Raise the final exception.
+    if error_stack:
+        last = error_stack.pop()
+        if last is not None:
+            raise last
+
+
 cdef void *exc_wrap_pointer(void *ptr) except NULL:
     """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
 
     Raises a Rasterio exception if a non-fatal error has be set.
-
     """
     if ptr == NULL:
         exc = exc_check()

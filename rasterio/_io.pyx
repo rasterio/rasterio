@@ -17,7 +17,7 @@ import numpy as np
 from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -163,17 +163,17 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     for i in range(count):
         bandmap[i] = <int>indexes[i]
 
-    try:
-        with nogil:
-            retval = GDALDatasetRasterIOEx(
-                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
-                bufxsize, bufysize, buftype, count, bandmap,
-                bufpixelspace, buflinespace, bufbandspace, &extras)
-
-        return exc_wrap_int(retval)
-
-    finally:
-        CPLFree(bandmap)
+    with stack_errors():
+        try:
+            with nogil:
+                retval = GDALDatasetRasterIOEx(
+                    hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
+                    bufxsize, bufysize, buftype, count, bandmap,
+                    bufpixelspace, buflinespace, bufbandspace, &extras)
+            return retval
+            # return exc_wrap_int(retval)
+        finally:
+            CPLFree(bandmap)
 
 
 cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
