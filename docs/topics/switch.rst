@@ -192,7 +192,7 @@ band index and some other band properties.
 Thus Rasterio never has objects with dangling dataset pointers.
 With Rasterio, bands are represented by a numerical
 index, starting from 1 (as GDAL does), and are used as arguments to dataset
-methods. To read the first band of a dataset as a Numpy ``ndarray``, do this.
+methods. To read the first band of a dataset as a :class:`numpy.ndarray`, do this.
 
 .. code-block:: python
 
@@ -349,7 +349,7 @@ data.
           [0, 0, 0, ..., 0, 0, 0],
           [0, 0, 0, ..., 0, 0, 0]], dtype-uint8)
 
-Arrays for dataset bands can also be had as a Numpy ``masked_array``.
+Arrays for dataset bands can also be had as a :class:`numpy.ma.MaskedArray`.
 
 .. code-block:: pycon
 

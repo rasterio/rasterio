@@ -161,7 +161,7 @@ the GDAL convention, bands are indexed from 1.
     (1,)
     >>> band1 = dataset.read(1)
 
-The :meth:`~rasterio.io.DatasetReader.read` method returns a Numpy N-D array.
+The :meth:`~rasterio.io.DatasetReader.read` method returns a :class:`numpy.ndarray`.
 
 .. code-block:: pycon
 

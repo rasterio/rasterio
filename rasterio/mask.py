@@ -156,7 +156,7 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
 
         Two elements:
 
-            masked : numpy ndarray or numpy.ma.MaskedArray
+            masked : numpy.ndarray or numpy.ma.MaskedArray
                 Data contained in the raster after applying the mask. If
                 `filled` is `True` and `invert` is `False`, the return will be
                 an array where pixels outside shapes are set to the nodata value

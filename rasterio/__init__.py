@@ -128,9 +128,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
-    dtype : str or numpy dtype
+    dtype : str or numpy.dtype
         The data type for bands. For example: 'uint8' or
-        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+        :attr:`rasterio.uint16`. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
@@ -334,7 +334,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
     Parameters
     ----------
-    array: ndarray
+    array: numpy.ndarray
         Numpy ndarray, for best results a 2D array
     transform: Affine transform
         transform object mapping pixel space to coordinates
@@ -350,8 +350,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
     Notes
     -----
-    See numpy docs for details on mode and other kwargs:
-    http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html
+    See :func:`numpy.pad` for details on mode and other kwargs.
     """
     import numpy as np
     transform = guard_transform(transform)

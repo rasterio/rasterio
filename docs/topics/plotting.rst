@@ -24,7 +24,7 @@ The first argument to :func:`~rasterio.plot.show` represent the data source to b
 
    * A dataset object opened in 'r' mode
    * A single band of a source, represented by a ``(src, band_index)`` tuple
-   * A numpy ndarray, 2D or 3D. If the array is 3D, ensure that it is in rasterio band order.
+   * A :class:`numpy.ndarray`, 2D or 3D. If the array is 3D, ensure that it is in rasterio band order.
 
 Thus the following operations for 3-band RGB data are equivalent. Note that when passing arrays,
 you can pass in a transform in order to get extent labels.
