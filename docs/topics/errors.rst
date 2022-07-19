@@ -25,7 +25,7 @@ To get more debugging information from the internal GDAL code:
 
     Here are examples to get started.
 
-    Add handler to the `rasterio` logger:
+    Example - Add handler to the `rasterio` logger:
 
     .. code-block:: python
 
@@ -39,7 +39,7 @@ To get more debugging information from the internal GDAL code:
         logger.setLevel(logging.DEBUG)
 
 
-    Activate default logging config:
+    Example - Activate default logging config:
 
     .. code-block:: python
 
