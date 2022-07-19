@@ -6,7 +6,7 @@ Error Handling
     error enums, context managers, converting GDAL errors to python exceptions
 
 
-Debugging Internal GDAL
+Debugging internal GDAL functions
 ------------------------
 
 To get more debugging information from the internal GDAL code:
