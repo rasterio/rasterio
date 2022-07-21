@@ -186,7 +186,7 @@ def can_cast_dtype(values, dtype):
     Parameters
     ----------
     values: list-like
-    dtype: numpy dtype or string
+    dtype: numpy.dtype or string
 
     Returns
     -------

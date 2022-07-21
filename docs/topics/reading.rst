@@ -55,7 +55,7 @@ a file can be read like this:
     >>> array.shape
     (718, 791)
 
-The returned object is a 2-dimensional Numpy ndarray. The representation of
+The returned object is a 2-dimensional :class:`numpy.ndarray`. The representation of
 that array at the Python prompt is a summary; the GeoTIFF file that
 Rasterio uses for testing has 0 values in the corners, but has nonzero values
 elsewhere.

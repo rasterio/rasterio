@@ -127,7 +127,7 @@ Removed: ``src.read_band()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``read_band()`` method has been replaced by ``read()``, which allows for
-faster I/O and reading multiple bands into a single ``numpy.ndarray()``.
+faster I/O and reading multiple bands into a single :class:`numpy.ndarray`.
 
 For example:
 

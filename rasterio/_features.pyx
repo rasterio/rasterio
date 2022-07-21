@@ -25,7 +25,7 @@ def _shapes(image, mask, connectivity, transform):
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
-    mask : numpy ndarray or rasterio Band object
+    mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
@@ -160,9 +160,9 @@ def _sieve(image, size, out, mask, connectivity):
         rasterio.uint16, or rasterio.float32.
     size : int
         minimum polygon size (number of pixels) to retain.
-    out : numpy ndarray
+    out : numpy.ndarray
         Array of same shape and data type as `image` in which to store results.
-    mask : numpy ndarray or rasterio Band object
+    mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation.
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
@@ -267,7 +267,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     ----------
     shapes : iterable of (geometry, value) pairs
         `geometry` is a GeoJSON-like object.
-    image : numpy ndarray
+    image : numpy.ndarray
         Array in which to store results.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `image` to the

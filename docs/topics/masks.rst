@@ -9,7 +9,7 @@ rows and columns as the dataset in which non-zero elements (typically 255) indic
 corresponding data elements are valid. Other elements are invalid, or *nodata*
 elements.
 
-The other kind of mask is Numpy's `masked array <http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html>`__
+The other kind of mask is a :class:`numpy.ma.MaskedArray`
 which has the inverse sense: `True` values in a masked array's mask indicate
 that the corresponding data elements are invalid. With care, you can safely
 navigate convert between the two mask types.
@@ -78,7 +78,7 @@ array shows the ``255`` values that indicate *valid data* regions.
            [255, 255, 255, 255, 255],
            [255, 255, 255, 255, 255]], dtype=uint8)
 
-Displayed using Matplotlib's `imshow()`, the mask looks like this:
+Displayed using  :func:`matplotlib.pyplot.imshow`, the mask looks like this:
 
 .. image:: ../img/mask_band.png
 
@@ -140,7 +140,7 @@ certainly can. Consider a fresh copy of that file.
 
 This time we'll read all 3 band masks
 (based on the nodata values, not a .msk GeoTIFF) and show them
-as an RGB image (with the help of `numpy.dstack()`):
+as an RGB image (with the help of :func:`numpy.dstack`):
 
 .. code-block:: python
 
@@ -185,7 +185,7 @@ considered valid.
 Numpy masked arrays
 -------------------
 
-If you want, you can read dataset bands as numpy masked arrays.
+If you want, you can read dataset bands as a :class:`numpy.ma.MaskedArray`.
 
 .. code-block:: python
 
