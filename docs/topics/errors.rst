@@ -7,7 +7,7 @@ Error Handling
 
 
 Debugging internal GDAL functions
-------------------------
+----------------------------------
 
 To get more debugging information from the internal GDAL code:
 
