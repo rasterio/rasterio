@@ -37,12 +37,12 @@ it exists and see if that eliminates the error condition and the message.
 Why can't rasterio find proj.db (rasterio versions < 1.2.0)?
 ------------------------------------------------------------
 
-If you see ``rasterio.errors.CRSError: The EPSG code is unknown. PROJ: proj_create_from_database: Cannot find proj.db`` it is because the PROJ library (one of rasterio's dependencies) cannot find its database of projections and coordinate systems. In some installations the ``PROJ_LIB`` `environment variable must be set <https://proj.org/usage/environmentvars.html#envvar-PROJ_LIB>`__ for PROJ to work properly.
+If you see ``rasterio.errors.CRSError: The EPSG code is unknown. PROJ: proj_create_from_database: Cannot find proj.db`` it is because the PROJ library (one of rasterio's dependencies) cannot find its database of projections and coordinate systems. In some installations the ``PROJ_LIB`` (PROJ < 9.1) | ``PROJ_DATA`` (PROJ 9.1+) `environment variable must be set <https://proj.org/usage/environmentvars.html#envvar-PROJ_LIB>`__ for PROJ to work properly.
 
 .. important:: Activate your conda environments.
-   The PROJ conda package will set ``PROJ_LIB`` to the proper value if you activate your conda environment. If you don't activate your conda enviornment, you are likely to see the exception shown above.
+   The PROJ conda package will set ``PROJ_LIB`` (PROJ < 9.1) | ``PROJ_DATA`` (PROJ 9.1+) to the proper value if you activate your conda environment. If you don't activate your conda enviornment, you are likely to see the exception shown above.
 
 Why can't rasterio find proj.db (rasterio from PyPI versions >= 1.2.0)?
 -----------------------------------------------------------------------
 
-Starting with version 1.2.0, rasterio wheels on PyPI include PROJ 7.x and GDAL 3.x. The libraries and modules in these wheels are incompatible with older versions of PROJ that may be installed on your system. If ``PROJ_LIB`` is set in your program's environment and points to an older version of PROJ, you must unset this variable. Rasterio will then use the version of PROJ contained in the wheel. 
+Starting with version 1.2.0, rasterio wheels on PyPI include PROJ 7.x and GDAL 3.x. The libraries and modules in these wheels are incompatible with older versions of PROJ that may be installed on your system. If ``PROJ_LIB`` (PROJ < 9.1) | ``PROJ_DATA`` (PROJ 9.1+) is set in your program's environment and points to an older version of PROJ, you must unset this variable. Rasterio will then use the version of PROJ contained in the wheel.

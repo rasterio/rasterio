@@ -646,7 +646,12 @@ if 'GDAL_DATA' not in os.environ:
             set_gdal_config("GDAL_DATA", path)
             log.debug("GDAL data found in other locations: path=%r.", path)
 
-if "PROJ_LIB" in os.environ:
+if "PROJ_DATA" in os.environ:
+    # PROJ 9.1+
+    path = os.environ["PROJ_DATA"]
+    set_proj_data_search_path(path)
+elif "PROJ_LIB" in os.environ:
+    # PROJ < 9.1
     path = os.environ["PROJ_LIB"]
     set_proj_data_search_path(path)
 
