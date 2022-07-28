@@ -680,7 +680,7 @@ cdef class DatasetBase:
 
         Returns
         -------
-        tuple
+        tuple[str | None, ...]
         """
         if not self._descriptions:
             descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
