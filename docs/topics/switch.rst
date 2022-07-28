@@ -46,11 +46,11 @@ for the environment, but it can be modified using functions like
 ``gdal.SetErrorHandler()`` and ``gdal.UseExceptions()``.
 
 Rasterio has modules that don't require complete initialization and
-configuration of GDAL (``rasterio.dtypes``, ``rasterio.profiles``, and
-``rasterio.windows``, for example) and in the interest of reducing overhead
+configuration of GDAL (:mod:`rasterio.dtypes`, :mod:`rasterio.profiles`, and
+:mod:`rasterio.windows`, for example) and in the interest of reducing overhead
 doesn't register format drivers and error handlers until they are needed. The
 functions that do need fully initialized GDAL environments will ensure that
-they exist. ``rasterio.open()`` is the foremost of this category of functions.
+they exist. :func:`rasterio.open` is the foremost of this category of functions.
 Consider the example code below.
 
 .. code-block:: python
@@ -64,10 +64,10 @@ Consider the example code below.
        # open() executes.
 
 Importing ``rasterio`` does not initialize the GDAL environment. Calling
-``rasterio.open()`` does. This is different from ``gdal`` where ``import
+:func:`rasterio.open` does. This is different from ``gdal`` where ``import
 osgeo.gdal``, not ``osgeo.gdal.Open()``, initializes the GDAL environment.
 
-Rasterio has an abstraction for the GDAL environment, ``rasterio.Env``, that
+Rasterio has an abstraction for the GDAL environment, :class:`rasterio.Env`, that
 can be invoked explicitly for more control over the configuration of GDAL as
 shown below.
 
@@ -131,7 +131,7 @@ Format Drivers
 
 ``gdal`` provides objects for each of the GDAL format drivers. With Rasterio,
 format drivers are represented by strings and are used only as arguments to
-functions like ``rasterio.open()``.
+functions like :func:`rasterio.open`.
 
 .. code-block:: python
 
@@ -175,12 +175,12 @@ Dataset Objects
 
 Rasterio and ``gdal`` each have dataset objects. Not the same classes, of 
 course, but not radically different ones. In each case, you generally get
-dataset objects through an "opener" function: ``rasterio.open()`` or
+dataset objects through an "opener" function: :func:`rasterio.open` or
 ``gdal.Open()``.
 
 So that Python developers can spend less time reading docs, the dataset object
-returned by ``rasterio.open()`` is modeled on Python's file object. It even has
-the ``close()`` method that ``gdal`` lacks so that you can actively close
+returned by :func:`rasterio.open` is modeled on Python's file object. It even has
+the :meth:`~.DatasetReader.close` method that ``gdal`` lacks so that you can actively close
 dataset connections.
 
 Bands
@@ -249,12 +249,12 @@ Namedtuples are like lightweight classes.
 Geotransforms
 -------------
 
-The ``transform`` attribute of a Rasterio dataset object is comparable to the
+The :attr:`.DatasetReader.transform` attribute is comparable to the
 ``GeoTransform`` attribute of a GDAL dataset, but Rasterio's has more power.
 It's not just an array of affine transformation matrix elements, it's an
 instance of an ``Affine`` class and has many handy methods. For example, the
 spatial coordinates of the upper left corner of any raster element is the
-product of the dataset's ``transform`` matrix and the ``(column, row)`` index
+product of the :attr:`.DatasetReader.transform` matrix and the ``(column, row)`` index
 of the element.
 
 .. code-block:: pycon
@@ -284,14 +284,15 @@ converted to the sequences used by ``gdal``.
 Coordinate Reference Systems
 ----------------------------
 
-The ``crs`` attribute of a Rasterio dataset object is an instance of Rasterio's
-``CRS`` class and works well with ``pyproj``.
+The :attr:`.DatasetReader.crs` attribute is an instance of Rasterio's
+:meth:`.CRS` class and works well with ``pyproj``.
 
 .. code-block:: pycon
 
-   >>> from pyproj import Proj, transform
+   >>> from pyproj import Transformer
    >>> src = rasterio.open('example.tif')
-   >>> transform(Proj(src.crs), Proj('+init=epsg:3857'), 101985.0, 2826915.0)
+   >>> transformer = Transformer.from_crs(src.crs, "EPSG:3857", always_xy=True)
+   >>> transformer.transfform(101985.0, 2826915.0)
    (-8789636.707871985, 2938035.238323653)
 
 Tags

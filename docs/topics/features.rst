@@ -3,7 +3,7 @@ Vector Features
 
 Rasterio's ``features`` module provides functions to extract shapes of raster
 features and to create new features by "burning" shapes into rasters:
-``shapes()`` and ``rasterize()``. These functions expose GDAL functions in
+:func:`.shapes` and :func:`.rasterize`. These functions expose GDAL functions in
 a general way, using iterators over GeoJSON-like Python objects instead of
 GIS layers.
 
@@ -52,7 +52,7 @@ georeferenced, you would get similarly georeferenced geometries like this:
 Burning shapes into a raster
 ----------------------------
 
-To go the other direction, use ``rasterize()`` to burn values into the pixels
+To go the other direction, use :func:`.rasterize` to burn values into the pixels
 intersecting with geometries.
 
 .. code-block:: python

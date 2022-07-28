@@ -3,4 +3,4 @@ Filling nodata areas
 
 .. todo::
 
-    fillnodata()
+    :func:`.fillnodata`

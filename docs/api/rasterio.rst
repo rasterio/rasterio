@@ -44,5 +44,6 @@ Module contents
 
 .. automodule:: rasterio
    :members:
+   :exclude-members: CRS, Env
    :undoc-members:
    :show-inheritance:
