@@ -32,7 +32,7 @@ with rasterio._loading.add_gdal_dll_directories():
         complex_int16,
     )
     from rasterio.env import ensure_env_with_credentials, Env, env_ctx_if_needed
-    from rasterio.errors import RasterioIOError, DriverCapabilityError
+    from rasterio.errors import RasterioIOError, DriverCapabilityError, RasterioDeprecationWarning
     from rasterio.io import (
         DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
     from rasterio.profiles import default_gtiff_profile
