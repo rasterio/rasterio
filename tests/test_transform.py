@@ -346,6 +346,16 @@ def test_ensure_arr_input_same_shape():
     with pytest.raises(TransformError):
         transformer.xy([0, 1, 2], [0, 1])
 
+
+def test_ensure_arr_input_with_zs():
+    assert AffineTransformer._ensure_arr_input(0, 1) == AffineTransformer._ensure_arr_input(0, 1, zs=0)
+    assert AffineTransformer._ensure_arr_input(0, [1, 2], zs=3) == ([0, 0], [1, 2], [3, 3])
+    assert AffineTransformer._ensure_arr_input([0, 1], 2, zs=3) == ([0, 1], [2, 2], [3, 3])
+    assert AffineTransformer._ensure_arr_input(0, 1, zs=[2, 3]) == ([0, 0], [1, 1], [2, 3])
+    with pytest.raises(TransformError):
+        AffineTransformer._ensure_arr_input(0, [1, 2], zs=[3, 4, 5])
+
+
 @pytest.mark.parametrize(
     'transformer_cls,transform',
     [
