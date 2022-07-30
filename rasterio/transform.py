@@ -319,8 +319,9 @@ class TransformerBase():
 
     def close(self):
         self.closed = True
-    
-    def _ensure_arr_input(self, xs, ys, zs=None):
+
+    @staticmethod
+    def _ensure_arr_input(xs, ys, zs=None):
         """Ensure all input coordinates are mapped to array-like objects
         
         Raises
