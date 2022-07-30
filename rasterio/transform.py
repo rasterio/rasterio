@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from contextlib import ExitStack
 from functools import partial
 import math
+import numpy as np
 import sys
 
 from affine import Affine
@@ -327,20 +328,13 @@ class TransformerBase():
         TransformError
             If input coordinates are not all of the same length
         """
-        if (isinstance(xs, Iterable) and not isinstance(ys, Iterable)) or (
-            isinstance(ys, Iterable) and not isinstance(xs, Iterable)
-        ):
-            raise TransformError("Invalid inputs")
-        if not isinstance(xs, Iterable) and not isinstance(ys, Iterable):
-            xs = [xs]
-            ys = [ys]
-        if zs is None:
-            zs = [0] * len(xs)
-        elif not isinstance(zs, Iterable):
-            zs = [zs]
-        if len(set((len(xs), len(ys), len(zs)))) > 1:
-            raise TransformError("Input coordinates must be of equal length")
-        return xs, ys, zs
+        try:
+            xs, ys, zs = np.broadcast_arrays(xs, ys, 0 if zs is None else zs)
+        except ValueError:
+            raise TransformError(
+                "Input coordinates must be broadcastable to a 1d array"
+            )
+        return list(np.atleast_1d(xs)), list(np.atleast_1d(ys)), list(np.atleast_1d(zs))
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
