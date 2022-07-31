@@ -347,11 +347,23 @@ def test_ensure_arr_input_same_shape():
         transformer.xy([0, 1, 2], [0, 1])
 
 
-def test_ensure_arr_input_with_zs():
+def test_ensure_arr_input_with_default_zs():
     assert AffineTransformer._ensure_arr_input(0, 1) == AffineTransformer._ensure_arr_input(0, 1, zs=0)
-    assert AffineTransformer._ensure_arr_input(0, [1, 2], zs=3) == ([0, 0], [1, 2], [3, 3])
-    assert AffineTransformer._ensure_arr_input([0, 1], 2, zs=3) == ([0, 1], [2, 2], [3, 3])
-    assert AffineTransformer._ensure_arr_input(0, 1, zs=[2, 3]) == ([0, 0], [1, 1], [2, 3])
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=0)
+    assert all(zs == [0, 0])
+
+
+def test_ensure_arr_input_with_zs():
+    _, _, zs = AffineTransformer._ensure_arr_input(0, 1, zs=2)
+    assert all(zs == [2])
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=3)
+    assert all(zs == [3, 3])
+    _, _, zs = AffineTransformer._ensure_arr_input([0, 1], 2, zs=3)
+    assert all(zs == [3, 3])
+    xs, ys, zs = AffineTransformer._ensure_arr_input(0, 1, zs=[2, 3])
+    assert all(zs == [2, 3])
+    assert all(ys == [1, 1])
+    assert all(xs == [0, 0])
     with pytest.raises(TransformError):
         AffineTransformer._ensure_arr_input(0, [1, 2], zs=[3, 4, 5])
 

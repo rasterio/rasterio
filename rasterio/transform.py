@@ -335,7 +335,7 @@ class TransformerBase():
             raise TransformError(
                 "Input coordinates must be broadcastable to a 1d array"
             )
-        return list(np.atleast_1d(xs)), list(np.atleast_1d(ys)), list(np.atleast_1d(zs))
+        return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
