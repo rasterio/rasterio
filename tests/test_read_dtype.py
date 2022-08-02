@@ -86,7 +86,7 @@ def test_write_mem(dtype, nodata):
         "nodata": nodata,
     }
 
-    values = np.array([[nodata, nodata]], dtype=dtype)
+    values = numpy.array([[nodata, nodata]], dtype=dtype)
 
     with rasterio.open("/vsimem/test.tif", "w", **profile) as src:
         src.write(values, indexes=1)
@@ -112,10 +112,10 @@ def test_write_fs(tmp_path, dtype, nodata):
     }
 
     if dtype.startswith('int') or dtype.startswith('uint'):
-        info = np.iinfo(dtype)
+        info = numpy.iinfo(dtype)
     else:
-        info = np.finfo(dtype)
-    values = np.array([[info.max, info.min]], dtype=dtype)
+        info = numpy.finfo(dtype)
+    values = numpy.array([[info.max, info.min]], dtype=dtype)
 
     with rasterio.open(filename, "w", **profile) as src:
         src.write(values, indexes=1)
