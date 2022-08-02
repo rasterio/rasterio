@@ -29,4 +29,4 @@ def env(ctx, key):
         elif key == 'gdal_data':
             click.echo(os.environ.get('GDAL_DATA') or GDALDataFinder().search())
         elif key == 'proj_data':
-            click.echo(os.environ.get('PROJ_LIB') or PROJDataFinder().search())
+            click.echo(os.environ.get('PROJ_DATA', os.environ.get('PROJ_LIB')) or PROJDataFinder().search())

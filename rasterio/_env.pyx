@@ -387,7 +387,13 @@ cdef class GDALEnv(ConfigEnv):
                                 log.debug("GDAL data found in other locations: path=%r.", path)
                                 self.update_config_options(GDAL_DATA=path)
 
-                    if 'PROJ_LIB' in os.environ:
+                    if 'PROJ_DATA' in os.environ:
+                        # PROJ 9.1+
+                        log.debug("PROJ_DATA found in environment.")
+                        path = os.environ["PROJ_DATA"]
+                        set_proj_data_search_path(path)
+                    elif 'PROJ_LIB' in os.environ:
+                        # PROJ < 9.1
                         log.debug("PROJ_LIB found in environment.")
                         path = os.environ["PROJ_LIB"]
                         set_proj_data_search_path(path)
