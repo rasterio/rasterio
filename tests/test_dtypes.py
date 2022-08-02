@@ -1,6 +1,3 @@
-import itertools
-
-import affine
 import numpy as np
 import pytest
 
@@ -13,8 +10,6 @@ from rasterio import (
     uint16,
     uint32,
     uint64,
-    sbyte,
-    int8,
     int16,
     int32,
     int64,
@@ -34,27 +29,6 @@ from rasterio.dtypes import (
     _getnpdtype,
     _get_gdal_dtype,
 )
-from rasterio.env import GDALVersion
-
-
-_GDAL_AT_LEAST_35 = GDALVersion.runtime().at_least("3.5")
-
-DTYPES = [
-    ubyte,
-    uint8,
-    uint16,
-    uint32,
-    sbyte,
-    int8,
-    int16,
-    int32,
-    float32,
-    float64,
-    complex_,
-]
-
-if _GDAL_AT_LEAST_35:
-    DTYPES.extend([uint64, int64])
 
 
 def test_is_ndarray():
@@ -183,56 +157,3 @@ def test__get_gdal_dtype__int64():
     else:
         with pytest.raises(TypeError, match="Unsupported data type"):
             _get_gdal_dtype("int64")
-
-
-@pytest.mark.parametrize("dtype,nodata", itertools.product(DTYPES, [1, 127]))
-def test_write_mem(dtype, nodata):
-    profile = {
-        "driver": "GTiff",
-        "width": 2,
-        "height": 1,
-        "count": 1,
-        "dtype": dtype,
-        "crs": "EPSG:3857",
-        "transform": affine.Affine(10, 0, 0, 0, -10, 0),
-        "nodata": nodata,
-    }
-
-    values = np.array([[nodata, nodata]], dtype=dtype)
-
-    with rasterio.open("/vsimem/test.tif", "w", **profile) as src:
-        src.write(values, indexes=1)
-
-    with rasterio.open("/vsimem/test.tif") as src:
-        read = src.read(indexes=1)
-        assert read[0][0] == nodata
-        assert read[0][1] == nodata
-
-
-@pytest.mark.parametrize("dtype,nodata", itertools.product(DTYPES, [None, 1, 127]))
-def test_write_fs(tmp_path, dtype, nodata):
-    filename = tmp_path.joinpath("test.tif")
-    profile = {
-        "driver": "GTiff",
-        "width": 2,
-        "height": 1,
-        "count": 1,
-        "dtype": dtype,
-        "crs": "EPSG:3857",
-        "transform": affine.Affine(10, 0, 0, 0, -10, 0),
-        "nodata": nodata,
-    }
-
-    if dtype.startswith('int') or dtype.startswith('uint'):
-        info = np.iinfo(dtype)
-    else:
-        info = np.finfo(dtype)
-    values = np.array([[info.max, info.min]], dtype=dtype)
-
-    with rasterio.open(filename, "w", **profile) as src:
-        src.write(values, indexes=1)
-
-    with rasterio.open(filename) as src:
-        read = src.read(indexes=1)
-        assert read[0][0] == info.max
-        assert read[0][1] == info.min
