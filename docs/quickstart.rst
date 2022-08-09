@@ -74,8 +74,8 @@ values is 7731 columns wide and 7871 rows high.
 Some dataset attributes expose the properties of all dataset bands via a tuple
 of values, one per band. To get a mapping of band indexes to variable data
 types, apply a dictionary comprehension to the :func:`zip` product of a
-dataset's :attr:`~rasterio.io.DatasetReader.indexes` and
-:attr:`~rasterio.io.DatasetReader.dtypes` attributes.
+dataset's :attr:`.DatasetReader.indexes` and
+:attr:`.DatasetReader.dtypes` attributes.
 
 .. code-block:: pycon
 
@@ -102,7 +102,7 @@ Our example covers the world from
 meters to 4265115 meters bottom to top. It covers a region 231.93 kilometers
 wide by 236.13 kilometers high.
 
-The value of :attr:`~rasterio.io.DatasetReader.bounds` attribute is derived
+The value of :attr:`.DatasetReader.bounds` attribute is derived
 from a more fundamental attribute: the dataset's geospatial transform.
 
 .. code-block:: pycon
@@ -111,7 +111,7 @@ from a more fundamental attribute: the dataset's geospatial transform.
     Affine(30.0, 0.0, 358485.0,
            0.0, -30.0, 4265115.0)
 
-A dataset's :attr:`~rasterio.io.DatasetReader.transform` is an affine
+A dataset's :attr:`.DatasetReader.transform` is an affine
 transformation matrix that maps pixel locations in (row, col) coordinates to
 (x, y) spatial positions. The product of this matrix and ``(0, 0)``, the row
 and column coordinates of the upper left corner of the dataset, is the spatial
@@ -138,16 +138,16 @@ values are relative to the origin of the dataset's coordinate reference system
     >>> dataset.crs
     CRS.from_epsg(32612)
 
-"EPSG 32612" identifies a particular coordinate reference system: `UTM
+`EPSG:32612 <https://epsg.org/crs_32612/WGS-84-UTM-zone-12N.html>`__ identifies a particular coordinate reference system: `UTM
 <https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system>`__
 zone 12N.  This system is used for mapping areas in the Northern Hemisphere
 between 108 and 114 degrees west. The upper left corner of the example dataset,
 ``(358485.0, 4265115.0)``, is 141.5 kilometers west of zone 12's central
 meridian (111 degrees west) and 4265 kilometers north of the equator.
 
-Between the :attr:`~rasterio.io.DatasetReader.crs` attribute and ``transform``
-the georeferencing of a raster dataset is described and the dataset can
-compared to other GIS datasets.
+Between the :attr:`.DatasetReader.crs` and
+:attr:`.DatasetReader.transform` attributes, the georeferencing
+of a raster dataset is described and the dataset can compared to other GIS datasets.
 
 Reading raster data
 -------------------
@@ -161,7 +161,7 @@ the GDAL convention, bands are indexed from 1.
     (1,)
     >>> band1 = dataset.read(1)
 
-The :meth:`~rasterio.io.DatasetReader.read` method returns a :class:`numpy.ndarray`.
+The :meth:`.DatasetReader.read` method returns a :class:`numpy.ndarray`.
 
 .. code-block:: pycon
 
@@ -184,7 +184,7 @@ Values from the array can be addressed by their row, column index.
 Spatial indexing
 ----------------
 
-Datasets have an :meth:`~rasterio.io.DatasetReader.index` method for getting
+Datasets have an :meth:`.DatasetReader.index` method for getting
 the array indices corresponding to points in georeferenced space. To get the
 value for the pixel 100 kilometers east and 50 kilometers south of the
 dataset's upper left corner, do the following.
@@ -198,7 +198,7 @@ dataset's upper left corner, do the following.
     >>> band1[row, col]
     7566
 
-To get the spatial coordinates of a pixel, use the dataset's :meth:`~rasterio.io.DatasetReader.xy` method.
+To get the spatial coordinates of a pixel, use the dataset's :meth:`.DatasetReader.xy` method.
 The coordinates of the center of the image can be computed like this.
 
 .. code-block:: pycon
@@ -299,14 +299,14 @@ Saving raster data
 ------------------
 
 To copy the grid to the opened dataset, call the new dataset's
-:meth:`~rasterio.io.DatasetWriter.write` method with the grid and target band
+:meth:`.DatasetWriter.write` method with the grid and target band
 number as arguments.
 
 .. code-block:: pycon
 
     >>> new_dataset.write(Z, 1)
 
-Then call the :meth:`~rasterio.io.DatasetWriter.close` method to sync data to
+Then call the :meth:`.DatasetWriter.close` method to sync data to
 disk and finish.
 
 .. code-block:: pycon

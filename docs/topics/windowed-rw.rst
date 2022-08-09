@@ -10,7 +10,7 @@ computers RAM or process chunks of large rasters in parallel.
 Windows
 -------
 
-A window is a view onto a rectangular subset of a raster dataset and is
+A :class:`.Window` is a view onto a rectangular subset of a raster dataset and is
 described in rasterio by column and row offsets and width and height
 in pixels. These may be ints or floats.
 
@@ -28,7 +28,7 @@ Only int values are permitted in these cases.
    Window.from_slices((row_start, row_stop), (col_start, col_stop))
    Window.from_slices(slice(row_start, row_stop), slice(col_start, col_stop))
 
-If height and width keyword arguments are passed to ``from_slices``, relative
+If height and width keyword arguments are passed to :meth:`~.Window.from_slices`, relative
 and open-ended slices may be used.
 
 .. code-block:: python
@@ -109,7 +109,7 @@ Data windows
 ------------
 
 Sometimes it is desirable to crop off an outer boundary of NODATA values around
-a dataset:
+a dataset. You can do this with :func:`.get_data_window`:
 
 .. code-block:: python
 
@@ -132,7 +132,7 @@ Window transforms
 -----------------
 
 The affine transform of a window can be accessed using a dataset's
-``window_transform`` method:
+:meth:`~.DatasetReader.window_transform` method:
 
 .. code-block:: pycon
 
@@ -203,9 +203,9 @@ The block windows themselves can be had from the block_windows function.
     ...
 
 This function returns an iterator that yields a pair of values. The second is
-a window tuple that can be used in calls to `read` or `write`. The first
-is the pair of row and column indexes of this block within all blocks of the
-dataset.
+a window tuple that can be used in calls to :meth:`~.DatasetReader.read`
+or :meth:`~.DatasetWriter.write`. The first is the pair of row and column
+indexes of this block within all blocks of the dataset.
 
 You may read windows of data from a file block-by-block like this.
 

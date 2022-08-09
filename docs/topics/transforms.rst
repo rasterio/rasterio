@@ -4,14 +4,15 @@ Transforms
 Rasterio supports three primary methods for transforming of coordinates from 
 image pixel (row, col) to and from geographic/projected (x, y) coordinates.
 The interface for performing these coordinate transformations is available 
-in ``rasterio.transforms`` through one of ``AffineTransformer``,
-``GCPTransformer``, or ``RPCTransformer``. The methods ``xy`` and ``rowcol`` 
+in :mod:`rasterio.transform` through one of :class:`.AffineTransformer`,
+:class:`.GCPTransformer`, or :class:`.RPCTransformer`.
+The methods :meth:`~.DatasetReader.xy` and :meth:`~rasterio.transform.rowcol`
 are responsible for converting between (row, col) -> (x, y) and (x, y) ->
 (row, col), respectively. 
 
 Using Affine transformation matrix
 -----------------------------------
-``rasterio.transform.AffineTransformer`` takes care of coordinate transformations
+:class:`.AffineTransformer` takes care of coordinate transformations
 given an Affine transformation matrix. For example
 
 .. code-block:: python
@@ -35,7 +36,7 @@ This is approximately equivalent to
     >>> ~transform * (102135.01896333754, 2826764.979108635)
     (0.5, 0.5)
 
-The dataset methods ``xy`` and ``index`` use ``rasterio.transform`` under the hood
+The dataset methods :meth:`~.DatasetReader.xy` and :meth:`~.DatasetReader.index` use :mod:`rasterio.transform` under the hood
 
 .. code-block:: python
 
@@ -58,7 +59,7 @@ Using Ground Control Points
 
 Using Rational Polynomial Coefficients
 ---------------------------------------
-For accuracy a height value is typically required when using ``RPCTransformer``. By default,
+For accuracy a height value is typically required when using :class:`.RPCTransformer`. By default,
 a value of 0 is assumed. 
 
 .. code-block:: python
@@ -78,7 +79,7 @@ A first order correction would be to use a mean elevation value for the image
     (-123.48096552376548, 49.528097381526386)
 
 Better yet is to sample height values from a digital elevation model (DEM). 
-``RPCTransformer`` allows for options to be passed to ``GDALCreateRPCTransformer``
+:class:`.RPCTransformer` allows for options to be passed to :cpp:func:`GDALCreateRPCTransformerV2`
 
 .. code-block:: python
 
@@ -87,13 +88,10 @@ Better yet is to sample height values from a digital elevation model (DEM).
             transformer.xy(0, 0)
     (-123.47954729595642, 49.5279448909449)
 
-See https://gdal.org/api/gdal_alg.html?highlight=gdalcreaterpctransformer#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-for more details.
-
 Transformer Resources
 ----------------------
-The ``AffineTransformer`` is a pure Python class, however ``GCPTransformer``
-and ``RPCTransformer`` make use of C/C++ GDAL objects. Explicit control of 
+The :class:`.AffineTransformer` is a pure Python class, however :class:`.GCPTransformer`
+and :class:`.RPCTransformer` make use of C/C++ GDAL objects. Explicit control of 
 the transformer object can be achieved by use within a context manager or 
 by calling ``close()`` method e.g.
 

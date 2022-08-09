@@ -54,7 +54,7 @@ with rasterio._loading.add_gdal_dll_directories():
             pass
         have_vsi_plugin = False
 
-__all__ = ['band', 'open', 'pad', 'Env', 'CRS']
+__all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
 __version__ = "1.4dev"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
@@ -310,6 +310,20 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+Band.__doc__ = """
+Band of a Dataset.
+
+Parameters
+----------
+ds: dataset object
+    An opened rasterio dataset object.
+bidx: int or sequence of ints
+    Band number(s), index starting at 1.
+dtype: str
+    rasterio data type of the data.
+shape: tuple
+    Width, height of band.
+"""
 
 
 def band(ds, bidx):
@@ -324,7 +338,7 @@ def band(ds, bidx):
 
     Returns
     -------
-    rasterio.Band
+    Band
     """
     return Band(ds, bidx, set(ds.dtypes).pop(), ds.shape)
 

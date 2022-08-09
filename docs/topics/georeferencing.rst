@@ -9,7 +9,7 @@ coordinates in that system.
 Coordinate Reference System
 ---------------------------
 
-The coordinate reference system of a dataset is accessed from its ``crs``
+The coordinate reference system of a dataset is accessed from its :attr:`.DatasetReader.crs`
 attribute. 
 
 .. code-block:: python
@@ -20,12 +20,11 @@ attribute.
     CRS({'init': 'epsg:32618'})
 
 Rasterio follows pyproj and uses PROJ.4 syntax in dict form as its native
-CRS syntax. If you want a WKT representation of the CRS, see the CRS
-class's ``wkt`` attribute.
+CRS syntax. If you want a WKT representation of the CRS, see: :meth:`.CRS.to_wkt`:
 
 .. code-block:: python
 
-    >>> src.crs.wkt
+    >>> src.crs.to_wkt()
     'PROJCS["WGS 84 / UTM zone 18N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32618"]]'
 
 When opening a new file for writing, you may also use a CRS string as an
@@ -79,7 +78,7 @@ Ground Control Points
 A ground control point (GCP) is the mapping of a dataset's row and pixel coordinate to a
 single world x, y, and optionally z coordinate. Typically a dataset will have multiple
 GCPs distributed across the image. Rasterio can calculate an affine transformation matrix
-from a collection of GCPs using the ``rasterio.transform.from_gcps`` method. Alternatively
+from a collection of GCPs using the :func:`rasterio.transform.from_gcps` method. Alternatively
 GCP interpolation can also be used for coordinate transforms.
 
 Rational Polynomial Coefficients
@@ -98,5 +97,4 @@ results. Datasets with low terrain variation may use an average height over the 
 the image, while datasets with higher terrain variation should use a digital elevation
 model to sample height values.The coordinate transformation from world to pixel
 coordinates is exact while the reverse is not, and must be computed iteratively. For more
-details on coordinate transformations using RPCs see
-https://gdal.org/api/gdal_alg.html#_CPPv424GDALCreateRPCTransformerP11GDALRPCInfoidPPc
+details on coordinate transformations using RPCs see :cpp:func:`GDALCreateRPCTransformerV2`.

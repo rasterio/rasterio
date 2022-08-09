@@ -127,9 +127,8 @@ threads simultaneously.
                     executor.map(process, windows)
 
 The code above simulates a CPU-intensive calculation that runs faster when
-spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
-``concurrent.futures`` module. Compared to the case of one concurrent job
-(``-j 1``),
+spread over multiple cores using  :class:`concurrent.futures.ThreadPoolExecutor`
+compared to the case of one concurrent job (``-j 1``),
 
 .. code-block:: console
 
@@ -150,8 +149,9 @@ we get over 3x speed up with four concurrent jobs.
    sys     0m0.168s
 
 If the function that you'd like to map over raster windows doesn't release the
-GIL, you unfortunately cannot simply replace ``ThreadPoolExecutor`` with
-``ProcessPoolExecutor``, the DatasetReader/Writer cannot be shared by multiple
+GIL, you unfortunately cannot simply replace :class:`~concurrent.futures.ThreadPoolExecutor` with
+:class:`~concurrent.futures.ProcessPoolExecutor`,
+the :class:`.DatasetReader`/:class:`.DatasetWriter` cannot be shared by multiple
 processes, which means that each process needs to open the file seperately,
 or you can do all the reading and writing from the main thread, as shown in
 this next example. This is much less efficient memory wise, however.
