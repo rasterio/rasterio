@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Non-informative errors arising from opening a dataset in write mode are
+  silenced (#2525).
 - N-D arrays are once again accepted by sampling.sample_gen (#2515).
 
 1.3.0.post1 (2022-08-09)

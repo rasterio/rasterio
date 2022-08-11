@@ -1,3 +1,4 @@
+import logging
 import re
 from pathlib import Path
 import subprocess
@@ -523,7 +524,7 @@ def test_write_int64(tmp_path):
     ) as file:
         file.write(data, [1])
         assert file.dtypes == (rasterio.int64,)
-    
+
     with rasterio.open(test_file) as file:
         assert file.dtypes == (rasterio.int64,)
 
@@ -546,3 +547,12 @@ def test_write_int64__unsupported(tmp_path):
             dtype=data.dtype
         ) as file:
             file.write(data, [1])
+
+
+def test_open_no_log(caplog, tmp_path):
+    """See gh-2525."""
+    caplog.set_level(logging.DEBUG)
+    rasterio.open(tmp_path / "my.tif", "w", driver="GTiff", width=500, height=500, count=4, dtype=np.uint8, nodata=255)
+    assert "GDAL signalled an error" not in caplog.text
+
+

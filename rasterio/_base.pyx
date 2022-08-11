@@ -212,8 +212,8 @@ cdef GDALDatasetH open_dataset(
     try:
         return exc_wrap_pointer(hds)
     finally:
-            CSLDestroy(drivers)
-            CSLDestroy(options)
+        CSLDestroy(drivers)
+        CSLDestroy(options)
 
 
 cdef class DatasetBase:
