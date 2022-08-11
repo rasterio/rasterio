@@ -16,6 +16,7 @@ import numpy as np
 
 from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
+from rasterio._env import catch_errors
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
 from rasterio.crs import CRS
@@ -271,7 +272,8 @@ cdef _delete_dataset_if_exists(path):
     cdef const char *path_c = NULL
 
     try:
-        dataset = open_dataset(path, 0x40, None, None, None)
+        with catch_errors():
+            dataset = open_dataset(path, 0x40, None, None, None)
     except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError) as exc:
         log.debug("Skipped delete for overwrite, dataset does not exist: %r", path)
     else:
