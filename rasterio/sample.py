@@ -58,7 +58,7 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
         nodata = np.ma.array(nodata, mask=mask)
 
     for pts in _grouper(xy, 256):
-        pts = zip(*filter(None, pts))
+        pts = zip(*filter(lambda x: x is not None, pts))
 
         for row_off, col_off in zip(*rowcol(dt, *pts)):
             if row_off < 0 or col_off < 0 or row_off >= height or col_off >= width:
