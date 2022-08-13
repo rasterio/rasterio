@@ -1,10 +1,8 @@
 # Workaround for issue #378. A pure Python generator.
 
 import numpy as np
-import operator
-from functools import partial
 from collections import defaultdict
-from itertools import zip_longest
+from itertools import islice, chain
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -13,25 +11,42 @@ with rasterio._loading.add_gdal_dll_directories():
     from rasterio.transform import rowcol
 
 
-def _grouper(iterable, n, fillvalue=None):
-    "Collect data into non-overlapping fixed-length chunks or blocks"
-    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
-    # from itertools recipes
-    args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
-    
+def groupby_block(dataset, xy):
+    def get_block(dataset, row, col):
+        bshapes = dataset.block_shapes
+        if len(bshapes) > 0:
+            xs, ys = bshapes[0]
+            return (divmod(row, xs), divmod(col, ys))
+        else:
+            raise RuntimeError
+
+    block_map = defaultdict(list)
+    for i, pt in enumerate(xy):
+        block = get_block(dataset, *pt)
+        blocknum = (block[0][0], block[1][0])
+        block_map[dataset.block_window(1, *blocknum)].append(i)
+    return list(chain.from_iterable(block_map.values()))
+
 
 def transform_xy(dataset, xy):
-    notNone = partial(operator.is_not, None)
     dt = dataset.transform
     rv = []
-    for pts in _grouper(xy, 256):
-        pts = zip(*filter(notNone, pts))
-        rv.extend(zip(*rowcol(dt, *pts)))
+    _xy = iter(xy)
+    while True:
+        buf = tuple(islice(_xy, 0, 256))
+        if not buf:
+            break
+        x, y = rowcol(dt, *zip(*buf))
+        rv.extend(zip(x, y))
     return rv
 
 
-def sample_gen(dataset, xy, indexes=None, masked=False):
+def sort_xy(dataset, xy):
+    x, y = tuple(zip(*xy))
+    return np.lexsort([y, x])
+    
+
+def sample_gen(dataset, xy, indexes=None, masked=False, sorter=None):
     """Sample pixels from a dataset
 
     Parameters
@@ -77,8 +92,14 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     samples = transform_xy(dataset, xy)
 
     # group access by block
-    sorted_samples = np.lexsort(list(reversed(tuple(zip(*samples)))))
-    for i in sorted_samples:
+    if sorter is None:
+        sample_order = range(len(samples))
+    elif callable(sorter):
+        sample_order = sorter(dataset, samples)
+    else:
+        sample_order = samples
+
+    for i in sample_order:
         row, col = samples[i]
         if 0 <= row < height and 0 <= col < width:
             win = Window(col, row, 1, 1)
