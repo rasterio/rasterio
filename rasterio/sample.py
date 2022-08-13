@@ -60,10 +60,16 @@ def sample_gen(dataset, xy, indexes=None, masked=False, sorter=None):
     masked : bool, default: False
         Whether to mask samples that fall outside the extent of the
         dataset.
-    sort : bool, default: False
-        Sort coordinates for hopefully better performance.
+    sorter : iterable|callable, default: None
+        A sequence of indices that sort xy. A callable function is
+        also accepted that takes two arguments (dataset, xy) and 
+        returns a sequence of indices.
+        Reordering xy can often yield better performance.
         This will hold all the points in memory at once and may be
         memory intensive.
+
+        Note: The sorting function is called on the transformed
+        x, y coordinates.
 
     Yields
     ------
