@@ -113,4 +113,4 @@ def sample_gen(dataset, xy, indexes=None, masked=False, sorter=None):
             samples[i] = data[:, 0, 0]
         else:
             samples[i] = nodata
-    return samples
+    return iter(samples)
