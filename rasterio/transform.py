@@ -331,10 +331,10 @@ class TransformerBase():
         """
         try:
             xs, ys, zs = np.broadcast_arrays(xs, ys, 0 if zs is None else zs)
-        except ValueError:
+        except ValueError as error:
             raise TransformError(
                 "Input coordinates must be broadcastable to a 1d array"
-            )
+            ) from error
         return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
 
     def __enter__(self):
