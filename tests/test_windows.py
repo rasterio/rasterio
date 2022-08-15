@@ -469,26 +469,33 @@ def test_read_with_window_class(path_rgb_byte_tif):
         assert subset.shape == (10, 10)
 
 
-def test_data_window_invalid_arr_dims():
+def test_data_window_invalid_4d():
     """An array of more than 3 dimensions is invalid."""
     # Test > 3 dims
     with pytest.raises(WindowError):
         get_data_window(np.ones((3, 3, 3, 3)))
 
+
+def test_data_window_invalid_0d():
+    """An array of less than 1 dimension is invalid."""
     # Test < 1 dim
     with pytest.raises(WindowError):
         get_data_window(np.ones(()))
 
 
-def test_data_window_full():
+def test_data_window_full_2d():
     """Get window of entirely valid data array."""
     arr = np.ones((3, 3))
     window = get_data_window(arr)
     assert window == Window.from_slices((0, 3), (0, 3))
 
+
+def test_data_window_full_1d():
     window = get_data_window(np.ones(3))
     assert window == Window.from_slices((0, 3), (0, 0))
 
+
+def test_data_window_full_3d():
     window = get_data_window(np.ones((3, 3, 3)))
     assert window == Window.from_slices((0, 3), (0, 3))
 
