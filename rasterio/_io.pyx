@@ -2076,6 +2076,9 @@ cdef class MemoryDataset(DatasetWriterBase):
                 bandoffset, lineoffset, pixeloffset = strides
                 info.update(BANDOFFSET=bandoffset, LINEOFFSET=lineoffset, PIXELOFFSET=pixeloffset)
 
+        if transform is not None:
+            info.update(GEOTRANSFORM="/".join(map(str, transform.to_gdal())))
+
         dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
         datasetname = f"MEM:::{dataset_options}"
 
