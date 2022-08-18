@@ -50,3 +50,10 @@ def test_sampling_type():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         sampler = src.sample([(220650.0, 2719200.0)], indexes=[2])
         assert type(sampler)
+
+
+def test_sampling_ndarray():
+    """sample and sample_gen can take ndarrays of coords."""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        data = next(src.sample(numpy.array([[220650.0, 2719200.0]])))
+        assert list(data) == [18, 25, 14]
