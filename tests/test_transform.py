@@ -200,7 +200,7 @@ def test_xy_input(rows, cols, exp_xy, aff):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("rows, cols", [(0, [0]), ("0", "0")])
+@pytest.mark.parametrize("rows, cols", [([0, 1, 2], [0, 1]), ("0", "0")])
 def test_invalid_xy_input(rows, cols, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
@@ -294,7 +294,7 @@ def test_xy_rowcol_inverse(transform):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("xs, ys", [(0, [0]), ("0", "0")])
+@pytest.mark.parametrize("xs, ys", [([0, 1, 2], [0, 1]), ("0", "0")])
 def test_invalid_rowcol_input(xs, ys, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
@@ -326,9 +326,15 @@ def test_transformer_open_closed(transformer_cls, transform):
 @pytest.mark.parametrize(
     'coords,expected',
     [
-        ((0,0), (0,0)),
-        (([0],[0]), ([0], [0])),
-        (([0,1],[0,1]), ([0,1],[0,1]))
+        ((0, 1), (1, 0)),
+        (([0],[1]), ([1], [0])),
+        ((0,[1]), ([1], [0])),
+        (([0], 1), ([1], [0])),
+        (([0, 1], [2, 3]), ([2, 3],[0, 1])),
+        ((0, [1, 2]), ([1, 2], [0, 0])),
+        (([0, 1], 2), ([2, 2], [0, 1])),
+        (([0], [1, 2]), ([1, 2], [0, 0])),
+        (([0, 1], [2]), ([2, 2], [0, 1])),
     ]
 )
 def test_ensure_arr_input(coords, expected):
@@ -338,7 +344,29 @@ def test_ensure_arr_input(coords, expected):
 def test_ensure_arr_input_same_shape():
     transformer = transform.AffineTransformer(Affine.identity())
     with pytest.raises(TransformError):
-        transformer.xy([0], [0, 1])
+        transformer.xy([0, 1, 2], [0, 1])
+
+
+def test_ensure_arr_input_with_default_zs():
+    assert AffineTransformer._ensure_arr_input(0, 1) == AffineTransformer._ensure_arr_input(0, 1, zs=0)
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=0)
+    assert all(zs == [0, 0])
+
+
+def test_ensure_arr_input_with_zs():
+    _, _, zs = AffineTransformer._ensure_arr_input(0, 1, zs=2)
+    assert all(zs == [2])
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=3)
+    assert all(zs == [3, 3])
+    _, _, zs = AffineTransformer._ensure_arr_input([0, 1], 2, zs=3)
+    assert all(zs == [3, 3])
+    xs, ys, zs = AffineTransformer._ensure_arr_input(0, 1, zs=[2, 3])
+    assert all(zs == [2, 3])
+    assert all(ys == [1, 1])
+    assert all(xs == [0, 0])
+    with pytest.raises(TransformError):
+        AffineTransformer._ensure_arr_input(0, [1, 2], zs=[3, 4, 5])
+
 
 @pytest.mark.parametrize(
     'transformer_cls,transform',
