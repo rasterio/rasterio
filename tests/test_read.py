@@ -392,6 +392,5 @@ def test_chained_io_errors(path_rgb_byte_tif):
 
 
 def test_read_bounds_eps(test_data_dir):
-    breakpoint()
     with rasterio.open(str(test_data_dir/"a.tif")) as ds:
         assert ds.bounds == (13.0, -20.0, 18.0, -32.0)
