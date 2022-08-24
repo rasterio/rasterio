@@ -3,8 +3,10 @@ import unittest
 
 import numpy as np
 import pytest
+import sys
 
 import rasterio
+import affine
 from rasterio.errors import DatasetIOShapeError
 
 # Find out if we've got HDF support (needed below).
@@ -14,6 +16,30 @@ try:
     has_hdf = True
 except Exception:
     has_hdf = False
+
+
+# Fixture to create test datasets within temporary directory
+@pytest.fixture(scope='function')
+def test_data_dir(tmpdir):
+    eps = sys.float_info.epsilon
+    kwargs = {
+        "crs": {'init': 'epsg:4326'},
+        "transform": affine.Affine(0.5, eps, 13,
+                                   eps, 1.2, -32),
+        "count": 1,
+        "dtype": rasterio.uint8,
+        "driver": "GTiff",
+        "width": 10,
+        "height": 10,
+        "nodata": 1
+    }
+
+    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        data = np.ones((10, 10), dtype=rasterio.uint8)
+        data[0:6, 0:6] = 255
+        dst.write(data, indexes=1)
+
+    return tmpdir
 
 
 class ReaderContextTest(unittest.TestCase):
@@ -319,3 +345,9 @@ def test_read_out_mask(path_rgb_byte_tif, out):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(ValueError):
             src.read(indexes=[2], out=out)
+
+
+def test_read_bounds_eps(test_data_dir):
+    breakpoint()
+    with rasterio.open(str(test_data_dir/"a.tif")) as ds:
+        assert ds.bounds == (13.0, -20.0, 18.0, -32.0)
