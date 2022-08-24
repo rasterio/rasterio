@@ -8,6 +8,7 @@ import logging
 import math
 import os
 import warnings
+from sys import float_info
 
 from libc.string cimport strncmp
 from rasterio.crs cimport CRS
@@ -939,7 +940,8 @@ cdef class DatasetBase:
         a, b, c, d, e, f, _, _, _ = self.transform
         width = self.width
         height = self.height
-        if b == d == 0:
+        eps = float_info.epsilon
+        if math.isclose(b, 0, abs_tol=eps) and math.isclose(d, 0, abs_tol=eps):
             return BoundingBox(c, f + e * height, c + a * width, f)
         else:
             c0x, c0y = c, f
