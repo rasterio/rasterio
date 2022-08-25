@@ -6,6 +6,7 @@ from functools import partial
 import math
 import numpy as np
 import sys
+import warnings
 
 from affine import Affine
 
