@@ -944,13 +944,17 @@ cdef class DatasetBase:
         if math.isclose(b, 0, abs_tol=eps) and math.isclose(d, 0, abs_tol=eps):
             return BoundingBox(c, f + e * height, c + a * width, f)
         else:
+            # Raster is rotated (Issue #1420)
             c0x, c0y = c, f
             c1x, c1y = self.transform * (0, height)
             c2x, c2y = self.transform * (width, height)
             c3x, c3y = self.transform * (width, 0)
             xs = (c0x, c1x, c2x, c3x)
             ys = (c0y, c1y, c2y, c3y)
-            return BoundingBox(min(xs), min(ys), max(xs), max(ys))
+            bottom, top = min(ys), max(ys)
+            if e > 0:
+                bottom, top = top, bottom
+            return BoundingBox(min(xs), bottom, max(xs), top)
 
     @property
     def res(self):
