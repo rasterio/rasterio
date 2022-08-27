@@ -1,7 +1,3 @@
-rasterio.rio.edit\_info module
-==============================
-
-.. automodule:: rasterio.rio.edit_info
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.edit_info:edit
+   :prog: rio edit_info
+   :show-nested:

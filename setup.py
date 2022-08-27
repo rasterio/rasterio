@@ -274,7 +274,13 @@ inst_reqs = [
 ]
 
 extra_reqs = {
-    "docs": ["ghp-import", "numpydoc", "sphinx", "sphinx-rtd-theme"],
+    "docs": [
+        "ghp-import",
+        "numpydoc",
+        "sphinx",
+        "sphinx-click",
+        "sphinx-rtd-theme",
+    ],
     "ipython": ["ipython>=2.0"],
     "plot": ["matplotlib"],
     "s3": ["boto3>=1.2.4"],

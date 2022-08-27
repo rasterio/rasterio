@@ -1,7 +1,3 @@
-rasterio.rio.rm module
-======================
-
-.. automodule:: rasterio.rio.rm
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.rm:rm
+   :prog: rio rm
+   :show-nested:

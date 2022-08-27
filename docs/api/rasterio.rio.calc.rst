@@ -1,7 +1,4 @@
-rasterio.rio.calc module
-========================
+.. click:: rasterio.rio.calc:calc
+   :prog: rio calc
+   :show-nested:
 
-.. automodule:: rasterio.rio.calc
-    :members:
-    :undoc-members:
-    :show-inheritance:

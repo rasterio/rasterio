@@ -12,5 +12,6 @@ pytest-cov>=2.2.0
 pytest-randomly==3.10.1
 shapely
 sphinx
+sphinx-click
 sphinx-rtd-theme
 wheel

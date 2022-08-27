@@ -214,6 +214,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     shapely
     ipython>=2.0
     sphinx
+    sphinx-click
     packaging
     ghp-import
     sphinx-rtd-theme
@@ -222,6 +223,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     ghp-import
     numpydoc
     sphinx
+    sphinx-click
     sphinx-rtd-theme
 
     [ipython]
