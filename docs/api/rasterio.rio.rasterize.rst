@@ -1,7 +1,3 @@
-rasterio.rio.rasterize module
-=============================
-
-.. automodule:: rasterio.rio.rasterize
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.rasterize:rasterize
+   :prog: rio rasterize
+   :show-nested:

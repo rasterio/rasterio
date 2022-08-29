@@ -1,7 +1,3 @@
-rasterio.rio.convert module
-===========================
-
-.. automodule:: rasterio.rio.convert
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.convert:convert
+   :prog: rio convert
+   :show-nested:

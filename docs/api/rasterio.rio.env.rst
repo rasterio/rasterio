@@ -1,7 +1,3 @@
-rasterio.rio.env module
-=======================
-
-.. automodule:: rasterio.rio.env
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.env:env
+   :prog: rio env
+   :show-nested:

@@ -1,7 +1,4 @@
-rasterio.rio.stack module
-=========================
+.. click:: rasterio.rio.stack:stack
+   :prog: rio stack
+   :show-nested:
 
-.. automodule:: rasterio.rio.stack
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,7 +1,2 @@
-rasterio.rio.clip module
-========================
-
-.. automodule:: rasterio.rio.clip
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.clip:clip
+   :prog: rio clip
