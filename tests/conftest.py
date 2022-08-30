@@ -624,6 +624,38 @@ def set_mem_name(request, monkeypatch):
     monkeypatch.setattr(rasterio._io, "uuid4", youyoueyedeefour)
 
 
+@pytest.fixture(scope="function")
+def directory_with_overlapping_rasters(tmp_path):
+    # Non-coincident datasets test fixture.
+    # Three overlapping GeoTIFFs, two to the NW and one to the SE.
+    kwargs = {
+        "crs": "EPSG:4326",
+        "transform": affine.Affine(0.2, 0, -114, 0, -0.2, 46),
+        "count": 1,
+        "dtype": rasterio.uint8,
+        "driver": "GTiff",
+        "width": 10,
+        "height": 10,
+        "nodata": 0,
+    }
+
+    with rasterio.open(tmp_path.joinpath("nw1.tif"), "w", **kwargs) as dst:
+        data = np.ones((10, 10), dtype=rasterio.uint8)
+        dst.write(data, indexes=1)
+
+    with rasterio.open(tmp_path.joinpath("nw3.tif"), "w", **kwargs) as dst:
+        data = np.ones((10, 10), dtype=rasterio.uint8) * 3
+        dst.write(data, indexes=1)
+
+    kwargs["transform"] = affine.Affine(0.2, 0, -113, 0, -0.2, 45)
+
+    with rasterio.open(tmp_path.joinpath("se.tif"), "w", **kwargs) as dst:
+        data = np.ones((10, 10), dtype=rasterio.uint8) * 2
+        dst.write(data, indexes=1)
+
+    return tmp_path
+
+
 class MockGeoInterface:
     """Tiny wrapper for GeoJSON to present an object with __geo_interface__ for testing"""
     def __init__(self, geojson):

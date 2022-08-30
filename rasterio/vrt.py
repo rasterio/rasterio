@@ -3,9 +3,10 @@
 import xml.etree.ElementTree as ET
 
 import rasterio
-from rasterio._warp import WarpedVRTReaderBase
+from rasterio._warp import WarpedVRTReaderBase, _BuildVRT
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
+from rasterio.env import ensure_env
 from rasterio._path import _parse_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
@@ -245,3 +246,66 @@ def _boundless_vrt_doc(
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
     return ET.tostring(vrtdataset).decode('ascii')
+
+
+class BuildVRT(_BuildVRT):
+    """
+    Builds a VRT from a list of datasets.
+
+    See: :cpp:func:`GDALBuildVRT`
+
+    Parameters
+    ----------
+    file_paths: Iterable[Union[str, os.PathLike]]
+        Paths to files to use to build the VRT.
+    dst_path: Union[str, os.PathLike], optional
+        Path to write VRT file to. If not provided, will be in-memory raster.
+    resolution: Literal['highest', 'lowest', 'average', 'user'], optional
+        In case the resolution of all input files is not the same,
+        the resolution flag enables the user to control the way
+        the output resolution is computed.
+
+        - highest will pick the smallest values of pixel dimensions within the set of source rasters.
+        - lowest will pick the largest values of pixel dimensions within the set of source rasters.
+        - average is the default and will compute an average of pixel dimensions within the set of source rasters.
+        - user must be used in combination with the dst_resolution option to specify the target resolution.
+
+    dst_bounds: Tuple[float, float, float, float], optional
+        output bounds as (minX, minY, maxX, maxY) in target CRS.
+    dst_resolution: Union[float, Tuple[float, float]], optional
+        output resolution (x resolution, y resolution) in target coordinate reference system.
+    target_aligned_pixels: bool, optional
+        whether to force output bounds to be multiple of output resolution.
+    separate: bool, optional
+        whether each source file goes into a separate stacked band in the VRT band.
+    band_list: List[int], optional
+        array of band numbers (index start at 1).
+    add_alpha: bool, optional
+        whether to add an alpha mask band to the VRT when the source raster have none.
+    resampling: Union[int, rasterio.enums.Resampling], optional
+        resampling mode.
+    dst_crs: CRS, optional
+        Assigned output coordinate reference system.
+    allow_projection_difference: bool, optional
+        Whether to accept input datasets have not the same projection.
+        Note: they will *not* be reprojected.
+    src_nodata: float, optional
+        source nodata value(s).
+    vrt_nodata: float, optional
+        nodata values at the VRT band level.
+    hide_nodata: bool, optional
+        whether to make the VRT band not report the NoData value.
+    strict: bool, optional
+        set to True if warnings should be failures
+
+    """
+
+    @ensure_env
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return (
+            f"<{self.closed and 'closed' or 'open'} BuildVRT "
+            f"name='{self.name}' mode='{self.mode}'>"
+        )
