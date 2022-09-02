@@ -170,6 +170,25 @@ def guard_transform(transform):
     return transform
 
 
+def decompose(transform):
+    """ For a conformal mapping, extract rotation, scale, and translation """
+    if not transform.is_conformal:
+        raise TransformError("shear detected, transform must be conformal")
+
+    transform = np.asarray(transform).reshape(3,3)
+    translation = tuple(transform[:2, 2])
+    transform[:2, 2] = 0
+    u, s, vh = np.linalg.svd(transform)
+    U = u @ vh
+    P = (vh.T.conj() * s) @ vh
+    if np.isclose(U[0,0], 0):
+        rotation_angle = math.degrees(math.asin(U[1, 0]))
+    else:
+        rotation_angle = math.degrees(math.acos(U[0, 0]))
+    scale_factor = tuple(P.max(axis=1)[:2])
+    return translation, rotation_angle, scale_factor
+
+
 def from_origin(west, north, xsize, ysize):
     """Return an Affine transformation given upper left and pixel sizes.
 
