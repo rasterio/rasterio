@@ -112,7 +112,7 @@ from a more fundamental attribute: the dataset's geospatial transform.
            0.0, -30.0, 4265115.0)
 
 A dataset's :attr:`.DatasetReader.transform` is an affine
-transformation matrix that maps pixel locations in (row, col) coordinates to
+transformation matrix that maps pixel locations in (col, row) coordinates to
 (x, y) spatial positions. The product of this matrix and ``(0, 0)``, the row
 and column coordinates of the upper left corner of the dataset, is the spatial
 position of the upper left corner.
