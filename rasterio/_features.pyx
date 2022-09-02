@@ -549,6 +549,10 @@ cdef class GeomBuilder:
         coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
         return {'type': 'MultiPolygon', 'coordinates': coordinates}
 
+    cpdef _buildGeometryCollection(self):
+        geometries = [geom for geom in self._buildParts(self.geom)]
+        return {'type': 'GeometryCollection', 'geometries': geometries}
+
     cdef build(self, OGRGeometryH geom):
         """Builds a GeoJSON object from an OGR geometry object."""
         if geom == NULL:
@@ -559,7 +563,10 @@ cdef class GeomBuilder:
         self.ndims = OGR_G_GetCoordinateDimension(geom)
         self.geom = geom
 
-        return getattr(self, '_build' + self.geomtypename)()
+        try:
+            return getattr(self, '_build' + self.geomtypename)()
+        except AttributeError:
+            raise ValueError(f"Unsupported geometry type {self.geomtypename}")
 
 
 cdef class OGRGeomBuilder:
@@ -641,7 +648,7 @@ cdef class OGRGeomBuilder:
             OGR_G_AddGeometryDirectly(geom, part)
         return geom
 
-    cdef OGRGeometryH _buildGeomCollection(self, object geoms) except NULL:
+    cdef OGRGeometryH _buildGeometryCollection(self, object geoms) except NULL:
         cdef OGRGeometryH part = NULL
         cdef OGRGeometryH ogr_geom = self._createOgrGeometry(
             GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection'])
@@ -688,7 +695,7 @@ cdef class OGRGeomBuilder:
             if not (geometries and len(geometries) > 0):
                 raise ValueError("Input is not a valid geometry object")
 
-            return self._buildGeomCollection(geometries)
+            return self._buildGeometryCollection(geometries)
 
         else:
             raise ValueError("Unsupported geometry type %s" % typename)
