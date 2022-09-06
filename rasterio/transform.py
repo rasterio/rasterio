@@ -171,16 +171,21 @@ def guard_transform(transform):
 
 
 def decompose(transform):
-    """ For a conformal mapping, extract rotation, scale, and translation """
+    """ For a conformal mapping, extract rotation, scale, and translation
+    
+    Rotation and scale are found using a polar decompostion (based on
+    the implementation in scipy.linalg.polar). """
     if not transform.is_conformal:
         raise TransformError("shear detected, transform must be conformal")
 
     translation = transform.xoff, transform.yoff
     transform = np.asarray(transform).reshape(3,3)
     transform[:2, 2] = 0
+    # Polar decomposition via SVD
     u, s, vh = np.linalg.svd(transform)
     U = u @ vh
     P = (vh.T.conj() * s) @ vh
+    # Avoid numerical stability issues with inverse sine around 0
     if np.isclose(U[0,0], 0):
         rotation_angle = math.degrees(math.asin(U[1, 0]))
     else:
