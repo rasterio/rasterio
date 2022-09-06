@@ -408,13 +408,14 @@ def test_2421_rpc_height_ignored():
         assert abs(x2 - x1) > 0
         assert abs(y2 - y1) > 0
 
+
 def test_decompose_translation():
     transform = Affine.translation(1, 5)
-
     t, r, s = decompose(transform)
     assert t == (1, 5)
     assert r == 0
     assert s == (1.0, 1.0)
+
 
 def test_decompose_rotation():
     transform = Affine.rotation(75)
@@ -423,6 +424,7 @@ def test_decompose_rotation():
     assert numpy.isclose(r, 75)
     assert numpy.allclose(s, (1.0, 1.0))
 
+
 def test_decompose_scaling():
     transform = Affine.scale(15, 12)
     t, r, s, = decompose(transform)
@@ -430,10 +432,12 @@ def test_decompose_scaling():
     assert r == 0
     assert numpy.allclose(s, (15, 12))
 
+
 def test_decompose_shear():
     transform = Affine.shear(5)
     with pytest.raises(TransformError):
         decompose(transform)
+
 
 def test_decompose_trs():
     transform = Affine.translation(2, 4)
