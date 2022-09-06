@@ -183,6 +183,11 @@ def decompose(transform):
     -------
     tuple
         (translation, rotation, scale)
+
+    Raises
+    ------
+    TransformError
+        If input transform is non conformal (ie has shear)
     """
     if not transform.is_conformal:
         raise TransformError("shear detected, transform must be conformal")
