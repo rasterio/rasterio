@@ -11,6 +11,7 @@ import numpy
 import rasterio
 from rasterio import transform
 from rasterio.transform import (
+    decompose,
     get_transformer,
     xy, 
     rowcol,
@@ -406,3 +407,40 @@ def test_2421_rpc_height_ignored():
         x2, y2 = src.xy(0, 0, z=2000, transform_method=transform_method)
         assert abs(x2 - x1) > 0
         assert abs(y2 - y1) > 0
+
+def test_decompose_translation():
+    transform = Affine.translation(1, 5)
+
+    t, r, s = decompose(transform)
+    assert t == (1, 5)
+    assert r == 0
+    assert s == (1.0, 1.0)
+
+def test_decompose_rotation():
+    transform = Affine.rotation(75)
+    t, r, s = decompose(transform)
+    assert t == (0, 0)
+    assert numpy.isclose(r, 75)
+    assert numpy.allclose(s, (1.0, 1.0))
+
+def test_decompose_scaling():
+    transform = Affine.scale(15, 12)
+    t, r, s, = decompose(transform)
+    assert t == (0, 0)
+    assert r == 0
+    assert numpy.allclose(s, (15, 12))
+
+def test_decompose_shear():
+    transform = Affine.shear(5)
+    with pytest.raises(TransformError):
+        decompose(transform)
+
+def test_decompose_trs():
+    transform = Affine.translation(2, 4)
+    transform *= Affine.rotation(38)
+    transform *= Affine.scale(4, 1)
+
+    t, r, s, = decompose(transform)
+    assert t == (2, 4)
+    assert numpy.isclose(r, 38)
+    assert numpy.allclose(s, (4, 1))
