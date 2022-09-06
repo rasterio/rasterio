@@ -175,8 +175,8 @@ def decompose(transform):
     if not transform.is_conformal:
         raise TransformError("shear detected, transform must be conformal")
 
+    translation = transform.xoff, transform.yoff
     transform = np.asarray(transform).reshape(3,3)
-    translation = tuple(transform[:2, 2])
     transform[:2, 2] = 0
     u, s, vh = np.linalg.svd(transform)
     U = u @ vh
