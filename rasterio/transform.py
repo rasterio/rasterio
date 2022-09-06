@@ -171,10 +171,19 @@ def guard_transform(transform):
 
 
 def decompose(transform):
-    """ For a conformal mapping, extract rotation, scale, and translation
-    
+    """ For a conformal mapping, extract translation, rotation, and scale
     Rotation and scale are found using a polar decompostion (based on
-    the implementation in scipy.linalg.polar). """
+    the implementation in scipy.linalg.polar).
+    
+    Parameters
+    ----------
+    transform : Affine.transform
+    
+    Returns
+    -------
+    tuple
+        (translation, rotation, scale)
+    """
     if not transform.is_conformal:
         raise TransformError("shear detected, transform must be conformal")
 
