@@ -204,7 +204,7 @@ def decompose(transform):
         rotation_angle = math.degrees(math.asin(U[1, 0]))
     else:
         rotation_angle = math.degrees(math.acos(U[0, 0]))
-    scale_factor = tuple(P.max(axis=1)[:2])
+    scale_factor = (P[0,0], P[1,1])
     return translation, rotation_angle, scale_factor
 
 
