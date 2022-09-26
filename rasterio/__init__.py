@@ -6,6 +6,7 @@ import logging
 from logging import NullHandler
 import os
 import platform
+import sys
 import warnings
 
 # On Windows we must explicitly register the directories that contain
