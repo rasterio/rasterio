@@ -2,15 +2,13 @@
 
 import xml.etree.ElementTree as ET
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio._warp import WarpedVRTReaderBase
-    from rasterio.dtypes import _gdal_typename
-    from rasterio.enums import MaskFlags
-    from rasterio._path import _parse_path
-    from rasterio.transform import TransformMethodsMixin
-    from rasterio.windows import WindowMethodsMixin
+import rasterio
+from rasterio._warp import WarpedVRTReaderBase
+from rasterio.dtypes import _gdal_typename
+from rasterio.enums import MaskFlags
+from rasterio._path import _parse_path
+from rasterio.transform import TransformMethodsMixin
+from rasterio.windows import WindowMethodsMixin
 
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,

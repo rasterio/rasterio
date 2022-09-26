@@ -3,9 +3,7 @@
 import logging
 import os
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._path import _parse_path, _UnparsedPath
+from rasterio._path import _parse_path, _UnparsedPath
 
 
 log = logging.getLogger(__name__)
