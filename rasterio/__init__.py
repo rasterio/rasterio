@@ -13,7 +13,7 @@ import warnings
 # the GDAL and supporting DLLs starting with Python 3.8. Presently, we
 # support the rasterio-wheels location or directories on the system's
 # executable path.
-if platform.system() == "Windows" and sys.version_info >= (3, 8):
+if platform.system() == "Windows":
     _whl_dir = os.path.join(os.path.dirname(__file__), ".libs")
     if os.path.exists(_whl_dir):
         os.add_dll_directory(_whl_dir)
