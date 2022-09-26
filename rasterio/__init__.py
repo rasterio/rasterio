@@ -1,7 +1,7 @@
 """Rasterio"""
 
 from collections import namedtuple
-from contextlib import ExitStack
+import glob
 import logging
 from logging import NullHandler
 import os
@@ -46,7 +46,7 @@ from rasterio.dtypes import (
     check_dtype,
     complex_int16,
 )
-from rasterio.env import ensure_env_with_credentials, Env, env_ctx_if_needed
+from rasterio.env import ensure_env_with_credentials, Env
 from rasterio.errors import (
     RasterioIOError,
     DriverCapabilityError,
@@ -93,6 +93,7 @@ __geos_version__ = ".".join([str(version) for version in get_geos_version()])
 # See rasterio/rio/main.py for an example.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
+
 
 # Remove this in 1.4.0 (see comment on gh-2423).
 def parse_path(path):
