@@ -1,61 +1,87 @@
 """Rasterio"""
 
 from collections import namedtuple
-from contextlib import ExitStack
+import glob
 import logging
 from logging import NullHandler
 import os
+import platform
+import sys
 import warnings
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._show_versions import show_versions
-    from rasterio._version import gdal_version, get_geos_version, get_proj_version
-    from rasterio.crs import CRS
-    from rasterio.drivers import driver_from_extension, is_blacklisted
-    from rasterio.dtypes import (
-        bool_,
-        ubyte,
-        sbyte,
-        uint8,
-        int8,
-        uint16,
-        int16,
-        uint32,
-        int32,
-        int64,
-        uint64,
-        float32,
-        float64,
-        complex_,
-        check_dtype,
-        complex_int16,
-    )
-    from rasterio.env import ensure_env_with_credentials, Env, env_ctx_if_needed
-    from rasterio.errors import RasterioIOError, DriverCapabilityError, RasterioDeprecationWarning
-    from rasterio.io import (
-        DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
-    from rasterio.profiles import default_gtiff_profile
-    from rasterio.transform import Affine, guard_transform
-    from rasterio._path import _parse_path
+# On Windows we must explicitly register the directories that contain
+# the GDAL and supporting DLLs starting with Python 3.8. Presently, we
+# support the rasterio-wheels location or directories on the system's
+# executable path.
+if platform.system() == "Windows":
+    _whl_dir = os.path.join(os.path.dirname(__file__), ".libs")
+    if os.path.exists(_whl_dir):
+        os.add_dll_directory(_whl_dir)
+    else:
+        if "PATH" in os.environ:
+            for p in os.environ["PATH"].split(os.pathsep):
+                if glob.glob(os.path.join(p, "gdal*.dll")):
+                    os.add_dll_directory(p)
 
-    # These modules are imported from the Cython extensions, but are also import
-    # here to help tools like cx_Freeze find them automatically
-    import rasterio._err
-    import rasterio.coords
-    import rasterio.enums
-    import rasterio._path
 
-    try:
-        from rasterio.io import FilePath
-        have_vsi_plugin = True
-    except ImportError:
-        class FilePath:
-            pass
-        have_vsi_plugin = False
+from rasterio._show_versions import show_versions
+from rasterio._version import gdal_version, get_geos_version, get_proj_version
+from rasterio.crs import CRS
+from rasterio.drivers import driver_from_extension, is_blacklisted
+from rasterio.dtypes import (
+    bool_,
+    ubyte,
+    sbyte,
+    uint8,
+    int8,
+    uint16,
+    int16,
+    uint32,
+    int32,
+    int64,
+    uint64,
+    float32,
+    float64,
+    complex_,
+    check_dtype,
+    complex_int16,
+)
+from rasterio.env import ensure_env_with_credentials, Env
+from rasterio.errors import (
+    RasterioIOError,
+    DriverCapabilityError,
+    RasterioDeprecationWarning,
+)
+from rasterio.io import (
+    DatasetReader,
+    get_writer_for_path,
+    get_writer_for_driver,
+    MemoryFile,
+)
+from rasterio.profiles import default_gtiff_profile
+from rasterio.transform import Affine, guard_transform
+from rasterio._path import _parse_path
+
+# These modules are imported from the Cython extensions, but are also import
+# here to help tools like cx_Freeze find them automatically
+import rasterio._err
+import rasterio.coords
+import rasterio.enums
+import rasterio._path
+
+try:
+    from rasterio.io import FilePath
+
+    have_vsi_plugin = True
+except ImportError:
+
+    class FilePath:
+        pass
+
+    have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Env', 'CRS']
-__version__ = "1.3.2"
+__version__ = "1.3.3dev0"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
@@ -67,6 +93,7 @@ __geos_version__ = ".".join([str(version) for version in get_geos_version()])
 # See rasterio/rio/main.py for an example.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
+
 
 # Remove this in 1.4.0 (see comment on gh-2423).
 def parse_path(path):

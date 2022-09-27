@@ -5,23 +5,21 @@ from math import ceil, floor
 from affine import Affine
 import numpy as np
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
+import rasterio
 
-    from rasterio._base import _transform
-    from rasterio.crs import CRS
-    from rasterio.enums import Resampling
-    from rasterio.env import ensure_env, require_gdal_version
-    from rasterio.errors import TransformError, RPCError
-    from rasterio.transform import array_bounds
-    from rasterio._warp import (
-        _calculate_default_transform,
-        _reproject,
-        _transform_bounds,
-        _transform_geom,
-        SUPPORTED_RESAMPLING
-    )
+from rasterio._base import _transform
+from rasterio.crs import CRS
+from rasterio.enums import Resampling
+from rasterio.env import ensure_env, require_gdal_version
+from rasterio.errors import TransformError, RPCError
+from rasterio.transform import array_bounds
+from rasterio._warp import (
+    _calculate_default_transform,
+    _reproject,
+    _transform_bounds,
+    _transform_geom,
+    SUPPORTED_RESAMPLING,
+)
 
 @ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):

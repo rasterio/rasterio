@@ -1,14 +1,13 @@
 # Workaround for issue #378. A pure Python generator.
 
+from itertools import zip_longest
+
 import numpy as np
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio.enums import MaskFlags
-    from rasterio.windows import Window
-    from rasterio.transform import rowcol
+from rasterio.enums import MaskFlags
+from rasterio.windows import Window
+from rasterio.transform import rowcol
 
-from itertools import zip_longest
 
 def _grouper(iterable, n, fillvalue=None):
     "Collect data into non-overlapping fixed-length chunks or blocks"

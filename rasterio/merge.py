@@ -9,15 +9,12 @@ import warnings
 
 import numpy as np
 
-import rasterio._loading
-
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.coords import disjoint_bounds
-    from rasterio.enums import Resampling
-    from rasterio.errors import RasterioDeprecationWarning
-    from rasterio import windows
-    from rasterio.transform import Affine
+import rasterio
+from rasterio.coords import disjoint_bounds
+from rasterio.enums import Resampling
+from rasterio.errors import RasterioDeprecationWarning
+from rasterio import windows
+from rasterio.transform import Affine
 
 logger = logging.getLogger(__name__)
 
