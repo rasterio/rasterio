@@ -24,7 +24,11 @@ The shapes of the foreground features can be extracted like this:
 
     with rasterio.open('13547682814_f2e459f7a5_o_d.png') as src:
         blue = src.read(3)
-
+   
+    # pprint requires that the image dtype must be one of: int16, int32, uint8, uint16, float32.
+    # If your data comes as int8 you can cast your data to an appropriate dtype like this: 
+    # data = data.astype('int16')
+    
     mask = blue != 255
     shapes = features.shapes(blue, mask=mask)
     pprint.pprint(next(shapes))
