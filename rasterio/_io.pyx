@@ -407,6 +407,9 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
+            *Note*: if indexes is None, then the function will return all available indexes,
+              If indexes = () or [] (an empty list or empty tuple) the function will return an empty array.
+
         out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
@@ -482,7 +485,9 @@ cdef class DatasetReaderBase(DatasetBase):
                 out.shape = (1,) + out.shape
 
         if not indexes:
-            raise ValueError("No indexes to read")
+            out = np.array()
+            logging.warning("No indexes to read, return empty array")
+            return out
 
         check_dtypes = set()
         nodatavals = []
