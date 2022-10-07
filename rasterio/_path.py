@@ -64,7 +64,7 @@ class _ParsedPath(_Path):
     @classmethod
     def from_uri(cls, uri):
         parts = urlparse(uri)
-        path = parts.path
+        path = pathlib.Path(parts.path).as_posix() if parts.path else parts.path
         scheme = parts.scheme or None
 
         if parts.query:
@@ -76,7 +76,7 @@ class _ParsedPath(_Path):
         parts = path.split('!')
         path = parts.pop() if parts else None
         archive = parts.pop() if parts else None
-        return _ParsedPath(pathlib.Path(path).as_posix(), archive, scheme)
+        return _ParsedPath(path, archive, scheme)
 
     @property
     def name(self):
