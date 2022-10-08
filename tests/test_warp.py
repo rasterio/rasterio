@@ -2097,7 +2097,7 @@ def test_coordinate_pipeline(tmp_path):
 
 
 @pytest.mark.skipif(
-    not gdal_version.at_least('3.4'),
+    not gdal_version.at_least('3.4') or gdal_version.at_least("3.5"),
     reason="Requires GDAL 3.4.x")
 def test_issue2353bis(caplog):
     """Errors left by a successful transformation are cleaned up."""
