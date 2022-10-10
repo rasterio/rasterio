@@ -159,3 +159,26 @@ def test_concurrent(path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, pa
     tifs = [path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif] * 4
     with ThreadPoolExecutor(max_workers=8) as exe:
         list(exe.map(_open_geotiff, tifs, timeout=5))
+
+
+def test_python_file_reuse():
+    """Test that we can reuse a Python file, see gh-2550."""
+    ascii_raster_string = """ncols        5
+    nrows        5
+    xllcorner    440720.000000000000
+    yllcorner    3750120.000000000000
+    cellsize     60.000000000000
+    nodata_value -99999
+        107    123    132    115    132
+        115    132    107    123    148
+        115    132    140    132    123
+        148    132    123    123    115
+        132    156    132    140    132
+    """
+    ascii_raster_io = BytesIO(ascii_raster_string.encode("utf-8"))
+
+    with rasterio.open(ascii_raster_io) as rds:
+        _ = rds.bounds
+
+    with rasterio.open(ascii_raster_io) as rds:
+        _ = rds.bounds

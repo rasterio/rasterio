@@ -1,14 +1,19 @@
 Changes
 =======
 
-1.3.3 (TBD)
------------
+1.3.3 (2022-10-11)
+------------------
 
 Packaging:
 
 The rasterio._loading module, which supports DLL loading on Windows,
 has been moved into __init__.py and is no longer used anywhere else
 (#2594).
+
+Bug fixes:
+
+- Rasterio's Python file VSI plugin now sets the position of the underlying
+  stream to 0 on close, resolving #2550.
 
 1.3.2 (2022-08-19)
 ------------------
