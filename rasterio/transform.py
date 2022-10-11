@@ -436,16 +436,16 @@ class TransformerBase():
         
         # shift input coordinates according to offset
         T = IDENTITY.translation(coff, roff)
-        temp_rows = []
-        temp_cols = []
+        offset_rows = []
+        offset_cols = []
         try:
             for colrow in zip(cols, rows):
-                col, row = T * colrow
-                temp_rows.append(row)
-                temp_cols.append(col)
+                offset_col, offset_row = T * colrow
+                offset_rows.append(offset_row)
+                offset_cols.append(offset_col)
 
             new_xs, new_ys = self._transform(
-                temp_cols, temp_rows, zs, transform_direction=TransformDirection.forward
+                offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
             )
 
             if len(new_xs) == 1 and not AS_ARR:
