@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "cython~=0.29.24", "oldest-supported-numpy"]
+requires = ["setuptools", "wheel", "cython>=0.29.29", "oldest-supported-numpy"]
 
 [tool.pytest.ini_options]
 markers = [
