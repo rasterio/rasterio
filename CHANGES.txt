@@ -14,6 +14,7 @@ Bug fixes:
 
 - GeoTIFF profiles combining tiled=False and a defined blockysize are now
   supported (#2599).
+- URLs with // in the query string are now properly parsed (#2603).
 - Rasterio's Python file VSI plugin now sets the position of the underlying
   stream to 0 on close, resolving #2550.
 
