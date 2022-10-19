@@ -155,7 +155,9 @@ cdef size_t filepath_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 cdef int filepath_close(void *pFile) except -1 with gil:
     # Optional
     cdef object file_wrapper = <object>pFile
-    del _FILESYSTEM_INFO[file_wrapper._filepath_path]
+    cdef object file_obj = file_wrapper._file_obj
+    file_obj.seek(0)
+    _ = _FILESYSTEM_INFO.pop(file_wrapper._filepath_path, None)
     return 0
 
 

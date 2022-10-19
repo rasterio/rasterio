@@ -80,10 +80,10 @@ def test_dataset_profile_property_tiled(data):
 
 
 def test_dataset_profile_property_untiled(data, path_rgb_byte_tif):
-    """An untiled dataset's profile has no block sizes"""
+    """An untiled dataset's profile has block y sizes"""
     with rasterio.open(path_rgb_byte_tif) as src:
         assert 'blockxsize' not in src.profile
-        assert 'blockysize' not in src.profile
+        assert src.profile['blockysize'] == 3
         assert src.profile['tiled'] is False
 
 

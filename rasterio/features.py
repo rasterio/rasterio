@@ -7,20 +7,22 @@ import warnings
 
 import numpy as np
 
-import rasterio._loading
-
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
-    from rasterio.enums import MergeAlg
-    from rasterio.env import ensure_env, GDALVersion
-    from rasterio.errors import ShapeSkipWarning
-    from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-    from rasterio import warp
-    from rasterio.rio.helpers import coords
-    from rasterio.transform import Affine
-    from rasterio.transform import IDENTITY, guard_transform, rowcol
-    from rasterio.windows import Window
+import rasterio
+from rasterio.dtypes import (
+    validate_dtype,
+    can_cast_dtype,
+    get_minimum_dtype,
+    _getnpdtype,
+)
+from rasterio.enums import MergeAlg
+from rasterio.env import ensure_env, GDALVersion
+from rasterio.errors import ShapeSkipWarning
+from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio import warp
+from rasterio.rio.helpers import coords
+from rasterio.transform import Affine
+from rasterio.transform import IDENTITY, guard_transform, rowcol
+from rasterio.windows import Window
 
 log = logging.getLogger(__name__)
 

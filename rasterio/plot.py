@@ -12,11 +12,9 @@ import warnings
 
 import numpy as np
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.io import DatasetReader
-    from rasterio.transform import guard_transform
+import rasterio
+from rasterio.io import DatasetReader
+from rasterio.transform import guard_transform
 
 logger = logging.getLogger(__name__)
 

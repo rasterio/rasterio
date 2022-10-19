@@ -6,22 +6,21 @@ from functools import partial
 import math
 import numpy as np
 import sys
+import warnings
 
 from affine import Affine
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.env import env_ctx_if_needed
-    from rasterio._transform import (
-        _transform_from_gcps,
-        RPCTransformerBase,
-        GCPTransformerBase
-    )
-    from rasterio.enums import TransformDirection, TransformMethod
-    from rasterio.control import GroundControlPoint
-    from rasterio.rpc import RPC
-    from rasterio.errors import TransformError, RasterioDeprecationWarning
+import rasterio
+from rasterio.env import env_ctx_if_needed
+from rasterio._transform import (
+    _transform_from_gcps,
+    RPCTransformerBase,
+    GCPTransformerBase,
+)
+from rasterio.enums import TransformDirection, TransformMethod
+from rasterio.control import GroundControlPoint
+from rasterio.rpc import RPC
+from rasterio.errors import TransformError, RasterioDeprecationWarning
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()

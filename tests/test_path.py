@@ -99,6 +99,14 @@ def test_parse_gdal():
     assert _parse_path('GDAL:filepath:varname').path == 'GDAL:filepath:varname'
 
 
+def test_parse_http_password():
+    """Make sure password unmodified GH2602"""
+    parsed = _parse_path('https://foo.tif?bar=a//b')
+    assert parsed.path == 'foo.tif?bar=a//b'
+    assert parsed.archive is None
+    assert parsed.scheme == 'https'
+
+
 @pytest.mark.skipif(sys.platform == 'win32', reason="Checking behavior on posix, not win32")
 def test_parse_windows_path(monkeypatch):
     """Return Windows paths unparsed"""

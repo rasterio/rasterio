@@ -1023,7 +1023,7 @@ cdef class DatasetBase:
                 blockysize=self.block_shapes[0][0],
                 tiled=True)
         else:
-            m.update(tiled=False)
+            m.update(blockysize=self.block_shapes[0][0], tiled=False)
         if self.compression:
             m['compress'] = self.compression.name
         if self.interleaving:

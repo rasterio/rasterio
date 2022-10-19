@@ -5,21 +5,22 @@ Instances of these classes are called dataset objects.
 
 import logging
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._base import (
-        get_dataset_driver, driver_can_create, driver_can_create_copy)
-    from rasterio._io import (
-        DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
-        MemoryFileBase)
-    from rasterio.windows import WindowMethodsMixin
-    from rasterio.env import ensure_env
-    from rasterio.transform import TransformMethodsMixin
-    from rasterio._path import _UnparsedPath
-    try:
-        from rasterio._filepath import FilePathBase
-    except ImportError:
-        FilePathBase = object
+from rasterio._base import get_dataset_driver, driver_can_create, driver_can_create_copy
+from rasterio._io import (
+    DatasetReaderBase,
+    DatasetWriterBase,
+    BufferedDatasetWriterBase,
+    MemoryFileBase,
+)
+from rasterio.windows import WindowMethodsMixin
+from rasterio.env import ensure_env
+from rasterio.transform import TransformMethodsMixin
+from rasterio._path import _UnparsedPath
+
+try:
+    from rasterio._filepath import FilePathBase
+except ImportError:
+    FilePathBase = object
 
 
 log = logging.getLogger(__name__)

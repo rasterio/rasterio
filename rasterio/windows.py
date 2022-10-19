@@ -27,10 +27,8 @@ from affine import Affine
 import attr
 import numpy as np
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio.errors import WindowError, RasterioDeprecationWarning
-    from rasterio.transform import rowcol, guard_transform
+from rasterio.errors import WindowError, RasterioDeprecationWarning
+from rasterio.transform import rowcol, guard_transform
 
 
 class WindowMethodsMixin:
