@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.3.3 (2022-10-11)
+1.3.3 (2022-10-19)
 ------------------
 
 Packaging:
@@ -12,6 +12,8 @@ has been moved into __init__.py and is no longer used anywhere else
 
 Bug fixes:
 
+- GeoTIFF profiles combining tiled=False and a defined blockysize are now
+  supported (#2599).
 - Rasterio's Python file VSI plugin now sets the position of the underlying
   stream to 0 on close, resolving #2550.
 
