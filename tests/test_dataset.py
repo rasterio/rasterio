@@ -80,3 +80,25 @@ def test_statistics(path_rgb_byte_tif):
         assert stats.max == 255
         assert_almost_equal(stats.mean, 29.947726688477)
         assert_almost_equal(stats.std, 52.340921626611)
+
+
+@pytest.mark.parametrize("blockysize", [1, 2, 3, 7, 61, 62])
+def test_creation_untiled_blockysize(tmp_path, blockysize):
+    """Check for fix of gh-2599"""
+    tmpfile = tmp_path / "test.tif"
+    with rasterio.open(
+        tmpfile,
+        "w",
+        count=1,
+        height=61,
+        width=37,
+        dtype="uint8",
+        blockysize=blockysize,
+        tiled=False,
+    ) as dataset:
+        pass
+
+    with rasterio.open(tmpfile) as dataset:
+        assert not dataset.is_tiled
+        assert dataset.profile["blockysize"] == min(blockysize, 61)
+        assert dataset.block_shapes[0][0] == min(blockysize, 61)

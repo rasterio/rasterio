@@ -356,7 +356,7 @@ cdef char **convert_options(kwargs):
     for k, v in kwargs.items():
         if k.lower() in ['affine']:
             continue
-        elif k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+        elif k in ['BLOCKXSIZE'] and not tiled:
             continue
 
         # Special cases for enums and tuples.
