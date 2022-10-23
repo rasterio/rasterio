@@ -1994,12 +1994,11 @@ def http_error_server(data):
     import multiprocessing
     import http.server
 
-    PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
-    httpd = http.server.HTTPServer(("", PORT), Handler)
+    httpd = http.server.HTTPServer(("", 0), Handler)
     p = multiprocessing.Process(target=httpd.serve_forever)
     p.start()
-    yield
+    yield f'{httpd.server_name}:{httpd.server_port}'
     p.terminate()
     p.join()
 
@@ -2012,7 +2011,7 @@ def test_reproject_error_propagation(http_error_server, caplog):
     """Propagate errors up from ChunkAndWarpMulti and check for a retry."""
 
     with rasterio.open(
-        "/vsicurl?max_retry=1&retry_delay=.1&url=http://localhost:8000/RGB.byte.tif"
+        f"/vsicurl?max_retry=1&retry_delay=.1&url=http://{http_error_server}/RGB.byte.tif"
     ) as src:
         out = np.zeros((src.count, src.height, src.width), dtype="uint8")
 
