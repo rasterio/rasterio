@@ -291,6 +291,7 @@ extra_reqs = {
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
         "shapely",
+        "zarr",
     ],
 }
 
