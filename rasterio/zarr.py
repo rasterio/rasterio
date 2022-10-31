@@ -14,10 +14,11 @@ log = logging.getLogger(__name__)
 class RasterioStore(MutableMapping):
     def __init__(self, dataset):
         self.dataset = dataset
+        self.array_name = Path(self.dataset.name).as_posix().lstrip("/")
         chunk_height, chunk_width = self.dataset.block_shapes[0]
         self._data = {
             ".zgroup": json.dumps({"zarr_format": 2}).encode("utf-8"),
-            Path(self.dataset.name).name
+            self.array_name
             + "/.zarray": json.dumps(
                 {
                     "zarr_format": 2,
@@ -38,13 +39,13 @@ class RasterioStore(MutableMapping):
                     "filters": None,
                 }
             ).encode("utf-8"),
-            Path(self.dataset.name).name + "/.zattrs": json.dumps({}),
+            self.array_name + "/.zattrs": json.dumps({}),
         }
 
     def __getitem__(self, key):
         if key in self._data:
             return self._data[key]
-        elif key.startswith(Path(self.dataset.name).name):
+        elif key.startswith(self.array_name):
             chunk_height, chunk_width = self.dataset.block_shapes[0]
             chunking = key.split("/")[-1]
             bc, rc, cc = [int(x) for x in chunking.split(".")]
@@ -53,7 +54,6 @@ class RasterioStore(MutableMapping):
                 window=Window(
                     cc * chunk_width, rc * chunk_height, chunk_width, chunk_height
                 ),
-                boundless=True,
             )
             return chunk
         else:
