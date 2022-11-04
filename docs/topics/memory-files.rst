@@ -25,14 +25,14 @@ One is the use of a temporary file on disk.
         with rasterio.open(tmpfile.name) as dataset:
             data_array = dataset.read()
 
-Another is Rasterio's ``MemoryFile``, an abstraction for objects in GDAL's
+Another is Rasterio's :class:`.MemoryFile`, an abstraction for objects in GDAL's
 in-memory filesystem.
 
 MemoryFile: BytesIO meets NamedTemporaryFile
 --------------------------------------------
 
-The ``MemoryFile`` class behaves a bit like ``BytesIO`` and
-``NamedTemporaryFile``.  A GeoTIFF file in a sequence of ``data`` bytes can be
+The :class:`.MemoryFile` class behaves a bit like :class:`~io.BytesIO` and
+:func:`~tempfile.NamedTemporaryFile`.  A GeoTIFF file in a sequence of ``data`` bytes can be
 opened in memory as shown below.
 
 .. code-block:: python
@@ -45,12 +45,12 @@ opened in memory as shown below.
             data_array = dataset.read()
 
 This code can be several times faster than the code using
-``NamedTemporaryFile`` at roughly double the price in memory.
+:func:`~tempfile.NamedTemporaryFile` at roughly double the price in memory.
 
 Writing MemoryFiles
 -------------------
 
-Incremental writes to an empty ``MemoryFile`` are also possible.
+Incremental writes to an empty :class:`.MemoryFile` are also possible.
 
 .. code-block:: python
 
@@ -63,10 +63,10 @@ Incremental writes to an empty ``MemoryFile`` are also possible.
         with memfile.open() as dataset:
             data_array = dataset.read()
 
-These two modes are incompatible: a ``MemoryFile`` initialized with a sequence
+These two modes are incompatible: a :class:`.MemoryFile` initialized with a sequence
 of bytes cannot be extended.
 
-An empty ``MemoryFile`` can also be written to using dataset API methods.
+An empty :class:`.MemoryFile` can also be written to using dataset API methods.
 
 .. code-block:: python
 
@@ -77,9 +77,10 @@ An empty ``MemoryFile`` can also be written to using dataset API methods.
 Reading MemoryFiles
 -------------------
 
-Like ``BytesIO``, ``MemoryFile`` implements the Python file protocol and
-provides ``read()``, ``seek()``, and ``tell()`` methods. Instances are thus suitable
-as arguments for methods like `requests.post() <https://requests.readthedocs.io/en/latest/api/#requests.post>`__.
+Like :class:`~io.BytesIO`, :class:`.MemoryFile` implements the Python file protocol and
+provides :meth:`~.MemoryFile.read`,  :meth:`~.MemoryFile.seek`, and  :meth:`~.MemoryFile.tell`
+methods. Instances are thus suitable as arguments for methods like
+`requests.post() <https://requests.readthedocs.io/en/latest/api/#requests.post>`__.
 
 .. code-block:: python
 

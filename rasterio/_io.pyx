@@ -320,7 +320,7 @@ cdef bint in_dtype_range(value, dtype):
 cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) except -1:
     """Convenience function to handle IO with a GDAL band.
 
-    :param data: a numpy ndarray
+    :param data: a numpy.ndarray
     :param band: an instance of GDALGetRasterBand
     :param write: 1 (True) uses write mode (writes data into band),
                   0 (False) uses read mode (reads band into data)
@@ -356,7 +356,7 @@ cdef char **convert_options(kwargs):
     for k, v in kwargs.items():
         if k.lower() in ['affine']:
             continue
-        elif k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+        elif k in ['BLOCKXSIZE'] and not tiled:
             continue
 
         # Special cases for enums and tuples.
@@ -407,7 +407,7 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
@@ -418,7 +418,7 @@ cdef class DatasetReaderBase(DatasetBase):
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
-        out_dtype : str or numpy dtype
+        out_dtype : str or numpy.dtype
             The desired output data type. For example: 'uint8' or
             rasterio.uint16.
         out_shape : tuple, optional
@@ -444,7 +444,7 @@ cdef class DatasetReaderBase(DatasetBase):
             are not cached.
         fill_value : scalar
             Fill value applied in the `boundless=True` case only. Like
-            the fill_value of numpy.ma.MaskedArray, should be value
+            the fill_value of :class:`numpy.ma.MaskedArray`, should be value
             valid for the dataset's data type.
 
         Returns
@@ -710,7 +710,7 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
@@ -946,7 +946,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         Parameters
         ----------
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
@@ -1329,7 +1329,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
-        dtype : str or numpy dtype
+        dtype : str or numpy.dtype
             The data type for bands. For example: 'uint8' or
             ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
@@ -1642,7 +1642,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         Parameters
         ----------
         arr : array-like
-            This may be a numpy MaskedArray.
+            This may be a :class:`numpy.ma.MaskedArray`.
         indexes : int or list, optional
             Which bands of the dataset to write to. The default is all.
         window : Window, optional
@@ -2139,7 +2139,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
-        dtype : str or numpy dtype
+        dtype : str or numpy.dtype
             The data type for bands. For example: 'uint8' or
             ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.

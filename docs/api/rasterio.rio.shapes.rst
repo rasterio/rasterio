@@ -1,7 +1,3 @@
-rasterio.rio.shapes module
-==========================
-
-.. automodule:: rasterio.rio.shapes
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.shapes:shapes
+   :prog: rio shapes
+   :show-nested:

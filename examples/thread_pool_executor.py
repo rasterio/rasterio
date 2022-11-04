@@ -31,7 +31,7 @@ def main(infile, outfile, num_workers=4):
         profile = src.profile
         profile.update(blockxsize=128, blockysize=128, tiled=True)
 
-        with rasterio.open(outfile, "w", **src.profile) as dst:
+        with rasterio.open(outfile, "w", **profile) as dst:
             windows = [window for ij, window in dst.block_windows()]
 
             # We cannot write to the same file from multiple threads

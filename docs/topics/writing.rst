@@ -50,15 +50,15 @@ Supported Drivers
 -----------------
 ``GTiff`` is the only driver that supports writing directly to disk.
 GeoTiffs use the ``RasterUpdater`` and leverage the full capabilities
-of the ``GDALCreate`` function. We highly recommend using GeoTiff
+of the :cpp:func:`GDALCreate` function. We highly recommend using GeoTiff
 driver for writing as it is the best-tested and best-supported format.
 
 Some other formats that are writable by GDAL can also be written by
 Rasterio. These use an ``IndirectRasterUpdater`` which does not create
-directly but uses a temporary in-memory dataset and ``GDALCreateCopy``
+directly but uses a temporary in-memory dataset and :cpp:func:`GDALCreateCopy`
 to produce the final output.
 
 Some formats are known to produce invalid results using the
-``IndirectRasterUpdater``. These formats will raise a ``RasterioIOError``
+``IndirectRasterUpdater``. These formats will raise a :class:`.RasterioIOError`
 if you attempt to write to the. Currently this applies to the ``netCDF``
 driver but please let us know if you experience problems writing other formats.

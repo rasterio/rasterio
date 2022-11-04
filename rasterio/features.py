@@ -43,7 +43,7 @@ def geometry_mask(
     ----------
     geometries : iterable over geometries (GeoJSON-like objects)
     out_shape : tuple or list
-        Shape of output numpy ndarray.
+        Shape of output :class:`numpy.ndarray`.
     transform : Affine transformation object
         Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
@@ -58,8 +58,8 @@ def geometry_mask(
 
     Returns
     -------
-    numpy ndarray of type 'bool'
-        Result
+    numpy.ndarray :
+        Type is :class:`numpy.bool_`
 
     Notes
     -----
@@ -83,15 +83,15 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     Parameters
     ----------
-    source : array, dataset object, Band, or tuple(dataset, bidx)
+    source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
-    mask : numpy ndarray or rasterio Band object, optional
+    mask : numpy.ndarray or rasterio Band object, optional
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
         of False or 0 will be excluded from feature generation.  Note
         well that this is the inverse sense from Numpy's, where a mask
         value of True indicates invalid data in an array. If `source` is
-        a Numpy masked array and `mask` is None, the source's mask will
+        a :class:`numpy.ma.MaskedArray` and `mask` is None, the source's mask will
         be inverted and used in place of `mask`.
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
@@ -144,9 +144,9 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
         rasterio.uint16, or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
-    out : numpy ndarray, optional
+    out : numpy.ndarray, optional
         Array of same shape and data type as `source` in which to store results.
-    mask : numpy ndarray or rasterio Band object, optional
+    mask : numpy.ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int, optional
@@ -154,7 +154,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Returns
     -------
-    out : numpy ndarray
+    out : numpy.ndarray
         Result
 
     Notes
@@ -201,11 +201,11 @@ def rasterize(
         the `default_value` will be used. If `value` is `None` the
         `fill` value will be used.
     out_shape : tuple or list with 2 integers
-        Shape of output numpy ndarray.
+        Shape of output :class:`numpy.ndarray`.
     fill : int or float, optional
         Used as fill value for all areas not covered by input
         geometries.
-    out : numpy ndarray, optional
+    out : numpy.ndarray, optional
         Array of same shape and data type as `source` in which to store
         results.
     transform : Affine transformation object, optional
@@ -224,12 +224,12 @@ def rasterize(
                 the new value will be added to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
-    dtype : rasterio or numpy data type, optional
+    dtype : rasterio or numpy.dtype, optional
         Used as data type for results, if `out` is not provided.
 
     Returns
     -------
-    numpy ndarray
+    numpy.ndarray :
         If `out` was not None then `out` is returned, it will have been
         modified in-place. If `out` was None, this will be a new array.
 

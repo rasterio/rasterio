@@ -3,7 +3,7 @@ Profiles and Writing Files
 
 How to use profiles when opening files.
 
-Like Python's built-in ``open()`` function, :func:`rasterio.open()` has two primary
+Like Python's built-in :func:`open` function, :func:`rasterio.open` has two primary
 arguments: a path (or URL) and an optional mode (``'r'``, ``'w'``, ``'r+'``, or
 ``'w+'``). In addition there are a number of keyword arguments, several of
 which are required when creating a new dataset:

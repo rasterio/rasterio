@@ -9,7 +9,7 @@ rows and columns as the dataset in which non-zero elements (typically 255) indic
 corresponding data elements are valid. Other elements are invalid, or *nodata*
 elements.
 
-The other kind of mask is Numpy's `masked array <http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html>`__
+The other kind of mask is a :class:`numpy.ma.MaskedArray`
 which has the inverse sense: `True` values in a masked array's mask indicate
 that the corresponding data elements are invalid. With care, you can safely
 navigate convert between the two mask types.
@@ -47,7 +47,7 @@ Reading dataset masks
 ---------------------
 
 For every band of a dataset there is a mask. These masks can be had as arrays
-using the dataset's `read_masks()`` method. Below, ``msk`` is the valid data
+using the dataset's :meth:`~.DatasetReader.read_masks` method. Below, ``msk`` is the valid data
 mask corresponding to the first dataset band.
 
 .. code-block:: python
@@ -78,14 +78,14 @@ array shows the ``255`` values that indicate *valid data* regions.
            [255, 255, 255, 255, 255],
            [255, 255, 255, 255, 255]], dtype=uint8)
 
-Displayed using Matplotlib's `imshow()`, the mask looks like this:
+Displayed using  :func:`matplotlib.pyplot.imshow`, the mask looks like this:
 
 .. image:: ../img/mask_band.png
 
 Wait, what are these 0 values in the mask interior? This is an example of
 a problem inherent in 8-bit raster data: lack of dynamic range. The dataset
 creator has said that 0 values represent missing data (see the
-``nodatavals`` property in the first code block of this document), but some of
+:attr:`~.DatasetReader.nodatavals` property in the first code block of this document), but some of
 the valid data have values so low they've been rounded during processing to
 zero.  This can happen in scaling 16-bit data to 8 bits.  There's
 no magic nodata value bullet for this. Using 16 bits per band helps, but you
@@ -96,8 +96,8 @@ Writing masks
 
 Writing a mask that applies to all dataset bands is just as straightforward:
 pass an ndarray with ``True`` (or values that evaluate to ``True`` to indicate
-valid data and ``False`` to indicate no data to ``write_mask()``. Consider a
-copy of the test data opened in "r+" (update) mode.
+valid data and ``False`` to indicate no data to :meth:`~.DatasetWriter.write_mask`.
+Consider a copy of the test data opened in "r+" (update) mode.
 
 
 .. code-block:: python
@@ -140,7 +140,7 @@ certainly can. Consider a fresh copy of that file.
 
 This time we'll read all 3 band masks
 (based on the nodata values, not a .msk GeoTIFF) and show them
-as an RGB image (with the help of `numpy.dstack()`):
+as an RGB image (with the help of :func:`numpy.dstack`):
 
 .. code-block:: python
 
@@ -161,7 +161,7 @@ masks we've read.
 
 .. image:: ../img/mask_conj.png
 
-Now we'll use `sieve()` to shake out the small buggy regions of the mask. I've
+Now we'll use :func:`~rasterio.features.sieve` to shake out the small buggy regions of the mask. I've
 found the right value for the ``size`` argument empirically.
 
 .. code-block:: python
@@ -185,7 +185,7 @@ considered valid.
 Numpy masked arrays
 -------------------
 
-If you want, you can read dataset bands as numpy masked arrays.
+If you want, you can read dataset bands as a :class:`numpy.ma.MaskedArray`.
 
 .. code-block:: python
 
@@ -221,7 +221,7 @@ Dataset masks
 
 Sometimes a per-band mask is not appropriate. In this case you can either
 construct a mask out of the component bands (or other auxillary data) manually
-*or* use the Rasterio dataset's ``src.dataset_mask()`` function. This returns
+*or* use the Rasterio dataset's :meth:`~.DatasetReader.dataset_mask` function. This returns
 a 2D array with a GDAL-style mask determined by the following criteria,
 in order of precedence:
 
@@ -244,7 +244,7 @@ and configuration options. While Rasterio provides an abstraction for those
 details when reading, it's often important to understand the differences when
 creating, manipulating and writing raster data.
 
-   * **Nodata values**: the ``src.nodata`` value is used to define which pixels should be masked.
+   * **Nodata values**: the :attr:`~.DatasetReader.nodata` value is used to define which pixels should be masked.
    * **Alpha band**: with RGB imagery, an additional 4th band (containing a GDAL-style 8-bit mask) is sometimes provided to explictly define the mask.
    * **Internal mask band**: GDAL provides the ability to store an additional boolean 1-bit mask that is stored internally to the dataset. This option relies on a GDAL environment with ``GDAL_TIFF_INTERNAL_MASK=True``. Otherwise the mask will be written externally.
    * **External mask band**: Same as above but the mask band is stored in a sidecar ``.msk`` file (default).

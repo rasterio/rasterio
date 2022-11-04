@@ -6,7 +6,7 @@ These options come in two flavors:
 
     * **Configuration options** are used to alter the default behavior of GDAL
       and OGR and are generally treated as global environment variables by GDAL. These
-      are set through a :class:`rasterio.Env()` context block in Python.
+      are set through a :class:`rasterio.Env` context block in Python.
 
     * **Creation options** are passed into the driver at dataset creation time as
       keyword arguments to ``rasterio.open(mode='w')``.
@@ -18,7 +18,7 @@ GDAL options are typically set as environment variables. While
 environment variables will influence the behavior of ``rasterio``, we
 highly recommended avoiding them in favor of defining behavior programatically.
 
-The preferred way to set options for rasterio is via :class:`rasterio.Env()`.
+The preferred way to set options for rasterio is via :class:`rasterio.Env`.
 Options set on entering the context are deleted on exit.
 
 .. code-block:: python
@@ -51,7 +51,7 @@ Some of the common GeoTIFF creation options include:
   * ``PHOTOMETRIC`` to define the band's color interpretation
 
 To specify these creation options in python code, you pass them as keyword arguments
-to the :func:`rasterio.open()` command in write mode.
+to the :func:`rasterio.open` command in write mode.
 
 .. code-block:: python
 

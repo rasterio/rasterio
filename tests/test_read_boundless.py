@@ -157,7 +157,7 @@ def test_issue1982(capfd):
     # 2.4.4 that also fixes the issue.  This test will XPASS in the
     # rasterio-wheels tests.
     with rasterio.Env(CPL_CURL_VERBOSE=True), rasterio.open(
-        "https://raw.githubusercontent.com/mapbox/rasterio/master/tests/data/green.tif"
+        "https://raw.githubusercontent.com/mapbox/rasterio/main/tests/data/green.tif"
     ) as src:
         image = src.read(
             indexes=[1, 2, 3],

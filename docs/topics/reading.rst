@@ -14,8 +14,8 @@ Reading Datasets
 
 
 Dataset objects provide read, read-write, and write access to raster data files
-and are obtained by calling ``rasterio.open()``. That function mimics Python's
-built-in ``open()`` and the dataset objects it returns mimic Python ``file``
+and are obtained by calling :func:`rasterio.open`. That function mimics Python's
+built-in :func:`open` and the dataset objects it returns mimic Python ``file``
 objects.
 
 .. code-block:: python
@@ -31,8 +31,8 @@ objects.
     >>> src.closed
     False
 
-If you try to access a nonexistent path, ``rasterio.open()`` does the same
-thing as ``open()``, raising an exception immediately.
+If you try to access a nonexistent path, :func:`rasterio.open` does the same
+thing as :func:`open`, raising an exception immediately.
 
 .. code-block:: python
 
@@ -55,7 +55,7 @@ a file can be read like this:
     >>> array.shape
     (718, 791)
 
-The returned object is a 2-dimensional Numpy ndarray. The representation of
+The returned object is a 2-dimensional :class:`numpy.ndarray`. The representation of
 that array at the Python prompt is a summary; the GeoTIFF file that
 Rasterio uses for testing has 0 values in the corners, but has nonzero values
 elsewhere.
@@ -87,7 +87,8 @@ In order to read smaller chunks of the dataset, refer to :ref:`windowrw`.
 
 
 The indexes, Numpy data types, and nodata values of all a dataset's bands can
-be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
+be had from its :attr:`~.DatasetReader.indexes`, :attr:`~.DatasetReader.dtypes`,
+and :attr:`~.DatasetReader.nodatavals` attributes.
 
 .. code-block:: python
 
@@ -98,7 +99,7 @@ be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
     2 uint8 0.0
     3 uint8 0.0
 
-To close a dataset, call its ``close()`` method.
+To close a dataset, call its :meth:`~.DatasetReader.close` method.
 
 .. code-block:: python
 

@@ -117,13 +117,13 @@ def blocks(
     option:
     \b
 
-        $ rio shapes --bidx 3 tests/data/RGB.byte.tif
+        $ rio blocks --bidx 3 tests/data/RGB.byte.tif
 
     By default a GeoJSON 'FeatureCollection' is written, but the --sequence'
     option produces a GeoJSON feature stream instead.
     \b
 
-        $ rio shapes tests/data/RGB.byte.tif --sequence
+        $ rio blocks tests/data/RGB.byte.tif --sequence
 
     Output features are reprojected to 'WGS84' unless the '--projected' flag is
     provided, which causes the output to be kept in the input datasource's

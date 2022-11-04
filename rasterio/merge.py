@@ -130,7 +130,7 @@ def merge(
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
-    dtype: numpy dtype or string
+    dtype: numpy.dtype or string
         dtype to use in outputfile. If not set, uses the dtype value in the
         first input raster.
     precision: int, optional
@@ -182,7 +182,7 @@ def merge(
 
         Two elements:
 
-            dest: numpy ndarray
+            dest: numpy.ndarray
                 Contents of all input rasters in single array
 
             out_transform: affine.Affine()

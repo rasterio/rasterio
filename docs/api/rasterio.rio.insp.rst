@@ -1,7 +1,3 @@
-rasterio.rio.insp module
-========================
-
-.. automodule:: rasterio.rio.insp
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.insp:insp
+   :prog: rio insp
+   :show-nested:

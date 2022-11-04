@@ -1,7 +1,3 @@
-rasterio.rio.warp module
-========================
-
-.. automodule:: rasterio.rio.warp
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.warp:warp
+   :prog: rio warp
+   :show-nested:

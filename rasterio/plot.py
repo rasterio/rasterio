@@ -51,7 +51,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     contour_label_kws : dictionary (opt)
         Keyword arguments for labeling the contours,
         empty dictionary for no labels.
-    ax : matplotlib axes (opt)
+    ax : matplotlib.axes.Axes, optional
         Axes to plot on, otherwise uses current axes.
     title : str, optional
         Title for the figure.
@@ -63,16 +63,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         True, values will be adjusted by the min / max of each band. If
         False, no adjustment will be applied.
     **kwargs : key, value pairings optional
-        These will be passed to the matplotlib imshow or contour method
-        depending on contour argument.
-        See full lists at:
-        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
-        or
-        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.contour.html
+        These will be passed to the :func:`matplotlib.pyplot.imshow` or
+        :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
 
     Returns
     -------
-    ax : matplotlib Axes
+    ax : matplotlib.axes.Axes
         Axes with plot.
     """
     plt = get_plt()
@@ -156,12 +152,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
 def plotting_extent(source, transform=None):
     """Returns an extent in the format needed
-     for matplotlib's imshow (left, right, bottom, top)
+     for :func:`matplotlib.pyplot.imshow` (left, right, bottom, top)
      instead of rasterio's bounds (left, bottom, right, top)
 
     Parameters
     ----------
-    source : array or dataset object opened in 'r' mode
+    source : numpy.ndarray or dataset object opened in 'r' mode
         If array, data in the order rows, columns and optionally bands. If array
         is band order (bands in the first dimension), use arr[0]
     transform: Affine, required if source is array
@@ -236,14 +232,13 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
         should be masked on read.
     title : str, optional
         Title for the figure.
-    ax : matplotlib axes (opt)
+    ax : matplotlib.axes.Axes, optional
         The raster will be added to this axes if passed.
     label : matplotlib labels (opt)
         If passed, matplotlib will use this label list.
         Otherwise, a default label list will be automatically created
     **kwargs : optional keyword arguments
-        These will be passed to the matplotlib hist method. See full list at:
-        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.hist
+        These will be passed to the :meth:`matplotlib.axes.Axes.hist` method.
     """
     plt = get_plt()
 

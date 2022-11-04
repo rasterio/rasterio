@@ -1,9 +1,9 @@
 Virtual Warping
 ===============
 
-Rasterio has a ``WarpedVRT`` class that abstracts many of the details of raster
+Rasterio has a :class:`.WarpedVRT` class that abstracts many of the details of raster
 warping by using an in-memory `Warped VRT
-<http://www.gdal.org/gdal_vrttut.html#gdal_vrttut_warped>`__. A ``WarpedVRT`` can
+<http://www.gdal.org/gdal_vrttut.html#gdal_vrttut_warped>`__. A :class:`.WarpedVRT` can
 be the easiest solution for tiling large datasets.
 
 For example, to virtually warp the ``RGB.byte.tif`` test dataset from its
@@ -58,7 +58,7 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
 Normalizing Data to a Consistent Grid
 -------------------------------------
 
-A ``WarpedVRT`` can be used to normalize a stack of images with differing
+A :class:`.WarpedVRT` can be used to normalize a stack of images with differing
 projections, bounds, cell sizes, or dimensions against a regular grid
 in a defined bounding box.
 

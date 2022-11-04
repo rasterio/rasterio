@@ -680,7 +680,7 @@ cdef class DatasetBase:
 
         Returns
         -------
-        list of str
+        tuple[str | None, ...]
         """
         if not self._descriptions:
             descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
@@ -1023,7 +1023,7 @@ cdef class DatasetBase:
                 blockysize=self.block_shapes[0][0],
                 tiled=True)
         else:
-            m.update(tiled=False)
+            m.update(blockysize=self.block_shapes[0][0], tiled=False)
         if self.compression:
             m['compress'] = self.compression.name
         if self.interleaving:

@@ -3,7 +3,7 @@ Advanced Datasets
 
 The analogy of Python file objects influences the design of Rasterio dataset
 objects. Datasets of a few different kinds exist and the canonical way to
-obtain one is to call ``rasterio.open`` with a path-like object or URI-like
+obtain one is to call :func:`rasterio.open` with a path-like object or URI-like
 identifier, a mode (such as "r" or "w"), and other keyword arguments.
 
 Dataset Identifiers

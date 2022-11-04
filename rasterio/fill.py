@@ -32,11 +32,11 @@ def fillnodata(
 
     Parameters
     ----------
-    image : numpy ndarray
+    image : numpy.ndarray
         The source image with holes to be filled. If a MaskedArray, the
         inverse of its mask will define the pixels to be filled --
         unless the ``mask`` argument is not None (see below).`
-    mask : numpy ndarray or None
+    mask : numpy.ndarray, optional
         A mask band indicating which pixels to interpolate. Pixels to
         interpolate into are indicated by the value 0. Values
         > 0 indicate areas to use during interpolation. Must be same
@@ -52,7 +52,7 @@ def fillnodata(
 
     Returns
     -------
-    out : numpy ndarray
+    numpy.ndarray :
         The filled raster array.
     """
     if mask is None and isinstance(image, MaskedArray):

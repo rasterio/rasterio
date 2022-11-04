@@ -31,6 +31,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
+    'sphinx_click',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -367,4 +368,6 @@ epub_exclude_files = ['search.html']
 intersphinx_mapping = {
     "python": ("https://docs.python.org/", None),
     "gdal": ("https://gdal.org/", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }

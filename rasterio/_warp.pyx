@@ -1168,7 +1168,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
 
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
@@ -1182,7 +1182,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
             This parameter cannot be combined with `out_shape`.
 
-        out_dtype : str or numpy dtype
+        out_dtype : str or numpy.dtype
             The desired output data type. For example: 'uint8' or
             rasterio.uint16.
 
@@ -1222,7 +1222,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         Returns
         -------
-        Numpy ndarray or a view on a Numpy ndarray
+        numpy.ndarray or a view on a numpy.ndarray
 
         Note: as with Numpy ufuncs, an object is returned even if you
         use the optional `out` argument and the return value shall be

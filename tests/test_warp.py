@@ -1730,6 +1730,34 @@ def test_issue_1446():
     assert round(g["coordinates"][1], 1) == 4212702.1
 
 
+def test_transform_geom_geometry_collection():
+    output = transform_geom(
+        "EPSG:4326",
+        "EPSG:3857",
+        {
+            "type": "GeometryCollection",
+            "geometries": [
+                {
+                    "type": "Point",
+                    "coordinates": [1, 2]
+                }
+            ]
+        }
+    )
+    assert output == {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {
+                'type': 'Point',
+                'coordinates': (
+                    pytest.approx(111319.49079327357),
+                    pytest.approx(222684.20850554405)
+                )
+            }
+        ]
+    }
+
+
 def test_reproject_init_dest_nodata():
     """No pixels should transfer over"""
     crs = CRS.from_epsg(4326)

@@ -6,7 +6,6 @@ import logging
 from logging import NullHandler
 import os
 import platform
-import sys
 import warnings
 
 # On Windows we must explicitly register the directories that contain
@@ -80,8 +79,8 @@ except ImportError:
 
     have_vsi_plugin = False
 
-__all__ = ['band', 'open', 'pad', 'Env', 'CRS']
-__version__ = "1.3.3dev0"
+__all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
+__version__ = "1.4dev"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
@@ -155,9 +154,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
-    dtype : str or numpy dtype
+    dtype : str or numpy.dtype
         The data type for bands. For example: 'uint8' or
-        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+        :attr:`rasterio.uint16`. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
@@ -337,6 +336,20 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+Band.__doc__ = """
+Band of a Dataset.
+
+Parameters
+----------
+ds: dataset object
+    An opened rasterio dataset object.
+bidx: int or sequence of ints
+    Band number(s), index starting at 1.
+dtype: str
+    rasterio data type of the data.
+shape: tuple
+    Width, height of band.
+"""
 
 
 def band(ds, bidx):
@@ -351,7 +364,7 @@ def band(ds, bidx):
 
     Returns
     -------
-    rasterio.Band
+    Band
     """
     return Band(ds, bidx, set(ds.dtypes).pop(), ds.shape)
 
@@ -361,7 +374,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
     Parameters
     ----------
-    array: ndarray
+    array: numpy.ndarray
         Numpy ndarray, for best results a 2D array
     transform: Affine transform
         transform object mapping pixel space to coordinates
@@ -377,8 +390,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
     Notes
     -----
-    See numpy docs for details on mode and other kwargs:
-    http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html
+    See :func:`numpy.pad` for details on mode and other kwargs.
     """
     import numpy as np
     transform = guard_transform(transform)

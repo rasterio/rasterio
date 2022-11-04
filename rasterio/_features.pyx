@@ -25,7 +25,7 @@ def _shapes(image, mask, connectivity, transform):
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
-    mask : numpy ndarray or rasterio Band object
+    mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
@@ -160,9 +160,9 @@ def _sieve(image, size, out, mask, connectivity):
         rasterio.uint16, or rasterio.float32.
     size : int
         minimum polygon size (number of pixels) to retain.
-    out : numpy ndarray
+    out : numpy.ndarray
         Array of same shape and data type as `image` in which to store results.
-    mask : numpy ndarray or rasterio Band object
+    mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation.
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
@@ -267,7 +267,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     ----------
     shapes : iterable of (geometry, value) pairs
         `geometry` is a GeoJSON-like object.
-    image : numpy ndarray
+    image : numpy.ndarray
         Array in which to store results.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `image` to the
@@ -549,6 +549,10 @@ cdef class GeomBuilder:
         coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
         return {'type': 'MultiPolygon', 'coordinates': coordinates}
 
+    cpdef _buildGeometryCollection(self):
+        geometries = [geom for geom in self._buildParts(self.geom)]
+        return {'type': 'GeometryCollection', 'geometries': geometries}
+
     cdef build(self, OGRGeometryH geom):
         """Builds a GeoJSON object from an OGR geometry object."""
         if geom == NULL:
@@ -559,7 +563,10 @@ cdef class GeomBuilder:
         self.ndims = OGR_G_GetCoordinateDimension(geom)
         self.geom = geom
 
-        return getattr(self, '_build' + self.geomtypename)()
+        try:
+            return getattr(self, '_build' + self.geomtypename)()
+        except AttributeError:
+            raise ValueError(f"Unsupported geometry type {self.geomtypename}")
 
 
 cdef class OGRGeomBuilder:
@@ -641,7 +648,7 @@ cdef class OGRGeomBuilder:
             OGR_G_AddGeometryDirectly(geom, part)
         return geom
 
-    cdef OGRGeometryH _buildGeomCollection(self, object geoms) except NULL:
+    cdef OGRGeometryH _buildGeometryCollection(self, object geoms) except NULL:
         cdef OGRGeometryH part = NULL
         cdef OGRGeometryH ogr_geom = self._createOgrGeometry(
             GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection'])
@@ -688,7 +695,7 @@ cdef class OGRGeomBuilder:
             if not (geometries and len(geometries) > 0):
                 raise ValueError("Input is not a valid geometry object")
 
-            return self._buildGeomCollection(geometries)
+            return self._buildGeometryCollection(geometries)
 
         else:
             raise ValueError("Unsupported geometry type %s" % typename)
