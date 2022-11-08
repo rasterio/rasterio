@@ -148,6 +148,11 @@ def _raster_driver_extensions():
 
         for extension in extensions.split():
             driver_extensions[extension] = drivername
+
+    # ensure default driver for tif to be GTiff instead of COG
+    driver_extensions.update(
+        {'tif': 'GTiff', 'tiff': 'GTiff'}
+    )
     return driver_extensions
 
 
