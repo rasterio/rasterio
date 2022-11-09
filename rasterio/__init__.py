@@ -19,7 +19,7 @@ if platform.system() == "Windows":
     else:
         if "PATH" in os.environ:
             for p in os.environ["PATH"].split(os.pathsep):
-                if glob.glob(os.path.join(p, "gdal*.dll")):
+                if p and glob.glob(os.path.join(p, "gdal*.dll")):
                     os.add_dll_directory(p)
 
 
