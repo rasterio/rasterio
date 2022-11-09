@@ -160,7 +160,10 @@ def get_data_window(arr, nodata=None):
     # Otherwise retrieve mask from array (if it is masked)
     # Finally try returning a full window (nodata=None and nothing in arr is masked)
     if nodata is not None:
-        arr_mask = arr != nodata
+        if np.isnan(nodata):
+            arr_mask = ~np.isnan(arr)
+        else:
+            arr_mask = arr != nodata
     elif np.ma.is_masked(arr):
         arr_mask = ~np.ma.getmask(arr)
     else:
@@ -180,10 +183,10 @@ def get_data_window(arr, nodata=None):
             v.append((nz.min(), nz.max() + 1))
         else:
             v.append((0, 0))
-    
+
     if arr_mask.ndim == 1:
         v.append((0, 0))
-        
+
     return Window.from_slices(*v)
 
 
