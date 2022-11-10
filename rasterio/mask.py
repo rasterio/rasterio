@@ -12,15 +12,8 @@ from rasterio.features import geometry_mask, geometry_window
 logger = logging.getLogger(__name__)
 
 
-def raster_geometry_mask(
-    dataset,
-    shapes,
-    all_touched=False,
-    invert=False,
-    crop=False,
-    pad=False,
-    pad_width=0.5,
-):
+def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
+                         crop=False, pad=False, pad_width=0.5):
     """Create a mask from shapes, transform, and optional window within original
     raster.
 
@@ -90,12 +83,10 @@ def raster_geometry_mask(
         # If shapes do not overlap raster, raise Exception or UserWarning
         # depending on value of crop
         if crop:
-            raise ValueError("Input shapes do not overlap raster.")
+            raise ValueError('Input shapes do not overlap raster.')
         else:
-            warnings.warn(
-                "shapes are outside bounds of raster. "
-                "Are they in different coordinate reference systems?"
-            )
+            warnings.warn('shapes are outside bounds of raster. '
+                          'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
         mask = numpy.ones(shape=dataset.shape[-2:], dtype="bool") * (not invert)
@@ -110,30 +101,14 @@ def raster_geometry_mask(
         transform = dataset.transform
         out_shape = (int(dataset.height), int(dataset.width))
 
-    mask = geometry_mask(
-        shapes,
-        transform=transform,
-        invert=invert,
-        out_shape=out_shape,
-        all_touched=all_touched,
-    )
+    mask = geometry_mask(shapes, transform=transform, invert=invert,
+                         out_shape=out_shape, all_touched=all_touched)
 
     return mask, transform, window
 
 
-def mask(
-    dataset,
-    shapes,
-    all_touched=False,
-    invert=False,
-    nodata=None,
-    filled=True,
-    crop=False,
-    pad=False,
-    pad_width=0.5,
-    indexes=None,
-    masked=True,
-):
+def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
+         filled=True, crop=False, pad=False, pad_width=0.5, indexes=None, masked=True):
     """Creates a masked or filled array using input shapes.
     Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
@@ -201,25 +176,18 @@ def mask(
             nodata = 0
 
     shape_mask, transform, window = raster_geometry_mask(
-        dataset,
-        shapes,
-        all_touched=all_touched,
-        invert=invert,
-        crop=crop,
-        pad=pad,
-        pad_width=pad_width,
-    )
+        dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
+        pad=pad, pad_width=pad_width)
 
     if indexes is None:
-        out_shape = (dataset.count,) + shape_mask.shape
+        out_shape = (dataset.count, ) + shape_mask.shape
     elif isinstance(indexes, int):
         out_shape = shape_mask.shape
     else:
-        out_shape = (len(indexes),) + shape_mask.shape
+        out_shape = (len(indexes), ) + shape_mask.shape
 
     out_image = dataset.read(
-        window=window, out_shape=out_shape, masked=masked, indexes=indexes
-    )
+        window=window, out_shape=out_shape, masked=masked, indexes=indexes)
 
     out_image.mask = out_image.mask | shape_mask
 
