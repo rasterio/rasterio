@@ -436,22 +436,22 @@ class TransformerBase():
         
         # shift input coordinates according to offset
         T = IDENTITY.translation(coff, roff)
-        temp_rows = []
-        temp_cols = []
+        offset_rows = []
+        offset_cols = []
         try:
-            for pt in zip(cols, rows):
-                y, x = T * pt
-                temp_rows.append(y)
-                temp_cols.append(x)
+            for colrow in zip(cols, rows):
+                offset_col, offset_row = T * colrow
+                offset_rows.append(offset_row)
+                offset_cols.append(offset_col)
 
-            new_ys, new_xs = self._transform(
-                temp_rows, temp_cols, zs, transform_direction=TransformDirection.forward
+            new_xs, new_ys = self._transform(
+                offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
             )
 
-            if len(new_ys) == 1 and not AS_ARR:
-                return (new_ys[0], new_xs[0])
+            if len(new_xs) == 1 and not AS_ARR:
+                return (new_xs[0], new_ys[0])
             else:
-                return (new_ys, new_xs)
+                return (new_xs, new_ys)
         except TypeError:
             raise TransformError("Invalid inputs")
     
