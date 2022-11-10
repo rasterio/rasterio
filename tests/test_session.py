@@ -282,6 +282,16 @@ def test_session_factory_az_kwargs_connection_string():
     assert sesh.get_credential_options()['AZURE_STORAGE_CONNECTION_STRING'] == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
 
 
+def test_session_factory_az_env(monkeypatch):
+    """Get an AzureSession for az:// paths with environment variables"""
+    monkeypatch.setenv('AZURE_STORAGE_ACCOUNT', 'foo')
+    monkeypatch.setenv('AZURE_STORAGE_ACCESS_KEY', 'bar')
+    sesh = Session.from_path("az://lol/wut")
+    assert isinstance(sesh, AzureSession)
+    assert sesh.get_credential_options()['AZURE_STORAGE_ACCOUNT'] == 'foo'
+    assert sesh.get_credential_options()['AZURE_STORAGE_ACCESS_KEY'] == 'bar'
+
+
 def test_azure_no_sign_request(monkeypatch):
     """If AZURE_NO_SIGN_REQUEST is set do not default to azure_unsigned=False"""
     monkeypatch.setenv('AZURE_NO_SIGN_REQUEST', 'YES')
