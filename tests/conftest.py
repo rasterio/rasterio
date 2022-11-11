@@ -10,6 +10,7 @@ import uuid
 import zipfile
 
 import affine
+import boto3
 from click.testing import CliRunner
 import pytest
 import numpy as np
@@ -25,6 +26,11 @@ DEFAULT_SHAPE = (10, 10)
 
 if sys.version_info > (3,):
     reduce = functools.reduce
+
+credentials = pytest.mark.skipif(
+    not(boto3.Session().get_credentials()),
+    reason="S3 raster access requires credentials")
+
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
     'data/RGB.byte.tif', 'data/float.tif', 'data/float32.tif',
