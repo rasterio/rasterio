@@ -2,7 +2,7 @@ name: Test GDAL Latest
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'maint-*' ]
   schedule:
     - cron:  '0 0 * * 0'
   pull_request:  # also build on PRs touching this file
@@ -49,7 +49,11 @@ jobs:
             libcurl4-gnutls-dev \
             libgeos-dev \
             libjpeg-dev \
+            libnetcdf-dev \
+            libhdf4-alt-dev \
+            libhdf5-serial-dev \
             libssl-dev \
+            libsqlite3-dev \
             libexpat-dev \
             libxerces-c-dev \
             libpng-dev \
@@ -59,7 +63,7 @@ jobs:
             cmake \
             curl \
             git
-          bash ci/gdal-compile.sh 3.6.0rc2
+          bash ci/gdal-compile.sh git
 
       - name: Install dependencies
         run: |
