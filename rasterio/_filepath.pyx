@@ -130,7 +130,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
 cdef vsi_l_offset filepath_tell(void *pFile) with gil:
     cdef object file_wrapper = <object>pFile
     cdef object file_obj = file_wrapper._file_obj
-    cdef int pos = file_obj.tell()
+    cdef long pos = file_obj.tell()
     return <vsi_l_offset>pos
 
 

@@ -65,7 +65,7 @@ cdef extern from "sys/stat.h" nogil:
 
 cdef extern from "cpl_vsi.h" nogil:
 
-    ctypedef int vsi_l_offset
+    ctypedef unsigned long long vsi_l_offset
     ctypedef FILE VSILFILE
     ctypedef stat VSIStatBufL
     ctypedef enum VSIRangeStatus:
