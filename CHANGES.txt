@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.3.4 (2022-11-16)
+
+Bug fixes:
+
+- Use Python long for FilePath VSI plugin's file position (#2652).
+
 1.3.3 (2022-10-19)
 ------------------
 
