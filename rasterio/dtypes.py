@@ -10,6 +10,7 @@ import numpy
 from rasterio.env import GDALVersion
 
 _GDAL_AT_LEAST_35 = GDALVersion.runtime().at_least("3.5")
+_GDAL_AT_LEAST_37 = GDALVersion.runtime().at_least("3.7")
 
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
@@ -47,10 +48,15 @@ if _GDAL_AT_LEAST_35:
     dtype_fwd[12] = int64 # GDT_Int64
     dtype_fwd[13] = uint64 # GDT_UInt64
 
+if _GDAL_AT_LEAST_37:
+    dtype_fwd[14] = sbyte # GDT_Int8
+
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 
 dtype_rev["uint8"] = 1
-dtype_rev["int8"] = 1
+if not _GDAL_AT_LEAST_37:
+    dtype_rev["int8"] = 1
+
 dtype_rev["complex"] = 11
 dtype_rev["complex_int16"] = 8
 
@@ -81,6 +87,9 @@ typename_fwd = {
 if _GDAL_AT_LEAST_35:
     typename_fwd[12] = 'Int64'
     typename_fwd[13] = 'UInt64'
+
+if _GDAL_AT_LEAST_37:
+    typename_fwd[14] = 'Int8'
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
