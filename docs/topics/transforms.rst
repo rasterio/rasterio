@@ -36,6 +36,16 @@ This is approximately equivalent to
     >>> ~transform * (102135.01896333754, 2826764.979108635)
     (0.5, 0.5)
 
+Dataset method :meth:`~.DatasetReader.index` can also be used to transform from CRS values without directly accessing affine matrices
+
+.. code-block:: python
+
+    >>> dataset = rasterio.open(example.tiff)
+    >>> dataset.xy(.5,.5)
+    (102135.01896333754, 2826764.979108635)
+    >>> dataset.index(102135.01896333754, 2826764.979108635)
+    (.5,.5)
+
 The dataset methods :meth:`~.DatasetReader.xy` and :meth:`~.DatasetReader.index` use :mod:`rasterio.transform` under the hood
 
 .. code-block:: python
