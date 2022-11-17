@@ -220,7 +220,7 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
         if exc:
             raise exc
         raise SystemError(
-            f"Unkown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
+            f"Unknown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
         )
     CPLErrorReset()
     return ptr
@@ -237,7 +237,7 @@ cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *vsifile) except NULL:
         if exc:
             raise exc
         raise SystemError(
-            f"Unkown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
+            f"Unknown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
         )
     CPLErrorReset()
     return vsifile
