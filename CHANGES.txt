@@ -1,6 +1,29 @@
 Changes
 =======
 
+1.3.4 (2022-11-16)
+------------------
+
+This version is good for use with GDAL 3.6.0 as well as previous versions.
+
+Changes:
+
+- Resampling tests have been updated to account for changes in GDAL 3.6.0
+  (#2653).
+- Variables in TransformerBase.xy have been renamed for better clarity (#2609).
+- Avoid use of a fixed port for the warp test server (#2619).
+
+Bug fixes:
+
+- Use Python long for FilePath VSI plugin's file position (#2652).
+- In the case that a GDAL function returns NULL but doesn't set an error, we
+  now raise SystemError instead of silently failing (#2645).
+- Azure storage access key can be taken from the environment if not explicitly
+  provided to AzureSession (#2637).
+- Skip empty parts of PATH on Windows when adding DLL directories (#2626).
+- get_data_window is fixed for the case where the nodata value is nan (#2629).
+- Ensure that GTiff, not COG, driver is used by default for TIFFs (#2634).
+
 1.3.3 (2022-10-19)
 ------------------
 
