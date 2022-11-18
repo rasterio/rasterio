@@ -159,6 +159,8 @@ def get_minimum_dtype(values):
             if not _GDAL_AT_LEAST_35:
                 raise ValueError("Values out of range for supported dtypes")
             return uint64
+        elif min_value >= -128 and max_value <= 127:
+            return int8
         elif min_value >= -32768 and max_value <= 32767:
             return int16
         elif min_value >= -2147483648 and max_value <= 2147483647:
