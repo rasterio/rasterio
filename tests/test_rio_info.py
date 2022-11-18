@@ -6,7 +6,7 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-from .conftest import requires_gdal32
+from .conftest import requires_gdal32, credentials
 
 
 with rasterio.Env() as env:
@@ -415,11 +415,11 @@ def test_info_no_credentials(tmpdir, monkeypatch, runner):
         ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
 
-@pytest.mark.skipif(not(boto3.Session().get_credentials()), reason="S3 raster access requires credentials")
+@credentials
 @pytest.mark.network
 def test_info_aws_unsigned(runner):
     """Unsigned access to public dataset works (see #1637)"""
-    result = runner.invoke(main_group, ['--aws-no-sign-requests', 'info', 's3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'])
+    result = runner.invoke(main_group, ['--aws-no-sign-requests', 'info', 's3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif'])
     assert result.exit_code == 0
 
 
