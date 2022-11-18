@@ -302,3 +302,31 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
     assert (type(masked) == np.ma.MaskedArray)
     assert np.array_equal(masked[0].mask, image.mask)
     assert np.array_equal(masked[0], image)
+
+def test_mask_masked_not_filled(basic_image, basic_image_2x2, basic_image_file,
+                     basic_geometry):
+    """Should be returned as np.ma.MaskedArray"""
+    geometries = [basic_geometry]
+    masked = False
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, filled=False, masked=masked)
+
+    image = np.ma.MaskedArray(basic_image, mask=basic_image_2x2==0)
+
+    assert (type(masked) == np.ma.MaskedArray)
+    assert np.array_equal(masked[0].mask, image.mask)
+    assert np.array_equal(masked[0],image)
+    
+    
+def test_mask_masked_filled(basic_image, basic_image_2x2, basic_image_file,
+                     basic_geometry):
+    """Should be returned as np.ndarraynumpy"""
+    geometries = [basic_geometry]
+    masked = False
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, filled=True, masked=masked)
+
+    image = np.ma.MaskedArray(basic_image, mask=basic_image_2x2==0)
+    image = image.filled(0)
+    assert (type(masked) == np.ndarray)
+    assert np.array_equal(masked[0], image)

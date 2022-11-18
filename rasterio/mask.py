@@ -147,6 +147,11 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
     indexes : list of ints or a single int (opt)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
+    masked : bool (opt)
+        If `masked` is `True` the return value will be a masked
+        array. Otherwise the return value will be a regular array.
+        Masks will be exactly the inverse of the GDAL RFC 15
+        conforming arrays returned by read_masks(). Defaults to True.
 
     Returns
     -------
@@ -189,7 +194,10 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
     out_image = dataset.read(
         window=window, out_shape=out_shape, masked=masked, indexes=indexes)
 
-    out_image.mask = out_image.mask | shape_mask
+    if masked:
+        out_image.mask = out_image.mask | shape_mask 
+    else:
+        out_image = numpy.ma.masked_array(out_image, mask = shape_mask)
 
     if filled:
         out_image = out_image.filled(nodata)
