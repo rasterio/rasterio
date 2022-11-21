@@ -89,3 +89,5 @@ MANIFEST
 .pytest_cache
 *.ipynb
 mprofile*.dat
+memray-*
+issue????.py

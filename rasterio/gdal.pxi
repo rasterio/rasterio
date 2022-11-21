@@ -223,6 +223,7 @@ cdef extern from "gdal.h" nogil:
     ctypedef enum GDALDataType:
         GDT_Unknown
         GDT_Byte
+        GDT_Int8
         GDT_UInt16
         GDT_Int16
         GDT_UInt32
