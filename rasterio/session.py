@@ -562,7 +562,7 @@ class AzureSession(Session):
             If True, requests will be unsigned.
         """
 
-        self.unsigned = bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
+        self.unsigned = parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
         self.storage_account = azure_storage_account or os.getenv("AZURE_STORAGE_ACCOUNT")
         self.storage_access_key = azure_storage_access_key or os.getenv("AZURE_STORAGE_ACCESS_KEY")
 
@@ -622,3 +622,11 @@ class AzureSession(Session):
             }
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
+
+def parse_bool(v):
+    """CPLTestBool equivalent"""
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, str):
+        return not(v.lower() in ("no", "false", "off", "0"))
+    return bool(v)

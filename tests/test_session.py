@@ -12,6 +12,7 @@ from rasterio.session import (
     GSSession,
     SwiftSession,
     AzureSession,
+    parse_bool,
 )
 
 
@@ -31,6 +32,16 @@ def test_dummy_session():
     assert sesh._session is None
     assert sesh.get_credential_options() == {}
 
+def test_parse_bool():
+    """parse_bool works"""
+    assert parse_bool(None) is False
+    assert parse_bool(False) is False
+    assert parse_bool(0) is False
+    assert parse_bool(True) is True
+    assert parse_bool("") is True
+    for no in ["no", "off", "0", "false"]:
+        assert parse_bool(no) is False
+        assert parse_bool(no.upper()) is False
 
 def test_aws_session_class():
     """AWSSession works"""
