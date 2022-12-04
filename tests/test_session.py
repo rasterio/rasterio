@@ -92,6 +92,9 @@ def test_aws_session_class_endpoint():
     sesh = AWSSession(endpoint_url="example.com")
     assert sesh.get_credential_options()['AWS_S3_ENDPOINT'] == 'example.com'
 
+    sesh = AWSSession(endpoint_url="example.com", aws_unsigned=True)
+    assert sesh.get_credential_options()['AWS_S3_ENDPOINT'] == 'example.com'
+
 
 def test_session_factory_unparsed():
     """Get a DummySession for unparsed paths"""

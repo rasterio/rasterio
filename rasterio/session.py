@@ -338,8 +338,8 @@ class AWSSession(Session):
         """
         if self.unsigned:
             opts = {'AWS_NO_SIGN_REQUEST': 'YES'}
-            if 'aws_region' in self.credentials:
-                opts['AWS_REGION'] = self.credentials['aws_region']
+            opts.update({k.upper(): v for k, v in self.credentials.items()
+                        if k in ('aws_region', 'aws_s3_endpoint')})
             return opts
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
