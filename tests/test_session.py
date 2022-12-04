@@ -60,12 +60,39 @@ def test_aws_session_class_session():
     assert sesh.get_credential_options()['AWS_SECRET_ACCESS_KEY'] == 'bar'
 
 
-def test_aws_session_class_unsigned():
+def test_aws_session_class_unsigned(monkeypatch):
     """AWSSession works"""
-    pytest.importorskip("boto3")
-    sesh = AWSSession(aws_unsigned=True, region_name='us-mountain-1')
+    sesh = AWSSession(aws_unsigned=True, region_name='us-mountain-1',
+                      endpoint_url="http://localhost:9090")
     assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
     assert sesh.get_credential_options()['AWS_REGION'] == 'us-mountain-1'
+    assert sesh.get_credential_options()['AWS_S3_ENDPOINT'] == 'http://localhost:9090'
+
+    # default to environment variable when not set 
+    monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "YES")
+    sesh = AWSSession()
+    assert sesh.unsigned is True
+    assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
+
+    # Arguments override environment variable 
+    sesh = AWSSession(aws_access_key_id="fake", aws_secret_access_key="fake", aws_unsigned=False)
+    assert sesh.unsigned is False
+    assert 'AWS_NO_SIGN_REQUEST' not in sesh.get_credential_options()
+
+    monkeypatch.undo()
+
+
+def test_aws_session_class_unsigned_noboto3(monkeypatch):
+    """AWSSession works without boto3"""
+    import rasterio.session
+    monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "YES")
+    monkeypatch.setattr(rasterio.session, "boto3", None)
+    assert rasterio.session.boto3 is None
+
+    sesh = AWSSession()
+    assert sesh.unsigned is True
+    assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
+    monkeypatch.undo()
 
 
 def test_aws_session_class_profile(tmpdir, monkeypatch):

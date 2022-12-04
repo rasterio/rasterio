@@ -2,6 +2,7 @@
 
 import logging
 import os
+from types import SimpleNamespace
 
 from rasterio._path import _parse_path, _UnparsedPath
 
@@ -243,7 +244,7 @@ class AWSSession(Session):
     """
 
     def __init__(
-            self, session=None, aws_unsigned=False, aws_access_key_id=None,
+            self, session=None, aws_unsigned=None, aws_access_key_id=None,
             aws_secret_access_key=None, aws_session_token=None,
             region_name=None, profile_name=None, endpoint_url=None,
             requester_pays=False):
@@ -271,8 +272,13 @@ class AWSSession(Session):
             True if the requester agrees to pay transfer costs (default:
             False)
         """
+        if aws_unsigned is None:
+            aws_unsigned = parse_bool(os.getenv("AWS_NO_SIGN_REQUEST", False))
+
         if session:
             self._session = session
+        elif aws_unsigned:
+            self._session = SimpleNamespace(region_name=region_name)
         else:
             self._session = boto3.Session(
                 aws_access_key_id=aws_access_key_id,
@@ -282,11 +288,11 @@ class AWSSession(Session):
                 profile_name=profile_name)
 
         self.requester_pays = requester_pays
-        self.unsigned = bool(os.getenv("AWS_NO_SIGN_REQUEST", aws_unsigned))
+        self.unsigned = aws_unsigned
         self.endpoint_url = endpoint_url
         self._creds = (
             self._session.get_credentials()
-            if not self.unsigned and self._session
+            if not self.unsigned
             else None
         )
 
