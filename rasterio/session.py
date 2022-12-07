@@ -98,14 +98,17 @@ class Session:
 
         path = _parse_path(path)
 
-        aws_path_regex = r"^s3://|^https?://.*\.s3\.amazonaws\.com/"
-        aws_path_regex = os.getenv("AWS_PATH_REGEX", aws_path_regex)
+        aws_path_regex = r"a^"
+        rio_aws_s3_domains = os.getenv("RIO_AWS_S3_DOMAINS")
+        if rio_aws_s3_domains:
+            aws_path_regex = r"^https://.*(?:%s)" % "|".join(rio_aws_s3_domains.split(","))
 
         if isinstance(path, _UnparsedPath) or path.is_local:
             return DummySession
 
         elif (
-            re.match(aws_path_regex, path.name)
+            path.scheme == "s3" or "amazonaws.com" in path.path
+            or re.match(aws_path_regex, path.name)
         ) and not "X-Amz-Signature" in path.path:
             if boto3 is not None:
                 return AWSSession

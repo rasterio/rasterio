@@ -139,9 +139,15 @@ def test_session_factory_s3_kwargs():
 def test_session_factory_custom_s3(monkeypatch):
     """Get an AWSSession for a custom s3 paths"""
     pytest.importorskip("boto3")
-    monkeypatch.setenv("AWS_PATH_REGEX", "s3://|^https?://.*\.s3\.amazonaws\.com/|^https://s3.acme.com/")
+    monkeypatch.setenv("RIO_AWS_S3_DOMAINS", "s3.acme.com,s3.test.com,s3.example.com")
     sesh = Session.from_path("https://s3.acme.com/bucket/key")
     assert isinstance(sesh, AWSSession)
+    sesh = Session.from_path("https://bucket.s3.test.com/key")
+    assert isinstance(sesh, AWSSession)
+    sesh = Session.from_path("https://s3.example.com/bucket/key")
+    assert isinstance(sesh, AWSSession)
+    sesh = Session.from_path("https://s3-console.example.com/bucket/key")
+    assert isinstance(sesh, DummySession)
 
 def test_session_factory_custom_s3_without_env():
     """Get an AWSSession for a custom s3 paths"""
