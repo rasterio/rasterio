@@ -101,7 +101,7 @@ class Session:
         aws_path_regex = r"a^"
         rio_aws_s3_domains = os.getenv("RIO_AWS_S3_DOMAINS")
         if rio_aws_s3_domains:
-            aws_path_regex = r"^https://.*(?:%s)" % "|".join(rio_aws_s3_domains.split(","))
+            aws_path_regex = r"^https://.*(?:%s)" % "|".join(rio_aws_s3_domains.replace(".", r"\.").replace("*", ".*").split(","))
 
         if isinstance(path, _UnparsedPath) or path.is_local:
             return DummySession
