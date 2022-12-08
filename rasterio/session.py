@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 
 from rasterio._path import _parse_path, _UnparsedPath
 
@@ -97,11 +98,17 @@ class Session:
 
         path = _parse_path(path)
 
+        aws_path_regex = r"a^"
+        rio_aws_s3_domains = os.getenv("RIO_AWS_S3_DOMAINS")
+        if rio_aws_s3_domains:
+            aws_path_regex = r"^https://.*(?:%s)" % "|".join(rio_aws_s3_domains.replace(".", r"\.").replace("*", ".*").split(","))
+
         if isinstance(path, _UnparsedPath) or path.is_local:
             return DummySession
 
         elif (
             path.scheme == "s3" or "amazonaws.com" in path.path
+            or re.match(aws_path_regex, path.name)
         ) and not "X-Amz-Signature" in path.path:
             if boto3 is not None:
                 return AWSSession

@@ -44,6 +44,24 @@ your code.
     #        0.0, -30.0, 2512815.0),
     #  'width': 7621}
 
+S3 URIs and custom S3 Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, rasterio open with an AWS Session object all URIs that begin with
+``s3://`` or containing ``amazonaws.com`` (except for Pre-signed URLs identified 
+by the ``X-Amz-Signature`` query parameter).
+
+It is possible to set addditional domains suffixes to be considered as S3 URIs by
+setting the ``RIO_AWS_S3_DOMAINS`` environment variable with comma-separated domain names.
+For instance ``s3.acme.com,s3.test.com`` will make rasterio consider
+all URIs with these domain name suffixes as S3 URIs (e.g. ``"https://s3.acme.com/bucket/key"``
+or ``"https://bucket.s3.test.com/key"``).
+In this case, it is probably necessary to set as well the ``AWS_S3_ENDPOINT_URL`` environment
+variable to the alternative endpoint for S3 service.
+See `GDAL's documentation<https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files>` 
+of the ``AWS_S3_ENDPOINT`` configuration option for more details.
+
+
 .. note:: AWS pricing concerns
    While this feature can reduce latency by reading fewer bytes from S3
    compared to downloading the entire TIFF and opening locally, it does
