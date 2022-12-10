@@ -35,10 +35,9 @@ from rasterio.warp import (
 from rasterio import windows
 
 from . import rangehttpserver
+from .conftest import gdal_version
 
 log = logging.getLogger(__name__)
-
-gdal_version = GDALVersion.runtime()
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
@@ -55,9 +54,17 @@ def flatten_coords(coordinates):
                 yield x
 
 
-reproj_expected = (
-    ({"CHECK_WITH_INVERT_PROJ": False}, 6644), ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
-)
+if gdal_version.at_least("3.7"):
+    # GH2662
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6646),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6646)
+    )
+else:
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6644),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
+    )
 
 
 class ReprojectParams:
@@ -529,7 +536,11 @@ def test_reproject_view():
         resampling=Resampling.nearest,
     )
 
-    assert (out > 0).sum() == 299199
+    expected_sum = 299199
+    if gdal_version.at_least("3.7"):
+        # GH2662
+        expected_sum = 299231
+    assert (out > 0).sum() == expected_sum
 
 
 def test_reproject_epsg():
