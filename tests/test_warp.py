@@ -54,7 +54,7 @@ def flatten_coords(coordinates):
                 yield x
 
 
-if gdal_version.at_least("3.7"):
+if gdal_version.at_least("3.6"):
     # GH2662
     reproj_expected = (
         ({"CHECK_WITH_INVERT_PROJ": False}, 6646),
@@ -537,7 +537,7 @@ def test_reproject_view():
     )
 
     expected_sum = 299199
-    if gdal_version.at_least("3.7"):
+    if gdal_version.at_least("3.6"):
         # GH2662
         expected_sum = 299231
     assert (out > 0).sum() == expected_sum
