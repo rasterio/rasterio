@@ -1411,7 +1411,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if tiled:
             blockxsize = kwargs.get("blockxsize", None)
             blockysize = kwargs.get("blockysize", None)
-            if (blockxsize and int(blockxsize) % 16) or (blockysize and int(blockysize) % 16):
+            if blockxsize is None or blockysize is None:
+                # ignore if only one provided
+                kwargs.pop("blockxsize", None)
+                kwargs.pop("blockysize", None)
+            elif int(blockxsize) % 16 or int(blockysize) % 16:
                 raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
