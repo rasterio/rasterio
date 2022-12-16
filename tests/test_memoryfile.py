@@ -12,15 +12,7 @@ import pytest
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
 from rasterio.enums import MaskFlags
-from rasterio.env import GDALVersion
 from rasterio.shutil import copyfiles
-
-
-# Skip ENTIRE module if not GDAL >= 2.x.
-# pytestmark is a keyword that instructs pytest to skip this module.
-pytestmark = pytest.mark.skipif(
-    not GDALVersion.runtime().major >= 2,
-    reason="MemoryFile requires GDAL 2.x")
 
 
 @pytest.fixture(scope='session')

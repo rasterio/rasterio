@@ -522,7 +522,7 @@ def test_gdalversion_class_parse_err():
 
 def test_gdalversion_class_runtime():
     """Test the version of GDAL from this runtime"""
-    GDALVersion.runtime().major >= 1
+    GDALVersion.runtime().major >= 3
 
 
 def test_gdalversion_class_cmp():
