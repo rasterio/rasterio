@@ -102,7 +102,7 @@ def _transform_geom(
 
     # GDAL cuts on the antimeridian by default and using different
     # logic in versions >= 2.2.
-    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
+    if GDALVersion.runtime() < GDALVersion.parse('2.2'):
         valb = str(antimeridian_offset).encode('utf-8')
         options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
         if antimeridian_cutting:

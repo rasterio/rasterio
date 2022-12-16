@@ -55,7 +55,7 @@ def driver_from_extension(path):
         pass
 
     # dynamic driver extension lists added in GDAL 2
-    if GDALVersion().runtime() < GDALVersion.parse('2.0'):
+    if GDALVersion.runtime() < GDALVersion.parse('2.0'):
         # basic list for GDAL 1
         driver_extensions = {
             'tif': 'GTiff',

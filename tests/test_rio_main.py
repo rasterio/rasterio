@@ -2,7 +2,7 @@ import logging
 import sys
 
 from packaging.version import parse
-
+from rasterio.env import GDALVersion
 from rasterio.rio.main import main_group
 
 
@@ -18,7 +18,7 @@ def test_version(runner):
 def test_gdal_version(runner):
     result = runner.invoke(main_group, ['--gdal-version'])
     assert result.exit_code == 0
-    assert parse(result.output.strip())
+    assert GDALVersion(result.output.strip())
 
 
 def test_show_versions(runner):

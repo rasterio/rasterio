@@ -8,7 +8,7 @@ from rasterio.env import GDALVersion
 gdal_version = GDALVersion.runtime()
 
 
-@pytest.mark.xfail(gdal_version < GDALVersion(3, 7), reason="GDAL < 3.7 doesn't handle signed int8 correctly")
+@pytest.mark.xfail(gdal_version < GDALVersion("3.7"), reason="GDAL < 3.7 doesn't handle signed int8 correctly")
 @pytest.mark.parametrize("nodata", [-1, -128])
 def test_write_int8_mem(nodata):
     profile = {

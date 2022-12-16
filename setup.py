@@ -268,6 +268,7 @@ inst_reqs = [
     "click>=4.0",
     "cligj>=0.5",
     "numpy>=1.18",
+    "packaging",
     "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
@@ -287,7 +288,6 @@ extra_reqs = {
     "test": [
         "boto3>=1.2.4",
         "hypothesis",
-        "packaging",
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
         "shapely",

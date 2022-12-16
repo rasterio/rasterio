@@ -10,6 +10,7 @@ import threading
 import warnings
 
 import attr
+from packaging.version import Version
 
 from rasterio._env import (
     GDALEnv,
@@ -446,60 +447,60 @@ def ensure_env_with_credentials(f):
     return wrapper
 
 
-@attr.s(slots=True)
-@total_ordering
-class GDALVersion:
+class GDALVersion(Version):
     """Convenience class for obtaining GDAL major and minor version components
-    and comparing between versions.  This is highly simplistic and assumes a
-    very normal numbering scheme for versions and ignores everything except
-    the major and minor components."""
+    and comparing between versions. Pre-release version information is ignored."""
 
-    major = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    minor = attr.ib(default=0, validator=attr.validators.instance_of(int))
-
-    def __eq__(self, other):
-        return (self.major, self.minor) == tuple(other.major, other.minor)
-
-    def __lt__(self, other):
-        return (self.major, self.minor) < tuple(other.major, other.minor)
+    _pattern = re.compile(r'^\d+\.\d+(\.\d+)?')
 
     def __repr__(self):
-        return "GDALVersion(major={0}, minor={1})".format(self.major, self.minor)
+        return f"GDALVersion('{self}')"
 
-    def __str__(self):
-        return "{0}.{1}".format(self.major, self.minor)
+    def __init__(self, version):
+        """
+        Parses input tuple or string to GDALVersion.
+
+        Parameters
+        ----------
+        version: Union[Tuple[int, int], Tuple[int, int, int], str]
+            GDAL version information.
+
+        """
+
+        if isinstance(version, tuple):
+            version = ".".join(str(item) for item in version)
+        if isinstance(version, str):
+            # Extract major and minor version components.
+            # alpha, beta, rc suffixes ignored
+            match = self._pattern.search(version)
+            if not match:
+                raise ValueError(
+                    f"value does not appear to be a valid GDAL version "
+                    f"number: {version}"
+                )
+            version = match.group()
+        else:
+            raise TypeError("GDALVersion can only be parsed from a string or tuple")
+        super().__init__(version)
 
     @classmethod
-    def parse(cls, input):
+    def parse(cls, version):
         """
         Parses input tuple or string to GDALVersion. If input is a GDALVersion
         instance, it is returned.
 
         Parameters
         ----------
-        input: tuple of (major, minor), string, or instance of GDALVersion
+        version: Union[Tuple[int, int], Tuple[int, int, int], str, GDALVersion]
+            GDAL version information.
 
         Returns
         -------
-        GDALVersion instance
+        GDALVersion
         """
-
-        if isinstance(input, cls):
-            return input
-        if isinstance(input, tuple):
-            return cls(*input)
-        elif isinstance(input, str):
-            # Extract major and minor version components.
-            # alpha, beta, rc suffixes ignored
-            match = re.search(r'^\d+\.\d+', input)
-            if not match:
-                raise ValueError(
-                    "value does not appear to be a valid GDAL version "
-                    "number: {}".format(input))
-            major, minor = (int(c) for c in match.group().split('.'))
-            return cls(major=major, minor=minor)
-
-        raise TypeError("GDALVersion can only be parsed from a string or tuple")
+        if isinstance(version, cls):
+            return version
+        return cls(version)
 
     @classmethod
     def runtime(cls):

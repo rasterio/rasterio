@@ -503,10 +503,10 @@ def test_gdal_cachemax():
 
 def test_gdalversion_class_parse():
     v = GDALVersion.parse('1.9.0')
-    assert v.major == 1 and v.minor == 9
+    assert v.major == 1 and v.minor == 9 and v.micro == 0
 
     v = GDALVersion.parse('1.9')
-    assert v.major == 1 and v.minor == 9
+    assert v.major == 1 and v.minor == 9 and v.micro == 0
 
     v = GDALVersion.parse('1.9a')
     assert v.major == 1 and v.minor == 9
@@ -526,34 +526,33 @@ def test_gdalversion_class_runtime():
 
 
 def test_gdalversion_class_cmp():
-    assert GDALVersion(1, 0) == GDALVersion(1, 0)
-    assert GDALVersion(2, 0) > GDALVersion(1, 0)
-    assert GDALVersion(1, 1) > GDALVersion(1, 0)
-    assert GDALVersion(1, 2) < GDALVersion(2, 2)
+    assert GDALVersion((1, 0)) == GDALVersion((1, 0))
+    assert GDALVersion((2, 0)) > GDALVersion((1, 0))
+    assert GDALVersion((1, 1)) > GDALVersion((1, 0))
+    assert GDALVersion((1, 2)) < GDALVersion((2, 2))
 
-    # Because we don't care about patch component
-    assert GDALVersion.parse('1.0') == GDALVersion.parse('1.0.10')
+    assert GDALVersion.parse('1.0') != GDALVersion.parse('1.0.10')
 
     assert GDALVersion.parse('1.9') < GDALVersion.parse('2.2.0')
-    assert GDALVersion.parse('2.0.0') > GDALVersion(1, 9)
+    assert GDALVersion.parse('2.0.0') > GDALVersion((1, 9))
 
 
 def test_gdalversion_class_repr():
-    assert (GDALVersion(2, 1)).__repr__() == 'GDALVersion(major=2, minor=1)'
+    assert (GDALVersion((2, 1))).__repr__() == "GDALVersion('2.1')"
 
 
 def test_gdalversion_class_str():
-    assert str(GDALVersion(2, 1)) == '2.1'
+    assert str(GDALVersion((2, 1))) == '2.1'
 
 
 def test_gdalversion_class_at_least():
-    assert GDALVersion(2, 1).at_least(GDALVersion(1, 9))
-    assert GDALVersion(2, 1).at_least((1, 9))
-    assert GDALVersion(2, 1).at_least('1.9')
+    assert GDALVersion((2, 1)).at_least(GDALVersion((1, 9)))
+    assert GDALVersion((2, 1)).at_least((1, 9))
+    assert GDALVersion((2, 1)).at_least('1.9')
 
-    assert not GDALVersion(2, 1).at_least(GDALVersion(2, 2))
-    assert not GDALVersion(2, 1).at_least((2, 2))
-    assert not GDALVersion(2, 1).at_least('2.2')
+    assert not GDALVersion((2, 1)).at_least(GDALVersion((2, 2)))
+    assert not GDALVersion((2, 1)).at_least((2, 2))
+    assert not GDALVersion((2, 1)).at_least('2.2')
 
 
 def test_gdalversion_class_at_least_invalid_type():
@@ -561,7 +560,7 @@ def test_gdalversion_class_at_least_invalid_type():
 
     for invalid in invalids_types:
         with pytest.raises(TypeError):
-            GDALVersion(2, 1).at_least(invalid)
+            GDALVersion((2, 1)).at_least(invalid)
 
 
 def test_require_gdal_version():
