@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Fixes for unsigned access to S3 (#2688, backport of #2669).
 - Ignore blockysize when converting untiled datasets to tiled datasets (#2687,
   backport of #2678).
 
