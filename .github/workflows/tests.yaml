@@ -34,7 +34,7 @@ jobs:
     name: Docker | GDAL=${{ matrix.gdal-version }} | python=${{ matrix.python-version }}
     container: osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
     env:
-        DEBIAN_FRONTEND=noninteractive
+        DEBIAN_FRONTEND: noninteractive
     strategy:
       fail-fast: false
       matrix:
