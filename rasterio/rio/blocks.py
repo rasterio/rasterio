@@ -10,7 +10,7 @@ import cligj
 
 import rasterio
 from rasterio.rio import options
-from rasterio.rio.helpers import write_features
+from rasterio.rio.helpers import hushpipe, write_features
 from rasterio.warp import transform_bounds
 
 
@@ -95,10 +95,10 @@ class _Collection:
     '--bidx', type=click.INT, default=0,
     help="Index of the band that is the source of shapes.")
 @click.pass_context
+@hushpipe
 def blocks(
-        ctx, input, output, precision, indent, compact, projection, sequence,
-        use_rs, bidx):
-
+    ctx, input, output, precision, indent, compact, projection, sequence, use_rs, bidx
+):
     """Write dataset blocks as GeoJSON features.
 
     This command writes features describing a raster's internal blocks, which
@@ -131,8 +131,8 @@ def blocks(
 
     For more information on exactly what blocks and windows represent, see
     'dataset.block_windows()'.
-    """
 
+    """
     dump_kwds = {'sort_keys': True}
 
     if indent:
@@ -152,11 +152,13 @@ def blocks(
             dataset=src,
             bidx=bidx,
             precision=precision,
-            geographic=projection != 'projected')
-
+            geographic=projection != "projected",
+        )
         write_features(
-            stdout, collection,
+            stdout,
+            collection,
             sequence=sequence,
-            geojson_type='feature' if sequence else 'collection',
+            geojson_type="feature" if sequence else "collection",
             use_rs=use_rs,
-            **dump_kwds)
+            **dump_kwds
+        )
