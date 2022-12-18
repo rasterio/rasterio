@@ -2,10 +2,8 @@
 Helper objects used by multiple CLI commands.
 """
 
-from functools import wraps
 import json
 import os
-import sys
 
 import click
 
@@ -120,27 +118,3 @@ def resolve_inout(
 def to_lower(ctx, param, value):
     """Click callback, converts values to lowercase."""
     return value.lower()
-
-
-def hushpipe(func):
-    """Handle and silence broken pipe exceptions
-
-    See https://docs.python.org/3/library/signal.html#note-on-sigpipeef
-
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except click.ClickException:
-            raise
-        except BrokenPipeError:
-            # Python flushes standard streams on exit; redirect remaining output
-            # to devnull to avoid another BrokenPipeError at shutdown
-            devnull = os.open(os.devnull, os.O_WRONLY)
-            os.dup2(devnull, sys.stdout.fileno())
-        except Exception as exc:
-            raise click.ClickException(exc)
-
-    return wrapper

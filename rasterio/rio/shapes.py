@@ -11,7 +11,7 @@ import rasterio
 
 from rasterio.rio import options
 from rasterio.features import dataset_features
-from rasterio.rio.helpers import hushpipe, write_features
+from rasterio.rio.helpers import write_features
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,6 @@ logger = logging.getLogger(__name__)
               help="Interpret a band as a mask and output only one class of "
                    "valid data shapes.")
 @click.pass_context
-@hushpipe
 def shapes(
         ctx, input, output, precision, indent, compact, projection, sequence,
         use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask):

@@ -12,7 +12,6 @@ from cligj import (
 import rasterio
 import rasterio.crs
 from rasterio.rio import options
-from rasterio.rio.helpers import hushpipe
 from rasterio.warp import transform_geom
 
 
@@ -37,7 +36,6 @@ sequence_opt = click.option(
 @indent_opt
 @compact_opt
 @click.pass_context
-@hushpipe
 def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent, compact):
     """Print GeoJSON representations of a dataset's control points.
 

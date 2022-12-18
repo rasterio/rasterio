@@ -5,7 +5,6 @@ import json
 import click
 from cligj import precision_opt
 
-from rasterio.rio.helpers import hushpipe
 import rasterio.shutil
 
 
@@ -17,7 +16,6 @@ import rasterio.shutil
               help="Destination CRS.")
 @precision_opt
 @click.pass_context
-@hushpipe
 def transform(ctx, input, src_crs, dst_crs, precision):
     import rasterio.warp
 

@@ -10,7 +10,7 @@ import cligj
 
 import rasterio
 from rasterio.rio import options
-from rasterio.rio.helpers import hushpipe, write_features
+from rasterio.rio.helpers import write_features
 from rasterio.warp import transform_bounds
 
 
@@ -95,7 +95,6 @@ class _Collection:
     '--bidx', type=click.INT, default=0,
     help="Index of the band that is the source of shapes.")
 @click.pass_context
-@hushpipe
 def blocks(
     ctx, input, output, precision, indent, compact, projection, sequence, use_rs, bidx
 ):

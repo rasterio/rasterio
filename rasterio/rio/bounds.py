@@ -8,7 +8,7 @@ from cligj import (
     use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
     geojson_type_collection_opt)
 
-from .helpers import hushpipe, write_features, to_lower
+from .helpers import write_features, to_lower
 from rasterio.rio import options
 from rasterio.warp import transform_bounds
 
@@ -35,7 +35,6 @@ logger = logging.getLogger(__name__)
 @geojson_type_feature_opt(True)
 @geojson_type_bbox_opt(False)
 @click.pass_context
-@hushpipe
 def bounds(
     ctx,
     input,
