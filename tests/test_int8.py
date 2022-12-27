@@ -5,7 +5,7 @@ import pytest
 import rasterio
 from rasterio.env import GDALVersion
 
-gdal_version = GDALVersion.runtime()
+from .conftest import gdal_version
 
 
 @pytest.mark.xfail(gdal_version < GDALVersion(3, 7), reason="GDAL < 3.7 doesn't handle signed int8 correctly")

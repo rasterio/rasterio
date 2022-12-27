@@ -40,10 +40,6 @@ def test_build_overviews_two(data):
         assert src.overviews(3) == [2, 4]
 
 
-@pytest.mark.xfail(
-    GDALVersion.runtime() < GDALVersion.parse("2.0"),
-    reason="Bilinear resampling not supported by GDAL < 2.0",
-)
 def test_build_overviews_bilinear(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
