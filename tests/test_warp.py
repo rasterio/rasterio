@@ -1,6 +1,5 @@
 """rasterio.warp module tests"""
 
-import json
 import logging
 import os
 import sys
@@ -15,7 +14,6 @@ from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
 from rasterio.errors import (
     CRSError,
     GDALVersionError,

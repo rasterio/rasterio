@@ -1,6 +1,5 @@
 """Rasterio's GDAL/AWS environment"""
 
-from contextlib import ExitStack
 from functools import wraps, total_ordering
 from inspect import getfullargspec as getargspec
 import logging

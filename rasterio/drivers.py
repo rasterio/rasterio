@@ -12,7 +12,7 @@ http://unidata.github.io/netcdf4-python/.
 import os
 
 from rasterio._base import _raster_driver_extensions
-from rasterio.env import GDALVersion, ensure_env
+from rasterio.env import ensure_env
 
 # Methods like `rasterio.open()` may use this blacklist to preempt
 # combinations of drivers and file modes.

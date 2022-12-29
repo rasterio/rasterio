@@ -1,6 +1,5 @@
 """Tests of rasterio._path and alias"""
 
-import os
 import sys
 
 import pytest
@@ -10,7 +9,7 @@ from rasterio.errors import PathError
 from rasterio._path import _parse_path, _vsi_path, _ParsedPath, _UnparsedPath
 
 # This will cause a deprecation warning in 1.3.
-from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
+from rasterio.path import parse_path
 
 
 def test_parsed_path_name():

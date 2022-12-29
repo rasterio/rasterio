@@ -6,8 +6,6 @@ import logging
 import click
 from cligj import precision_opt
 
-import rasterio.shutil
-
 
 @click.command(short_help="Transform coordinates.")
 @click.argument('INPUT', default='-', required=False)

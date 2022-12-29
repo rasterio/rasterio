@@ -8,7 +8,6 @@ from .conftest import requires_gdal33
 import rasterio
 from rasterio.enums import _OverviewResampling as OverviewResampling
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
 from rasterio.errors import OverviewCreationError
 
 

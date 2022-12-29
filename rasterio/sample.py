@@ -1,7 +1,5 @@
 # Workaround for issue #378. A pure Python generator.
 
-from itertools import zip_longest
-
 import numpy as np
 from itertools import islice
 

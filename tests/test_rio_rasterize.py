@@ -7,7 +7,6 @@ import os
 import numpy as np
 
 import rasterio
-from rasterio.features import rasterize
 from rasterio.rio.main import main_group
 
 

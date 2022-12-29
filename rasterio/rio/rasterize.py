@@ -4,11 +4,9 @@
 import json
 import logging
 from math import ceil
-import os
 
 from affine import Affine
 import click
-import cligj
 
 import rasterio
 from rasterio.errors import CRSError

@@ -2,9 +2,6 @@
 
 import timeit
 
-import rasterio
-from osgeo import gdal
-
 # GDAL
 s = """
 src = gdal.Open('tests/data/RGB.byte.tif')
