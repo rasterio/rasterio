@@ -699,42 +699,8 @@ cdef extern from "gdal_alg.h" nogil:
             int * pnLines, double * padfExtent, int nOptions)
 
 cdef extern from "gdal_utils.h" nogil:
-    ctypedef struct GDALBuildVRTOptions:
-        bint bStrict
-        char *pszResolution
-        int bSeparate
-        int bAllowProjectionDifference
-        double we_res
-        double ns_res
-        int bTargetAlignedPixels
-        double xmin
-        double ymin
-        double xmax
-        double ymax
-        int bAddAlpha
-        int bHideNoData
-        int nSubdataset
-        char* pszSrcNoData
-        char* pszVRTNoData
-        char* pszOutputSRS
-        int *panSelectedBandList
-        int nBandCount
-        char* pszResampling
-        char** papszOpenOptions
-        bint bUseSrcMaskBand
-        # allow or suppress progress monitor and other non-error output
-        int bQuiet
-        # the progress function to use
-        GDALProgressFunc pfnProgress
-        # pointer to the progress data variable
-        void *pProgressData
-
-    ctypedef struct GDALBuildVRTOptionsForBinary:
-        int nSrcFiles
-        char** papszSrcFiles
-        char* pszDstFilename
-        int bQuiet
-        int bOverwrite
+    ctypedef struct GDALBuildVRTOptions
+    ctypedef struct GDALBuildVRTOptionsForBinary
 
     GDALBuildVRTOptions *GDALBuildVRTOptionsNew(
         char** papszArgv, GDALBuildVRTOptionsForBinary* psOptionsForBinary
