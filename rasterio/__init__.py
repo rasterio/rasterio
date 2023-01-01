@@ -4,6 +4,7 @@ from collections import namedtuple
 import glob
 import logging
 from logging import NullHandler
+from typing import Iterable
 import os
 import platform
 import warnings
@@ -210,7 +211,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         if not (
             hasattr(fp, "read")
             or hasattr(fp, "write")
-            or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
+            or isinstance(fp, (os.PathLike, MemoryFile, FilePath, Iterable))
         ):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, str):
@@ -294,10 +295,17 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         return dataset
 
     # At this point, the fp argument is a string or path-like object
-    # which can be converted to a string.
+    # which can be converted to a string or an iterable
     else:
-        raw_dataset_path = os.fspath(fp)
-        path = _parse_path(raw_dataset_path)
+        if not isinstance(fp, str) and isinstance(fp, Iterable):
+            if mode != "r":
+                raise ValueError(
+                    "Multiple files only allow in 'r' mode."
+                )
+            path = fp
+        else:
+            raw_dataset_path = os.fspath(fp)
+            path = _parse_path(raw_dataset_path)
 
         if mode == "r":
             dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)

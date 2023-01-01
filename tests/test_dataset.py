@@ -7,13 +7,16 @@ try:
 except ImportError:
     from mock import MagicMock
 
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_array_equal
 import pytest
 
 import rasterio
-from rasterio.enums import Compression
+import rasterio.shutil
+from rasterio.coords import BoundingBox
+from rasterio.enums import Compression, Resampling
 from rasterio.errors import RasterioIOError, DatasetAttributeError
 from rasterio.transform import Affine
+from .conftest import gdal_version
 
 
 def test_files(data):
@@ -102,3 +105,86 @@ def test_creation_untiled_blockysize(tmp_path, blockysize):
         assert not dataset.is_tiled
         assert dataset.profile["blockysize"] == min(blockysize, 61)
         assert dataset.block_shapes[0][0] == min(blockysize, 61)
+
+
+def test_build_vrt__attributes(path_rgb_byte_tif):
+    with rasterio.open(
+        [path_rgb_byte_tif]
+    ) as vrt, rasterio.open(path_rgb_byte_tif) as rds:
+        assert vrt.name == "MultiFileVRT"
+        assert rds.count == vrt.count
+        assert rds.crs == vrt.crs
+        assert rds.transform == vrt.transform
+        if gdal_version.at_least("3.3"):
+            assert rds.gcps == vrt.gcps
+        assert rds.units == vrt.units
+        assert rds.descriptions == vrt.descriptions
+        assert rds.dtypes == vrt.dtypes
+        assert rds.shape == vrt.shape
+        assert rds.nodata == vrt.nodata
+        vrt_profile = vrt.profile.copy()
+        assert vrt_profile.pop("driver") == "VRT"
+        assert vrt_profile.pop("blockxsize") == 128
+        assert vrt_profile.pop("blockysize") == 128
+        assert vrt_profile.pop("tiled") is True
+        rds_profile = rds.profile.copy()
+        rds_profile.pop("tiled")
+        rds_profile.pop("blockysize")
+        rds_profile.pop("driver")
+        rds_profile.pop("interleave")
+        assert rds_profile == vrt_profile
+        assert vrt.block_shapes == [(128, 128), (128, 128), (128, 128)]
+        assert_array_equal(vrt.read(), rds.read())
+
+@pytest.mark.parametrize(
+    "method,value",
+    [(Resampling.nearest, 2), (Resampling.average, 2)],
+)
+def test_build_vrt__multi(method, value, directory_with_overlapping_rasters):
+    with rasterio.open(
+        sorted(directory_with_overlapping_rasters.iterdir()),
+        resampling=method,
+    ) as vrt:
+        assert vrt.name == "MultiFileVRT"
+        assert vrt.count == 1
+        assert vrt.shape == (15, 15)
+        assert vrt.crs == 4326
+        assert vrt.transform.almost_equals(
+            Affine(0.2, 0.0, -114.0, 0.0, -0.2, 46.0)
+        )
+        assert vrt.bounds == BoundingBox(
+            left=-114.0, bottom=43.0, right=-111.0, top=46.0
+        )
+        assert_array_equal(vrt.read()[:, 5:10, 5:10], value)
+
+
+def test_build_vrt__write(path_rgb_byte_tif, tmp_path):
+    dst_file = tmp_path / "file.vrt"
+    with rasterio.open([path_rgb_byte_tif]) as vrt:
+        rasterio.shutil.copy(vrt, dst_file)
+
+    with rasterio.open(dst_file) as vrt, rasterio.open(path_rgb_byte_tif) as rds:
+        assert rds.count == vrt.count
+        assert rds.crs == vrt.crs
+        assert rds.transform == vrt.transform
+        if gdal_version.at_least("3.3"):
+            assert rds.gcps == vrt.gcps
+        assert rds.units == vrt.units
+        assert rds.descriptions == vrt.descriptions
+        assert rds.dtypes == vrt.dtypes
+        assert rds.shape == vrt.shape
+        assert rds.nodata == vrt.nodata
+        vrt_profile = vrt.profile.copy()
+        assert vrt_profile.pop("driver") == "VRT"
+        assert vrt_profile.pop("blockxsize") == 128
+        assert vrt_profile.pop("blockysize") == 128
+        assert vrt_profile.pop("tiled") is True
+        rds_profile = rds.profile.copy()
+        rds_profile.pop("tiled")
+        rds_profile.pop("blockysize")
+        rds_profile.pop("driver")
+        rds_profile.pop("interleave")
+        assert rds_profile == vrt_profile
+        assert vrt.block_shapes == [(128, 128), (128, 128), (128, 128)]
+        assert_array_equal(vrt.read(), rds.read())
+

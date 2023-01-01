@@ -4,6 +4,7 @@
 
 from collections import defaultdict
 from contextlib import ExitStack
+from typing import Iterable
 import logging
 import math
 import os
@@ -23,13 +24,14 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
-    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp, Resampling)
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
+from rasterio._env import catch_errors
 from rasterio._path import _parse_path
 from rasterio import windows
 
@@ -223,6 +225,182 @@ cdef GDALDatasetH open_dataset(
         CSLDestroy(options)
 
 
+cdef char* _high_precision_str(data):
+    b_numeric_str = (
+        f"{data:.18g}" if isinstance(data, float) else str(data)
+    ).encode("utf-8")
+    return b_numeric_str
+
+
+_RESAMPLE_METHOD_TO_STRING = {
+    Resampling.nearest: 'near',
+    Resampling.bilinear: 'bilinear',
+    Resampling.cubic: 'cubic',
+    Resampling.cubic_spline: 'cubicspline',
+    Resampling.lanczos: 'lanczos',
+    Resampling.average: 'average',
+    Resampling.rms: 'rms',
+    Resampling.mode: 'mode',
+    Resampling.gauss: 'gauss',
+}
+
+cdef GDALDatasetH open_multiple_datasets(
+    file_paths,
+    resolution=None,
+    dst_bounds=None,
+    dst_resolution=None,
+    target_aligned_pixels=None,
+    separate=None,
+    band_list=None,
+    add_alpha=None,
+    resampling=None,
+    dst_crs=None,
+    allow_projection_difference=None,
+    src_nodata=None,
+    vrt_nodata=None,
+    hide_nodata=None,
+    strict=False,
+) except NULL:
+    """
+    Builds a VRT from a list of datasets.
+
+    See: :cpp:func:`GDALBuildVRT`
+
+    Parameters
+    ----------
+    file_paths: Iterable[Union[str, os.PathLike]]
+        Paths to files to use to build the VRT.
+    resolution: Literal['highest', 'lowest', 'average', 'user'], optional
+        In case the resolution of all input files is not the same,
+        the resolution flag enables the user to control the way
+        the output resolution is computed.
+
+        - highest will pick the smallest values of pixel dimensions within the set of source rasters.
+        - lowest will pick the largest values of pixel dimensions within the set of source rasters.
+        - average is the default and will compute an average of pixel dimensions within the set of source rasters.
+        - user must be used in combination with the dst_resolution option to specify the target resolution.
+
+    dst_bounds: Tuple[float, float, float, float], optional
+        output bounds as (minX, minY, maxX, maxY) in target CRS.
+    dst_resolution: Union[float, Tuple[float, float]], optional
+        output resolution (x resolution, y resolution) in target coordinate reference system.
+    target_aligned_pixels: bool, optional
+        whether to force output bounds to be multiple of output resolution.
+    separate: bool, optional
+        whether each source file goes into a separate stacked band in the VRT band.
+    band_list: List[int], optional
+        array of band numbers (index start at 1).
+    add_alpha: bool, optional
+        whether to add an alpha mask band to the VRT when the source raster have none.
+    resampling: Union[int, rasterio.enums.Resampling], optional
+        resampling mode.
+    dst_crs: CRS, optional
+        Assigned output coordinate reference system.
+    allow_projection_difference: bool, optional
+        Whether to accept input datasets have not the same projection.
+        Note: they will *not* be reprojected.
+    src_nodata: float, optional
+        source nodata value(s).
+    vrt_nodata: float, optional
+        nodata values at the VRT band level.
+    hide_nodata: bool, optional
+        whether to make the VRT band not report the NoData value.
+    strict: bool, optional
+        set to True if warnings should be failures
+    """
+    # Logic based on:
+    # https://github.com/OSGeo/gdal/blob/2df92d3ad556da08714f7dfe17b9bef681453808/swig/python/osgeo/gdal.py#L1837-L1944
+    file_paths = [
+        _parse_path(file_path).as_vsi() for file_path in file_paths
+    ]
+
+    cdef char** options = NULL
+    cdef GDALBuildVRTOptions* vrt_options = NULL
+    cdef int num_datasets = len(file_paths)
+    cdef char** c_file_paths = NULL
+
+    try:
+        if resolution is not None:
+            options = CSLAddString(options, '-resolution')
+            b_resolution = str(resolution).encode("utf-8")
+            options = CSLAddString(options, b_resolution)
+        if dst_bounds is not None:
+            options = CSLAddString(options, '-te')
+            options = CSLAddString(options, _high_precision_str(dst_bounds[0]))
+            options = CSLAddString(options, _high_precision_str(dst_bounds[1]))
+            options = CSLAddString(options, _high_precision_str(dst_bounds[2]))
+            options = CSLAddString(options, _high_precision_str(dst_bounds[3]))
+        if dst_resolution is not None:
+            try:
+                x_res, y_res = dst_resolution
+            except ValueError:
+                x_res = y_res = dst_resolution
+            options = CSLAddString(options, '-tr')
+            options = CSLAddString(options, _high_precision_str(x_res))
+            options = CSLAddString(options, _high_precision_str(y_res))
+        if target_aligned_pixels:
+            options = CSLAddString(options, '-tap')
+        if separate:
+            options = CSLAddString(options, '-separate')
+        if band_list != None:
+            for band in band_list:
+                options = CSLAddString(options, '-b')
+                b_band = str(band).encode("utf-8")
+                options = CSLAddString(options, b_band)
+        if add_alpha:
+            options = CSLAddString(options, '-addalpha')
+        if resampling is not None:
+            options = CSLAddString(options, '-r')
+            b_resampling = str(
+                _RESAMPLE_METHOD_TO_STRING.get(resampling, resampling)
+            ).encode("utf-8")
+            options = CSLAddString(options, b_resampling)
+        if dst_crs is not None:
+            options = CSLAddString(options, '-a_srs')
+            b_dst_crs = str(dst_crs).encode("utf-8")
+            options = CSLAddString(options, b_dst_crs)
+        if allow_projection_difference:
+            options = CSLAddString(options, '-allow_projection_difference')
+        if src_nodata is not None:
+            options = CSLAddString(options, '-srcnodata')
+            b_src_nodata = str(src_nodata).encode("utf-8")
+            options = CSLAddString(options, b_src_nodata)
+        if vrt_nodata is not None:
+            options = CSLAddString(options, '-vrtnodata')
+            b_vrt_nodata = str(vrt_nodata).encode("utf-8")
+            options = CSLAddString(options, b_vrt_nodata)
+        if hide_nodata:
+            options = CSLAddString(options, '-hidenodata')
+        if strict:
+            options = CSLAddString(options, '-strict')
+    except:
+        CSLDestroy(options)
+        raise
+
+    vrt_options = GDALBuildVRTOptionsNew(options, NULL)
+    CSLDestroy(options)
+    for file_path in file_paths:
+        b_file_path = file_path.encode('utf-8')
+        c_file_paths = CSLAddString(c_file_paths, b_file_path)
+    try:
+        with catch_errors():
+            return exc_wrap_pointer(
+                GDALBuildVRT(
+                    "",
+                    num_datasets,
+                    NULL,
+                    c_file_paths,
+                    vrt_options,
+                    NULL,
+                )
+            )
+    except CPLE_BaseError as err:
+        raise RasterioIOError(str(err))
+    finally:
+        GDALBuildVRTOptionsFree(vrt_options)
+        CSLDestroy(c_file_paths)
+
+
 cdef class DatasetBase:
     """Dataset base class
 
@@ -271,8 +449,9 @@ cdef class DatasetBase:
 
         Parameters
         ----------
-        path : rasterio.path.Path or str
-            Path of the local or remote dataset.
+        path : Union[rasterio.path.Path, str, Iterable[Union[rasterio.path.Path, str]]
+            Path of the local or remote dataset. If an iterable is passed in,
+            then, it is opened as a VRT.
         driver : str or list of str
             A single driver name or a list of driver names to consider when
             opening the dataset.
@@ -293,7 +472,29 @@ cdef class DatasetBase:
 
         self._hds = NULL
 
-        if path is not None:
+        if not isinstance(path, str) and isinstance(path, Iterable):
+            if driver is not None:
+                raise ValueError("driver not supported for multiple datasets.")
+
+            self._hds = open_multiple_datasets(
+                file_paths=path,
+                resolution=kwargs.get("resolution"),
+                dst_bounds=kwargs.get("dst_bounds"),
+                dst_resolution=kwargs.get("dst_resolution"),
+                target_aligned_pixels=kwargs.get("target_aligned_pixels"),
+                separate=kwargs.get("separate"),
+                band_list=kwargs.get("band_list"),
+                add_alpha=kwargs.get("add_alpha"),
+                resampling=kwargs.get("resampling"),
+                dst_crs=kwargs.get("dst_crs"),
+                allow_projection_difference=kwargs.get("allow_projection_difference"),
+                src_nodata=kwargs.get("src_nodata"),
+                vrt_nodata=kwargs.get("vrt_nodata"),
+                hide_nodata=kwargs.get("hide_nodata"),
+                strict=kwargs.get("strict"),
+            )
+            self.name = "MultiFileVRT"
+        elif path is not None:
             path = _parse_path(path)
             filename = path.as_vsi()
 
