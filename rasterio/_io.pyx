@@ -645,11 +645,14 @@ cdef class DatasetReaderBase(DatasetBase):
             else:
                 nodataval = ndv
 
+            # mask_vrt_doc is bytes, the dataset ctor needs a str.
+            # Allowing it to take bytes is a TODO.
             vrt_doc = _boundless_vrt_doc(
                 self, nodata=nodataval, background=nodataval,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window))
+                transform=self.window_transform(window)
+            ).decode("utf-8")
 
             vrt_kwds = {'driver': 'VRT'}
             with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
@@ -659,19 +662,20 @@ cdef class DatasetReaderBase(DatasetBase):
                     None, resampling=resampling)
 
                 if masked:
-
                     # Below we use another VRT to compute the valid data mask
                     # in this special case where all source pixels are valid.
                     if all_valid:
-
                         mask_vrt_doc = _boundless_vrt_doc(
                             self, nodata=0,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
                             transform=self.window_transform(window),
-                            masked=True)
+                            masked=True
+                        ).decode("utf-8")
 
-                        with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                        with DatasetReaderBase(
+                                _UnparsedPath(mask_vrt_doc), **vrt_kwds
+                            ) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
@@ -844,7 +848,8 @@ cdef class DatasetReaderBase(DatasetBase):
                         blank_dataset, nodata=0,
                         width=max(self.width, window.width) + 1,
                         height=max(self.height, window.height) + 1,
-                        transform=self.window_transform(window))
+                        transform=self.window_transform(window)
+                    ).decode("utf-8")
 
                     with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
@@ -855,10 +860,10 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_doc = _boundless_vrt_doc(
                     self, width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window))
+                    transform=self.window_transform(window)
+                ).decode("utf-8")
 
                 with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
-
                     out = vrt._read(
                         indexes, out, Window(0, 0, window.width, window.height),
                         None, resampling=resampling, masks=True)

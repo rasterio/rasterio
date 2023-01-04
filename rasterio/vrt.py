@@ -245,4 +245,4 @@ def _boundless_vrt_doc(
         dstrect.attrib['xSize'] = str(src_dataset.width)
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
-    return ET.tostring(vrtdataset).decode('ascii')
+    return ET.tostring(vrtdataset, encoding="utf-8")

@@ -722,4 +722,4 @@ def virtual_merge(
                         ySize=str(src.height * src.transform.e / output_transform.e),
                     )
 
-    return ET.tostring(vrtdataset).decode("ascii")
+    return ET.tostring(vrtdataset, encoding="utf-8")

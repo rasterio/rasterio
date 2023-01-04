@@ -128,7 +128,7 @@ def test_issue2202(dx, dy):
 def test_virtual_merge(tmp_path):
     """Test."""
     xml = virtual_merge(glob("tests/data/rgb?.tif"))
-    tmp_path.joinpath("test.vrt").write_text(xml)
+    tmp_path.joinpath("test.vrt").write_bytes(xml)
     with rasterio.open(tmp_path.joinpath("test.vrt")) as dataset:
         rgb = dataset.read()
 
