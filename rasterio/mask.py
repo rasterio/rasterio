@@ -3,7 +3,7 @@
 import logging
 import warnings
 
-import numpy
+import numpy as np
 
 import rasterio._loading
 with rasterio._loading.add_gdal_dll_directories():
@@ -68,9 +68,6 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                 Window within original raster covered by shapes.  None if crop
                 is False.
     """
-    if crop and invert:
-        raise ValueError("crop and invert cannot both be True.")
-
     if crop and pad:
         pad_x = pad_width
         pad_y = pad_width
@@ -91,7 +88,9 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                           'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
-        mask = numpy.ones(shape=dataset.shape[-2:], dtype="bool") * (not invert)
+        mask = np.ones(shape=dataset.shape[-2:], dtype="bool")
+        if invert:
+            mask = ~mask
         return mask, dataset.transform, None
 
     if crop:
