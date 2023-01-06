@@ -91,7 +91,7 @@ def test_raster_geometrymask_crop_invert(basic_image_2x2, basic_image_file,
         geometrymask, transform, window = raster_geometry_mask(src, geometries,
                                                             crop=True, invert=True)
 
-    image = basic_image_2x2[2:5, 2:5].astype(bool)
+    image = basic_image_2x2[2:5, 2:5] == 1
 
     assert geometrymask.shape == (3, 3)
     assert np.array_equal(geometrymask, image)
