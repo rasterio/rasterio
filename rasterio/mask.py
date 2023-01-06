@@ -38,12 +38,14 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         If False (default), include a pixel only if its center is within one of
         the shapes, or if it is selected by Bresenham's line algorithm.
     invert : bool (opt)
-        If False (default), mask will be `False` inside shapes and `True`
-        outside.  If True, mask will be `True` inside shapes and `False`
-        outside.
+        Determines whether to mask pixels outside or inside the shapes.
+        The default (False) is to mask pixels outside shapes.
+        When invert is used with crop, the area outside the cropping window is
+        considered selected and should be processed accordingly by the user.
     crop : bool (opt)
-        Whether to crop the dataset to the extent of the shapes. Defaults to
-        False.
+        Crop the dataset to the extent of the shapes. Useful for
+        processing rasters where shapes cover only a relatively small area.
+        Defaults to False.
     pad : bool (opt)
         If True, the features will be padded in each direction by
         one half of a pixel prior to cropping dataset. Defaults to False.
@@ -57,8 +59,9 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
         Three elements:
 
-            mask : numpy ndarray of type 'bool'
-                Mask that is `True` outside shapes, and `False` within shapes.
+            mask : np.ndarray of type 'bool'
+                Mask suitable for use in a MaskedArray where valid pixels are
+                marked `False` and invalid pixels are marked `True`.
 
             out_transform : affine.Affine()
                 Information for mapping pixel coordinates in `masked` to another
