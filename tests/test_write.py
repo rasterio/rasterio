@@ -511,6 +511,28 @@ def test_write_masked_true(tmp_path):
         assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]
 
 
+def test_write_masked_nomask(tmp_path):
+    """Verify that a mask is written when we write an optimized masked array (mask == np.ma.nomask)."""
+    data = np.ma.masked_array([[0, 1, 2]], dtype="uint8")
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+    ) as dst:
+        dst.write(data, indexes=1, masked=True)
+
+    # Expect no masked values.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.per_dataset],)
+        arr = src.read(masked=True)
+        assert list(arr.flatten()) == [0, 1, 2]
+
+
 @requires_gdal35
 def test_write_int64(tmp_path):
     test_file = tmp_path / "test.tif"

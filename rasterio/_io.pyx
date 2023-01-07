@@ -1923,9 +1923,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             height = self.height
 
         try:
-            if mask_array is True:
+            if mask_array is True or mask_array is np.True_:
                 GDALFillRaster(mask, 255, 0)
-            elif mask_array is False:
+            elif mask_array is False or mask_array is np.False_:
                 GDALFillRaster(mask, 0, 0)
             elif mask_array.dtype == bool:
                 array = 255 * mask_array.astype(np.uint8)
