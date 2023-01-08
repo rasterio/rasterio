@@ -40,7 +40,7 @@ for Windows 64bit starting with Rasterio version 1.3. To install,
 run ``pip install rasterio``.
 
 Binary wheels for rasterio < 1.3 and GDAL < 3.5 for Windows 64bit and 32bit 
-were created by Christoph Gohlke and are still available from his website.
+were created by Christoph Gohlke and are currently available from his website.
 
 To install rasterio < 1.3, download both binaries for your system (`rasterio
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
