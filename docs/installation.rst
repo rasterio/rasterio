@@ -35,7 +35,7 @@ release.
 Windows
 *******
 
-Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
+Binary wheels with the GDAL, GEOS, and PROJ libraries included are available
 for Windows 64bit starting with Rasterio version 1.3. To install,
 run ``pip install rasterio``.
 
