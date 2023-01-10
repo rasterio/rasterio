@@ -2,7 +2,6 @@
 Tests in this file will ONLY run for GDAL >= 2.x"""
 
 from io import BytesIO
-import logging
 import os.path
 
 from affine import Affine

@@ -1,6 +1,5 @@
 import attr
-from collections import OrderedDict
-from collections.abc import Iterable
+
 
 @attr.s(slots=True)
 class RPC:

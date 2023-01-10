@@ -4,7 +4,6 @@ from __future__ import division
 
 from collections import OrderedDict
 from contextlib import ExitStack
-from distutils.version import LooseVersion
 import math
 
 import click

@@ -1,7 +1,3 @@
-import logging
-import subprocess
-import sys
-
 import rasterio
 
 

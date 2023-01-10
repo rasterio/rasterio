@@ -35,7 +35,6 @@ def _get_gdal_info():
     dict:
         system GDAL information
     """
-    # pylint: disable=import-outside-toplevel
     import rasterio
 
     blob = [

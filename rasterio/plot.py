@@ -6,9 +6,7 @@ Primarily supports `$ rio insp`.
 """
 
 from collections import OrderedDict
-from itertools import zip_longest
 import logging
-import warnings
 
 import numpy as np
 

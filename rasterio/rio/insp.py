@@ -12,7 +12,6 @@ import click
 
 from . import options
 import rasterio
-from rasterio.plot import show, show_hist
 
 try:
     import matplotlib.pyplot as plt

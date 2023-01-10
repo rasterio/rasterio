@@ -21,7 +21,7 @@ from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio import warp
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
-from rasterio.transform import IDENTITY, guard_transform, rowcol
+from rasterio.transform import IDENTITY, guard_transform
 from rasterio.windows import Window
 
 log = logging.getLogger(__name__)

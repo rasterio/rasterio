@@ -5,7 +5,6 @@ import logging
 import shutil
 
 import affine
-import boto3
 import numpy
 import pytest
 

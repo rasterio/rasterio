@@ -3,14 +3,6 @@ import sys
 
 import numpy as np
 import pytest
-
-try:
-    import matplotlib as mpl
-    mpl.use('agg')
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
-
 from affine import Affine
 
 import rasterio
