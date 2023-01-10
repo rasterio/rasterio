@@ -2,10 +2,11 @@
 
 import xml.etree.ElementTree as ET
 
+from rasterio._path import _parse_path
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
-from rasterio._path import _parse_path
+from rasterio.env import ensure_env
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 
@@ -246,3 +247,57 @@ def _boundless_vrt_doc(
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
     return ET.tostring(vrtdataset, encoding="utf-8")
+
+
+class VirtualDataset:
+    """A lazily evaluated virtual dataset based on GDAL's VRT."""
+
+    @classmethod
+    def fromstring(cls, text):
+        """Create a virtual dataset from XML.
+
+        Paramters
+        ---------
+        text : bytes or str
+            XML as a byte or unicode string.
+
+        Returns
+        -------
+        VirtualDataset
+
+        """
+        # To avoid a circular import.
+        from rasterio.io import MemoryFile
+
+        tree = ET.fromstring(text)
+        doc = ET.tostring(tree)
+        memfile = MemoryFile(doc, ext=".vrt")
+        vrt = cls()
+        vrt._tree = tree
+        vrt._doc = doc
+        vrt._memfile = memfile
+        return vrt
+
+    @ensure_env
+    def open(self, sharing=False, **kwargs):
+        """Return a Rasterio dataset object in read-only mode.
+
+        Parameters
+        ----------
+        sharing : bool
+
+        kwargs : dict
+            Optional dataset opening options to be passed to
+            rasterio.open().
+
+        Note well that there are no path or mode parameters. A Virtual
+        Dataset contains its own paths and mode does not apply.
+
+        """
+        return self._memfile.open(driver="VRT", sharing=sharing, **kwargs)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._memfile.close()
