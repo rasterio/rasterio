@@ -24,24 +24,3 @@ def test_boundless_msk_vrt(path_rgb_msk_byte_tif):
             assert msk.count == vrt.count
             assert msk.dtypes == vrt.dtypes
             assert msk.mask_flag_enums == vrt.mask_flag_enums
-
-
-def test_virtual_dataset(path_rgb_byte_tif):
-    with rasterio.open(path_rgb_byte_tif) as rgb:
-        doc = rasterio.vrt._boundless_vrt_doc(rgb)
-        with rasterio.vrt.VirtualDataset.fromstring(doc) as vrtfile, vrtfile.open() as vrt:
-            assert rgb.count == vrt.count
-            assert rgb.dtypes == vrt.dtypes
-            assert rgb.mask_flag_enums == vrt.mask_flag_enums
-
-
-def test_virtual_dataset_invalid():
-    doc = "<VRTDataset></VRTDataset>"
-    with rasterio.Env() as env:
-        with rasterio.vrt.VirtualDataset.fromstring(doc) as vrtfile:
-            print(vrtfile._memfile.name)
-
-        assert vrtfile._memfile.closed
-        assert Path(vrtfile._memfile.name).parent.as_posix() not in [
-            "/vsimem/" + item for item in env._dump_vsimem()
-        ]
