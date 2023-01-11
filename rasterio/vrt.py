@@ -248,7 +248,22 @@ def _boundless_vrt_doc(
 
 
 class VirtualDataset:
-    """A lazily evaluated virtual dataset based on GDAL's VRT."""
+    """A lazily evaluated virtual dataset based on GDAL's VRT.
+
+    Attributes
+    ----------
+    height : int
+        Virtual raster height in rows.
+    width : int
+        Virtual raster width in columns.
+
+    """
+
+    def __init__(self, height=0, width=0):
+        self._tree = ET.Element(
+            "VRTDataset", rasterXSize=str(width), rasterYSize=str(height)
+        )
+        self._memfile = None
 
     @classmethod
     def fromstring(cls, text):
@@ -264,17 +279,32 @@ class VirtualDataset:
         VirtualDataset
 
         """
-        # To avoid a circular import.
-        from rasterio.io import MemoryFile
-
-        tree = ET.fromstring(text)
-        doc = ET.tostring(tree)
-        memfile = MemoryFile(doc, ext=".vrt")
         vrt = cls()
-        vrt._tree = tree
-        vrt._doc = doc
-        vrt._memfile = memfile
+        vrt._tree = ET.fromstring(text)
         return vrt
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._memfile is not None:
+            self._memfile.close()
+
+    @property
+    def height(self):
+        return int(self._tree.get("rasterYSize"))
+
+    @height.setter
+    def height(self, value):
+        self._tree.set("rasterYSize", str(value))
+
+    @property
+    def width(self):
+        return int(self._tree.get("rasterXSize"))
+
+    @width.setter
+    def width(self, value):
+        self._tree.set("rasterXSize", str(value))
 
     @ensure_env
     def open(self, sharing=False, **kwargs):
@@ -292,10 +322,9 @@ class VirtualDataset:
         Dataset contains its own paths and mode does not apply.
 
         """
+        # To avoid a circular import.
+        from rasterio.io import MemoryFile
+
+        self._memfile = MemoryFile(ET.tostring(self._tree))
         return self._memfile.open(driver="VRT", sharing=sharing, **kwargs)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self._memfile.close()
