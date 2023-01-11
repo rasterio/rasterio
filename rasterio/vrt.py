@@ -325,6 +325,7 @@ class VirtualDataset:
         # To avoid a circular import.
         from rasterio.io import MemoryFile
 
+        # TODO: consider implications of calling open a second time.
         self._memfile = MemoryFile(ET.tostring(self._tree))
         return self._memfile.open(driver="VRT", sharing=sharing, **kwargs)
 
