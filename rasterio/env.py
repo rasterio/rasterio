@@ -261,6 +261,13 @@ class Env:
         """
         return local._env._dump_open_datasets()
 
+    def _dump_vsimem(self):
+        """Returns contents of /vsimem/.
+
+        For debugging and testing purposes.
+        """
+        return local._env._dump_vsimem()
+
     def __enter__(self):
         log.debug("Entering env context: %r", self)
         if local._env is None:

@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Better, recursive cleanup of MemoryFile /vsimem/ directories.
 - Python ignores SIGPIPE by default. By never catching BrokenPipeError via
   `except Exception` when, for example, piping the output of rio-shapes to
   the Unix head program, we avoid getting an unhandled BrokenPipeError message
