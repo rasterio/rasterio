@@ -1,4 +1,4 @@
-PYTHON_VERSION ?= `python --version | cut -d' ' -f2 | cut -d'.' -f1,2`
+PYTHON_VERSION ?= 3.8
 GDAL ?= ubuntu-small-3.3.3
 all: deps clean install test
 
