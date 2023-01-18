@@ -486,7 +486,7 @@ def test_merge_out_of_range_nodata(tiffs):
 
     with pytest.warns(UserWarning):
         rv, transform = merge(datasets, nodata=9999)
-    assert not (rv == np.uint8(9999)).any()
+    assert not (rv == (9999 % 256)).any()
 
 def test_merge_rgb(tmpdir, runner):
     """Get back original image"""

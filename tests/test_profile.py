@@ -1,7 +1,6 @@
 """Profile tests"""
 
 import pickle
-import warnings
 
 import pytest
 

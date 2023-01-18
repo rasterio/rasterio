@@ -59,6 +59,7 @@ author = u'Sean Gillies'
 #
 # Parse the version from the rasterio module.
 try:
+    import rasterio
     release = rasterio.__version__
 except:
     with open('../rasterio/__init__.py') as f:

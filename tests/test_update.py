@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.env import GDALVersion
 
 
 @pytest.mark.gdalbin

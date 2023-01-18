@@ -1,6 +1,5 @@
 """Tests of _env util module"""
 
-from numpy import isin
 import pytest
 
 from rasterio._env import (

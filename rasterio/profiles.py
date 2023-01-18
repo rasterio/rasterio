@@ -1,7 +1,6 @@
 """Raster dataset profiles."""
 
 from collections import UserDict
-import warnings
 
 from rasterio.dtypes import uint8
 

@@ -1,6 +1,3 @@
-import pytest
-
-import rasterio
 from rasterio.rio.main import main_group
 
 

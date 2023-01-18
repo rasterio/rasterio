@@ -39,7 +39,6 @@ from click_plugins import with_plugins
 import click
 import cligj
 
-from . import options
 import rasterio
 from rasterio.session import AWSSession
 

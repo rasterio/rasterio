@@ -1226,8 +1226,7 @@ cdef class MemoryFileBase:
         if self._vsif != NULL:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
-        _delete_dataset_if_exists(self.name)
-        VSIRmdir(self._dirname.encode("utf-8"))
+        VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
         self.closed = True
 
     def seek(self, offset, whence=0):
@@ -1923,9 +1922,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             height = self.height
 
         try:
-            if mask_array is True:
+            if mask_array is True or mask_array is np.True_:
                 GDALFillRaster(mask, 255, 0)
-            elif mask_array is False:
+            elif mask_array is False or mask_array is np.False_:
                 GDALFillRaster(mask, 0, 0)
             elif mask_array.dtype == bool:
                 array = 255 * mask_array.astype(np.uint8)

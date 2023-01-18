@@ -2,7 +2,6 @@ from affine import Affine
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioDeprecationWarning
 from rasterio.windows import Window, WindowMethodsMixin
 
 
