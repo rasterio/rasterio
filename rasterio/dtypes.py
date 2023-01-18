@@ -5,7 +5,7 @@ Happily strings can be used throughout Numpy and so existing code will
 not break.
 
 """
-import numpy
+import numpy as np
 
 from rasterio.env import GDALVersion
 
@@ -103,7 +103,7 @@ def in_dtype_range(value, dtype):
     """
     Check if the value is within the dtype range
     """
-    if numpy.dtype(dtype).kind == "f" and (numpy.isinf(value) or numpy.isnan(value)):
+    if np.dtype(dtype).kind == "f" and (np.isinf(value) or np.isnan(value)):
         return True
     range_min, range_max = dtype_ranges[dtype]
     return range_min <= value <= range_max
@@ -140,7 +140,6 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    import numpy as np
 
     if not is_ndarray(values):
         values = np.array(values)
@@ -175,7 +174,6 @@ def get_minimum_dtype(values):
 
 def is_ndarray(array):
     """Check if array is a ndarray."""
-    import numpy as np
 
     return isinstance(array, np.ndarray) or hasattr(array, '__array__')
 
@@ -193,7 +191,6 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    import numpy as np
 
     if not is_ndarray(values):
         values = np.array(values)
@@ -222,7 +219,6 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    import numpy as np
 
     if not is_ndarray(values):
         values = np.array(values)
@@ -236,7 +232,6 @@ def _is_complex_int(dtype):
 
 
 def _getnpdtype(dtype):
-    import numpy as np
     if _is_complex_int(dtype):
         return np.dtype("complex64")
     else:
