@@ -140,11 +140,16 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    values = np.asarray(values)
-    min_value = values.min()
-    max_value = values.max()
+    if is_ndarray(values):
+        min_value = values.min()
+        max_value = values.max()
+        dtype = values.dtype
+    else:
+        min_value = min(values)
+        max_value = max(values)
+        dtype = np.result_type(min_value, max_value)
 
-    if values.dtype.kind in ('i', 'u'):
+    if dtype.kind in {'i', 'u'}:
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
@@ -162,7 +167,6 @@ def get_minimum_dtype(values):
         if not _GDAL_AT_LEAST_35:
             raise ValueError("Values out of range for supported dtypes")
         return int64
-
     else:
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
             return float32
