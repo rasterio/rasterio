@@ -103,7 +103,7 @@ def in_dtype_range(value, dtype):
     """
     Check if the value is within the dtype range
     """
-    if np.dtype(dtype).kind == "f" and (np.isinf(value) or np.isnan(value)):
+    if np.dtype(dtype).kind == "f" and (np.math.isinf(value) or np.math.isnan(value)):
         return True
     range_min, range_max = dtype_ranges[dtype]
     return range_min <= value <= range_max
