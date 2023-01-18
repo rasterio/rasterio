@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Normalize paths before calling os.add_dll_directory on Windows (#2705).
 - Affine version 2.4.0 exposes a bug in Rasterio's test_deprecated.py module, a
   test than erroneously fails. This test has been fixed and passes with all
   versions of the affine module.
