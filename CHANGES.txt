@@ -6,6 +6,9 @@ Changes
 
 Bug fixes:
 
+- Affine version 2.4.0 exposes a bug in Rasterio's test_deprecated.py module, a
+  test than erroneously fails. This test has been fixed and passes with all
+  versions of the affine module.
 - Better, recursive cleanup of MemoryFile /vsimem/ directories.
 - Python ignores SIGPIPE by default. By never catching BrokenPipeError via
   `except Exception` when, for example, piping the output of rio-shapes to
