@@ -229,10 +229,10 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    values = np.asarray(values)
-
-    return (values.dtype.name in valid_dtypes or
-            get_minimum_dtype(values) in valid_dtypes)
+    if is_ndarray(values) and values.dtype.name in valid_dtypes:
+        return True
+    else:
+        return get_minimum_dtype(values) in valid_dtypes
 
 
 def _is_complex_int(dtype):
