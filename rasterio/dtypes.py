@@ -1,9 +1,5 @@
 """Mapping of GDAL to Numpy data types.
 
-Since 0.13 we are not importing numpy here and data types are strings.
-Happily strings can be used throughout Numpy and so existing code will
-not break.
-
 """
 import numpy as np
 
