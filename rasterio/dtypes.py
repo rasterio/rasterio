@@ -178,10 +178,14 @@ def get_minimum_dtype(values):
         # check finite values range
         if is_ndarray(values):
             fvals = values[np.isfinite(values)]
+            if fvals.size == 0:
+                return float32
             min_value = fvals.min()
             max_value = fvals.max()
         else:
             fvals = tuple(filter(np.math.isfinite, values))
+            if not fvals:
+                return float32
             min_value = min(fvals)
             max_value = max(fvals)
 
