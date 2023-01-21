@@ -181,7 +181,7 @@ def get_minimum_dtype(values):
             min_value = fvals.min()
             max_value = fvals.max()
         else:
-            fvals = tuple(map(np.math.isfinite, values))
+            fvals = tuple(filter(np.math.isfinite, values))
             min_value = min(fvals)
             max_value = max(fvals)
 
