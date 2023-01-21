@@ -175,6 +175,16 @@ def get_minimum_dtype(values):
             raise ValueError("Values out of range for supported dtypes")
         return int64
     else:
+        # check finite values range
+        if is_ndarray(values):
+            fvals = values[np.isfinite(values)]
+            min_value = fvals.min()
+            max_value = fvals.max()
+        else:
+            fvals = tuple(map(np.math.isfinite, values))
+            min_value = min(fvals)
+            max_value = max(fvals)
+            
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
             return float32
         return float64
