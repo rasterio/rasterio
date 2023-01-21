@@ -227,8 +227,7 @@ def validate_dtype(values, valid_dtypes):
     """
     if is_ndarray(values) and values.dtype.name in valid_dtypes:
         return True
-    else:
-        return get_minimum_dtype(values) in valid_dtypes
+    return get_minimum_dtype(values) in valid_dtypes
 
 
 def _is_complex_int(dtype):
