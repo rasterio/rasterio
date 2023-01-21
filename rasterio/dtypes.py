@@ -184,7 +184,7 @@ def get_minimum_dtype(values):
             fvals = tuple(map(np.math.isfinite, values))
             min_value = min(fvals)
             max_value = max(fvals)
-            
+
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
             return float32
         return float64
@@ -209,16 +209,12 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    values = np.asarray(values)
-
-    if values.dtype.name == _getnpdtype(dtype).name:
+    dtype_name = _getnpdtype(dtype).name
+    if is_ndarray(values) and values.dtype.name == dtype_name:
         return True
 
-    elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype), equal_nan=True)
-
-    else:
-        return np.array_equal(values, values.astype(dtype))
+    min_dtype = get_minimum_dtype(values)
+    return np.can_cast(min_dtype, dtype_name, casting='safe')
 
 
 def validate_dtype(values, valid_dtypes):
