@@ -204,7 +204,7 @@ def can_cast_dtype(values, dtype):
         True if values can be cast to data type.
     """
     dtype_name = _getnpdtype(dtype).name
-    if values.dtype.name == _getnpdtype(dtype).name:
+    if is_ndarray(values) and values.dtype.name == dtype_name:
         return True
     min_dtype = get_minimum_dtype(values)
     return np.can_cast(min_dtype, dtype_name, casting='safe')
