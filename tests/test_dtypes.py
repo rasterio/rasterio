@@ -76,6 +76,9 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype([-1, 0, 100000]) == int32
     assert get_minimum_dtype([-1.5, 0, 1.5]) == float32
     assert get_minimum_dtype([-1.5e+100, 0, 1.5e+100]) == float64
+    assert get_minimum_dtype([-1.5, np.nan, np.inf, -np.inf]) == float32
+    assert get_minimum_dtype([np.nan, np.inf]) == float32
+
 
     assert get_minimum_dtype(np.array([], dtype=np.uint)) == bool_
     assert get_minimum_dtype(np.array([0, 1], dtype=np.uint)) == uint8
@@ -85,6 +88,8 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([-1, 0, 128], dtype=int)) == int16
     assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
     assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
+    assert get_minimum_dtype(np.array([-1.5, np.nan, np.inf, -np.inf])) == float32
+    assert get_minimum_dtype(np.array([np.nan, np.inf])) == float32
 
 
 def test_get_minimum_dtype__int64():
