@@ -203,16 +203,11 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    values = np.asarray(values)
-
+    dtype_name = _getnpdtype(dtype).name
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
-
-    elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype), equal_nan=True)
-
-    else:
-        return np.array_equal(values, values.astype(dtype))
+    min_dtype = get_minimum_dtype(values)
+    return np.can_cast(min_dtype, dtype_name, casting='safe')
 
 
 def validate_dtype(values, valid_dtypes):
