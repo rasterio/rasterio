@@ -107,6 +107,9 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
         * (read i) evaluates to the i-th input dataset (a 3-D array).
         * (read i j) evaluates to the j-th band of the i-th dataset (a
           2-D array).
+        * (read i j 'float64') casts the array to, e.g. float64. This
+          is critical if calculations will produces values that exceed
+          the limits of the dataset's natural data type.
         * (take foo j) evaluates to the j-th band of a dataset named foo
           (see help on the --name option above).
         * Standard numpy array operators (+, -, *, /) are available.
