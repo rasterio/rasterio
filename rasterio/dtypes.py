@@ -217,6 +217,8 @@ def can_cast_dtype(values, dtype):
 
 def validate_dtype(values, valid_dtypes):
     """Test if dtype of values is one of valid_dtypes.
+    If values is an array, the known dtype is validated.
+    If values is not an array, the minimum dtype is validated.
 
     Parameters
     ----------
