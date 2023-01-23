@@ -150,10 +150,14 @@ def get_minimum_dtype(values):
     rasterio dtype string
     """
     if is_ndarray(values):
+        if values.size == 0:
+            return bool_
         min_value = values.min()
         max_value = values.max()
         dtype = values.dtype
     else:
+        if not values:
+            return bool_
         min_value = min(values)
         max_value = max(values)
         dtype = np.result_type(min_value, max_value)
