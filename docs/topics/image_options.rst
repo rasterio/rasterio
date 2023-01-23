@@ -59,7 +59,7 @@ to the :func:`rasterio.open()` command in write mode.
                        tiled=True, blockxsize=256, blockysize=256,
                        photometric="YCBCR") as dataset:
         # Write data to the dataset.
-        
+
 .. note:: The GeoTIFF format requires that *blockxsize* and *blockysize* be multiples of 16.
 
 On the command line, ``rio`` commands will accept multiple ``--co`` options.
