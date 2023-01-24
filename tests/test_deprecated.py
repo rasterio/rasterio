@@ -13,6 +13,6 @@ def test_open_transform_gdal_geotransform(path_rgb_byte_tif):
     """
     with pytest.raises(TypeError):
         with rasterio.open(
-                path_rgb_byte_tif,
-                transform=tuple(affine.Affine.identity())):
+            path_rgb_byte_tif, transform=tuple(affine.Affine.identity().to_gdal())
+        ):
             pass
