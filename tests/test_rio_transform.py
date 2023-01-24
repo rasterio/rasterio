@@ -4,7 +4,7 @@ import rasterio
 from rasterio.rio.main import main_group
 
 
-def test_transform(runner, basic_image_file):
+def test_transform(runner):
     """Coordinates are transformed."""
     result = runner.invoke(
         main_group,
