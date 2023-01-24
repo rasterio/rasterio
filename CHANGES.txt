@@ -7,9 +7,9 @@ Changes
 Bug fixes:
 
 - Align offsets in rio-clip as well as height and width to match gdal_translate
-  with -projwin (#).
+  with -projwin (#2729).
 - Allow rio-warp's --target-aligned-pixels option to be used with --dst-bounds
-  or --src-bounds (#).
+  or --src-bounds (#2729).
 - Normalize paths before calling os.add_dll_directory on Windows (#2705).
 - Affine version 2.4.0 exposes a bug in Rasterio's test_deprecated.py module, a
   test than erroneously fails. This test has been fixed and passes with all

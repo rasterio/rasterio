@@ -74,15 +74,19 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     -------
     ax : matplotlib Axes
         Axes with plot.
+
     """
     plt = get_plt()
 
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
+
         if len(arr.shape) >= 3:
             arr = reshape_as_image(arr)
+
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
+
     elif isinstance(source, DatasetReader):
         if with_bounds:
             kwargs['extent'] = plotting_extent(source)
@@ -91,19 +95,18 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = source.read(1, masked=True)
         else:
             try:
-
-                # Lookup table for the color space in the source file. This will allow us to re-order it
-                # to RGB if needed
+                # Lookup table for the color space in the source file.
+                # This will allow us to re-order it to RGB if needed
                 source_colorinterp = OrderedDict(zip(source.colorinterp, source.indexes))
-
                 colorinterp = rasterio.enums.ColorInterp
 
                 # Gather the indexes of the RGB channels in that order
                 rgb_indexes = [source_colorinterp[ci] for ci in
                                (colorinterp.red, colorinterp.green, colorinterp.blue)]
 
-                # Read the image in the proper order so the numpy array will have the colors in the
-                # order expected by matplotlib (RGB)
+                # Read the image in the proper order so the numpy array
+                # will have the colors in the order expected by
+                # matplotlib (RGB)
                 arr = source.read(rgb_indexes, masked=True)
                 arr = reshape_as_image(arr)
 
@@ -112,20 +115,25 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     else:
         # The source is a numpy array reshape it to image if it has 3+ bands
         source = np.ma.squeeze(source)
+
         if len(source.shape) >= 3:
             arr = reshape_as_image(source)
         else:
             arr = source
+
         if transform and with_bounds:
             kwargs['extent'] = plotting_extent(arr, transform)
+
     if adjust and arr.ndim >= 3:
         # Adjust each band by the min/max so it will plot as RGB.
         arr = reshape_as_raster(arr)
+
         for ii, band in enumerate(arr):
             arr[ii] = adjust_band(band, kind='linear')
         arr = reshape_as_image(arr)
 
     show = False
+
     if not ax:
         show = True
         ax = plt.gca()
@@ -133,10 +141,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     if contour:
         if 'cmap' not in kwargs:
             kwargs['colors'] = kwargs.get('colors', 'red')
+
         kwargs['linewidths'] = kwargs.get('linewidths', 1.5)
         kwargs['alpha'] = kwargs.get('alpha', 0.8)
 
         C = ax.contour(arr, origin='upper', **kwargs)
+
         if contour_label_kws is None:
             # no explicit label kws passed use defaults
             contour_label_kws = dict(fontsize=8,
@@ -145,6 +155,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             ax.clabel(C, **contour_label_kws)
     else:
         ax.imshow(arr, **kwargs)
+
     if title:
         ax.set_title(title, fontweight='bold')
 
