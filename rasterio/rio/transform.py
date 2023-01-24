@@ -17,6 +17,22 @@ import rasterio.shutil
 @precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
+    """Transform coordinates between coordinate reference systems.
+
+    JSON arrays of coordinates, interleaved, are read from stdin.
+    Aarrays of transformed coordinates are written to stdout.
+
+    To transform a longitude, latitude point (EPSG:4326 is the default)
+    to another coordinate system with 2 decimal places of output
+    precision, do the following.
+
+    \b
+        $ cat << EOF | rio transform --dst-crs EPSG:32618 --precision 2
+        > [-78.0 23.0]
+        > EOF
+        [192457.13, 2546667.68]
+
+    """
     import rasterio.warp
 
     # Handle the case of file, stream, or string input.
