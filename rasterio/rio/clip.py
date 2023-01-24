@@ -135,9 +135,9 @@ def clip(
                     Window(0, 0, src.width, src.height)
                 )
 
-            # Get the window with integer height
-            # and width that contains the bounds window.
+            # Align window, as in gdal_translate.
             out_window = bounds_window.round_lengths()
+            out_window = out_window.round_offsets()
 
             height = int(out_window.height)
             width = int(out_window.width)
