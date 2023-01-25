@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Fixed plot.show(adjust=True) with respect to 16-bit integer data (#).
 - Align offsets in rio-clip as well as height and width to match gdal_translate
   with -projwin (#2729).
 - Allow rio-warp's --target-aligned-pixels option to be used with --dst-bounds
