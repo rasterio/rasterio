@@ -65,23 +65,26 @@ def test_gdal_name(dtype, name):
     assert _gdal_typename(dtype) == name
 
 
-def test_get_minimum_dtype():
-    assert get_minimum_dtype([0, 1]) == uint8
-    assert get_minimum_dtype([0, 1000]) == uint16
-    assert get_minimum_dtype([0, 100000]) == uint32
-    assert get_minimum_dtype([-1, 0, 1]) == int8
-    assert get_minimum_dtype([-1, 0, 128]) == int16
-    assert get_minimum_dtype([-1, 0, 100000]) == int32
-    assert get_minimum_dtype([-1.5, 0, 1.5]) == float32
-    assert get_minimum_dtype([-1.5e+100, 0, 1.5e+100]) == float64
-
-    assert get_minimum_dtype(np.array([0, 1], dtype=np.uint)) == uint8
-    assert get_minimum_dtype(np.array([0, 1000], dtype=np.uint)) == uint16
-    assert get_minimum_dtype(np.array([0, 100000], dtype=np.uint)) == uint32
-    assert get_minimum_dtype(np.array([-1, 0, 1], dtype=int)) == int8
-    assert get_minimum_dtype(np.array([-1, 0, 128], dtype=int)) == int16
-    assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
-    assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
+@pytest.mark.parametrize("values,dtype", [
+    ([0, 1], uint8),
+    ([0, 1000], uint16),
+    ([0, 100000], uint32),
+    ([-1, 0, 1], int8),
+    ([-1, 0, 128], int16),
+    ([-1, 0, 100000], int32),
+    ([-1.5, 0, 1.5], float32),
+    ([-1.5e+100, 0, 1.5e+100], float64),
+    ([-3, .01, 3], float32),
+    (np.array([0, 1], dtype=np.uint), uint8),
+    (np.array([0, 1000], dtype=np.uint), uint16),
+    (np.array([0, 100000], dtype=np.uint), uint32),
+    (np.array([-1, 0, 1], dtype=int), int8),
+    (np.array([-1, 0, 128], dtype=int), int16),
+    (np.array([-1, 0, 100000], dtype=int), int32),
+    (np.array([-1.5, 0, 1.5], dtype=np.float64), float32),
+])
+def test_get_minimum_dtype(values,dtype):
+    assert get_minimum_dtype(values) == dtype
 
 
 def test_get_minimum_dtype__int64():
