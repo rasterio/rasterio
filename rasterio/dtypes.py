@@ -70,6 +70,8 @@ _kind_stem = {
 def _dtype_name(dtype):
     # Workaround to avoid a lot of overhead in Numpy to get typenames like float32
     dtype = np.dtype(dtype)
+    if dtype.kind == 'b':
+        return _kind_stem[dtype.kind]
     return f"{_kind_stem[dtype.kind]}{dtype.itemsize * 8}"
 
 
