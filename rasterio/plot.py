@@ -101,8 +101,10 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
                 colorinterp = rasterio.enums.ColorInterp
 
                 # Gather the indexes of the RGB channels in that order
-                rgb_indexes = [source_colorinterp[ci] for ci in
-                               (colorinterp.red, colorinterp.green, colorinterp.blue)]
+                rgb_indexes = [
+                    source_colorinterp[ci]
+                    for ci in (colorinterp.red, colorinterp.green, colorinterp.blue)
+                ]
 
                 # Read the image in the proper order so the numpy array
                 # will have the colors in the order expected by
@@ -126,10 +128,11 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
     if adjust and arr.ndim >= 3:
         # Adjust each band by the min/max so it will plot as RGB.
-        arr = reshape_as_raster(arr)
+        arr = reshape_as_raster(arr).astype("float64")
 
         for ii, band in enumerate(arr):
-            arr[ii] = adjust_band(band, kind='linear')
+            arr[ii] = adjust_band(band)
+
         arr = reshape_as_image(arr)
 
     show = False
@@ -149,8 +152,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
         if contour_label_kws is None:
             # no explicit label kws passed use defaults
-            contour_label_kws = dict(fontsize=8,
-                                     inline=True)
+            contour_label_kws = dict(fontsize=8, inline=True)
+
         if contour_label_kws:
             ax.clabel(C, **contour_label_kws)
     else:
@@ -321,26 +324,22 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
         plt.show()
 
 
-def adjust_band(band, kind='linear'):
+def adjust_band(band, kind=None):
     """Adjust a band to be between 0 and 1.
 
     Parameters
     ----------
     band : array, shape (height, width)
         A band of a raster object.
-    kind : 'linear'
-        The kind of normalization to apply. For now, there
-        is only one option ('linear').
+    kind : str
+        An unused option. For now, there is only one option ('linear').
 
     Returns
     -------
     band_normed : array, shape (height, width)
         An adjusted version of the input band.
+
     """
-    band_normed = np.zeros_like(band)
-    if kind == 'linear':
-        # Including this `if` statement in case future norms are added.
-        imin = np.nanmin(band)
-        imax = np.nanmax(band)
-        band_normed = (band - imin) / (imax - imin)
-    return band_normed
+    imin = np.float64(np.nanmin(band))
+    imax = np.float64(np.nanmax(band))
+    return (band - imin) / (imax - imin)
