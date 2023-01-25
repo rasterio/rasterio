@@ -60,6 +60,18 @@ if not _GDAL_AT_LEAST_37:
 dtype_rev["complex"] = 11
 dtype_rev["complex_int16"] = 8
 
+_kind_stem = {
+    'f': 'float',
+    'c': 'complex',
+    'i': 'int', 
+    'u': 'uint',
+    'b': 'bool'}
+
+def _dtype_name(dtype):
+    # Workaround to avoid a lot of overhead in Numpy to get typenames like float32
+    dtype = np.dtype(dtype)
+    return f"{_kind_stem[dtype.kind]}{dtype.itemsize * 8}"
+
 
 def _get_gdal_dtype(type_name):
     try:
@@ -203,8 +215,8 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    dtype_name = _getnpdtype(dtype).name
-    if is_ndarray(values) and values.dtype.name == dtype_name:
+    dtype_name = _dtype_name(_getnpdtype(dtype))
+    if is_ndarray(values) and _dtype_name(values.dtype) == dtype_name:
         return True
     min_dtype = get_minimum_dtype(values)
     return np.can_cast(min_dtype, dtype_name, casting='safe')
