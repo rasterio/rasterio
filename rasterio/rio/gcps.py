@@ -36,8 +36,7 @@ sequence_opt = click.option(
 @indent_opt
 @compact_opt
 @click.pass_context
-def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent,
-         compact):
+def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent, compact):
     """Print GeoJSON representations of a dataset's control points.
 
     Each ground control point is represented as a GeoJSON feature. The
@@ -64,7 +63,6 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent,
             "Pretty-printing a sequence of Features requires the --rs option")
 
     with ctx.obj['env'], rasterio.open(input) as src:
-
         gcps, crs = src.gcps
         proj = crs.to_string()
         proj = proj.split('=')[1].upper() if proj.startswith('+init=epsg') else proj
@@ -88,10 +86,13 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent,
             else:
                 features = [update_props(p.__geo_interface__, crs=proj) for p in gcps]
 
-            click.echo(json.dumps(
-                {'type': 'FeatureCollection', 'features': features},
-                separators=(',', ':') if compact else None,
-                indent=indent))
+            click.echo(
+                json.dumps(
+                    {"type": "FeatureCollection", "features": features},
+                    separators=(",", ":") if compact else None,
+                    indent=indent,
+                )
+            )
 
         else:
             for p in gcps:
@@ -104,7 +105,8 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent,
                 else:
                     feat = update_props(p.__geo_interface__, crs=proj)
 
-                click.echo(json.dumps(
-                    feat,
-                    separators=(',', ':') if compact else None,
-                    indent=indent))
+                click.echo(
+                    json.dumps(
+                        feat, separators=(",", ":") if compact else None, indent=indent
+                    )
+                )

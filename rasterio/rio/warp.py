@@ -48,20 +48,38 @@ MAX_OUTPUT_HEIGHT = 100000
     '--bounds', '--dst-bounds', 'dst_bounds', nargs=4, type=float, default=None,
     help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
-@click.option('--resampling',
-              type=click.Choice([r.name for r in SUPPORTED_RESAMPLING]),
-              default='nearest', help="Resampling method.",
-              show_default=True)
-@click.option('--src-nodata', default=None, show_default=True,
-              type=float, help="Manually override source nodata")
-@click.option('--dst-nodata', default=None, show_default=True,
-              type=float, help="Manually override destination nodata")
-@click.option('--threads', type=int, default=1,
-              help='Number of processing threads.')
-@click.option('--check-invert-proj/--no-check-invert-proj', default=True,
-              help='Constrain output to valid coordinate region in dst-crs')
-@click.option('--target-aligned-pixels/--no-target-aligned-pixels', default=False,
-              help='align the output bounds based on the resolution')
+@click.option(
+    "--resampling",
+    type=click.Choice([r.name for r in SUPPORTED_RESAMPLING]),
+    default="nearest",
+    help="Resampling method.",
+    show_default=True,
+)
+@click.option(
+    "--src-nodata",
+    default=None,
+    show_default=True,
+    type=float,
+    help="Manually override source nodata",
+)
+@click.option(
+    "--dst-nodata",
+    default=None,
+    show_default=True,
+    type=float,
+    help="Manually override destination nodata",
+)
+@click.option("--threads", type=int, default=1, help="Number of processing threads.")
+@click.option(
+    "--check-invert-proj/--no-check-invert-proj",
+    default=True,
+    help="Constrain output to valid coordinate region in dst-crs",
+)
+@click.option(
+    "--target-aligned-pixels/--no-target-aligned-pixels",
+    default=False,
+    help="align the output bounds based on the resolution",
+)
 @options.overwrite_opt
 @options.creation_options
 @click.option(
@@ -155,10 +173,6 @@ def warp(
         if not res:
             raise click.BadParameter(
                 '--target-aligned-pixels requires a specified resolution')
-        if src_bounds or dst_bounds:
-            raise click.BadParameter(
-                '--target-aligned-pixels cannot be used with '
-                '--src-bounds or --dst-bounds')
 
     # Check invalid parameter combinations
     if like:

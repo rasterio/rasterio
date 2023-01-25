@@ -20,7 +20,7 @@ if platform.system() == "Windows":
         if "PATH" in os.environ:
             for p in os.environ["PATH"].split(os.pathsep):
                 if p and glob.glob(os.path.join(p, "gdal*.dll")):
-                    os.add_dll_directory(p)
+                    os.add_dll_directory(os.path.abspath(p))
 
 
 from rasterio._show_versions import show_versions

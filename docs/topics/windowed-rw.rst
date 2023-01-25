@@ -54,6 +54,17 @@ test file.
     >>> print(w.shape)
     (256, 512)
 
+.. attention::
+
+   In getting data to fill a window Rasterio will read the entirety of one or
+   more chunks of data from the dataset. If you're reading from a GeoTIFF with
+   512 x 512 pixel chunks (blocks), that determines the minimum number of bytes
+   that will be read from disk or copied over your network, even if your read
+   window is only 1 x 1 pixels. In the case that your source dataset does not
+   use chunks (rare, but possible) Rasterio will read the entire dataset in
+   order to fill even a 1 x 1 pixel window. In practice, it's important to
+   chunk the data you create and store for your applications.
+
 Writing
 -------
 
