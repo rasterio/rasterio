@@ -182,7 +182,7 @@ def get_minimum_dtype(values):
         if not _GDAL_AT_LEAST_35:
             raise ValueError("Values out of range for supported dtypes")
         return int64
-    else:
+    elif dtype.kind == 'f':
         # Check finite values range
         if is_ndarray(values):
             fvals = values[np.isfinite(values)]
