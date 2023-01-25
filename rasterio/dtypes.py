@@ -134,6 +134,45 @@ def check_dtype(dt):
     return False
 
 
+def _get_minimum_int(min_value, max_value):
+    """Determine minimum int"""
+    if min_value >= 0:
+        if max_value <= 1:
+            return bool_
+        if max_value <= 255:
+            return uint8
+        elif max_value <= 65535:
+            return uint16
+        elif max_value <= 4294967295:
+            return uint32
+        if not _GDAL_AT_LEAST_35:
+            raise ValueError("Values out of range for supported dtypes")
+        return uint64
+    elif min_value >= -128 and max_value <= 127:
+        return int8
+    elif min_value >= -32768 and max_value <= 32767:
+        return int16
+    elif min_value >= -2147483648 and max_value <= 2147483647:
+        return int32
+    if not _GDAL_AT_LEAST_35:
+        raise ValueError("Values out of range for supported dtypes")
+    return int64
+
+
+def _get_minimum_float(min_value, max_value):
+    if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
+        return float32
+    return float64
+
+
+def _get_minimum_complex(min_value, max_value):
+    real_dt = _get_minimum_float(min_value.real, max_value.real)
+    imag_dt = _get_minimum_float(min_value.imag, max_value.imag)
+    if (real_dt, imag_dt) == ('float32', 'float32'):
+        return complex64
+    return complex128
+
+
 def get_minimum_dtype(values):
     """Determine minimum type to represent values.
 
@@ -149,72 +188,42 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    if is_ndarray(values):
+    is_arr = is_ndarray(values)
+    if is_arr:
         if values.size == 0:
-            return bool_
-        min_value = values.min()
-        max_value = values.max()
+            return None
         dtype = values.dtype
     else:
         if not values:
-            return bool_
-        min_value = min(values)
-        max_value = max(values)
+            return None
         dtype = np.result_type(min_value, max_value)
 
     if dtype.kind in {'i', 'u'}:
-        if min_value >= 0:
-            if max_value <= 1:
-                return bool_
-            if max_value <= 255:
-                return uint8
-            elif max_value <= 65535:
-                return uint16
-            elif max_value <= 4294967295:
-                return uint32
-            if not _GDAL_AT_LEAST_35:
-                raise ValueError("Values out of range for supported dtypes")
-            return uint64
-        elif min_value >= -128 and max_value <= 127:
-            return int8
-        elif min_value >= -32768 and max_value <= 32767:
-            return int16
-        elif min_value >= -2147483648 and max_value <= 2147483647:
-            return int32
-        if not _GDAL_AT_LEAST_35:
-            raise ValueError("Values out of range for supported dtypes")
-        return int64
+        if is_arr:
+            min_value = values.min()
+            max_value = values.max()
+        else:
+            min_value = min(values)
+            max_value = max(values)
+        return _get_minimum_int(min_value, max_value)
     elif dtype.kind in {'f', 'c'}:
         # Check finite values range
-        if is_ndarray(values):
+        if is_arr:
             fvals = values[np.isfinite(values)]
             if fvals.size == 0:
-                if dtype.kind == 'f':
-                    return float32
-                else:
-                    return complex64
+                return None
             min_value = fvals.min()
             max_value = fvals.max()
         else:
             fvals = tuple(filter(np.math.isfinite, values))
             if not fvals:
-                if dtype.kind == 'f':
-                    return float32
-                else:
-                    return complex64
+                return None
             min_value = min(fvals)
             max_value = max(fvals)
-
-        if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
-            if dtype.kind == 'f':
-                return float32
-            else:
-                return complex64
+        
         if dtype.kind == 'f':
-            return float64
-        else:
-            return complex128
-
+            return _get_minimum_float(min_value, max_value)
+        return _get_minimum_complex(min_value, max_value)
 
 
 def is_ndarray(array):
