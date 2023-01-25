@@ -29,7 +29,19 @@ from rasterio.dtypes import (
     _is_complex_int,
     _getnpdtype,
     _get_gdal_dtype,
+    _dtype_name
 )
+
+
+def test_dtype_name():
+    from rasterio.dtypes import dtype_rev
+    for dt in dtype_rev:
+        if dt is None:
+            continue
+        elif dt.startswith('complex_int'):
+            continue
+        dt = np.dtype(dt)
+        assert _dtype_name(dt) == dt.name
 
 
 def test_is_ndarray():
