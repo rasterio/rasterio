@@ -121,8 +121,10 @@ def test_cant_cast_dtype_nan(dtype):
 
 def test_validate_dtype():
     assert validate_dtype([1, 2, 3], ('uint8', 'uint16'))
-    assert validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16'))
-    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float32',))
+    assert not validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16'))
+    assert validate_dtype(np.array([1, 2, 3], dtype='uint8'), ('uint8', 'uint16'))
+    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float64',))
+    assert validate_dtype([1.4, 2.1, 3.65], ('float32'))
     assert not validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',))
 
 
