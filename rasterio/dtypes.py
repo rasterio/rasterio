@@ -149,16 +149,13 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    if is_ndarray(values):
-        min_value = values.min()
-        max_value = values.max()
-        dtype = values.dtype
-    else:
-        min_value = min(values)
-        max_value = max(values)
-        dtype = np.result_type(min_value, max_value)
+    if not is_ndarray(values):
+        values = np.asarray(values)
 
-    if dtype.kind in {'i', 'u'}:
+    min_value = values.min()
+    max_value = values.max()
+
+    if values.dtype.kind in {'i', 'u'}:
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
