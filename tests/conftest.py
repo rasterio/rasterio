@@ -27,8 +27,13 @@ DEFAULT_SHAPE = (10, 10)
 if sys.version_info > (3,):
     reduce = functools.reduce
 
+try:
+    have_credentials = boto3.Session().get_credentials()
+except Exception:
+    have_credentials = False
+
 credentials = pytest.mark.skipif(
-    not(boto3.Session().get_credentials()),
+    not(have_credentials),
     reason="S3 raster access requires credentials")
 
 
