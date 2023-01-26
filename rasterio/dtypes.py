@@ -6,8 +6,6 @@ not break.
 
 """
 import numpy as np
-from numpy.core._multiarray_umath import _discover_array_parameters
-
 
 from rasterio.env import GDALVersion
 
@@ -158,7 +156,7 @@ def get_minimum_dtype(values):
     else:
         min_value = min(values)
         max_value = max(values)
-        dtype, _ = _discover_array_parameters(values)
+        dtype = np.result_type(min_value, max_value)
 
     if dtype.kind in {'i', 'u'}:
         if min_value >= 0:
