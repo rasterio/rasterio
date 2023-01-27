@@ -30,7 +30,7 @@ def deprecated_precision(*args):
               default='nearest', help="Resampling method.",
               show_default=True)
 @click.option('--method',
-              type=click.Choice([method for method in MERGE_METHODS.keys()]),
+              type=click.Choice(list(MERGE_METHODS)),
               default='first', help="Merging strategy.",
               show_default=True)
 @options.nodata_opt
