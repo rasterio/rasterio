@@ -354,11 +354,10 @@ def rasterize(
     else:
         raise ValueError('Either an out_shape or image must be provided')
 
-    out.fill(fill)
-    
     if min(out.shape) == 0:
         raise ValueError("width and height must be > 0")
 
+    out.fill(fill)
     transform = guard_transform(transform)
     _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
     return out
