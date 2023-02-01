@@ -556,7 +556,6 @@ def test_rasterize_invalid_geom(input):
     _warn = record.pop(ShapeSkipWarning)
 
 
-
 def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
     """Rasterize operation should succeed for at least one valid geometry
     and should skip any invalid or empty geometries with an error."""
@@ -598,9 +597,11 @@ def test_rasterize_missing_out(basic_geometry):
 
 
 def test_rasterize_missing_shapes():
-    """Shapes are required for this operation."""
+    """Shapes are recommended for this operation. If no shapes, empty array is returned."""
     with pytest.warns(RasterioWarning, match="No valid geometry objects"):
-        rasterize([], out_shape=DEFAULT_SHAPE)
+        rv = rasterize([], out_shape=DEFAULT_SHAPE)
+        assert rv.shape == DEFAULT_SHAPE
+        assert (rv == 0).all()
 
 
 def test_rasterize_invalid_shapes():
