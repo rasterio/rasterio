@@ -603,6 +603,8 @@ def test_rasterize_missing_shapes():
         assert rv.shape == DEFAULT_SHAPE
         assert (rv == 0).all()
 
+
+def test_rasterize_fill_out_array():
     with pytest.warns(RasterioWarning, match="No valid geometry objects"):
         out = np.empty((3, 3))
         rv = rasterize([], out=out)
