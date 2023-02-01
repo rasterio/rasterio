@@ -9,7 +9,7 @@ import shapely.geometry
 
 import rasterio
 from rasterio.enums import MergeAlg
-from rasterio.errors import WindowError, ShapeSkipWarning
+from rasterio.errors import WindowError, ShapeSkipWarning, RasterioWarning
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
@@ -126,13 +126,16 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
 @pytest.mark.parametrize("geom", [{'type': 'Invalid'}, {'type': 'Point'}, {'type': 'Point', 'coordinates': []}])
 def test_geometry_invalid_geom(geom):
     """An invalid geometry should fail"""
-    with pytest.raises(ValueError) as exc_info, pytest.warns(ShapeSkipWarning):
+    with pytest.warns((RasterioWarning, ShapeSkipWarning)) as record:
         geometry_mask(
             [geom],
             out_shape=DEFAULT_SHAPE,
             transform=Affine.identity())
 
-    assert 'No valid geometry objects found for rasterize' in exc_info.value.args[0]
+    assert len(record) == 2
+    _warn = record.pop(RasterioWarning)
+    assert "No valid geometry objects" in _warn.message.args[0]
+    _warn = record.pop(ShapeSkipWarning)
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -544,8 +547,14 @@ def test_rasterize_multipolygon_no_hole():
     [{'type'}], [{'type': 'Invalid'}], [{'type': 'Point'}], [{'type': 'Point', 'coordinates': []}], [{'type': 'GeometryCollection', 'geometries': []}]])
 def test_rasterize_invalid_geom(input):
     """Invalid GeoJSON should fail with exception"""
-    with pytest.raises(ValueError), pytest.warns(ShapeSkipWarning):
+    with pytest.warns((RasterioWarning, ShapeSkipWarning)) as record:
         rasterize(input, out_shape=DEFAULT_SHAPE)
+
+    assert len(record) == 2
+    _warn = record.pop(RasterioWarning)
+    assert "No valid geometry objects" in _warn.message.args[0]
+    _warn = record.pop(ShapeSkipWarning)
+
 
 
 def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
@@ -590,18 +599,19 @@ def test_rasterize_missing_out(basic_geometry):
 
 def test_rasterize_missing_shapes():
     """Shapes are required for this operation."""
-    with pytest.raises(ValueError) as ex:
+    with pytest.warns(RasterioWarning, match="No valid geometry objects"):
         rasterize([], out_shape=DEFAULT_SHAPE)
-
-    assert 'No valid geometry objects' in str(ex.value)
 
 
 def test_rasterize_invalid_shapes():
     """Invalid shapes should raise an exception rather than be skipped."""
-    with pytest.raises(ValueError) as ex, pytest.warns(ShapeSkipWarning):
+    with pytest.warns((RasterioWarning, ShapeSkipWarning)) as record:
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
-    assert 'No valid geometry objects found for rasterize' in str(ex.value)
+    assert len(record) == 2
+    _warn = record.pop(RasterioWarning)
+    assert "No valid geometry objects" in _warn.message.args[0]
+    _warn = record.pop(ShapeSkipWarning)
 
 
 def test_rasterize_invalid_out_shape(basic_geometry):
