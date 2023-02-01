@@ -326,15 +326,15 @@ def merge(
             # problem. Making it more efficient is a TODO.
 
             # 0. Precondition checks
-            #    - Check that source is withing destination bounds
-            #    - Check CRS is same
+            #    - Check that source is within destination bounds
+            #    - Check that CRS is same
 
             if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
                 logger.debug("Skipping source: src=%r, window=%r", src)
                 continue
 
             if first_crs != src.crs:
-                raise RasterioError(f"CRS mismatch in merge source: {dataset}")
+                raise RasterioError(f"CRS mismatch with source: {dataset}")
 
             # 1. Compute spatial intersection of destination and source
             src_w, src_s, src_e, src_n = src.bounds
