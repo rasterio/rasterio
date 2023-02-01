@@ -350,11 +350,12 @@ def rasterize(
             raise ValueError('Invalid out_shape, must be 2D')
 
         out = np.empty(out_shape, dtype=dtype)
-        out.fill(fill)
 
     else:
         raise ValueError('Either an out_shape or image must be provided')
 
+    out.fill(fill)
+    
     if min(out.shape) == 0:
         raise ValueError("width and height must be > 0")
 
