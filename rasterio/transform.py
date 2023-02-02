@@ -404,7 +404,8 @@ class TransformerBase():
             transformations. Default: 0.
         offset : str, optional
             Determines if the returned coordinates are for the center of the
-            pixel or for a corner.
+            pixel or for a corner. Available options include center, ul, ur, ll,
+            lr.
         Raises
         ------
         ValueError
