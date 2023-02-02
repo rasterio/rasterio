@@ -3,6 +3,10 @@
 from click import FileError
 
 
+#----------------------------------------
+#  Rasterio Errors
+#----------------------------------------
+
 class RasterioError(Exception):
     """Root exception class"""
 
@@ -46,32 +50,8 @@ class RasterioIOError(OSError):
     registered format drivers."""
 
 
-class NodataShadowWarning(UserWarning):
-    """Warn that a dataset's nodata attribute is shadowing its alpha band."""
-
-    def __str__(self):
-        return ("The dataset's nodata attribute is shadowing "
-                "the alpha band. All masks will be determined "
-                "by the nodata attribute")
-
-
-class NotGeoreferencedWarning(UserWarning):
-    """Warn that a dataset isn't georeferenced."""
-
-
-class TransformWarning(UserWarning):
-    """Warn that coordinate transformations may behave unexpectedly"""
-
 class RPCError(ValueError):
     """Raised when RPC transformation is invalid"""
-
-
-class ShapeSkipWarning(UserWarning):
-    """Warn that an invalid or empty shape in a collection has been skipped"""
-
-
-class RasterioWarning(UserWarning):
-    """General warning from Rasterio"""
 
 
 class GDALBehaviorChangeException(RuntimeError):
@@ -106,14 +86,6 @@ class GDALVersionError(RasterioError):
 
 class WindowEvaluationError(ValueError):
     """Raised when window evaluation fails"""
-
-
-class RasterioDeprecationWarning(FutureWarning):
-    """Rasterio module deprecations
-
-    Following https://www.python.org/dev/peps/pep-0565/#additional-use-case-for-futurewarning
-    we base this on FutureWarning while continuing to support Python < 3.7.
-    """
 
 
 class RasterBlockError(RasterioError):
@@ -162,3 +134,41 @@ class DatasetIOShapeError(RasterioError):
 
 class WarpOperationError(RasterioError):
     """Raised when a warp operation fails."""
+
+
+#----------------------------------------
+# Rasterio Warnings
+#----------------------------------------
+
+
+class RasterioWarning(UserWarning):
+    """General warning from Rasterio"""
+
+
+class NodataShadowWarning(UserWarning):
+    """Warn that a dataset's nodata attribute is shadowing its alpha band."""
+
+    def __str__(self):
+        return ("The dataset's nodata attribute is shadowing "
+                "the alpha band. All masks will be determined "
+                "by the nodata attribute")
+
+
+class NotGeoreferencedWarning(UserWarning):
+    """Warn that a dataset isn't georeferenced."""
+
+
+class TransformWarning(UserWarning):
+    """Warn that coordinate transformations may behave unexpectedly"""
+
+
+class ShapeSkipWarning(UserWarning):
+    """Warn that an invalid or empty shape in a collection has been skipped"""
+
+
+class RasterioDeprecationWarning(FutureWarning):
+    """Rasterio module deprecations
+
+    Following https://www.python.org/dev/peps/pep-0565/#additional-use-case-for-futurewarning
+    we base this on FutureWarning while continuing to support Python < 3.7.
+    """
