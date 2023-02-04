@@ -303,7 +303,7 @@ def from_gcps(gcps):
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
 
-class TransformerBase():
+class TransformerBase:
     """Generic GDAL transformer base class
 
     Notes
@@ -312,12 +312,7 @@ class TransformerBase():
 
     """
     def __init__(self):
-        self._env = ExitStack()
         self._transformer = None
-        self.closed = True
-
-    def close(self):
-        self.closed = True
 
     @staticmethod
     def _ensure_arr_input(xs, ys, zs=None):
@@ -340,8 +335,7 @@ class TransformerBase():
         return self
 
     def __exit__(self, *args):
-        self.close()
-        self._env.close()
+        pass
     
     def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
@@ -458,6 +452,23 @@ class TransformerBase():
         raise NotImplementedError
 
 
+class GDALTransformerBase(TransformerBase):
+    def __init__(self):
+        super().__init__()
+        self._env = ExitStack()
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+        self._env.close()
+
+
 class AffineTransformer(TransformerBase):
     """A pure Python class related to affine based coordinate transformations."""
     def __init__(self, affine_transform):
@@ -465,9 +476,6 @@ class AffineTransformer(TransformerBase):
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
-
-    def close(self):
-        pass
 
     def _transform(self, xs, ys, zs, transform_direction):
         resxs = []
@@ -489,7 +497,7 @@ class AffineTransformer(TransformerBase):
         return "<AffineTransformer>"
 
 
-class RPCTransformer(RPCTransformerBase, TransformerBase):
+class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
     """
     Class related to Rational Polynomial Coeffecients (RPCs) based
     coordinate transformations.
@@ -505,16 +513,12 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
             raise ValueError("RPCTransformer requires RPC")
         super().__init__(rpcs, **rpc_options)
 
-    def __enter__(self):
-        self._env.enter_context(env_ctx_if_needed())
-        return self
-
     def __repr__(self):
         return "<{} RPCTransformer>".format(
             self.closed and 'closed' or 'open')
 
 
-class GCPTransformer(GCPTransformerBase, TransformerBase):
+class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
     """
     Class related to Ground Control Point (GCPs) based
     coordinate transformations.
@@ -528,10 +532,6 @@ class GCPTransformer(GCPTransformerBase, TransformerBase):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
         super().__init__(gcps)
-
-    def __enter__(self):
-        self._env.enter_context(env_ctx_if_needed())
-        return self
 
     def __repr__(self):
         return "<{} GCPTransformer>".format(
