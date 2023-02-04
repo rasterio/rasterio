@@ -337,7 +337,6 @@ class TransformerBase():
         return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
 
     def __enter__(self):
-        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *args):
@@ -469,7 +468,7 @@ class AffineTransformer(TransformerBase):
 
     def close(self):
         pass
-    
+
     def _transform(self, xs, ys, zs, transform_direction):
         resxs = []
         resys = []
@@ -506,6 +505,10 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
             raise ValueError("RPCTransformer requires RPC")
         super().__init__(rpcs, **rpc_options)
 
+    def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
+        return self
+
     def __repr__(self):
         return "<{} RPCTransformer>".format(
             self.closed and 'closed' or 'open')
@@ -525,6 +528,10 @@ class GCPTransformer(GCPTransformerBase, TransformerBase):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
         super().__init__(gcps)
+
+    def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
+        return self
 
     def __repr__(self):
         return "<{} GCPTransformer>".format(
