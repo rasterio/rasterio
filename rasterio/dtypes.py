@@ -149,16 +149,11 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    if is_ndarray(values):
-        min_value = values.min()
-        max_value = values.max()
-        dtype = values.dtype
-    else:
-        min_value = min(values)
-        max_value = max(values)
-        dtype = np.result_type(min_value, max_value)
+    values = np.asanyarray(values)
+    min_value = values.min()
+    max_value = values.max()
 
-    if dtype.kind in {'i', 'u'}:
+    if values.dtype.kind in {'i', 'u'}:
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
@@ -203,7 +198,7 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    values = np.asarray(values)
+    values = np.asanyarray(values)
 
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
@@ -229,7 +224,7 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    values = np.asarray(values)
+    values = np.asanyarray(values)
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)

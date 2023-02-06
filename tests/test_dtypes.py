@@ -83,6 +83,9 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
     assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
 
+    # Mixed type list where min/max are same type
+    assert get_minimum_dtype([0, 1.5, 5]) == float32
+
 
 def test_get_minimum_dtype__int64():
     if gdal_version.at_least("3.5"):
