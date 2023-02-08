@@ -141,11 +141,11 @@ class WarpOperationError(RasterioError):
 #----------------------------------------
 
 
-class RasterioWarning(UserWarning):
+class RasterioWarning(Warning):
     """General warning from Rasterio"""
 
 
-class NodataShadowWarning(UserWarning):
+class NodataShadowWarning(RasterioWarning):
     """Warn that a dataset's nodata attribute is shadowing its alpha band."""
 
     def __str__(self):
@@ -154,15 +154,15 @@ class NodataShadowWarning(UserWarning):
                 "by the nodata attribute")
 
 
-class NotGeoreferencedWarning(UserWarning):
+class NotGeoreferencedWarning(RasterioWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
-class TransformWarning(UserWarning):
+class TransformWarning(RasterioWarning):
     """Warn that coordinate transformations may behave unexpectedly"""
 
 
-class ShapeSkipWarning(UserWarning):
+class ShapeSkipWarning(RasterioWarning):
     """Warn that an invalid or empty shape in a collection has been skipped"""
 
 
