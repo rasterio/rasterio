@@ -92,6 +92,7 @@ cdef class RPCTransformerBase:
                Consider using RPC_DEM to supply a DEM to sample accurate height measurements
                from.
         """
+        super().__init__()
         cdef char **papszMD = NULL
         cdef char **options = NULL
         cdef int bReversed = 1
@@ -124,8 +125,6 @@ cdef class RPCTransformerBase:
         finally:
             CSLDestroy(options)
             CSLDestroy(papszMD)
-
-        self._env = ExitStack()
 
     def _transform(self, xs, ys, zs, transform_direction):
         """
@@ -251,6 +250,7 @@ cdef class GCPTransformerBase:
         gcps : a sequence of GroundControlPoint
             Ground Control Points for a dataset.
         """
+        super().__init__()
         cdef int bReversed = 1
         cdef int nReqOrder = 0  # let GDAL determine polynomial order
         cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -271,8 +271,6 @@ cdef class GCPTransformerBase:
             self._closed = False
         finally:
             CPLFree(gcplist)
-
-        self._env = ExitStack()
 
     def _transform(self, xs, ys, zs, transform_direction):
         """
