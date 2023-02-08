@@ -1110,7 +1110,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
             )
         except CPLE_AppDefinedError as exc:
-            raise StatisticsError("No valid pixels found in sampling.")
+            raise StatisticsError("No valid pixels found in sampling.") from exc
         else:
             return Statistics(min, max, mean, std)
 
