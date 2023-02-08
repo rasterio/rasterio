@@ -397,35 +397,17 @@ def _bounds(geometry, north_up=True, transform=None):
     TODO: add to Fiona.
     """
 
-    if 'features' in geometry:
-        # Input is a FeatureCollection
-        xmins = []
-        ymins = []
-        xmaxs = []
-        ymaxs = []
-        for feature in geometry['features']:
-            xmin, ymin, xmax, ymax = _bounds(feature['geometry'])
-            xmins.append(xmin)
-            ymins.append(ymin)
-            xmaxs.append(xmax)
-            ymaxs.append(ymax)
+    if 'features' in geometry and geometry["features"]:
+        xmins, ymins, xmaxs, ymaxs = zip(
+            *[_bounds(feat["geometry"]) for feat in geometry["features"]]
+        )
         if north_up:
             return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
         else:
             return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
-    elif 'geometries' in geometry:
-        # Input is a geometry collection
-        xmins = []
-        ymins = []
-        xmaxs = []
-        ymaxs = []
-        for geometry in geometry['geometries']:
-            xmin, ymin, xmax, ymax = _bounds(geometry)
-            xmins.append(xmin)
-            ymins.append(ymin)
-            xmaxs.append(xmax)
-            ymaxs.append(ymax)
+    elif 'geometries' in geometry and geometry['geometries']:
+        xmins, ymins, xmaxs, ymaxs = zip(*[_bounds(geom) for geom in geometry["geometries"]])
         if north_up:
             return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
         else:
