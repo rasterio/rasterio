@@ -18,14 +18,16 @@ from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
 from rasterio._env import catch_errors
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
+    GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
+    CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
+    StatisticsError
 )
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
@@ -1107,8 +1109,8 @@ cdef class DatasetReaderBase(DatasetBase):
             exc_wrap_int(
                 GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
             )
-        except CPLE_BaseError:
-            raise
+        except CPLE_AppDefinedError as exc:
+            raise StatisticsError("No valid pixels found in sampling.") from exc
         else:
             return Statistics(min, max, mean, std)
 
