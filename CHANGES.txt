@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.3.6 (TBD)
+-----------
+
+- StatisticsError is raised when dataset statistics cannot be computed ().
+- In DatasetBase.__enter__ an Env is added to the dataset's context stack if
+  needed, making an explicit `with Env():` optional when using an opened
+  dataset as a context manager ().
+
 1.3.5.post1 (2023-02-02)
 ------------------------
 
