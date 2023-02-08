@@ -1,16 +1,13 @@
 """Geospatial transforms"""
 
-from collections.abc import Iterable
 from contextlib import ExitStack
 from functools import partial
 import math
 import numpy as np
-import sys
 import warnings
 
 from affine import Affine
 
-import rasterio
 from rasterio.env import env_ctx_if_needed
 from rasterio._transform import (
     _transform_from_gcps,
@@ -303,7 +300,7 @@ def from_gcps(gcps):
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
 
-class TransformerBase():
+class TransformerBase:
     """Generic GDAL transformer base class
 
     Notes
@@ -312,12 +309,7 @@ class TransformerBase():
 
     """
     def __init__(self):
-        self._env = ExitStack()
         self._transformer = None
-        self.closed = True
-
-    def close(self):
-        self.closed = True
 
     @staticmethod
     def _ensure_arr_input(xs, ys, zs=None):
@@ -337,12 +329,10 @@ class TransformerBase():
         return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
 
     def __enter__(self):
-        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *args):
-        self.close()
-        self._env.close()
+        pass
 
     def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
@@ -459,6 +449,23 @@ class TransformerBase():
         raise NotImplementedError
 
 
+class GDALTransformerBase(TransformerBase):
+    def __init__(self):
+        super().__init__()
+        self._env = ExitStack()
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+        self._env.close()
+
+
 class AffineTransformer(TransformerBase):
     """A pure Python class related to affine based coordinate transformations."""
     def __init__(self, affine_transform):
@@ -466,9 +473,6 @@ class AffineTransformer(TransformerBase):
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
-
-    def close(self):
-        pass
 
     def _transform(self, xs, ys, zs, transform_direction):
         resxs = []
@@ -490,7 +494,7 @@ class AffineTransformer(TransformerBase):
         return "<AffineTransformer>"
 
 
-class RPCTransformer(RPCTransformerBase, TransformerBase):
+class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
     """
     Class related to Rational Polynomial Coeffecients (RPCs) based
     coordinate transformations.
@@ -511,7 +515,7 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
             self.closed and 'closed' or 'open')
 
 
-class GCPTransformer(GCPTransformerBase, TransformerBase):
+class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
     """
     Class related to Ground Control Point (GCPs) based
     coordinate transformations.
