@@ -449,6 +449,37 @@ def subdivide(window, height, width):
     return blocks
 
 
+def neighbors(window, height, width):
+    """Return the 8 neighbors of window
+
+    Parameters
+    ----------
+    window: Window or tuple of (rows, cols).
+        The input window.
+    height, width: int
+        The number of rows or columns in the array that the window
+        targets.
+
+    Returns
+    -------
+    list[Window]:
+        list of neighbors. Always returned in clockwise order starting from NW corner.
+    """
+    right = window.col_off + window.width
+    bottom = window.row_off + window.height
+    _neighbors = [
+        Window(0, 0, window.col_off, window.row_off),                       # NW
+        Window(window.col_off, 0, right, window.row_off),                   # N
+        Window(right, 0, width - right, window.row_off),                    # NE
+        Window(right, window.row_off, width - right, bottom),               # E
+        Window(right, bottom, width - right, height - bottom),              # SE
+        Window(window.col_off, bottom, right, height - bottom),             # S
+        Window(0, bottom, window.col_off, height - bottom),                 # SW
+        Window(0, window.row_off, window.col_off, bottom)                   # W
+    ]
+    return list(filter(lambda w: w.area > 0, _neighbors))
+
+
 def evaluate(window, height, width, boundless=False):
     """Evaluates a window tuple that may contain relative index values.
 
