@@ -449,6 +449,47 @@ def subdivide(window, height, width):
     return blocks
 
 
+def are_mergeable(w1, w2):
+    """Determine if two windows are mergeable. Two windows are mergeable
+    if the windows can be unioned and exactly cover the area of the two
+    original windows.
+
+    Parameters
+    ----------
+    w1, w2: Window
+        The two windows to test
+
+    Returns
+    -------
+    bool
+        True if the windows can be merged.
+    """
+    if w1 in w2 or w2 in w1:
+        return True
+
+    if math.isclose(w1.height, w2.height):
+        # Same height check that row is same
+        if math.isclose(w1.row_off, w2.row_off):
+            w1c = w1.col_off
+            w2c = w2.col_off
+            return (w1c <= w2c <= w1c + w1.width
+                    or w2c <= w1c <= w2c + w2.width)
+    elif math.isclose(w1.width, w2.width):
+        if math.isclose(w1.col_off, w2.col_off):
+            w1r = w1.row_off
+            w2r = w2.row_off
+            return (w1r <= w2r <= w1r + w1.height
+                    or w2r <= w1r <= w2r + w2.height)
+    return False
+
+
+def merge(w1, w2):
+    """ Merge two windows that are mergeable into a single larger window """
+    if are_mergeable(w1, w2):
+        return _union(w1, w2)
+    raise WindowError("Windows are not mergeable")
+
+
 def neighbors(window, height, width):
     """Return the 8 neighbors of window
 
@@ -625,6 +666,15 @@ class Window:
             "Window(col_off={self.col_off}, row_off={self.row_off}, "
             "width={self.width}, height={self.height})").format(
                 self=self)
+
+    def __contains__(self, other):
+        """Determine if window completely contains other"""
+        right = self.col_off + self.width
+        bottom = self.row_off + self.height
+        return (self.col_off <= other.col_off <= right
+                and self.row_off <= other.row_off <= bottom
+                and other.col_off + other.width <= right
+                and other.row_off + other.height <= bottom)
 
     def flatten(self):
         """A flattened form of the window.
