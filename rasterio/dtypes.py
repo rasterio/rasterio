@@ -239,3 +239,24 @@ def _getnpdtype(dtype):
         return np.dtype("complex64")
     else:
         return np.dtype(dtype)
+
+
+def array_bytes(dtype, shape):
+    """Get size of array in bytes with specific dtype and shape.
+    
+    Parameters
+    ----------
+    dtype: np.dtype, str
+        Array dtype
+    shape: tuple
+        Array shape
+        
+    Returns
+    -------
+    int:
+        Array size in bytes
+    """
+    size = _getnpdtype(dtype).itemsize
+    for s in shape:
+        size *= s
+    return size
