@@ -16,7 +16,7 @@ from rasterio.dtypes import (
 )
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
-from rasterio.errors import ShapeSkipWarning, RasterioWarning
+from rasterio.errors import ShapeSkipWarning, RasterioUserWarning
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio import warp
 from rasterio.rio.helpers import coords
@@ -324,7 +324,7 @@ def rasterize(
             warnings.warn('Invalid or empty shape {} at index {} will not be rasterized.'.format(geom, index), ShapeSkipWarning)
 
     if not valid_shapes:
-        warnings.warn('No valid geometry objects found for rasterize', RasterioWarning)
+        warnings.warn('No valid geometry objects found for rasterize', RasterioUserWarning)
 
     shape_values = np.array(shape_values)
 
