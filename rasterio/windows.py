@@ -807,3 +807,7 @@ class Window:
         Window
         """
         return intersection([self, other])
+
+    @property
+    def area(self):
+        return self.width * self.height
