@@ -4,6 +4,9 @@ Changes
 1.3.6 (TBD)
 -----------
 
+- Tests that use matplotlib have been cleaned up and the one in test_warp.py
+  which uses our vendored rangehttpserver has been marked as needing a network
+  (#).
 - When computing the bounds of a sequence of feature or geometry objects, we
   dodge empty "features" and "geometries" sequences that could be provided by,
   e.g., Fiona 1.9.0 (#2745).

@@ -1,24 +1,13 @@
-import logging
-import sys
-
-import numpy as np
-import pytest
-
-try:
-    import matplotlib as mpl
-    mpl.use('agg')
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
+"""Dataset mask test."""
 
 from affine import Affine
+import numpy as np
+import pytest
 
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.errors import NodataShadowWarning
 from rasterio.crs import CRS
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 # Setup test arrays
@@ -131,7 +120,7 @@ def tiffs(tmpdir):
     # 6. RGB with msk (internal)
     prof = _profile.copy()
     prof['count'] = 3
-    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True) as env:
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
         with rasterio.open(str(tmpdir.join('rgb_msk_internal.tif')),
                            'w', **prof) as dst:
             dst.write(red, 1)
@@ -156,21 +145,25 @@ def test_no_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_no_ndv.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), alldata)
 
+
 def test_rgb_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         res = src.dataset_mask()
         assert res.dtype.name == "uint8"
         assert np.array_equal(src.dataset_mask(), alp)
 
+
 def test_rgba_no_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgba_no_ndv.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), alp)
+
 
 def test_rgba_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgba_ndv.tif'))) as src:
         with pytest.warns(NodataShadowWarning):
             res = src.dataset_mask()
         assert np.array_equal(res, alp)
+
 
 def test_rgb_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgb_msk.tif'))) as src:
@@ -179,9 +172,11 @@ def test_rgb_msk(tiffs):
         for bmask in src.read_masks():
             assert np.array_equal(bmask, msk)
 
+
 def test_rgb_msk_int(tiffs):
     with rasterio.open(str(tiffs.join('rgb_msk_internal.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), msk)
+
 
 def test_rgba_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgba_msk.tif'))) as src:
