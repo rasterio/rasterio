@@ -415,6 +415,40 @@ def crop(window, height, width):
                   row_stop - row_start)
 
 
+def subdivide(window, height, width):
+    """Subdivide a window into non-overlapping windows of specified height and width.
+
+    Parameters
+    ----------
+    window: Window 
+        Input window to subdivide.
+    height, width: int
+        Desired height and width of sub windows. Windows of smaller
+        sizes may be returned if height and width do not evenly divide
+        the dimensions of the input window.
+
+    Returns
+    -------
+    list[Window]:
+        A list of windows that subdivide input window
+    """
+    blocks = []
+    row_blocks = divmod(window.height, height)
+    col_blocks = divmod(window.width, width)
+    for j in range(row_blocks[0] + (row_blocks[1] > 0)): # rows
+        for k in range(col_blocks[0] + (col_blocks[1] > 0)):  # cols
+            h, w = height, width
+            col_off = w * k
+            row_off = h * j
+
+            if col_off < window.width and col_off + w > window.width:
+                w = window.width % w
+            if row_off < window.height and row_off + h > window.height:
+                h = window.height % h
+            blocks.append(Window(col_off, row_off, w, h))
+    return blocks
+
+
 def evaluate(window, height, width, boundless=False):
     """Evaluates a window tuple that may contain relative index values.
 
