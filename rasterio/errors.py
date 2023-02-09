@@ -145,6 +145,10 @@ class RasterioWarning(Warning):
     """General warning from Rasterio"""
 
 
+class RasterioUserWarning(RasterioWarning, UserWarning):
+    """Rasterio UserWarning. Use instead of UserWarning."""
+
+
 class NodataShadowWarning(RasterioWarning):
     """Warn that a dataset's nodata attribute is shadowing its alpha band."""
 
