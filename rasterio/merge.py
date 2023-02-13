@@ -11,7 +11,7 @@ import numpy as np
 import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning, RasterioError
 from rasterio import windows
 from rasterio.transform import Affine
 
@@ -219,6 +219,7 @@ def merge(
 
     with dataset_opener(datasets[0]) as first:
         first_profile = first.profile
+        first_crs = first.crs
         first_res = first.res
         nodataval = first.nodatavals[0]
         dt = first.dtypes[0]
@@ -324,9 +325,16 @@ def merge(
             # This approach uses the maximum amount of memory to solve the
             # problem. Making it more efficient is a TODO.
 
+            # 0. Precondition checks
+            #    - Check that source is within destination bounds
+            #    - Check that CRS is same
+
             if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
                 logger.debug("Skipping source: src=%r, window=%r", src)
                 continue
+
+            if first_crs != src.crs:
+                raise RasterioError(f"CRS mismatch with source: {dataset}")
 
             # 1. Compute spatial intersection of destination and source
             src_w, src_s, src_e, src_n = src.bounds

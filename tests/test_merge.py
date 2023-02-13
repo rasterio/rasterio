@@ -9,6 +9,8 @@ import pytest
 import affine
 import rasterio
 from rasterio.merge import merge
+from rasterio.crs import CRS
+from rasterio.errors import RasterioError
 
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
@@ -40,6 +42,19 @@ def test_data_dir_overlapping(tmp_path):
         dst.write(data, indexes=1)
 
     return tmp_path
+
+
+def test_different_crs(test_data_dir_overlapping):
+    inputs = [x.name for x in test_data_dir_overlapping.iterdir()]
+
+    # Create new raster with different crs
+    with rasterio.open(test_data_dir_overlapping.joinpath(inputs[-1])) as ds_src:
+        kwds = ds_src.profile
+        kwds['crs'] = CRS.from_epsg(3499)
+        with rasterio.open(test_data_dir_overlapping.joinpath("new.tif"), 'w', **kwds) as ds_out:
+            ds_out.write(ds_src.read())
+    with pytest.raises(RasterioError):
+        result = merge(list(test_data_dir_overlapping.iterdir()))
 
 
 @pytest.mark.parametrize(
