@@ -24,6 +24,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
@@ -441,6 +442,7 @@ cdef class DatasetBase:
         self._closed = True
 
     def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *exc_details):
