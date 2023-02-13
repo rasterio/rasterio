@@ -330,7 +330,11 @@ def merge(
             #    - Check that CRS is same
 
             if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                logger.debug("Skipping source: src=%r, window=%r", src)
+                logger.debug(
+                    "Skipping source: src=%r, bounds=%r",
+                    src,
+                    (dst_w, dst_s, dst_e, dst_n),
+                )
                 continue
 
             if first_crs != src.crs:
