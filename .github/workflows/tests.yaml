@@ -63,7 +63,7 @@ jobs:
             gdal-version: '3.2.3'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Update
         run: |
@@ -109,7 +109,7 @@ jobs:
           - os: ubuntu-latest
             python-version: '3.10'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Conda Setup
         uses: s-weigand/setup-conda@v1
