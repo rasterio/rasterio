@@ -1210,7 +1210,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
@@ -1303,7 +1303,7 @@ def test_reproject_resampling_alpha(method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
