@@ -256,7 +256,9 @@ def rasterize(
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
     if GDALVersion.runtime().at_least("3.5"):
-        valid_dtypes = valid_dtypes + ("int64", "uint64")
+        valid_dtypes += ("int64", "uint64")
+    if GDALVersion.runtime().at_least("3.7"):
+        valid_dtypes += ("int8",)
 
     def format_invalid_dtype(param):
         return '{0} dtype must be one of: {1}'.format(
