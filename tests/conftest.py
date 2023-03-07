@@ -638,11 +638,6 @@ class MockGeoInterface:
 # Define helpers to skip tests based on GDAL version
 gdal_version = GDALVersion.runtime()
 
-
-requires_gdal32 = pytest.mark.skipif(
-    not gdal_version.at_least('3.2'),
-    reason="Requires GDAL 3.2.x")
-
 requires_gdal33 = pytest.mark.skipif(
     not gdal_version.at_least('3.3'),
     reason="Requires GDAL 3.3.x")

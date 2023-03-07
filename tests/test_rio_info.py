@@ -5,7 +5,7 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-from .conftest import requires_gdal32, credentials
+from .conftest import credentials
 
 
 with rasterio.Env() as env:
@@ -422,7 +422,6 @@ def test_info_aws_unsigned(runner):
     assert result.exit_code == 0
 
 
-@requires_gdal32(reason="Unsigned Azure requests require GDAL ~= 3.2")
 @pytest.mark.network
 @pytest.mark.skip(reason="Undiagnosed problem accessing this file")
 def test_info_azure_unsigned(monkeypatch, runner):
