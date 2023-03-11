@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
         gdal-version: ['3.5.3', '3.6.2']
         include:
           - python-version: '3.9'
@@ -102,10 +102,12 @@ jobs:
       fail-fast: true
       matrix:
         os: [macos-latest]
-        python-version: ['3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
         include:
           - os: ubuntu-latest
             python-version: '3.10'
+          - os: ubuntu-latest
+            python-version: '3.11'
     steps:
       - uses: actions/checkout@v3
 
@@ -119,7 +121,7 @@ jobs:
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
-          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.10.3 cython=0.29 numpy
+          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=0.29 numpy
           source activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt
