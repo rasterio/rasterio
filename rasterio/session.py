@@ -2,6 +2,7 @@
 
 import logging
 import os
+from types import SimpleNamespace
 
 from rasterio._path import _parse_path, _UnparsedPath
 
@@ -243,7 +244,7 @@ class AWSSession(Session):
     """
 
     def __init__(
-            self, session=None, aws_unsigned=False, aws_access_key_id=None,
+            self, session=None, aws_unsigned=None, aws_access_key_id=None,
             aws_secret_access_key=None, aws_session_token=None,
             region_name=None, profile_name=None, endpoint_url=None,
             requester_pays=False):
@@ -271,8 +272,13 @@ class AWSSession(Session):
             True if the requester agrees to pay transfer costs (default:
             False)
         """
+        if aws_unsigned is None:
+            aws_unsigned = parse_bool(os.getenv("AWS_NO_SIGN_REQUEST", False))
+
         if session:
             self._session = session
+        elif aws_unsigned:
+            self._session = SimpleNamespace(region_name=region_name)
         else:
             self._session = boto3.Session(
                 aws_access_key_id=aws_access_key_id,
@@ -282,11 +288,11 @@ class AWSSession(Session):
                 profile_name=profile_name)
 
         self.requester_pays = requester_pays
-        self.unsigned = bool(os.getenv("AWS_NO_SIGN_REQUEST", aws_unsigned))
+        self.unsigned = aws_unsigned
         self.endpoint_url = endpoint_url
         self._creds = (
             self._session.get_credentials()
-            if not self.unsigned and self._session
+            if not self.unsigned
             else None
         )
 
@@ -338,8 +344,8 @@ class AWSSession(Session):
         """
         if self.unsigned:
             opts = {'AWS_NO_SIGN_REQUEST': 'YES'}
-            if 'aws_region' in self.credentials:
-                opts['AWS_REGION'] = self.credentials['aws_region']
+            opts.update({k.upper(): v for k, v in self.credentials.items()
+                        if k in ('aws_region', 'aws_s3_endpoint')})
             return opts
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
@@ -562,8 +568,9 @@ class AzureSession(Session):
             If True, requests will be unsigned.
         """
 
-        self.unsigned = bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
-        self.storage_account = os.getenv("AZURE_STORAGE_ACCOUNT", azure_storage_account)
+        self.unsigned = parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
+        self.storage_account = azure_storage_account or os.getenv("AZURE_STORAGE_ACCOUNT")
+        self.storage_access_key = azure_storage_access_key or os.getenv("AZURE_STORAGE_ACCESS_KEY")
 
         if azure_storage_connection_string:
             self._creds = {
@@ -572,7 +579,7 @@ class AzureSession(Session):
         elif not self.unsigned:
             self._creds = {
                 "azure_storage_account": self.storage_account,
-                "azure_storage_access_key": azure_storage_access_key
+                "azure_storage_access_key": self.storage_access_key
             }
         else:
             self._creds = {
@@ -621,3 +628,11 @@ class AzureSession(Session):
             }
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
+
+def parse_bool(v):
+    """CPLTestBool equivalent"""
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, str):
+        return not(v.lower() in ("no", "false", "off", "0"))
+    return bool(v)

@@ -18,14 +18,16 @@ from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
 from rasterio._env import catch_errors
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
+    GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
+    CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
+    StatisticsError
 )
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
@@ -1107,8 +1109,8 @@ cdef class DatasetReaderBase(DatasetBase):
             exc_wrap_int(
                 GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
             )
-        except CPLE_BaseError:
-            raise
+        except CPLE_AppDefinedError as exc:
+            raise StatisticsError("No valid pixels found in sampling.") from exc
         else:
             return Statistics(min, max, mean, std)
 
@@ -1226,8 +1228,7 @@ cdef class MemoryFileBase:
         if self._vsif != NULL:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
-        _delete_dataset_if_exists(self.name)
-        VSIRmdir(self._dirname.encode("utf-8"))
+        VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
         self.closed = True
 
     def seek(self, offset, whence=0):
@@ -1411,7 +1412,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if tiled:
             blockxsize = kwargs.get("blockxsize", None)
             blockysize = kwargs.get("blockysize", None)
-            if (blockxsize and int(blockxsize) % 16) or (blockysize and int(blockysize) % 16):
+            if blockxsize is None or blockysize is None:
+                # ignore if only one provided
+                kwargs.pop("blockxsize", None)
+                kwargs.pop("blockysize", None)
+            elif int(blockxsize) % 16 or int(blockysize) % 16:
                 raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
@@ -1437,7 +1442,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # if we can crosswalk those.
             gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
-            if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
+            # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+            # with PIXELTYPE=SIGNEDBYTE creation option.
+            if _getnpdtype(self._init_dtype) == _getnpdtype('int8') and gdal_dtype == 1:
                 options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.
@@ -1917,9 +1924,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             height = self.height
 
         try:
-            if mask_array is True:
+            if mask_array is True or mask_array is np.True_:
                 GDALFillRaster(mask, 255, 0)
-            elif mask_array is False:
+            elif mask_array is False or mask_array is np.False_:
                 GDALFillRaster(mask, 0, 0)
             elif mask_array.dtype == bool:
                 array = 255 * mask_array.astype(np.uint8)

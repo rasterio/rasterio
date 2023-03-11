@@ -1,7 +1,6 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 
-from collections import OrderedDict
 import json
 import warnings
 

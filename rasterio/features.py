@@ -21,7 +21,7 @@ from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio import warp
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
-from rasterio.transform import IDENTITY, guard_transform, rowcol
+from rasterio.transform import IDENTITY, guard_transform
 from rasterio.windows import Window
 
 log = logging.getLogger(__name__)
@@ -206,8 +206,8 @@ def rasterize(
         Used as fill value for all areas not covered by input
         geometries.
     out : numpy.ndarray, optional
-        Array of same shape and data type as `source` in which to store
-        results.
+        Array in which to store results. If not provided, out_shape 
+        and dtype are required.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`

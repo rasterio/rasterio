@@ -24,6 +24,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
@@ -148,6 +149,11 @@ def _raster_driver_extensions():
 
         for extension in extensions.split():
             driver_extensions[extension] = drivername
+
+    # ensure default driver for tif to be GTiff instead of COG
+    driver_extensions.update(
+        {'tif': 'GTiff', 'tiff': 'GTiff'}
+    )
     return driver_extensions
 
 
@@ -155,8 +161,10 @@ cdef _band_dtype(GDALRasterBandH band):
     """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
     cdef const char * ptype
     cdef int gdal_dtype = GDALGetRasterDataType(band)
-    if gdal_dtype == GDT_Byte:
-        # Can be uint8 or int8, need to check PIXELTYPE property
+    if gdal_dtype == GDT_Byte and dtypes.dtype_rev["int8"] == 1:
+        # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+        # with PIXELTYPE=SIGNEDBYTE metadata item in IMAGE_STRUCTURE
+        # metadata domain.
         ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
         if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
             return 'int8'
@@ -434,6 +442,7 @@ cdef class DatasetBase:
         self._closed = True
 
     def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *exc_details):

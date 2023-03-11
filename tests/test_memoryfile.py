@@ -2,8 +2,8 @@
 Tests in this file will ONLY run for GDAL >= 2.x"""
 
 from io import BytesIO
-import logging
 import os.path
+from pathlib import Path
 
 from affine import Affine
 import numpy
@@ -12,15 +12,7 @@ import pytest
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
 from rasterio.enums import MaskFlags
-from rasterio.env import GDALVersion
 from rasterio.shutil import copyfiles
-
-
-# Skip ENTIRE module if not GDAL >= 2.x.
-# pytestmark is a keyword that instructs pytest to skip this module.
-pytestmark = pytest.mark.skipif(
-    not GDALVersion.runtime().major >= 2,
-    reason="MemoryFile requires GDAL 2.x")
 
 
 @pytest.fixture(scope='session')
@@ -299,15 +291,29 @@ def test_write_plus_mode():
 
 
 def test_write_plus_model_jpeg():
-    with rasterio.Env(), MemoryFile() as memfile:
-        with memfile.open(driver='JPEG', dtype='uint8', count=3, height=32, width=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5)) as dst:
-            dst.write(numpy.full((32, 32), 255, dtype='uint8'), 1)
-            dst.write(numpy.full((32, 32), 204, dtype='uint8'), 2)
-            dst.write(numpy.full((32, 32), 153, dtype='uint8'), 3)
-            data = dst.read()
-            assert (data[0] == 255).all()
-            assert (data[1] == 204).all()
-            assert (data[2] == 153).all()
+    """Ensure /vsimem/ file is cleaned up."""
+    with rasterio.Env() as env:
+        with MemoryFile() as memfile:
+            with memfile.open(
+                driver="JPEG",
+                dtype="uint8",
+                count=3,
+                height=32,
+                width=32,
+                crs="epsg:3226",
+                transform=Affine.identity() * Affine.scale(0.5, -0.5),
+            ) as dst:
+                dst.write(numpy.full((32, 32), 255, dtype="uint8"), 1)
+                dst.write(numpy.full((32, 32), 204, dtype="uint8"), 2)
+                dst.write(numpy.full((32, 32), 153, dtype="uint8"), 3)
+                data = dst.read()
+                assert (data[0] == 255).all()
+                assert (data[1] == 204).all()
+                assert (data[2] == 153).all()
+
+        assert (
+            Path(*Path(memfile.name).parts[2:]).parent.as_posix() not in env._dump_vsimem()
+        )
 
 
 def test_memfile_copyfiles(path_rgb_msk_byte_tif):

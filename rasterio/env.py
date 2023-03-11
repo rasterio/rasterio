@@ -1,6 +1,5 @@
 """Rasterio's GDAL/AWS environment"""
 
-from contextlib import ExitStack
 from functools import wraps, total_ordering
 from inspect import getfullargspec as getargspec
 import logging
@@ -260,6 +259,13 @@ class Env:
         For debugging and testing purposes.
         """
         return local._env._dump_open_datasets()
+
+    def _dump_vsimem(self):
+        """Returns contents of /vsimem/.
+
+        For debugging and testing purposes.
+        """
+        return local._env._dump_vsimem()
 
     def __enter__(self):
         log.debug("Entering env context: %r", self)

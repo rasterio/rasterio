@@ -17,7 +17,7 @@ Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
-Rasterio 1.3 works with Python 3.8+, Numpy 1.18+, and GDAL 3.1+. Official
+Rasterio 1.4 works with Python 3.9+, Numpy 1.21+, and GDAL 3.3+. Official
 binary packages for Linux, macOS, and Windows with most built-in format
 drivers plus HDF5, netCDF, and OpenJPEG2000 are available on PyPI. Unofficial
 binary packages for Windows are available through other channels.
@@ -185,7 +185,7 @@ system set the variable as shown below.
 Dependencies
 ------------
 
-Rasterio has a C library dependency: GDAL >= 3.1. GDAL itself depends on some
+Rasterio has a C library dependency: GDAL >= 3.3. GDAL itself depends on some
 other libraries provided by most major operating systems and also depends on
 the non standard GEOS and PROJ libraries. How to meet these requirement will
 be explained below.
@@ -199,7 +199,7 @@ Rasterio's Python dependencies are (see the package metadata file):
     certifi
     click>=4.0
     cligj>=0.5
-    numpy>=1.18
+    numpy>=1.21
     snuggs>=1.4.1
     click-plugins
     setuptools

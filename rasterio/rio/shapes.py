@@ -89,25 +89,26 @@ def shapes(
 
     geographic = True if projection == 'geographic' else False
 
-    try:
-        with ctx.obj['env'] as env:
-            with rasterio.open(input) as src:
-                write_features(
-                    stdout,
-                    feature_gen(
-                        src, env, bidx,
-                        sampling=sampling,
-                        band=band,
-                        as_mask=as_mask,
-                        with_nodata=with_nodata,
-                        geographic=geographic,
-                        precision=precision),
-                    sequence=sequence,
-                    geojson_type=geojson_type, use_rs=use_rs,
-                    **dump_kwds)
-    except Exception:
-        logger.exception("Exception caught during processing")
-        raise click.Abort()
+    with ctx.obj["env"] as env:
+        with rasterio.open(input) as src:
+            write_features(
+                stdout,
+                feature_gen(
+                    src,
+                    env,
+                    bidx,
+                    sampling=sampling,
+                    band=band,
+                    as_mask=as_mask,
+                    with_nodata=with_nodata,
+                    geographic=geographic,
+                    precision=precision,
+                ),
+                sequence=sequence,
+                geojson_type=geojson_type,
+                use_rs=use_rs,
+                **dump_kwds
+            )
 
 
 def feature_gen(src, env, *args, **kwargs):

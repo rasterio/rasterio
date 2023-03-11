@@ -1,7 +1,6 @@
 """Profile tests"""
 
 import pickle
-import warnings
 
 import pytest
 
@@ -85,6 +84,21 @@ def test_dataset_profile_property_untiled(data, path_rgb_byte_tif):
         assert 'blockxsize' not in src.profile
         assert src.profile['blockysize'] == 3
         assert src.profile['tiled'] is False
+
+
+def test_dataset_convert_untiled_to_tiled(tmp_path, path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        assert 'blockxsize' not in src.profile
+        assert src.profile['blockysize'] == 3
+        assert src.profile['tiled'] is False
+
+        dst_profile = src.profile
+        dst_profile.update(tiled=True)
+        with rasterio.open(tmp_path / 'test_tiled.tif', 'w+', **dst_profile) as dst_ds:
+            assert dst_ds.profile['tiled'] is True
+            assert dst_ds.profile['blockysize'] == 256
+            assert dst_ds.profile['blockxsize'] == 256
+            dst_ds.write(src.read(1), 1)
 
 
 def test_profile_affine_set():

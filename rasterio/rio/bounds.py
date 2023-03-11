@@ -6,10 +6,9 @@ from cligj import (
     precision_opt, indent_opt, compact_opt, projection_geographic_opt,
     projection_mercator_opt, projection_projected_opt,
     use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
-    geojson_type_collection_opt)
+)
 
 from .helpers import write_features, to_lower
-import rasterio
 from rasterio.rio import options
 from rasterio.warp import transform_bounds
 
@@ -36,8 +35,18 @@ logger = logging.getLogger(__name__)
 @geojson_type_feature_opt(True)
 @geojson_type_bbox_opt(False)
 @click.pass_context
-def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
-           sequence, use_rs, geojson_type):
+def bounds(
+    ctx,
+    input,
+    precision,
+    indent,
+    compact,
+    projection,
+    dst_crs,
+    sequence,
+    use_rs,
+    geojson_type,
+):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
@@ -104,13 +113,12 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                 self._xs.extend(bbox[::2])
                 self._ys.extend(bbox[1::2])
 
-    try:
-        with ctx.obj['env'] as env:
-            write_features(
-                stdout, Collection(env), sequence=sequence,
-                geojson_type=geojson_type, use_rs=use_rs,
-                **dump_kwds)
-
-    except Exception:
-        logger.exception("Exception caught during processing")
-        raise click.Abort()
+    with ctx.obj["env"] as env:
+        write_features(
+            stdout,
+            Collection(env),
+            sequence=sequence,
+            geojson_type=geojson_type,
+            use_rs=use_rs,
+            **dump_kwds
+        )

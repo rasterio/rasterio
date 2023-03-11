@@ -1,5 +1,4 @@
 import json
-import logging
 
 import click
 
@@ -52,8 +51,6 @@ def sample(ctx, files, bidx):
         [25, 29]
 
     """
-    logger = logging.getLogger(__name__)
-
     files = list(files)
     source_path = files.pop(0)
     input = files.pop(0) if files else '-'
@@ -64,23 +61,19 @@ def sample(ctx, files, bidx):
     except OSError:
         points = [input]
 
-    try:
-        with ctx.obj['env']:
-            with rasterio.open(source_path) as src:
-                if bidx is None:
-                    indexes = src.indexes
-                elif '..' in bidx:
-                    start, stop = map(
-                        lambda x: int(x) if x else None, bidx.split('..'))
-                    if start is None:
-                        start = 1
-                    indexes = src.indexes[slice(start - 1, stop)]
-                else:
-                    indexes = list(map(int, bidx.split(',')))
-                for vals in src.sample(
-                        (json.loads(line) for line in points), indexes=indexes):
-                    click.echo(json.dumps(vals.tolist()))
+    with ctx.obj["env"]:
+        with rasterio.open(source_path) as src:
+            if bidx is None:
+                indexes = src.indexes
+            elif ".." in bidx:
+                start, stop = map(lambda x: int(x) if x else None, bidx.split(".."))
+                if start is None:
+                    start = 1
+                indexes = src.indexes[slice(start - 1, stop)]
+            else:
+                indexes = list(map(int, bidx.split(",")))
 
-    except Exception:
-        logger.exception("Exception caught during processing")
-        raise click.Abort()
+            for vals in src.sample(
+                (json.loads(line) for line in points), indexes=indexes
+            ):
+                click.echo(json.dumps(vals.tolist()))

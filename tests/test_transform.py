@@ -19,7 +19,6 @@ from rasterio.transform import (
     RPCTransformer
 )
 from rasterio.errors import TransformError
-from rasterio.windows import Window
 from rasterio.control import GroundControlPoint
 
 

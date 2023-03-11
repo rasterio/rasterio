@@ -8,7 +8,6 @@ from .conftest import requires_gdal33
 import rasterio
 from rasterio.enums import _OverviewResampling as OverviewResampling
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
 from rasterio.errors import OverviewCreationError
 
 
@@ -40,10 +39,6 @@ def test_build_overviews_two(data):
         assert src.overviews(3) == [2, 4]
 
 
-@pytest.mark.xfail(
-    GDALVersion.runtime() < GDALVersion.parse("2.0"),
-    reason="Bilinear resampling not supported by GDAL < 2.0",
-)
 def test_build_overviews_bilinear(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:

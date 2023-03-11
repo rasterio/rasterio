@@ -1,6 +1,74 @@
 Changes
 =======
 
+1.3.6 (2014-02-13)
+------------------
+
+- Tests that use matplotlib have been cleaned up and the one in test_warp.py
+  which uses our vendored rangehttpserver has been marked as needing a network
+  (#).
+- When computing the bounds of a sequence of feature or geometry objects, we
+  dodge empty "features" and "geometries" sequences that could be provided by,
+  e.g., Fiona 1.9.0 (#2745).
+- Decouple our Affine transformer from GDAL environments, fixing a performance
+  regression introduced in 1.3.0 (#2754).
+- StatisticsError is raised when dataset statistics cannot be computed (#2760).
+- In DatasetBase.__enter__ an Env is added to the dataset's context stack if
+  needed, making an explicit `with Env():` optional when using an opened
+  dataset as a context manager (#2760).
+
+1.3.5.post1 (2023-02-02)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels as
+the 1.3.5 macosx 10.15 wheels are defective.
+
+1.3.5 (2023-01-25)
+------------------
+
+Bug fixes:
+
+- Fixed plot.show(adjust=True) with respect to 16-bit integer data (#2733).
+- Align offsets in rio-clip as well as height and width to match gdal_translate
+  with -projwin (#2729).
+- Allow rio-warp's --target-aligned-pixels option to be used with --dst-bounds
+  or --src-bounds (#2729).
+- Normalize paths before calling os.add_dll_directory on Windows (#2705).
+- Affine version 2.4.0 exposes a bug in Rasterio's test_deprecated.py module, a
+  test than erroneously fails. This test has been fixed and passes with all
+  versions of the affine module.
+- Better, recursive cleanup of MemoryFile /vsimem/ directories.
+- Python ignores SIGPIPE by default. By never catching BrokenPipeError via
+  `except Exception` when, for example, piping the output of rio-shapes to
+  the Unix head program, we avoid getting an unhandled BrokenPipeError message
+  when the interpreter shuts down (#2689).
+- Fixes for unsigned access to S3 (#2688, backport of #2669).
+- Ignore blockysize when converting untiled datasets to tiled datasets (#2687,
+  backport of #2678).
+
+1.3.4 (2022-11-16)
+------------------
+
+This version is good for use with GDAL 3.6.0 as well as previous versions.
+
+Changes:
+
+- Resampling tests have been updated to account for changes in GDAL 3.6.0
+  (#2653).
+- Variables in TransformerBase.xy have been renamed for better clarity (#2609).
+- Avoid use of a fixed port for the warp test server (#2619).
+
+Bug fixes:
+
+- Use Python long for FilePath VSI plugin's file position (#2652).
+- In the case that a GDAL function returns NULL but doesn't set an error, we
+  now raise SystemError instead of silently failing (#2645).
+- Azure storage access key can be taken from the environment if not explicitly
+  provided to AzureSession (#2637).
+- Skip empty parts of PATH on Windows when adding DLL directories (#2626).
+- get_data_window is fixed for the case where the nodata value is nan (#2629).
+- Ensure that GTiff, not COG, driver is used by default for TIFFs (#2634).
+
 1.3.3 (2022-10-19)
 ------------------
 

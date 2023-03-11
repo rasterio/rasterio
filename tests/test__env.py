@@ -1,6 +1,5 @@
 """Tests of _env util module"""
 
-from numpy import isin
 import pytest
 
 from rasterio._env import (
@@ -35,15 +34,11 @@ def mock_fhs(tmpdir):
 @pytest.fixture
 def mock_debian(tmpdir):
     """A fake Debian multi-install system"""
-    tmpdir.ensure("share/gdal/2.3/header.dxf")
-    tmpdir.ensure("share/gdal/2.4/header.dxf")
-    tmpdir.ensure("share/gdal/3.0/header.dxf")
-    tmpdir.ensure("share/gdal/3.1/header.dxf")
-    tmpdir.ensure("share/gdal/3.2/header.dxf")
     tmpdir.ensure("share/gdal/3.3/header.dxf")
     tmpdir.ensure("share/gdal/3.4/header.dxf")
     tmpdir.ensure("share/gdal/3.5/header.dxf")
     tmpdir.ensure("share/gdal/3.6/header.dxf")
+    tmpdir.ensure(f"share/gdal/{gdal_version.major}.{gdal_version.minor}/header.dxf")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 

@@ -12,9 +12,8 @@ from .conftest import requires_gdal35, gdal_version
 import rasterio
 from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
-from rasterio.env import Env
+from rasterio.env import Env, GDALVersion
 from rasterio.errors import RasterioIOError
-
 
 def test_validate_dtype_None(tmpdir):
     """Raise TypeError if there is no dtype"""
@@ -118,7 +117,10 @@ def test_write_sbyte(tmpdir):
 
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
-    assert 'SIGNEDBYTE' in info
+    if gdal_version < GDALVersion(3, 7):
+        assert 'SIGNEDBYTE' in info
+    else:
+        assert 'Int8' in info
 
 
 @pytest.mark.gdalbin
@@ -507,6 +509,28 @@ def test_write_masked_true(tmp_path):
         assert src.mask_flag_enums == ([MaskFlags.per_dataset],)
         arr = src.read(masked=True)
         assert list(arr.flatten()) == [np.ma.masked, np.ma.masked, 2]
+
+
+def test_write_masked_nomask(tmp_path):
+    """Verify that a mask is written when we write an optimized masked array (mask == np.ma.nomask)."""
+    data = np.ma.masked_array([[0, 1, 2]], dtype="uint8")
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+    ) as dst:
+        dst.write(data, indexes=1, masked=True)
+
+    # Expect no masked values.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.per_dataset],)
+        arr = src.read(masked=True)
+        assert list(arr.flatten()) == [0, 1, 2]
 
 
 @requires_gdal35

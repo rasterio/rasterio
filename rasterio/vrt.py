@@ -2,7 +2,6 @@
 
 import xml.etree.ElementTree as ET
 
-import rasterio
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags

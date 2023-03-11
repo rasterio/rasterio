@@ -1,13 +1,9 @@
-import logging
-import sys
-import warnings
-
 import numpy as np
 import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.errors import NodataShadowWarning, RasterioDeprecationWarning
+from rasterio.errors import NodataShadowWarning
 
 
 @pytest.fixture(scope='function')

@@ -508,6 +508,14 @@ def test_data_window_nodata():
     assert window == Window.from_slices((1, 3), (0, 3))
 
 
+def test_data_window_nodata_nan():
+    """Get window of arr with nodata."""
+    arr = np.ones((3, 3))
+    arr[0, :] = np.nan
+    window = get_data_window(arr, nodata=np.nan)
+    assert window == Window.from_slices((1, 3), (0, 3))
+
+
 def test_data_window_novalid():
     """Get window of arr with nodata."""
     arr = np.ones((3, 3))

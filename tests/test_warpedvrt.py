@@ -5,7 +5,6 @@ import logging
 import shutil
 
 import affine
-import boto3
 import numpy
 import pytest
 
@@ -20,15 +19,9 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import gdal_version
+from .conftest import gdal_version, credentials
 
 log = logging.getLogger(__name__)
-
-# Custom markers.
-credentials = pytest.mark.skipif(
-    not (boto3.Session().get_credentials()),
-    reason="S3 raster access requires credentials",
-)
 
 DST_CRS = "EPSG:3857"
 
@@ -246,18 +239,18 @@ def test_transformer_options__width_height(path_rgb_byte_tif):
 @pytest.mark.network
 def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
-    L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
+    L8TIF = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif"
     with rasterio.open(L8TIF) as src:
         with WarpedVRT(src, crs=DST_CRS, src_nodata=0, nodata=0) as vrt:
             assert vrt.crs == DST_CRS
             assert tuple(round(x, 1) for x in vrt.bounds) == (
-                9556764.6, 2345109.3, 9804595.9, 2598509.1
+                9222324.9, -14139657.4, 9730075.2, -13635650.5
             )
-            assert vrt.name == "WarpedVRT(s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF)"
+            assert vrt.name == f"WarpedVRT({L8TIF})"
             assert vrt.indexes == (1,)
             assert vrt.nodatavals == (0,)
             assert vrt.dtypes == ("uint16",)
-            assert vrt.shape == (7827, 7655)
+            assert vrt.shape == (1885, 1899)
 
 
 def test_warped_vrt_nodata_read(path_rgb_byte_tif):

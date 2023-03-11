@@ -1,0 +1,84 @@
+name: Test GDAL Latest
+
+on:
+  push:
+    branches: [ main, 'maint-*' ]
+  schedule:
+    - cron:  '0 0 * * 0'
+  pull_request:  # also build on PRs touching this file
+    paths:
+      - ".github/workflows/test_gdal_latest.yaml"
+      - "ci/gdal-compile.sh"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_gdal_latest:
+    name: GDAL Latest
+    runs-on: ubuntu-latest
+    container: osgeo/proj:9.1.0
+    env:
+      GDAL_DIR: ${{ github.workspace }}/gdal_install
+      GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
+      LD_LIBRARY_PATH: "${{ github.workspace }}/gdal_install/lib/:${LD_LIBRARY_PATH}"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update
+        run: |
+          apt-get update
+          apt-get -y install software-properties-common
+          add-apt-repository -y ppa:deadsnakes/ppa
+          apt-get update
+
+      - name: Set up Python
+        run: |
+          apt-get install -y --no-install-recommends \
+            python3.10 \
+            python3.10-dev \
+            python3.10-venv \
+            python3-pip \
+            g++
+
+      - name: Install GDAL
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -qq \
+            libcurl4-gnutls-dev \
+            libgeos-dev \
+            libjpeg-dev \
+            libnetcdf-dev \
+            libhdf4-alt-dev \
+            libhdf5-serial-dev \
+            libssl-dev \
+            libsqlite3-dev \
+            libexpat-dev \
+            libxerces-c-dev \
+            libpng-dev \
+            libopenjp2-7-dev \
+            libzstd-dev \
+            libwebp-dev \
+            cmake \
+            curl \
+            git
+          bash ci/gdal-compile.sh git
+
+      - name: Install dependencies
+        run: |
+          export PATH="${GDAL_DIR}/bin/:${PATH}"
+          python3.10 -m venv testenv
+          . testenv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip wheel -r requirements-dev.txt
+          python -m pip install -r requirements-dev.txt
+          python setup.py clean
+          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+
+      - name: Test
+        shell: bash
+        run: |
+          export PATH="${GDAL_DIR}/bin/:${PATH}"
+          . testenv/bin/activate
+          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing

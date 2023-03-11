@@ -12,7 +12,7 @@ http://unidata.github.io/netcdf4-python/.
 import os
 
 from rasterio._base import _raster_driver_extensions
-from rasterio.env import GDALVersion, ensure_env
+from rasterio.env import ensure_env
 
 # Methods like `rasterio.open()` may use this blacklist to preempt
 # combinations of drivers and file modes.
@@ -54,19 +54,7 @@ def driver_from_extension(path):
     except AttributeError:
         pass
 
-    # dynamic driver extension lists added in GDAL 2
-    if GDALVersion().runtime() < GDALVersion.parse('2.0'):
-        # basic list for GDAL 1
-        driver_extensions = {
-            'tif': 'GTiff',
-            'tiff': 'GTiff',
-            'png': 'PNG',
-            'jpg': 'JPEG',
-            'jpeg': 'JPEG',
-        }
-    else:
-        driver_extensions = raster_driver_extensions()
-
+    driver_extensions = raster_driver_extensions()
     try:
         return driver_extensions[os.path.splitext(path)[-1].lstrip(".").lower()]
     except KeyError:

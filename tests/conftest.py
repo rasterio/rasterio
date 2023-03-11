@@ -10,6 +10,7 @@ import uuid
 import zipfile
 
 import affine
+import boto3
 from click.testing import CliRunner
 import pytest
 import numpy as np
@@ -25,6 +26,16 @@ DEFAULT_SHAPE = (10, 10)
 
 if sys.version_info > (3,):
     reduce = functools.reduce
+
+try:
+    have_credentials = boto3.Session().get_credentials()
+except Exception:
+    have_credentials = False
+
+credentials = pytest.mark.skipif(
+    not(have_credentials),
+    reason="S3 raster access requires credentials")
+
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
     'data/RGB.byte.tif', 'data/float.tif', 'data/float32.tif',
@@ -626,11 +637,6 @@ class MockGeoInterface:
 
 # Define helpers to skip tests based on GDAL version
 gdal_version = GDALVersion.runtime()
-
-
-requires_gdal32 = pytest.mark.skipif(
-    not gdal_version.at_least('3.2'),
-    reason="Requires GDAL 3.2.x")
 
 requires_gdal33 = pytest.mark.skipif(
     not gdal_version.at_least('3.3'),

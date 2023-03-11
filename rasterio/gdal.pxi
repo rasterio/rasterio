@@ -65,7 +65,7 @@ cdef extern from "sys/stat.h" nogil:
 
 cdef extern from "cpl_vsi.h" nogil:
 
-    ctypedef int vsi_l_offset
+    ctypedef unsigned long long vsi_l_offset
     ctypedef FILE VSILFILE
     ctypedef stat VSIStatBufL
     ctypedef enum VSIRangeStatus:
@@ -131,7 +131,9 @@ cdef extern from "cpl_vsi.h" nogil:
     int VSIFCloseL(VSILFILE *fp)
     int VSIUnlink(const char *path)
     int VSIMkdir(const char *path, long mode)
+    char** VSIReadDir(const char *path)
     int VSIRmdir(const char *path)
+    int VSIRmdirRecursive(const char *path)
     int VSIFFlushL(VSILFILE *fp)
     size_t VSIFReadL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIFSeekL(VSILFILE *fp, vsi_l_offset nOffset, int nWhence)
@@ -221,6 +223,7 @@ cdef extern from "gdal.h" nogil:
     ctypedef enum GDALDataType:
         GDT_Unknown
         GDT_Byte
+        GDT_Int8
         GDT_UInt16
         GDT_Int16
         GDT_UInt32

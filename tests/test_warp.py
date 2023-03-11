@@ -1,6 +1,5 @@
 """rasterio.warp module tests"""
 
-import json
 import logging
 import os
 import sys
@@ -15,7 +14,6 @@ from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
 from rasterio.errors import (
     CRSError,
     GDALVersionError,
@@ -35,10 +33,9 @@ from rasterio.warp import (
 from rasterio import windows
 
 from . import rangehttpserver
+from .conftest import gdal_version
 
 log = logging.getLogger(__name__)
-
-gdal_version = GDALVersion.runtime()
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
@@ -55,9 +52,17 @@ def flatten_coords(coordinates):
                 yield x
 
 
-reproj_expected = (
-    ({"CHECK_WITH_INVERT_PROJ": False}, 6644), ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
-)
+if gdal_version.at_least("3.6"):
+    # GH2662
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6646),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6646)
+    )
+else:
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6644),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
+    )
 
 
 class ReprojectParams:
@@ -529,7 +534,11 @@ def test_reproject_view():
         resampling=Resampling.nearest,
     )
 
-    assert (out > 0).sum() == 299199
+    expected_sum = 299199
+    if gdal_version.at_least("3.6"):
+        # GH2662
+        expected_sum = 299231
+    assert (out > 0).sum() == expected_sum
 
 
 def test_reproject_epsg():
@@ -1201,14 +1210,14 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
-        Resampling.sum: [439118],
+        Resampling.sum: [439118, 439142],  # 439142 for GDAL 3.6+
         Resampling.rms: [439385],
     }
 
@@ -1294,14 +1303,14 @@ def test_reproject_resampling_alpha(method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
-        Resampling.sum: [439118],
+        Resampling.sum: [439118, 439142],  # 439142 for GDAL 3.6+
         Resampling.rms: [439385],
     }
 
@@ -1987,6 +1996,7 @@ def test_reproject_rpcs_approx_transformer(caplog):
         assert "Created approximate transformer" in caplog.text
 
 
+@pytest.mark.network
 @pytest.fixture
 def http_error_server(data):
     """Serves files from the test data directory, poorly."""
@@ -1994,12 +2004,11 @@ def http_error_server(data):
     import multiprocessing
     import http.server
 
-    PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
-    httpd = http.server.HTTPServer(("", PORT), Handler)
+    httpd = http.server.HTTPServer(("", 0), Handler)
     p = multiprocessing.Process(target=httpd.serve_forever)
     p.start()
-    yield
+    yield f'{httpd.server_name}:{httpd.server_port}'
     p.terminate()
     p.join()
 
@@ -2012,7 +2021,7 @@ def test_reproject_error_propagation(http_error_server, caplog):
     """Propagate errors up from ChunkAndWarpMulti and check for a retry."""
 
     with rasterio.open(
-        "/vsicurl?max_retry=1&retry_delay=.1&url=http://localhost:8000/RGB.byte.tif"
+        f"/vsicurl?max_retry=1&retry_delay=.1&url=http://{http_error_server}/RGB.byte.tif"
     ) as src:
         out = np.zeros((src.count, src.height, src.width), dtype="uint8")
 
