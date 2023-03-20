@@ -65,7 +65,7 @@ be addressed on the `rasterio conda-forge`_ issue tracker.
 .. note::
     "... we recommend always installing your packages inside a
     new environment instead of the base environment from
-    anaconda/miniconda. Using envs make it easier to
+    anaconda/miniconda/miniforge. Using envs make it easier to
     debug problems with packages and ensure the stability
     of your root env."
     -- https://conda-forge.org/docs/user/tipsandtricks.html
