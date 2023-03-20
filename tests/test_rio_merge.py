@@ -14,7 +14,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.merge import merge
+from rasterio.merge import merge, MERGE_METHODS
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
@@ -700,3 +700,27 @@ def test_merge_no_gap(tiffs, runner):
     with rasterio.open(outputname) as src:
         data = src.read(1)
         assert data[184, 61] != 0
+
+
+@pytest.mark.parametrize(
+    "method",
+    list(MERGE_METHODS)
+)
+def test_rio_merge_method(test_data_dir_1, method, runner):
+    outputname = str(test_data_dir_1.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_1.listdir()]
+
+    merged, _ = merge(
+        inputs, output_count=1, method=method, dtype=rasterio.uint8
+    )
+
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] +
+        ['--method', method])
+
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(outputname) as dst:
+        output_raster = dst.read()
+
+    np.testing.assert_array_equal(output_raster, merged)
