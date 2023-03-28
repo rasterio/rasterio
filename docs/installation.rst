@@ -62,6 +62,20 @@ To install rasterio on the Anaconda Python distribution, please visit the
 separately from the rasterio distribution on PyPi and packaging issues should
 be addressed on the `rasterio conda-forge`_ issue tracker.
 
+.. note::
+    "... we recommend always installing your packages inside a
+    new environment instead of the base environment from
+    anaconda/miniconda/miniforge. Using envs make it easier to
+    debug problems with packages and ensure the stability
+    of your root env."
+    -- https://conda-forge.org/docs/user/tipsandtricks.html
+
+.. warning::
+    Avoid using `pip install` with a conda environment. If you encounter
+    a python package that isn't in conda-forge, consider submitting a
+    recipe: https://github.com/conda-forge/staged-recipes/
+
+
 Installing from the source distribution
 ---------------------------------------
 
