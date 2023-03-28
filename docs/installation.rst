@@ -1,6 +1,24 @@
 Installation
 ============
 
+Please install Rasterio in a `virtual environment
+<https://www.python.org/dev/peps/pep-0405/>`__ so that its requirements don't
+tamper with your system's Python.
+
+SSL certs
+---------
+
+The Linux wheels on PyPI are built on CentOS and libcurl expects certs to be in
+/etc/pki/tls/certs/ca-bundle.crt. Ubuntu's certs, for example, are in
+a different location. You may need to use the CURL_CA_BUNDLE environment
+variable to specify the location of SSL certs on your computer. On an Ubuntu
+system set the variable as shown below.
+
+.. code-block:: console
+
+    $ export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+
 Dependencies
 ------------
 
@@ -16,6 +34,26 @@ Development also requires (see requirements-dev.txt) Cython and other packages.
 Installing from binaries
 ------------------------
 
+Use a binary distribution that directly or indirectly provides GDAL if
+possible.
+
+The rasterio wheels on PyPI include GDAL and its own dependencies.
+
+========  ====
+Rasterio  GDAL
+========  ====
+1.2.3     3.2.2
+1.2.4+    3.3.0
+========  ====
+
+Linux
+*****
+
+Rasterio distributions are available from UbuntuGIS and Anaconda's conda-forge
+channel.
+
+`Manylinux1 <https://github.com/pypa/manylinux>`__ wheels are available on PyPI.
+
 OS X
 ****
 
@@ -23,7 +61,7 @@ Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install,
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
-a source distribution, run ``pip install rasterio --no-binary`` instead.
+a source distribution, run ``pip install rasterio --no-binary rasterio`` instead.
 
 The included GDAL library is fairly minimal, providing only the format drivers
 that ship with GDAL and are enabled by default. To get access to more formats,
@@ -50,8 +88,8 @@ this from the downloads folder:
 .. code-block:: console
 
     $ pip install -U pip
-    $ pip install GDAL‑3.4.3‑cp311‑cp311‑win32.whl
-    $ pip install rasterio‑1.2.10‑cp311‑cp311‑win32.whl
+    $ pip install GDAL-3.4.3-cp311-cp311-win32.whl
+    $ pip install rasterio-1.2.10-cp311-cp311-win32.whl
 
 
 Installing with Anaconda
