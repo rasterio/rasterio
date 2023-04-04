@@ -1689,7 +1689,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 arr = arr.filled(fill_value)
 
         else:
-            arr = np.array(arr, copy=False)
+            arr = np.asanyarray(arr)
 
         if indexes is None:
             indexes = self.indexes
