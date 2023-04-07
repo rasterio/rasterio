@@ -166,6 +166,44 @@ def guard_transform(transform):
     return transform
 
 
+def decompose(transform):
+    """ For a conformal mapping, extract translation, rotation, and scale
+    Rotation and scale are found using a polar decompostion (based on
+    the implementation in scipy.linalg.polar).
+    
+    Parameters
+    ----------
+    transform : Affine.transform
+    
+    Returns
+    -------
+    tuple
+        (translation, rotation, scale)
+
+    Raises
+    ------
+    TransformError
+        If input transform is non conformal (ie has shear)
+    """
+    if not transform.is_conformal:
+        raise TransformError("shear detected, transform must be conformal")
+
+    translation = transform.xoff, transform.yoff
+    transform = np.asarray(transform).reshape(3,3)
+    transform[:2, 2] = 0
+    # Polar decomposition via SVD
+    u, s, vh = np.linalg.svd(transform)
+    U = u @ vh
+    P = (vh.T.conj() * s) @ vh
+    # Avoid numerical stability issues with inverse sine around 0
+    if np.isclose(U[0,0], 0):
+        rotation_angle = math.degrees(math.asin(U[1, 0]))
+    else:
+        rotation_angle = math.degrees(math.acos(U[0, 0]))
+    scale_factor = (P[0,0], P[1,1])
+    return translation, rotation_angle, scale_factor
+
+
 def from_origin(west, north, xsize, ysize):
     """Return an Affine transformation given upper left and pixel sizes.
 
