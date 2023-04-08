@@ -47,6 +47,7 @@ jobs:
           apt-get update
           apt-get install -qq \
             libcurl4-openssl-dev \
+            libtiff-dev \
             libgeos-dev \
             libjpeg-dev \
             libnetcdf-dev \
