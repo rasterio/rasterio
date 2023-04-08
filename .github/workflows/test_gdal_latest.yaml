@@ -18,7 +18,7 @@ jobs:
   test_gdal_latest:
     name: GDAL Latest
     runs-on: ubuntu-latest
-    container: ghcr.io/osgeo/proj:9.1.0
+    container: ghcr.io/osgeo/proj:9.2.0
     env:
       GDAL_DIR: ${{ github.workspace }}/gdal_install
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
@@ -46,7 +46,8 @@ jobs:
         run: |
           apt-get update
           apt-get install -qq \
-            libcurl4-gnutls-dev \
+            libcurl4-openssl-dev \
+            libtiff-dev \
             libgeos-dev \
             libjpeg-dev \
             libnetcdf-dev \
