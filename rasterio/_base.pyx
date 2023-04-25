@@ -158,17 +158,18 @@ def _raster_driver_extensions():
 
 
 cdef _band_dtype(GDALRasterBandH band):
-    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
+    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity."""
     cdef const char * ptype
     cdef int gdal_dtype = GDALGetRasterDataType(band)
+
     if gdal_dtype == GDT_Byte:
         # Can be uint8 or int8, need to check PIXELTYPE property
         ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
+
         if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
             return 'int8'
         else:
             return 'uint8'
-
 
     return dtypes.dtype_fwd[gdal_dtype]
 
