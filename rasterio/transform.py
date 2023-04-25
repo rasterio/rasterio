@@ -196,9 +196,19 @@ def array_bounds(height, width, transform):
     its height, width, and an affine transform.
 
     """
-    w, n = transform.xoff, transform.yoff
-    e, s = transform * (width, height)
-    return w, s, e, n
+    a, b, c, d, e, f, _, _, _ = transform
+    if b == d == 0:
+        west, south, east, north = c, f + e * height, c + a * width, f
+    else:
+        c0x, c0y = c, f
+        c1x, c1y = transform * (0, height)
+        c2x, c2y = transform * (width, height)
+        c3x, c3y = transform * (width, 0)
+        xs = (c0x, c1x, c2x, c3x)
+        ys = (c0y, c1y, c2y, c3y)
+        west, south, east, north = min(xs), min(ys), max(xs), max(ys)
+
+    return west, south, east, north
 
 
 def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):

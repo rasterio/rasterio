@@ -1,15 +1,19 @@
 """High level tests for Rasterio's ``GDALDataset`` abstractions."""
 
 
+import math
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
 import rasterio
+from rasterio.coords import BoundingBox
 from rasterio.enums import Compression
-from rasterio.errors import RasterioIOError, DatasetAttributeError
+from rasterio.errors import DatasetAttributeError, RasterioIOError
 from rasterio.transform import Affine
+
+from .conftest import assert_bounding_box_equal
 
 
 def test_files(data):
@@ -88,3 +92,22 @@ def test_creation_untiled_blockysize(tmp_path, blockysize):
         assert not dataset.is_tiled
         assert dataset.profile["blockysize"] == min(blockysize, 61)
         assert dataset.block_shapes[0][0] == min(blockysize, 61)
+
+
+@pytest.mark.parametrize(
+    ["width", "height", "transform", "expected_bounds"],
+    [
+        pytest.param(2, 2, Affine.identity(), BoundingBox(0.0, 2.0, 2.0, 0.0), id="Identity transform"),
+        pytest.param(2, 2, Affine.scale(1, -1), BoundingBox(0.0, -2.0, 2.0, 0.0), id="North-up transform"),
+        pytest.param(2, 2, Affine.translation(2, 2) * Affine.scale(1, -1), BoundingBox(2.0, 0.0, 4.0, 2.0), id="Translated transform"),
+        pytest.param(2, 2, Affine.scale(4) * Affine.scale(1, -1), BoundingBox(0.0, -8.0, 8.0, 0.0), id="Scaled transform"),
+        pytest.param(2, 2, Affine.rotation(90) * Affine.scale(1, -1), BoundingBox(0.0, 0.0, 2.0, 2.0), id="90 degree rotated transform"),
+        pytest.param(2, 2, Affine.rotation(45) * Affine.scale(1, -1), BoundingBox(0.0, -math.sqrt(2), 2 * math.sqrt(2), math.sqrt(2)), id="45 degree rotated transform"),
+        pytest.param(2, 2, Affine.scale(4, 1) * Affine.scale(1, -1), BoundingBox(0, -2.0, 8.0, 0.0), id="Rectangular pixel transform"),
+        pytest.param(6, 2, Affine.scale(1, -1), BoundingBox(0, -2.0, 6.0, 0.0), id="Differing width and height"),
+    ]
+)
+def test_bounds(width, height, transform, expected_bounds, image_file_with_custom_size_and_transform):
+    filepath = image_file_with_custom_size_and_transform(width, height, transform)
+    with rasterio.open(filepath) as dataset:
+        assert_bounding_box_equal(expected_bounds, dataset.bounds)
