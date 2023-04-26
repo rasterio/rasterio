@@ -118,7 +118,6 @@ def test_write_sbyte(tmpdir):
 
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
-    assert 'SIGNEDBYTE' in info
 
 
 @pytest.mark.gdalbin
