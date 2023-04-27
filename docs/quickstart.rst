@@ -113,8 +113,8 @@ from a more fundamental attribute: the dataset's geospatial transform.
 
 A dataset's :attr:`.DatasetReader.transform` is an affine
 transformation matrix that maps pixel locations in (col, row) coordinates to
-(x, y) spatial positions. The product of this matrix and ``(0, 0)``, the row
-and column coordinates of the upper left corner of the dataset, is the spatial
+(x, y) spatial positions. The product of this matrix and ``(0, 0)``, the column
+and row coordinates of the upper left corner of the dataset, is the spatial
 position of the upper left corner.
 
 .. code-block:: pycon
