@@ -290,20 +290,22 @@ def test_transform_bounds__esri_wkt():
 @pytest.mark.parametrize(
     "density,expected",
     [
-        (0, (-1688721.99764, -350040.36880, 1688799.61159, 2236495.86829)),
-        (100, (-1688721.99764, -555239.84875, 1688799.61159, 2236495.86829)),
+        (0, (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559)),
+        (100, (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559)),
     ],
 )
 def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(2163)
-    with rasterio.Env(OSR_USE_NON_DEPRECATED="NO"):
-        assert np.allclose(
-            expected,
-            transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
-        )
+    dst_crs = CRS.from_proj4(
+        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
+        "+a=6370997 +b=6370997 +units=m +no_defs"
+    )
+    assert np.allclose(
+        expected,
+        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
+    )
 
 
 def test_transform_bounds_no_change():
@@ -1210,7 +1212,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
@@ -1303,7 +1305,7 @@ def test_reproject_resampling_alpha(method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
@@ -1996,6 +1998,7 @@ def test_reproject_rpcs_approx_transformer(caplog):
         assert "Created approximate transformer" in caplog.text
 
 
+@pytest.mark.network
 @pytest.fixture
 def http_error_server(data):
     """Serves files from the test data directory, poorly."""

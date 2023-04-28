@@ -750,6 +750,14 @@ def test_rasterize_invalid_value(basic_geometry):
                 gdal_version.at_least("3.5"), reason="GDAL regression? Works with 3.4.3"
             ),
         ),
+        pytest.param(
+            "int8",
+            -128,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.7"),
+                reason="int8 support added in GDAL 3.7",
+            ),
+        ),
         ("uint8", 255),
         ("uint16", 65535),
         ("float32", 1.434532),
@@ -781,11 +789,12 @@ def test_rasterize_supported_dtype(dtype, default_value, basic_geometry):
 def test_rasterize_unsupported_dtype(basic_geometry):
     """Unsupported types should all raise exceptions."""
     unsupported_types = (
-        ('int8', -127),
-        ('float16', -9343.232)
+        ('float16', -9343.232),
     )
     if not gdal_version.at_least("3.5"):
         unsupported_types += (('int64', 20439845334323),)
+    if not gdal_version.at_least("3.7"):
+        unsupported_types += (('int8', -127),)
 
     for dtype, default_value in unsupported_types:
         with pytest.raises(ValueError):

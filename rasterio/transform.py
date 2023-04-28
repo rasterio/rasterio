@@ -57,13 +57,13 @@ class TransformMethodsMixin:
         col : int
             Pixel column.
         z : float, optional
-            Height associated with coordinates. Primarily used for RPC based 
-            coordinate transformations. Ignored for affine based 
+            Height associated with coordinates. Primarily used for RPC based
+            coordinate transformations. Ignored for affine based
             transformations. Default: 0.
         offset : str, optional
             Determines if the returned coordinates are for the center of the
             pixel or for a corner.
-        transform_method: TransformMethod, optional 
+        transform_method: TransformMethod, optional
             The coordinate transformation method. Default: `TransformMethod.affine`.
         rpc_options: dict, optional
             Additional arguments passed to GDALCreateRPCTransformer
@@ -100,13 +100,13 @@ class TransformMethodsMixin:
         y : float
             y value in coordinate reference system
         z : float, optional
-            Height associated with coordinates. Primarily used for RPC based 
-            coordinate transformations. Ignored for affine based 
+            Height associated with coordinates. Primarily used for RPC based
+            coordinate transformations. Ignored for affine based
             transformations. Default: 0.
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
-        transform_method: TransformMethod, optional 
+        transform_method: TransformMethod, optional
             The coordinate transformation method. Default: `TransformMethod.affine`.
         rpc_options: dict, optional
             Additional arguments passed to GDALCreateRPCTransformer
@@ -196,9 +196,19 @@ def array_bounds(height, width, transform):
     its height, width, and an affine transform.
 
     """
-    w, n = transform.xoff, transform.yoff
-    e, s = transform * (width, height)
-    return w, s, e, n
+    a, b, c, d, e, f, _, _, _ = transform
+    if b == d == 0:
+        west, south, east, north = c, f + e * height, c + a * width, f
+    else:
+        c0x, c0y = c, f
+        c1x, c1y = transform * (0, height)
+        c2x, c2y = transform * (width, height)
+        c3x, c3y = transform * (width, 0)
+        xs = (c0x, c1x, c2x, c3x)
+        ys = (c0y, c1y, c2y, c3y)
+        west, south, east, north = min(xs), min(ys), max(xs), max(ys)
+
+    return west, south, east, north
 
 
 def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
@@ -207,20 +217,20 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
-    Supports affine, Ground Control Point (GCP), or Rational Polynomial 
+    Supports affine, Ground Control Point (GCP), or Rational Polynomial
     Coefficients (RPC) based coordinate transformations.
 
     Parameters
     ----------
     transform : Affine or sequence of GroundControlPoint or RPC
-        Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer. 
+        Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer.
     rows : list or int
         Pixel rows.
     cols : int or sequence of ints
         Pixel columns.
     zs : list or float, optional
-        Height associated with coordinates. Primarily used for RPC based 
-        coordinate transformations. Ignored for affine based 
+        Height associated with coordinates. Primarily used for RPC based
+        coordinate transformations. Ignored for affine based
         transformations. Default: 0.
     offset : str, optional
         Determines if the returned coordinates are for the center of the
@@ -253,8 +263,8 @@ def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_opti
     ys : list or float
         y values in coordinate reference system.
     zs : list or float, optional
-        Height associated with coordinates. Primarily used for RPC based 
-        coordinate transformations. Ignored for affine based 
+        Height associated with coordinates. Primarily used for RPC based
+        coordinate transformations. Ignored for affine based
         transformations. Default: 0.
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
@@ -300,7 +310,7 @@ def from_gcps(gcps):
     return Affine.from_gdal(*_transform_from_gcps(gcps))
 
 
-class TransformerBase():
+class TransformerBase:
     """Generic GDAL transformer base class
 
     Notes
@@ -309,17 +319,12 @@ class TransformerBase():
 
     """
     def __init__(self):
-        self._env = ExitStack()
         self._transformer = None
-        self.closed = True
-
-    def close(self):
-        self.closed = True
 
     @staticmethod
     def _ensure_arr_input(xs, ys, zs=None):
         """Ensure all input coordinates are mapped to array-like objects
-        
+
         Raises
         ------
         TransformError
@@ -334,13 +339,11 @@ class TransformerBase():
         return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
 
     def __enter__(self):
-        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *args):
-        self.close()
-        self._env.close()
-    
+        pass
+
     def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
 
@@ -349,8 +352,8 @@ class TransformerBase():
         xs, ys : float or list of float
             Geographic coordinates
         zs : float or list of float, optional
-            Height associated with coordinates. Primarily used for RPC based 
-            coordinate transformations. Ignored for affine based 
+            Height associated with coordinates. Primarily used for RPC based
+            coordinate transformations. Ignored for affine based
             transformations. Default: 0.
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
@@ -377,7 +380,7 @@ class TransformerBase():
 
         AS_ARR = True if hasattr(xs, "__iter__") else False
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
-        
+
         try:
             new_cols, new_rows = self._transform(
                 xs, ys, zs, transform_direction=TransformDirection.reverse
@@ -399,12 +402,13 @@ class TransformerBase():
         rows, cols : int or list of int
             Image pixel coordinates
         zs : float or list of float, optional
-            Height associated with coordinates. Primarily used for RPC based 
-            coordinate transformations. Ignored for affine based 
+            Height associated with coordinates. Primarily used for RPC based
+            coordinate transformations. Ignored for affine based
             transformations. Default: 0.
         offset : str, optional
             Determines if the returned coordinates are for the center of the
-            pixel or for a corner.
+            pixel or for a corner. Available options include center, ul, ur, ll,
+            lr.
         Raises
         ------
         ValueError
@@ -417,7 +421,7 @@ class TransformerBase():
         """
         AS_ARR = True if hasattr(rows, "__iter__") else False
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
-        
+
         if offset == 'center':
             coff, roff = (0.5, 0.5)
         elif offset == 'ul':
@@ -430,7 +434,7 @@ class TransformerBase():
             coff, roff = (1, 1)
         else:
             raise TransformError("Invalid offset")
-        
+
         # shift input coordinates according to offset
         T = IDENTITY.translation(coff, roff)
         offset_rows = []
@@ -451,9 +455,26 @@ class TransformerBase():
                 return (new_xs, new_ys)
         except TypeError:
             raise TransformError("Invalid inputs")
-    
+
     def _transform(self, xs, ys, zs, transform_direction):
         raise NotImplementedError
+
+
+class GDALTransformerBase(TransformerBase):
+    def __init__(self):
+        super().__init__()
+        self._env = ExitStack()
+
+    def close(self):
+        pass
+
+    def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+        self._env.close()
 
 
 class AffineTransformer(TransformerBase):
@@ -464,13 +485,10 @@ class AffineTransformer(TransformerBase):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
 
-    def close(self):
-        pass
-    
     def _transform(self, xs, ys, zs, transform_direction):
         resxs = []
         resys = []
-        
+
         if transform_direction is TransformDirection.forward:
             transform = self._transformer
         elif transform_direction is TransformDirection.reverse:
@@ -480,21 +498,21 @@ class AffineTransformer(TransformerBase):
             resx, resy = transform * (x, y)
             resxs.append(resx)
             resys.append(resy)
-        
+
         return (resxs, resys)
-    
+
     def __repr__(self):
         return "<AffineTransformer>"
 
 
-class RPCTransformer(RPCTransformerBase, TransformerBase):
+class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
     """
     Class related to Rational Polynomial Coeffecients (RPCs) based
     coordinate transformations.
 
     Uses GDALCreateRPCTransformer and GDALRPCTransform for computations. Options
     for GDALCreateRPCTransformer may be passed using `rpc_options`.
-    Ensure that GDAL transformer objects are destroyed by calling `close()` 
+    Ensure that GDAL transformer objects are destroyed by calling `close()`
     method or using context manager interface.
 
     """
@@ -508,13 +526,13 @@ class RPCTransformer(RPCTransformerBase, TransformerBase):
             self.closed and 'closed' or 'open')
 
 
-class GCPTransformer(GCPTransformerBase, TransformerBase):
+class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
     """
     Class related to Ground Control Point (GCPs) based
     coordinate transformations.
 
     Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
-    Ensure that GDAL transformer objects are destroyed by calling `close()` 
+    Ensure that GDAL transformer objects are destroyed by calling `close()`
     method or using context manager interface.
 
     """

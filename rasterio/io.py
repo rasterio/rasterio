@@ -26,8 +26,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
-                    TransformMethodsMixin):
+class DatasetReader(DatasetReaderBase, WindowMethodsMixin, TransformMethodsMixin):
     """An unbuffered data and metadata reader"""
 
     def __repr__(self):
@@ -35,8 +34,7 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
-                    TransformMethodsMixin):
+class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
     directly to disk.
     """
@@ -46,8 +44,9 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
-                            TransformMethodsMixin):
+class BufferedDatasetWriter(
+    BufferedDatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin
+):
     """Maintains data and metadata in a buffer, writing to disk or
     network only when `close()` is called.
 
@@ -92,7 +91,8 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
+
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext=".tif"):
         """Create a new file in memory
 
         Parameters
@@ -138,10 +138,20 @@ class MemoryFile(MemoryFileBase):
             return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
-            return writer(mempath, 'w+', driver=driver, width=width,
-                          height=height, count=count, crs=crs,
-                          transform=transform, dtype=dtype,
-                          nodata=nodata, sharing=sharing, **kwargs)
+            return writer(
+                mempath,
+                "w+",
+                driver=driver,
+                width=width,
+                height=height,
+                count=count,
+                crs=crs,
+                transform=transform,
+                dtype=dtype,
+                nodata=nodata,
+                sharing=sharing,
+                **kwargs
+            )
 
     def __enter__(self):
         return self
@@ -151,13 +161,7 @@ class MemoryFile(MemoryFileBase):
 
 
 class _FilePath(FilePathBase):
-    """A BytesIO-like object, backed by an in-memory file.
-
-    This allows formatted files to be read and written without I/O.
-
-    A MemoryFile created with initial bytes becomes immutable. A
-    MemoryFile created without initial bytes may be written to using
-    either file-like or dataset interfaces.
+    """A BytesIO-like object, backed by a Python file object.
 
     Examples
     --------

@@ -1,32 +1,28 @@
 """Tests of the transform module."""
 
-from array import array
 import logging
-
-from affine import Affine
-import pytest
+import math
+from array import array
 
 import numpy
+import pytest
+from affine import Affine
 
 import rasterio
 from rasterio import transform
-from rasterio.transform import (
-    get_transformer,
-    xy, 
-    rowcol,
-    AffineTransformer,
-    GCPTransformer,
-    RPCTransformer
-)
-from rasterio.errors import TransformError
 from rasterio.control import GroundControlPoint
+from rasterio.errors import TransformError
+from rasterio.transform import (AffineTransformer, GCPTransformer,
+                                RPCTransformer, get_transformer, rowcol, xy)
+
+from .conftest import assert_bounding_box_equal
 
 
 def gcps():
     return [
-        GroundControlPoint(row=11521.5, col=0.5, x=-123.6185142817931, y=48.99561141948625, z=89.13533782958984, id='217', info=''), 
-        GroundControlPoint(row=11521.5, col=7448.5, x=-122.8802747777599, y=48.91210259315549, z=89.13533782958984, id='234', info=''), 
-        GroundControlPoint(row=0.5, col=0.5, x=-123.4809665720148, y=49.52809729106944, z=89.13533782958984, id='1', info=''), 
+        GroundControlPoint(row=11521.5, col=0.5, x=-123.6185142817931, y=48.99561141948625, z=89.13533782958984, id='217', info=''),
+        GroundControlPoint(row=11521.5, col=7448.5, x=-122.8802747777599, y=48.91210259315549, z=89.13533782958984, id='234', info=''),
+        GroundControlPoint(row=0.5, col=0.5, x=-123.4809665720148, y=49.52809729106944, z=89.13533782958984, id='1', info=''),
         GroundControlPoint(row=0.5, col=7448.5, x=-122.7345733674704, y=49.44455878004666, z=89.13533782958984, id='18', info='')
     ]
 
@@ -71,6 +67,24 @@ def test_array_bounds():
         width = src.width
         tr = transform.from_bounds(w, s, e, n, src.width, src.height)
     assert (w, s, e, n) == transform.array_bounds(height, width, tr)
+
+
+@pytest.mark.parametrize(
+    ["width", "height", "affine_transform", "expected_bounds"],
+    [
+        pytest.param(2, 2, Affine.identity(), (0.0, 2.0, 2.0, 0.0), id="Identity transform"),
+        pytest.param(2, 2, Affine.scale(1, -1), (0.0, -2.0, 2.0, 0.0), id="North-up transform"),
+        pytest.param(2, 2, Affine.translation(2, 2) * Affine.scale(1, -1), (2.0, 0.0, 4.0, 2.0), id="Translated transform"),
+        pytest.param(2, 2, Affine.scale(4) * Affine.scale(1, -1), (0.0, -8.0, 8.0, 0.0), id="Scaled transform"),
+        pytest.param(2, 2, Affine.rotation(90) * Affine.scale(1, -1), (0.0, 0.0, 2.0, 2.0), id="90 degree rotated transform"),
+        pytest.param(2, 2, Affine.rotation(45) * Affine.scale(1, -1), (0.0, -math.sqrt(2), 2 * math.sqrt(2), math.sqrt(2)), id="45 degree rotated transform"),
+        pytest.param(2, 2, Affine.scale(4, 1) * Affine.scale(1, -1), (0, -2.0, 8.0, 0.0), id="Rectangular pixel transform"),
+        pytest.param(6, 2, Affine.scale(1, -1), (0, -2.0, 6.0, 0.0), id="Differing width and height"),
+    ]
+)
+def test_array_bounds_from_transforms(width, height, affine_transform, expected_bounds):
+    actual_bounds = transform.array_bounds(height, width, affine_transform)
+    assert_bounding_box_equal(expected_bounds, actual_bounds)
 
 
 def test_window_bounds():
@@ -256,7 +270,7 @@ def test_rowcol_input(xs, ys, exp_rowcol):
         (
             'tests/data/RGB.byte.gcp.vrt',
             'gcps',
-            [(-123.40736757459366, 49.52003804469494), (-123.478928146875, 49.5280898698975), (-123.4886516975216, 49.491531881517595), (-123.41709112524026, 49.48348005631504), (-123.40736757459366, 49.52003804469494)], 
+            [(-123.40736757459366, 49.52003804469494), (-123.478928146875, 49.5280898698975), (-123.4886516975216, 49.491531881517595), (-123.41709112524026, 49.48348005631504), (-123.40736757459366, 49.52003804469494)],
             [(0, 718), (0, 0), (791, 0), (791, 718), (0, 718)]
         ),
         (
@@ -308,16 +322,16 @@ def test_from_gcps():
         assert not transform.tastes_like_gdal(aff)
 
 @pytest.mark.parametrize(
-    'transformer_cls,transform', 
+    'transformer_cls,transform',
     [
-        (GCPTransformer,gcps()), 
+        (GCPTransformer,gcps()),
         (RPCTransformer,rpcs())
     ]
 )
 def test_transformer_open_closed(transformer_cls, transform):
     # open or closed does not matter for pure Python AffineTransformer
     with transformer_cls(transform) as transformer:
-        assert not transformer.closed 
+        assert not transformer.closed
     assert transformer.closed
     with pytest.raises(ValueError):
         transformer.xy(0, 0)

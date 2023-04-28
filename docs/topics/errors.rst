@@ -9,11 +9,20 @@ Error Handling
 Debugging internal GDAL functions
 ----------------------------------
 
-To get more debugging information from the internal GDAL code:
+To get more debugging information from the internal GDAL/PROJ code:
 
 1. Enable the `CPL_DEBUG` config option.
 
+    .. note:: If setting the :envvar:`PROJ_DEBUG` environment variable
+              inside a Python script, make sure that it is set before
+              importing rasterio.
+
     .. code-block:: python
+
+        import os
+        os.environ["PROJ_DEBUG"] = "2"
+
+        import rasterio
 
         with rasterio.Env(CPL_DEBUG=True):
             ...

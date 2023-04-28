@@ -136,8 +136,8 @@ if "clean" not in sys.argv:
     gdal_minor_version = int(gdal_minor_version)
     gdal_patch_version = int(gdal_patch_version)
 
-    if (gdal_major_version, gdal_minor_version) < (3, 1):
-        raise SystemExit("ERROR: GDAL >= 3.1 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (3, 3):
+        raise SystemExit("ERROR: GDAL >= 3.3 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -267,7 +267,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy>=1.18",
+    "numpy>=1.21",
     "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
@@ -310,9 +310,9 @@ setup_args = dict(
         "License :: OSI Approved :: BSD License",
         "Programming Language :: C",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3",
         "Topic :: Multimedia :: Graphics :: Graphics Conversion",
         "Topic :: Scientific/Engineering :: GIS",
@@ -329,7 +329,7 @@ setup_args = dict(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )
 
 if os.environ.get('PACKAGE_DATA'):

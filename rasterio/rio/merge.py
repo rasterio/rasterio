@@ -8,6 +8,7 @@ from rasterio.enums import Resampling
 from rasterio.errors import RasterioDeprecationWarning
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
+from rasterio.merge import MERGE_METHODS
 
 
 def deprecated_precision(*args):
@@ -27,6 +28,10 @@ def deprecated_precision(*args):
 @click.option('--resampling',
               type=click.Choice([r.name for r in Resampling if r.value <= 7]),
               default='nearest', help="Resampling method.",
+              show_default=True)
+@click.option('--method',
+              type=click.Choice(list(MERGE_METHODS)),
+              default='first', help="Merging strategy.",
               show_default=True)
 @options.nodata_opt
 @options.dtype_opt
@@ -49,6 +54,7 @@ def merge(
     bounds,
     res,
     resampling,
+    method,
     nodata,
     dtype,
     bidx,
@@ -94,6 +100,7 @@ def merge(
             dtype=dtype,
             indexes=(bidx or None),
             resampling=resampling,
+            method=method,
             dst_path=output,
             dst_kwds=creation_options,
         )

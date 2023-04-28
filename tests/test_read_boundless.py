@@ -146,13 +146,8 @@ def test_msk_read_masks(path_rgb_msk_byte_tif):
         assert msk.mean() > 90
 
 
-@pytest.mark.xfail(reason="GDAL 3.1 skips overviews because of background layer")
 def test_issue1982(capfd):
     """See a curl request for overview file"""
-    # Note: the underlying GDAL issue has been fixed after 3.1.3. The
-    # rasterio 1.1.6 wheels published to PyPI will include a patched
-    # 2.4.4 that also fixes the issue.  This test will XPASS in the
-    # rasterio-wheels tests.
     with rasterio.Env(CPL_CURL_VERBOSE=True), rasterio.open(
         "https://raw.githubusercontent.com/mapbox/rasterio/main/tests/data/green.tif"
     ) as src:
