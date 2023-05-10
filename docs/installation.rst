@@ -48,7 +48,7 @@ With pip (version >= 22.3 is required):
 .. code-block:: console
 
     python -m pip install --user -U pip
-    GDAL_CONFIG=/path/to/gdal-config python -m pip install --user .
+    GDAL_CONFIG=/path/to/gdal-config python -m pip install --user --no-binary rasterio rasterio
 
 These are pretty much equivalent. Pip will use setuptools as the build backend.
 If the gdal-config program is on your executable path, then you don't need to
