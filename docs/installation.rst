@@ -77,21 +77,6 @@ Binary wheels with the GDAL, GEOS, and PROJ libraries included are available
 for Windows 64bit starting with Rasterio version 1.3. To install,
 run ``pip install rasterio``.
 
-Binary wheels for rasterio < 1.3 and GDAL < 3.5 for Windows 64bit and 32bit 
-were created by Christoph Gohlke and are currently available from his website.
-
-To install rasterio < 1.3, download both binaries for your system (`rasterio
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like
-this from the downloads folder:
-
-.. code-block:: console
-
-    $ pip install -U pip
-    $ pip install GDAL-3.4.3-cp311-cp311-win32.whl
-    $ pip install rasterio-1.2.10-cp311-cp311-win32.whl
-
-
 Installing with Anaconda
 -------------------------
 
@@ -135,7 +120,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
     $ sudo add-apt-repository ppa:ubuntugis/ppa
     $ sudo apt-get update
     $ sudo apt-get install python-numpy gdal-bin libgdal-dev
-    $ pip install rasterio
+    $ pip install --no-binary rasterio rasterio
 
 Adapt them as necessary for your Linux system.
 
