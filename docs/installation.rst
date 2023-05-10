@@ -1,135 +1,75 @@
+============
 Installation
 ============
 
-Dependencies
-------------
+Installation of the Rasterio package is complicated by its dependency on libgdal
+and other C libraries. There are easy installations paths and an advanced
+installation path.
 
-Rasterio has one C library dependency: ``GDAL >=1.11``. GDAL itself depends on
-many of other libraries provided by most major operating systems and also
-depends on the non standard GEOS and PROJ4 libraries.
+Easy installation
+=================
 
-Python package dependencies (see also requirements.txt): ``affine, cligj,
-click, enum34, numpy``.
-
-Development also requires (see requirements-dev.txt) Cython and other packages.
-
-Installing from binaries
-------------------------
-
-OS X
-****
-
-Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
-for OS X versions 10.7+ starting with Rasterio version 0.17. To install,
-run ``pip install rasterio``. These binary wheels are preferred by newer
-versions of pip. If you don't want these wheels and want to install from
-a source distribution, run ``pip install rasterio --no-binary`` instead.
-
-The included GDAL library is fairly minimal, providing only the format drivers
-that ship with GDAL and are enabled by default. To get access to more formats,
-you must build from a source distribution (see below).
-
-Binary wheels for other operating systems will be available in a future
-release.
-
-Windows
-*******
-
-Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are
-available from his website.
-
-To install rasterio, download both binaries for your system (`rasterio
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like
-this from the downloads folder:
+Rasterio has several `extension modules
+<https://docs.python.org/3/extending/extending.html>`__ which link against
+libgdal. This complicates installation. Binary distributions (wheels)
+containing libgdal and its own dependencies are available from the Python
+Package Index and can be installed using pip.
 
 .. code-block:: console
 
-    $ pip install -U pip
-    $ pip install GDAL-1.11.2-cp27-none-win32.whl
-    $ pip install rasterio-0.24.0-cp27-none-win32.whl
+    pip install rasterio
 
+These wheels are mainly intended to make installation easy for simple
+applications, not so much for production. They are not tested for compatibility
+with all other binary wheels, conda packages, or QGIS, and omit many of GDAL's
+optional format drivers.
 
-Installing with Anaconda
--------------------------
+Many users find Anaconda and conda-forge a good way to install Rasterio and get
+access to more optional format drivers (like TileDB and others).
 
-To install rasterio on the Anaconda Python distribution, please visit the
-`rasterio conda-forge`_ page for install instructions. This build is maintained
-separately from the rasterio distribution on PyPi and packaging issues should
-be addressed on the `rasterio conda-forge`_ issue tracker.
+Rasterio 1.3 requires Python 3.8 or higher and GDAL 3.1 or higher.
 
-Installing from the source distribution
----------------------------------------
+Advanced installation
+=====================
 
-Rasterio is a Python C extension and to build you'll need a working compiler
-(XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy headers are
-required to run the rasterio setup script. Numpy has to be installed (via the
-indicated requirements file) before rasterio can be installed. See rasterio's
-Travis `configuration
-<https://github.com/rasterio/rasterio/blob/master/.travis.yml>`__ for more
-guidance.
+Once GDAL and its dependencies are installed on your computer (how to do this
+is documented at https://gdal.org) Rasterio can be built and installed using
+setuptools or pip. If your GDAL installation provides the ``gdal-config``
+program, the process is simpler.
 
-Linux
-*****
-
-The following commands are adapted from Rasterio's Travis-CI configuration.
+Without pip:
 
 .. code-block:: console
 
-    $ sudo add-apt-repository ppa:ubuntugis/ppa
-    $ sudo apt-get update
-    $ sudo apt-get install python-numpy gdal-bin libgdal-dev
-    $ pip install rasterio
+    GDAL_CONFIG=/path/to/gdal-config python setup.py install
 
-Adapt them as necessary for your Linux system.
-
-OS X
-****
-
-For a Homebrew based Python environment, do the following.
+With pip (version >= 22.3 is required):
 
 .. code-block:: console
 
-    $ brew install gdal
-    $ pip install rasterio
+    python -m pip install --user -U pip
+    GDAL_CONFIG=/path/to/gdal-config python -m pip install --user .
 
-Windows
-*******
+These are pretty much equivalent. Pip will use setuptools as the build backend.
+If the gdal-config program is on your executable path, then you don't need to
+set the environment variable.
 
-You can download a binary distribution of GDAL from `here
-<http://www.gisinternals.com/release.php>`__.  You will also need to download
-the compiled libraries and headers (include files).
+Without gdal-config you will need to configure header and library locations for
+the build in another way. One way to do this is to create a setup.cfg file in
+the source directory with content like this:
 
-When building from source on Windows, it is important to know that setup.py
-cannot rely on gdal-config, which is only present on UNIX systems, to discover
-the locations of header files and libraries that rasterio needs to compile its
-C extensions. On Windows, these paths need to be provided by the user. You
-will need to find the include files and the library files for gdal and use
-setup.py as follows.
+.. code-block:: ini
 
-.. code-block:: console
+    [build_ext]
+    include_dirs = C:/vcpkg/installed/x64-windows/include
+    libraries = gdal
+    library_dirs = C:/vcpkg/installed/x64-windows/lib
 
-    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library> install
+This is the approach taken by Rasterio's `wheel-building workflow
+<https://github.com/rasterio/rasterio-wheels/blob/main/.github/workflows/win-wheels.yaml#L67-L74>`__.
+With this file in place you can run either ``python setup.py install`` or ``python -m pip install --user .``.
 
-With pip
-
-.. code-block:: console
-
-    $ pip install --no-use-pep517 --global-option -I<path to gdal include files> -lgdal_i -L<path to gdal library> .
-
-Note: :code:`--no-use-pep517` is required as pip currently hasn't implemented a
-way for optional arguments to be passed to the build backend when using PEP 517.
-See  `here <https://github.com/pypa/pip/issues/5771>`__. for more details.
-
-Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point
-to include directories and library files.
-
-We have had success compiling code using the same version of Microsoft's
-Visual Studio used to compile the targeted version of Python (more info on
-versions used `here
-<https://docs.python.org/devguide/setup.html#windows>`__.).
-
-Note: The GDAL dll (gdal111.dll) and gdal-data directory need to be in your
-Windows PATH otherwise rasterio will fail to work.
-
-.. _rasterio conda-forge: https://github.com/conda-forge/rasterio-feedstock
+You can also pass those three values on the command line following the
+`setuptools documentation
+<https://setuptools.pypa.io/en/latest/userguide/ext_modules.html#compiler-and-linker-options>`__.
+However, the setup.cfg approach is easier.
