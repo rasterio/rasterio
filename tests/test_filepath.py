@@ -2,6 +2,7 @@
 Tests in this file will ONLY run for GDAL >= 3.x"""
 
 from io import BytesIO
+import logging
 import os.path
 
 import pytest
@@ -139,9 +140,12 @@ def test_vsifile_copyfiles(path_rgb_msk_byte_tif):
 @pytest.mark.xfail(reason="FilePath does not implement '.files' property properly.")
 def test_multi_vsifile(path_rgb_msk_byte_tif):
     """Multiple files can be copied to a FilePath using copyfiles"""
-    with open(path_rgb_msk_byte_tif, 'rb') as tif_fp, open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
-        with FilePath(tif_fp, dirname="bar", filename='foo.tif') as tifvsifile, \
-                FilePath(msk_fp, dirname="bar", filename='foo.tif.msk') as mskvsifile:
+    with open(path_rgb_msk_byte_tif, "rb") as tif_fp, open(
+        path_rgb_msk_byte_tif + ".msk", "rb"
+    ) as msk_fp:
+        with FilePath(
+            tif_fp, dirname="bar", filename="foo.tif"
+        ) as tifvsifile, FilePath(msk_fp, dirname="bar", filename="foo.tif.msk"):
             with tifvsifile.open() as src:
                 assert sorted(os.path.basename(fn) for fn in src.files) == sorted(['foo.tif', 'foo.tif.msk'])
                 assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
@@ -182,3 +186,13 @@ def test_python_file_reuse():
 
     with rasterio.open(ascii_raster_io) as rds:
         _ = rds.bounds
+
+
+def test_pam_disabled(caplog, path_rgb_byte_tif):
+    """Expect no log messages about PAM .aux files."""
+    with caplog.at_level(logging.INFO):
+        with open(path_rgb_byte_tif, "rb") as f, FilePath(f) as vsi_file:
+            with vsi_file.open() as src:
+                _ = src.profile
+
+        assert ".AUX" not in caplog.text

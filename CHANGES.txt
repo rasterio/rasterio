@@ -4,6 +4,7 @@ Changes
 1.3.7 (TBD)
 -----------
 
+- Always disable PAM sidecar detection with FilePath.
 - Full support for signed byte data in GDAL 3.7 has been added.
 - The math for array_bounds has been fixed. It can now handle rotated arrays
   (#2787).
