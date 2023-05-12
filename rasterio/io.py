@@ -214,11 +214,22 @@ class _FilePath(FilePathBase):
 
         Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
+
+        Returns
+        -------
+        DatasetReader
+
+        Raises
+        ------
+        IOError
+            If the memory file is closed.
+
         """
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
+
         # Assume we were given a non-empty file-like object
         log.debug("VSI path: {}".format(mempath.path))
 

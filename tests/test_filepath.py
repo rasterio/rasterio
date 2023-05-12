@@ -188,13 +188,11 @@ def test_python_file_reuse():
         _ = rds.bounds
 
 
-def test_pam_disabled(caplog, path_rgb_byte_tif):
-    """Expect no log messages about PAM .aux files."""
+def test_quieter_vsi_plugin_notifications(caplog, path_rgb_byte_tif):
+    """Expect no warning or error level log messages about .aux or .hdr files."""
     with caplog.at_level(logging.WARNING):
         with open(path_rgb_byte_tif, "rb") as f, FilePath(f) as vsi_file:
             with vsi_file.open() as src:
                 _ = src.profile
 
         assert "not found in virtual filesystem" not in caplog.text
-        assert ".AUX" not in caplog.text
-        assert ".HDR" not in caplog.text

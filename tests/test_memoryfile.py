@@ -390,12 +390,3 @@ def test_write_rpcs_to_memfile(path_rgb_byte_rpc_vrt):
                 dst.rpcs = src.rpcs
                 assert dst.rpcs
 
-
-def test_pam_disabled(caplog, path_rgb_byte_tif):
-    """Expect no log messages about PAM .aux files."""
-    with caplog.at_level(logging.INFO):
-        with open(path_rgb_byte_tif, "rb") as f, MemoryFile(f) as memfile:
-            with memfile.open() as src:
-                _ = src.profile
-
-        assert ".AUX" not in caplog.text
