@@ -222,8 +222,7 @@ class _FilePath(FilePathBase):
         # Assume we were given a non-empty file-like object
         log.debug("VSI path: {}".format(mempath.path))
 
-        with Env(GDAL_PAM_ENABLED=False):
-            return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+        return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
     def __enter__(self):
         return self

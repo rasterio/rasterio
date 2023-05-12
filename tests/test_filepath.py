@@ -190,9 +190,11 @@ def test_python_file_reuse():
 
 def test_pam_disabled(caplog, path_rgb_byte_tif):
     """Expect no log messages about PAM .aux files."""
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.WARNING):
         with open(path_rgb_byte_tif, "rb") as f, FilePath(f) as vsi_file:
             with vsi_file.open() as src:
                 _ = src.profile
 
+        assert "not found in virtual filesystem" not in caplog.text
         assert ".AUX" not in caplog.text
+        assert ".HDR" not in caplog.text

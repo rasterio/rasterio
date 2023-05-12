@@ -99,9 +99,9 @@ cdef void uninstall_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callback
 
 cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
     """Access existing open file-like object in the virtual filesystem.
-    
+
     This function is mandatory in the GDAL Filesystem Plugin API.
-    
+
     """
     cdef object file_wrapper
 
@@ -117,7 +117,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
     try:
         file_wrapper = filesystem_info[pszFilename]
     except KeyError:
-        log.error("File-like object not found in virtual filesystem: %s", pszFilename)
+        log.info("File-like object not found in virtual filesystem: %s", pszFilename)
         return NULL
 
     if not hasattr(file_wrapper, "_file_obj"):
