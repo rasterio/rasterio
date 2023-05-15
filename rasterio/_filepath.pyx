@@ -117,7 +117,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
     try:
         file_wrapper = filesystem_info[pszFilename]
     except KeyError:
-        log.info("File-like object not found in virtual filesystem: %s", pszFilename)
+        log.info("Object not found in virtual filesystem: filename=%r", pszFilename)
         return NULL
 
     if not hasattr(file_wrapper, "_file_obj"):
