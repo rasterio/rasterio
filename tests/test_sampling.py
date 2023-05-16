@@ -10,26 +10,51 @@ def test_sampling():
 
 
 def test_sampling_beyond_bounds():
+    """Unmasked sampling beyond bounds yields unmasked array of zeros."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        data = next(src.sample([(-10, 2719200.0)]))
+        data = next(src.sample([(0.0, 0.0)]))
+        assert not numpy.ma.is_masked(data)
         assert list(data) == [0, 0, 0]
 
 
-def test_sampling_beyond_bounds_no_nodata():
+def test_sampling_masked_beyond_bounds():
+    """Masked sampling beyond bounds yields an entirely masked array."""
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        data = next(src.sample([(0.0, 0.0)], masked=True))
+        assert numpy.ma.is_masked(data)
+        assert all(data.mask == True)
+
+
+def test_sampling_no_nodata_masked_beyond_bounds(data):
+    """Masked sampling beyond bounds yields an entirely masked array."""
+    filename = str(data.join("RGB.byte.tif"))
+
+    with rasterio.open(filename, "r+") as src:
+        src.nodata = None
+
+    with rasterio.open(filename) as src:
+        data = next(src.sample([(0.0, 0.0)], masked=True))
+        assert numpy.ma.is_masked(data)
+        assert all(data.mask == True)
+
+
+def test_sampling_beyond_bounds_no_nodata_masked():
+    """Masked sampling beyond bounds yields an entirely masked array."""
     with rasterio.open('tests/data/RGB2.byte.tif') as src:
-        data = next(src.sample([(-10, 2719200.0)]))
-        assert list(data) == [0, 0, 0]
+        data = next(src.sample([(0.0, 0.0)], masked=True))
+        assert all(data.mask == True)
 
 
 def test_sampling_beyond_bounds_masked():
+    """Masked sampling beyond bounds yields a masked array with last element being False."""
     with rasterio.open('tests/data/RGBA.byte.tif') as src:
-        data = next(src.sample([(-10, 2719200.0)], masked=True))
+        data = next(src.sample([(0.0, 0.0)], masked=True))
         assert list(data.mask) == [True, True, True, False]
 
 
 def test_sampling_beyond_bounds_nan():
     with rasterio.open('tests/data/float_nan.tif') as src:
-        data = next(src.sample([(-10, 0.0)]))
+        data = next(src.sample([(-10.0, 0.0)]))
         assert numpy.isnan(data)
 
 
