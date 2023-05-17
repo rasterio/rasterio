@@ -53,8 +53,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11']
-        gdal-version: ['3.5.3', '3.6.3']
+        gdal-version: ['3.6.3', '3.7.0']
         include:
+          - python-version: '3.9'
+            gdal-version: '3.5.3'
           - python-version: '3.9'
             gdal-version: '3.4.3'
           - python-version: '3.9'
