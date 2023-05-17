@@ -400,7 +400,7 @@ def calculate_default_transform(
         top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None, **kwargs):
     """Output dimensions and transform for a reprojection.
 
-    Source and destination coordinate reference systems and output
+    Source and destination coordinate reference systems and source
     width and height are the first four, required, parameters. Source
     georeferencing can be specified using either ground control points
     (gcps) or spatial bounds (left, bottom, right, top). These two
