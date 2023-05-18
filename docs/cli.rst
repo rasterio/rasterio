@@ -92,14 +92,14 @@ block windows) by default, or from the band specified using the ``--bidx`` optio
 
 .. code-block:: console
 
-	rio shapes --bidx 3 tests/data/RGB.byte.tif
+	rio blocks --bidx 3 tests/data/RGB.byte.tif
 
 By default a GeoJSON FeatureCollection is written. With the ``--sequence``
 option a GeoJSON feature stream is written instead.
 
 .. code-block:: console
 
-	rio shapes tests/data/RGB.byte.tif --sequence
+	rio blocks tests/data/RGB.byte.tif --sequence
 
 Output features are reprojected to OGC:CRS84 (WGS 84) unless the
 ``--projected`` flag is provided, which causes the output to be kept in the
