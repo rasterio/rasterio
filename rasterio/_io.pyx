@@ -1442,7 +1442,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # if we can crosswalk those.
             gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
-            if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
+            # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+            # with PIXELTYPE=SIGNEDBYTE creation option.
+            if _getnpdtype(self._init_dtype) == _getnpdtype('int8') and gdal_dtype == 1:
                 options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.

@@ -161,9 +161,10 @@ cdef _band_dtype(GDALRasterBandH band):
     """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity."""
     cdef const char * ptype
     cdef int gdal_dtype = GDALGetRasterDataType(band)
-
-    if gdal_dtype == GDT_Byte:
-        # Can be uint8 or int8, need to check PIXELTYPE property
+    if gdal_dtype == GDT_Byte and dtypes.dtype_rev["int8"] == 1:
+        # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+        # with PIXELTYPE=SIGNEDBYTE metadata item in IMAGE_STRUCTURE
+        # metadata domain.
         ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
 
         if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:

@@ -4,6 +4,8 @@ Changes
 1.3.7 (TBD)
 -----------
 
+- Ensure that the nodata mask value for all non-alpha bands is True in
+  sample_gen() (#2832).
 - GDAL often searches for sidecar files that may or may not exist. For the
   Python file VSI plugin in _filepath.pyx, we have turned the logging level for
   these events down from ERROR to INFO (#2827).
