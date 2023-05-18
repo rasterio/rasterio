@@ -4,6 +4,7 @@ Changes
 1.3.7 (TBD)
 -----------
 
+- Missing documentation for rio-blocks has been added to the CLI docs (#2835).
 - Ensure that the nodata mask value for all non-alpha bands is True in
   sample_gen() (#2832).
 - GDAL often searches for sidecar files that may or may not exist. For the
