@@ -356,7 +356,7 @@ def _reproject(
                 # source is a masked array
                 src_nodata = source.fill_value
             # ensure data converted to numpy array
-            source = np.array(source, copy=False)
+            source = np.asanyarray(source)
             # Convert 2D single-band arrays to 3D multi-band.
             if len(source.shape) == 2:
                 source = source.reshape(1, *source.shape)
@@ -398,7 +398,7 @@ def _reproject(
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
             # ensure data converted to numpy array
-            destination = np.array(destination, copy=False)
+            destination = np.asanyarray(destination)
             if len(destination.shape) == 2:
                 destination = destination.reshape(1, *destination.shape)
 
