@@ -1838,14 +1838,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         ----------
         bidx : int
             Index of the band (starting with 1).
-
-        value: string
+        value : str
             A label for the band's unit of measure such as 'meters' or
             'degC'.  See the Pint project for a suggested list of units.
 
         Returns
         -------
         None
+
         """
         cdef GDALRasterBandH hband = NULL
 
@@ -1855,7 +1855,23 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._units = ()
 
     def write_colormap(self, bidx, colormap):
-        """Write a colormap for a band to the dataset."""
+        """Write a colormap for a band to the dataset.
+
+        A colormap maps pixel values of a single-band dataset to RGB or
+        RGBA colors.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+        colormap : Mapping
+            Keys are integers and values are 3 or 4-tuples of ints.
+
+        Returns
+        -------
+        None
+
+        """
         cdef GDALRasterBandH hBand = NULL
         cdef GDALColorTableH hTable = NULL
         cdef GDALColorEntry color
@@ -1863,36 +1879,45 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         hBand = self.band(bidx)
 
         # RGB only for now. TODO: the other types.
-        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
+        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2, GPI_HLS=3
         hTable = GDALCreateColorTable(1)
-        vals = range(256)
 
-        for i, rgba in colormap.items():
+        try:
+            for i, rgba in colormap.items():
+                if len(rgba) == 3:
+                    rgba = tuple(rgba) + (255,)
+                color.c1, color.c2, color.c3, color.c4 = rgba
+                GDALSetColorEntry(hTable, i, &color)
 
-            if len(rgba) == 3:
-                rgba = tuple(rgba) + (255,)
+            # TODO: other color interpretations?
+            GDALSetRasterColorInterpretation(hBand, <GDALColorInterp>1)
+            GDALSetRasterColorTable(hBand, hTable)
 
-            if i not in vals:
-                log.warning("Invalid colormap key %d", i)
-                continue
-
-            color.c1, color.c2, color.c3, color.c4 = rgba
-            GDALSetColorEntry(hTable, i, &color)
-
-        # TODO: other color interpretations?
-        GDALSetRasterColorInterpretation(hBand, <GDALColorInterp>1)
-        GDALSetRasterColorTable(hBand, hTable)
-        GDALDestroyColorTable(hTable)
+        finally:
+            GDALDestroyColorTable(hTable)
 
     def write_mask(self, mask_array, window=None):
-        """Write the valid data mask src array into the dataset's band
-        mask.
+        """Write to the dataset's band mask.
 
-        The optional `window` argument takes a tuple like:
+        Values > 0 represent valid data.
 
-            ((row_start, row_stop), (col_start, col_stop))
+        Parameters
+        ----------
+        mask_array : ndarray
+            Values of 0 represent invalid or missing data. Values > 0
+            represent valid data.
+        window : Window, optional
+            A subset of the dataset's band mask.
 
-        specifying a raster subset to write into.
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RasterioIOError
+            When no mask is written.
+
         """
         cdef GDALRasterBandH band = NULL
         cdef GDALRasterBandH mask = NULL
