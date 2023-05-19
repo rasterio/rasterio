@@ -8,7 +8,6 @@ from rasterio import dtypes
 from rasterio.dtypes import _getnpdtype
 from rasterio.enums import MergeAlg
 
-from rasterio._base import DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, MemoryDataset, io_auto
 
@@ -218,9 +217,6 @@ def _sieve(image, size, out, mask, connectivity):
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
 
-        # elif isinstance(image, tuple):
-        #     rdr = image.ds
-        #     in_band = (<DatasetReaderBase?>rdr).band(image.bidx)
         else:
             raise ValueError("Invalid source image")
 
@@ -238,9 +234,6 @@ def _sieve(image, size, out, mask, connectivity):
             if isinstance(dst_bidx, int):
                 dst_bidx = [dst_bidx]
 
-        # elif isinstance(out, tuple):
-        #     udr = out.ds
-        #     out_band = (<DatasetReaderBase?>udr).band(out.bidx)
         else:
             raise ValueError("Invalid out image")
 
