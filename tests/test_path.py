@@ -1,6 +1,5 @@
 """Tests of rasterio._path and alias"""
 
-import os
 import sys
 
 import pytest
@@ -8,9 +7,6 @@ import pytest
 import rasterio
 from rasterio.errors import PathError
 from rasterio._path import _parse_path, _vsi_path, _ParsedPath, _UnparsedPath
-
-# This will cause a deprecation warning in 1.3.
-from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
 
 
 def test_parsed_path_name():
@@ -243,4 +239,4 @@ def test_parse_path_win_no_pathlib(monkeypatch):
 
 def test_parse_gdal_vsi_alias():
     """Check that the alias function works"""
-    assert parse_path('/vsifoo/bar').path == '/vsifoo/bar'
+    assert _parse_path('/vsifoo/bar').path == '/vsifoo/bar'
