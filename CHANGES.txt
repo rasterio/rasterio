@@ -4,6 +4,8 @@ Changes
 1.3.7 (2023-05-22)
 ------------------
 
+- The sieve function now accepts as input opened datasets or multiband
+  Band objects (#2782).
 - Allow color values greater than 256 in colormaps (#2769).
 - Fix the GDAL datatype mapping of Rasterio's uint64 and int64 data types. They
   were reversed in previous versions.
