@@ -45,8 +45,8 @@ dtype_fwd = {
 }
 
 if _GDAL_AT_LEAST_35:
-    dtype_fwd[12] = int64 # GDT_Int64
-    dtype_fwd[13] = uint64 # GDT_UInt64
+    dtype_fwd[13] = int64 # GDT_Int64
+    dtype_fwd[12] = uint64 # GDT_UInt64
 
 if _GDAL_AT_LEAST_37:
     dtype_fwd[14] = sbyte  # GDT_Int8
@@ -85,8 +85,8 @@ typename_fwd = {
     11: 'CFloat64'}
 
 if _GDAL_AT_LEAST_35:
-    typename_fwd[12] = 'Int64'
-    typename_fwd[13] = 'UInt64'
+    typename_fwd[13] = 'Int64'
+    typename_fwd[12] = 'UInt64'
 
 if _GDAL_AT_LEAST_37:
     typename_fwd[14] = "Int8"
