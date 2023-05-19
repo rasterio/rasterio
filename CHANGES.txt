@@ -1,9 +1,11 @@
 Changes
 =======
 
-1.3.7 (TBD)
------------
+1.3.7 (2023-05-22)
+------------------
 
+- Special characters, specifically "!", in an HTTP(S) URI's userinfo
+  subcomponent no longer break rasrerio's path parser (#2776).
 - Missing documentation for rio-blocks has been added to the CLI docs (#2835).
 - Ensure that the nodata mask value for all non-alpha bands is True in
   sample_gen() (#2832).
