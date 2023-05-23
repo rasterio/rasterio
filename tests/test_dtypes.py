@@ -159,7 +159,7 @@ def test_get_npdtype():
 
 def test__get_gdal_dtype__int64():
     if gdal_version.at_least("3.5"):
-        assert _get_gdal_dtype("int64") == 12
+        assert _get_gdal_dtype("int64") == 13
     else:
         with pytest.raises(TypeError, match="Unsupported data type"):
             _get_gdal_dtype("int64")

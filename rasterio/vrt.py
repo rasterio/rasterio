@@ -54,6 +54,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         or one-eigth of a pixel.
     src_alpha : int, optional
         Index of a source band to use as an alpha band for warping.
+    dst_alpha : int, optional
+        Index of a destination band to use as an alpha band for warping.
     add_alpha : bool, optional
         Whether to add an alpha masking band to the virtual dataset.
         Default: False. This option will cause deletion of the VRT

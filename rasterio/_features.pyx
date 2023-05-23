@@ -148,21 +148,21 @@ def _shapes(image, mask, connectivity, transform):
 
 
 def _sieve(image, size, out, mask, connectivity):
-    """
-    Replaces small polygons in `image` with the value of their largest
-    neighbor.  Polygons are found for each set of neighboring pixels of the
-    same value.
+    """Remove small polygon regions from a raster.
 
     Parameters
     ----------
-    image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
-        Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
-        rasterio.uint16, or rasterio.float32.
+    image : ndarray or Band
+        The source is a 2 or 3-D ndarray, or a single or a multiple
+        Rasterio Band object.  Must be of type rasterio.int16,
+        rasterio.int32, rasterio.uint8, rasterio.uint16, or
+        rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
-    out : numpy.ndarray
-        Array of same shape and data type as `image` in which to store results.
-    mask : numpy.ndarray or rasterio Band object
+    out : numpy ndarray
+        Array of same shape and data type as `image` in which to store
+        results.
+    mask : numpy ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation.
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
@@ -182,8 +182,7 @@ def _sieve(image, size, out, mask, connectivity):
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
 
     if _getnpdtype(image.dtype).name not in valid_dtypes:
-        valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
-                                     in valid_dtypes))
+        valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t in valid_dtypes))
         raise ValueError(
             "image dtype must be one of: {0}".format(valid_types_str))
 
@@ -206,26 +205,40 @@ def _sieve(image, size, out, mask, connectivity):
     try:
 
         if dtypes.is_ndarray(image):
+            if len(image.shape) == 2:
+                image = image.reshape(1, *image.shape)
+            src_count = image.shape[0]
+            src_bidx = list(range(1, src_count + 1))
             in_mem_ds = MemoryDataset(image)
-            in_band = in_mem_ds.band(1)
+            src_dataset = in_mem_ds
+
         elif isinstance(image, tuple):
-            rdr = image.ds
-            in_band = (<DatasetReaderBase?>rdr).band(image.bidx)
+            src_dataset, src_bidx, dtype, shape = image
+            if isinstance(src_bidx, int):
+                src_bidx = [src_bidx]
+
         else:
             raise ValueError("Invalid source image")
 
         if dtypes.is_ndarray(out):
             log.debug("out array: %r", out)
+            if len(out.shape) == 2:
+                out = out.reshape(1, *out.shape)
+            dst_count = out.shape[0]
+            dst_bidx = list(range(1, dst_count + 1))
             out_mem_ds = MemoryDataset(out)
-            out_band = out_mem_ds.band(1)
+            dst_dataset = out_mem_ds
+
         elif isinstance(out, tuple):
-            udr = out.ds
-            out_band = (<DatasetReaderBase?>udr).band(out.bidx)
+            dst_dataset, dst_bidx, _, _ = out
+            if isinstance(dst_bidx, int):
+                dst_bidx = [dst_bidx]
+
         else:
             raise ValueError("Invalid out image")
 
         if mask is not None:
-            if mask.shape != image.shape:
+            if mask.shape != image.shape[-2:]:
                 raise ValueError("Mask must have same shape as image")
 
             if _getnpdtype(mask.dtype) not in ('bool', 'uint8'):
@@ -241,12 +254,11 @@ def _sieve(image, size, out, mask, connectivity):
                 mask_reader = mask.ds
                 mask_band = (<DatasetReaderBase?>mask_reader).band(mask.bidx)
 
-        GDALSieveFilter(in_band, mask_band, out_band, size, connectivity,
-                              NULL, NULL, NULL)
-
-    else:
-        # Read from out_band into out
-        io_auto(out, out_band, False)
+        for i, j in zip(src_bidx, dst_bidx):
+            in_band = (<DatasetReaderBase?>src_dataset).band(i)
+            out_band = (<DatasetReaderBase?>dst_dataset).band(j)
+            GDALSieveFilter(in_band, mask_band, out_band, size, connectivity, NULL, NULL, NULL)
+            io_auto(out[i - 1], out_band, False)
 
     finally:
         if in_mem_ds is not None:
@@ -255,6 +267,11 @@ def _sieve(image, size, out, mask, connectivity):
             out_mem_ds.close()
         if mask_mem_ds is not None:
             mask_mem_ds.close()
+
+    if out.shape[0] == 1:
+        out = out[0]
+
+    return out
 
 
 def _rasterize(shapes, image, transform, all_touched, merge_alg):

@@ -8,9 +8,6 @@ import rasterio
 from rasterio.errors import PathError
 from rasterio._path import _parse_path, _vsi_path, _ParsedPath, _UnparsedPath
 
-# This will cause a deprecation warning in 1.3.
-from rasterio.path import parse_path
-
 
 def test_parsed_path_name():
     """A parsed path's name property is correct"""
@@ -98,10 +95,19 @@ def test_parse_gdal():
     assert _parse_path('GDAL:filepath:varname').path == 'GDAL:filepath:varname'
 
 
-def test_parse_http_password():
+def test_parse_http_query_slashes():
     """Make sure password unmodified GH2602"""
     parsed = _parse_path('https://foo.tif?bar=a//b')
     assert parsed.path == 'foo.tif?bar=a//b'
+    assert parsed.archive is None
+    assert parsed.scheme == 'https'
+
+
+def test_parse_http_password():
+    """Make sure password unmodified GH2776"""
+    url = "https://xxx:yyy!@actinia.mundialis.de/api/v3/resources/demouser/resource_id-1e904ec8-ad55-4eda-8f0d-440eb61d891a/baum.tif"
+    parsed = _parse_path(url)
+    assert parsed.path == "xxx:yyy!@actinia.mundialis.de/api/v3/resources/demouser/resource_id-1e904ec8-ad55-4eda-8f0d-440eb61d891a/baum.tif"
     assert parsed.archive is None
     assert parsed.scheme == 'https'
 
@@ -233,4 +239,4 @@ def test_parse_path_win_no_pathlib(monkeypatch):
 
 def test_parse_gdal_vsi_alias():
     """Check that the alias function works"""
-    assert parse_path('/vsifoo/bar').path == '/vsifoo/bar'
+    assert _parse_path('/vsifoo/bar').path == '/vsifoo/bar'

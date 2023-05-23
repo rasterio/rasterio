@@ -8,17 +8,13 @@ import warnings
 import numpy as np
 
 import rasterio
-from rasterio.dtypes import (
-    validate_dtype,
-    can_cast_dtype,
-    get_minimum_dtype,
-    _getnpdtype,
-)
+from rasterio import warp
+from rasterio._base import DatasetBase
+from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import ShapeSkipWarning
-from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-from rasterio import warp
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
@@ -133,20 +129,24 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
 @ensure_env
 def sieve(source, size, out=None, mask=None, connectivity=4):
-    """Replace small polygons in `source` with value of their largest neighbor.
+    """Remove small polygon regions from a raster.
 
-    Polygons are found for each set of neighboring pixels of the same value.
+    Polygons are found for each set of neighboring pixels of the same
+    value.
 
     Parameters
     ----------
-    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
-        Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
-        rasterio.uint16, or rasterio.float32
+    source : ndarray, dataset, or Band
+        The source is a 2 or 3-D ndarray, a dataset opened in "r" mode,
+        or a single or a multiple Rasterio Band object. Must be of type
+        rasterio.int16, rasterio.int32, rasterio.uint8, rasterio.uint16,
+        or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
-    out : numpy.ndarray, optional
-        Array of same shape and data type as `source` in which to store results.
-    mask : numpy.ndarray or rasterio Band object, optional
+    out : numpy ndarray, optional
+        Array of same shape and data type as `source` in which to store
+        results.
+    mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int, optional
@@ -159,21 +159,23 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Notes
     -----
-    GDAL only supports values that can be cast to 32-bit integers for this
-    operation.
+    GDAL only supports values that can be cast to 32-bit integers for
+    this operation.
 
-    The amount of memory used by this algorithm is proportional to the number
-    and complexity of polygons found in the image.  This algorithm is most
-    appropriate for simple thematic data.  Data with high pixel-to-pixel
-    variability, such as imagery, may produce one polygon per pixel and consume
-    large amounts of memory.
+    The amount of memory used by this algorithm is proportional to the
+    number and complexity of polygons found in the image.  This
+    algorithm is most appropriate for simple thematic data.  Data with
+    high pixel-to-pixel variability, such as imagery, may produce one
+    polygon per pixel and consume large amounts of memory.
 
     """
+    if isinstance(source, DatasetBase):
+        source = rasterio.band(source, source.indexes)
 
     if out is None:
         out = np.zeros(source.shape, source.dtype)
-    _sieve(source, size, out, mask, connectivity)
-    return out
+
+    return _sieve(source, size, out, mask, connectivity)
 
 
 @ensure_env

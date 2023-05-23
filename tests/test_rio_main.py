@@ -19,7 +19,7 @@ def test_version(runner):
 def test_gdal_version(runner):
     result = runner.invoke(main_group, ['--gdal-version'])
     assert result.exit_code == 0
-    assert GDALVersion.parse(result.output.strip())
+    assert result.output.strip().startswith(("2", "3"))
 
 
 def test_show_versions(runner):

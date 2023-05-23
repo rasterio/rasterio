@@ -117,6 +117,7 @@ def _transform_geom(
 
     return out_geom
 
+
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
         object dst_alpha, object src_alpha, int warp_mem_limit, GDALDataType working_data_type, const char **options) except NULL:
@@ -366,7 +367,7 @@ def _reproject(
                                          transform=format_transform(src_transform),
                                          gcps=gcps,
                                          rpcs=rpcs,
-                                         crs=src_crs, 
+                                         crs=src_crs,
                                          copy=True)
             src_dataset = src_mem.handle()
 
@@ -793,7 +794,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=DEFAULT_NODATA_FLAG, nodata=DEFAULT_NODATA_FLAG,
                  width=None, height=None,
                  src_transform=None, transform=None,
-                 init_dest_nodata=True, src_alpha=0, add_alpha=False,
+                 init_dest_nodata=True, src_alpha=0, dst_alpha=0, add_alpha=False,
                  warp_mem_limit=0, dtype=None, **warp_extras):
         """Make a virtual warped dataset
 
@@ -832,6 +833,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             or one-eigth of a pixel.
         src_alpha : int, optional
             Index of a source band to use as an alpha band for warping.
+        dst_alpha : int, optional
+            Index of a destination band to use as an alpha band for warping.
         add_alpha : bool, optional
             Whether to add an alpha masking band to the virtual dataset.
             Default: False. This option will cause deletion of the VRT
@@ -956,13 +959,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         cdef GDALRasterBandH hBand = NULL
         src_alpha_band = 0
+        dst_alpha_band = 0
         for bidx in src_dataset.indexes:
             hBand = GDALGetRasterBand(hds, bidx)
             if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
                 src_alpha_band = bidx
+                dst_alpha_band = bidx
 
         # Adding an alpha band when the source has one is trouble.
-        # It will result in suprisingly unmasked data. We will 
+        # It will result in suprisingly unmasked data. We will
         # raise an exception instead.
 
         if add_alpha:
@@ -972,11 +977,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     "The VRT already has an alpha band, adding a new one is not supported")
 
             else:
-                dst_alpha = src_dataset.count + 1
+                dst_alpha_band = src_dataset.count + 1
                 self.dst_nodata = None
 
-        else:
-            dst_alpha = 0
+        if dst_alpha:
+            dst_alpha_band = dst_alpha
 
         if src_alpha:
             src_alpha_band = src_alpha
@@ -984,7 +989,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         gdal_dtype = dtypes._get_gdal_dtype(self.working_dtype)
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata, src_dataset.count, dst_alpha,
+            self.dst_nodata, src_dataset.count, dst_alpha_band,
             src_alpha_band, warp_mem_limit, <GDALDataType>gdal_dtype,
             <const char **>c_warp_extras)
 

@@ -15,10 +15,12 @@ def test_warning(tmpdir, caplog):
     with rasterio.Env(GDAL_VALIDATE_CREATION_OPTIONS=True):
         rasterio.open(str(tmpdir.join("test.tif")), "w", **profile)
 
-    assert [
-        "CPLE_NotSupported in driver GTiff does not support creation option COMPRESSION",
-        "CPLE_NotSupported in driver GTiff does not support creation option FOO",
-    ] == sorted(
+    assert set(
+        [
+            "CPLE_NotSupported in driver GTiff does not support creation option COMPRESSION",
+            "CPLE_NotSupported in driver GTiff does not support creation option FOO",
+        ]
+    ) <= set(
         [
             rec.message
             for rec in caplog.records

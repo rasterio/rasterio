@@ -13,7 +13,7 @@ from rasterio._io import (
     MemoryFileBase,
 )
 from rasterio.windows import WindowMethodsMixin
-from rasterio.env import ensure_env
+from rasterio.env import Env, ensure_env
 from rasterio.transform import TransformMethodsMixin
 from rasterio._path import _UnparsedPath
 
@@ -214,13 +214,25 @@ class _FilePath(FilePathBase):
 
         Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
+
+        Returns
+        -------
+        DatasetReader
+
+        Raises
+        ------
+        IOError
+            If the memory file is closed.
+
         """
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
+
         # Assume we were given a non-empty file-like object
         log.debug("VSI path: {}".format(mempath.path))
+
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
     def __enter__(self):

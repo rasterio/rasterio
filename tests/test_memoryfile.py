@@ -333,7 +333,9 @@ def test_multi_memfile(path_rgb_msk_byte_tif):
     with open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
         msk_bytes = msk_fp.read()
 
-    with MemoryFile(tif_bytes, dirname="bar", filename='foo.tif') as tifmemfile, MemoryFile(msk_bytes, dirname="bar", filename='foo.tif.msk') as mskmemfile:
+    with MemoryFile(
+        tif_bytes, dirname="bar", filename="foo.tif"
+    ) as tifmemfile, MemoryFile(msk_bytes, dirname="bar", filename="foo.tif.msk"):
         with tifmemfile.open() as src:
             assert sorted(os.path.basename(fn) for fn in src.files) == sorted(['foo.tif', 'foo.tif.msk'])
             assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
@@ -378,3 +380,4 @@ def test_write_rpcs_to_memfile(path_rgb_byte_rpc_vrt):
                 assert dst.rpcs is None
                 dst.rpcs = src.rpcs
                 assert dst.rpcs
+
