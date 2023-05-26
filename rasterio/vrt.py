@@ -6,7 +6,6 @@ from rasterio._path import _parse_path
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
-from rasterio.env import ensure_env
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 

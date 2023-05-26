@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from rasterio.env import GDALVersion
 from packaging.version import parse
 
 from rasterio.rio.main import main_group

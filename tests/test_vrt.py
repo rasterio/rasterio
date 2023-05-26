@@ -1,7 +1,5 @@
 """Tests of the rasterio.vrt module"""
 
-from pathlib import Path
-
 import rasterio
 import rasterio.vrt
 
