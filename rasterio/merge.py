@@ -629,7 +629,9 @@ def virtual_merge(
                 src.indexes, src.colorinterp, src.block_shapes, src.dtypes
             ):
                 vrtrasterband = vrtdataset.find(f"VRTRasterBand[@band='{bidx}']")
-                complexsource = ET.SubElement(vrtrasterband, "ComplexSource")
+                complexsource = ET.SubElement(
+                    vrtrasterband, "ComplexSource", resampling=resampling.name
+                )
                 ET.SubElement(
                     complexsource, "SourceFilename", relativeToVRT="0", shared="0"
                 ).text = _parse_path(src.name).as_vsi()
@@ -685,7 +687,9 @@ def virtual_merge(
                 for bidx, ci, block_shape, dtype in zip(
                     src.indexes, src.colorinterp, src.block_shapes, src.dtypes
                 ):
-                    simplesource = ET.SubElement(vrtrasterband, "SimpleSource")
+                    simplesource = ET.SubElement(
+                        vrtrasterband, "SimpleSource", resampling=resampling.name
+                    )
                     ET.SubElement(
                         simplesource, "SourceFilename", relativeToVRT="0", shared="0"
                     ).text = _parse_path(src.name).as_vsi()
