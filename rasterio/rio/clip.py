@@ -32,8 +32,7 @@ projection_projected_opt = click.option(
 data_window_options = click.option(
     '--clip-data-window',
     flag_value='datawindow',
-    default=False,
-    help='Clip the raster to the region of valid data. Removes surrounding NoData values'
+    help='Clip the raster to the region of valid data by removing areas of surrounding NoData values.'
 )
 
 # Clip command
