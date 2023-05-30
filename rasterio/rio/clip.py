@@ -11,6 +11,7 @@ from rasterio.coords import disjoint_bounds
 from rasterio.crs import CRS
 from rasterio.enums import MaskFlags
 from rasterio.windows import Window
+from rasterio.windows import get_data_window
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,12 @@ projection_projected_opt = click.option(
     default=True,
     help="Bounds in input's own projected coordinates (the default).")
 
+data_window_options = click.option(
+    '--clip-data-window',
+    flag_value='datawindow',
+    default=False,
+    help='Clip the raster to the region of valid data. Removes surrounding NoData values'
+)
 
 # Clip command
 @click.command(short_help='Clip a raster to given bounds.')
@@ -39,10 +46,12 @@ projection_projected_opt = click.option(
     metavar="INPUT OUTPUT")
 @options.output_opt
 @options.bounds_opt
+@data_window_options
 @click.option(
     '--like',
     type=click.Path(exists=True),
-    help='Raster dataset to use as a template for bounds')
+    help='Raster dataset to use as a template for bounds'
+    )
 @options.format_opt
 @options.nodata_opt
 @projection_geographic_opt
@@ -67,6 +76,7 @@ def clip(
     overwrite,
     creation_options,
     with_complement,
+    clip_data_window,
 ):
     """Clips a raster using projected or geographic bounds.
 
@@ -112,6 +122,7 @@ def clip(
                                              'the input raster',
                                              param='--bounds',
                                              param_hint='--bounds')
+                bounds_window = src.window(*bounds)
             elif like:
                 with rasterio.open(like) as template_ds:
                     bounds = template_ds.bounds
@@ -124,12 +135,14 @@ def clip(
                                                  'the input raster',
                                                  param='--like',
                                                  param_hint='--like')
+                bounds_window = src.window(*bounds)
+
+            elif clip_data_window:
+                bounds_window = get_data_window(src.read(1,masked=True))
 
             else:
-                raise click.UsageError('--bounds or --like required')
-
-            bounds_window = src.window(*bounds)
-
+                raise click.UsageError('--bounds, --like, or --clip-data-window required')
+                
             if not with_complement:
                 bounds_window = bounds_window.intersection(
                     Window(0, 0, src.width, src.height)
