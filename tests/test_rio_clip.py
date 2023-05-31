@@ -60,14 +60,26 @@ def test_clip_bounds_geographic(runner, tmpdir):
     with rasterio.open(output) as out:
         assert out.shape == (718, 791)
 
-def test_clip_to_datawindow(runner,tmpdir):
-    output = str(tmpdir.join('test.tif'))
+
+def test_clip_to_datawindow(runner, tmpdir):
+    output = str(
+        tmpdir.join(
+            "test.tif",
+        )
+    )
     result = runner.invoke(
         main_group,
-        ['clip','tests/data/float_raster_with_extra_nodata.tif',output,'--to-data-window']
+        [
+            "clip",
+            "tests/data/float_raster_with_extra_nodata.tif",
+            output,
+            "--to-data-window",
+        ],
     )
     assert result.exit_code == 0
-    assert os.path.exists(output)
+    assert os.path.exists(
+        output,
+    )
 
     # could also check that it is equal to tests/data/float_raster_with_nodata.tif
     with rasterio.open(output) as out:
@@ -94,8 +106,7 @@ def test_clip_missing_params(runner, tmpdir):
     result = runner.invoke(
         main_group, ['clip', 'tests/data/shade.tif', output])
     assert result.exit_code == 2
-    assert '--bounds, --like, or --to-data-window required' in result.output
-
+    assert "-bounds, --like, or --to-data-window required" in result.output
 
 def test_clip_bounds_disjunct(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
