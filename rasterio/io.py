@@ -13,7 +13,7 @@ from rasterio._io import (
     MemoryFileBase,
 )
 from rasterio.windows import WindowMethodsMixin
-from rasterio.env import Env, ensure_env
+from rasterio.env import ensure_env
 from rasterio.transform import TransformMethodsMixin
 from rasterio._path import _UnparsedPath
 
