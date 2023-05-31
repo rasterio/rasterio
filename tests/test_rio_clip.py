@@ -64,7 +64,7 @@ def test_clip_to_datawindow(runner,tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
         main_group,
-        ['clip','tests/data/float_raster_with_extra_nodata.tif',output,'--clip-data-window']
+        ['clip','tests/data/float_raster_with_extra_nodata.tif',output,'--to-data-window']
     )
     assert result.exit_code == 0
     assert os.path.exists(output)
@@ -94,7 +94,7 @@ def test_clip_missing_params(runner, tmpdir):
     result = runner.invoke(
         main_group, ['clip', 'tests/data/shade.tif', output])
     assert result.exit_code == 2
-    assert '--bounds, --like, or --clip-data-window required' in result.output
+    assert '--bounds, --like, or --to-data-window required' in result.output
 
 
 def test_clip_bounds_disjunct(runner, tmpdir):

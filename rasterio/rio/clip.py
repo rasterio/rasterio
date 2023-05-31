@@ -30,7 +30,7 @@ projection_projected_opt = click.option(
     help="Bounds in input's own projected coordinates (the default).")
 
 data_window_options = click.option(
-    '--clip-data-window',
+    '--to-data-window',
     flag_value='datawindow',
     help='Clip the raster to the region of valid data by removing areas of surrounding NoData values.'
 )
@@ -140,7 +140,7 @@ def clip(
                 bounds_window = get_data_window(src.read(1,masked=True))
 
             else:
-                raise click.UsageError('--bounds, --like, or --clip-data-window required')
+                raise click.UsageError('--bounds, --like, or --to-data-window required')
                 
             if not with_complement:
                 bounds_window = bounds_window.intersection(
