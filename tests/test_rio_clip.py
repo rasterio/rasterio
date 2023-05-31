@@ -108,6 +108,7 @@ def test_clip_missing_params(runner, tmpdir):
     assert result.exit_code == 2
     assert "-bounds, --like, or --to-data-window required" in result.output
 
+
 def test_clip_bounds_disjunct(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(

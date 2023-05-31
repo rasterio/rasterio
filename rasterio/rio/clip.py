@@ -75,7 +75,7 @@ def clip(
     overwrite,
     creation_options,
     with_complement,
-    clip_data_window,
+    to_data_window,
 ):
     """Clips a raster using projected or geographic bounds.
 
@@ -138,12 +138,12 @@ def clip(
                         )
                 bounds_window = src.window(*bounds)
 
-            elif clip_data_window:
+            elif to_data_window:
                 bounds_window = get_data_window(src.read(1, masked=True))
 
             else:
                 raise click.UsageError("--bounds, --like, or --to-data-window required")
-                
+
             if not with_complement:
                 bounds_window = bounds_window.intersection(
                     Window(0, 0, src.width, src.height)
