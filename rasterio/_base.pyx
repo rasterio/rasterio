@@ -1041,7 +1041,12 @@ cdef class DatasetBase:
             m['photometric'] = self.photometric.name
         return m
 
-    def lnglat(self):
+    def lnglat(self) -> tuple[float, float]:
+        """Geographic coordinates of center of raster.
+
+        Returns:
+            (longitude, latitude) of centroid.
+        """
         w, s, e, n = self.bounds
         cx = (w + e)/2.0
         cy = (s + n)/2.0
