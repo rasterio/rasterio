@@ -1042,16 +1042,17 @@ cdef class DatasetBase:
         return m
 
     def lnglat(self) -> tuple[float, float]:
-        """Geographic coordinates of center of raster.
+        """Geographic coordinates of the dataset's center.
 
-        Returns:
-            (longitude, latitude) of centroid.
+        Returns
+        -------
+        (longitude, latitude) of centroid.
+
         """
         w, s, e, n = self.bounds
-        cx = (w + e)/2.0
-        cy = (s + n)/2.0
-        lng, lat = _transform(
-                self.crs, {'init': 'epsg:4326'}, [cx], [cy], None)
+        cx = (w + e) / 2.0
+        cy = (s + n) / 2.0
+        lng, lat = _transform(self.crs, "EPSG:4326", [cx], [cy], None)
         return lng.pop(), lat.pop()
 
     def _get_crs(self):
