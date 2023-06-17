@@ -163,6 +163,43 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     for i in range(count):
         bandmap[i] = <int>indexes[i]
 
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 6, 0) and (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) < (3, 7, 1):
+        # Workaround for https://github.com/rasterio/rasterio/issues/2847
+        # (bug when reading TIFF PlanarConfiguration=Separate images with
+        # multi-threading)
+        # To be removed when GDAL >= 3.7.1 is required
+        cdef const char* interleave = NULL
+        cdef GDALDriverH driver = NULL
+        cdef const char* driver_name = NULL
+        cdef GDALRasterBandH band = NULL
+        if CPLGetConfigOption("GDAL_NUM_THREADS", NULL):
+            interleave = GDALGetMetadataItem(hds, "INTERLEAVE", "IMAGE_STRUCTURE")
+            if interleave and interleave == b"BAND":
+                driver = GDALGetDatasetDriver(hds)
+                if driver:
+                    driver_name = GDALGetDescription(driver)
+                    if driver_name and driver_name == b"GTiff":
+                        try:
+                            for i in range(count):
+                                band = GDALGetRasterBand(hds, bandmap[i])
+                                if band == NULL:
+                                    raise ValueError("Null band")
+                                with nogil:
+                                    retval = GDALRasterIOEx(
+                                        band,
+                                        <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
+                                        buf + i * bufbandspace,
+                                        bufxsize, bufysize, buftype,
+                                        bufpixelspace, buflinespace, &extras)
+
+                                if retval != CE_None:
+                                    return exc_wrap_int(retval)
+
+                            return exc_wrap_int(CE_None)
+
+                        finally:
+                            CPLFree(bandmap)
+
     try:
         with nogil:
             retval = GDALDatasetRasterIOEx(
