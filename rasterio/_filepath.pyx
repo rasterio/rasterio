@@ -69,7 +69,7 @@ cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _FILESYSTEM_INFO = {}
-
+cdef _OPEN_FILE_WRAPPERS = set()
 
 cdef int install_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
     """Install handlers for python file-like objects if it isn't already installed."""
@@ -97,10 +97,33 @@ cdef void uninstall_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callback
 
 ## Filesystem Functions
 
+def clone_file_wrapper(file_wrapper):
+    """Clone a file wrapper.
+
+    Supports wrappers around fsspec files, rasterio memory files, and
+    Python file objects.
+
+    """
+    fobj = file_wrapper._file_obj
+
+    if hasattr(fobj, "fs"):
+        new_fobj = fobj.fs.open(fobj.path, fobj.mode)
+    elif hasattr(fobj, "getbuffer"):
+        new_fobj = fobj.__class__(fobj.getbuffer())
+    else:
+        new_fobj = open(fobj.name, fobj.mode)
+
+    return file_wrapper.__class__(new_fobj, file_wrapper._dirname, file_wrapper._filename)
+
+
 cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
-    """Access existing open file-like object in the virtual filesystem.
+    """Access files in the virtual filesystem.
 
     This function is mandatory in the GDAL Filesystem Plugin API.
+
+    This function returns clones of the file wrappers stored in
+    _FILESYSTEM_INFO. GDAL may call this function multiple times per
+    filename and each result must be seperately seekable.
 
     """
     cdef object file_wrapper
@@ -115,7 +138,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
     cdef dict filesystem_info = <object>pUserData
 
     try:
-        file_wrapper = filesystem_info[pszFilename]
+        file_wrapper = clone_file_wrapper(filesystem_info[pszFilename])
     except KeyError:
         log.info("Object not found in virtual filesystem: filename=%r", pszFilename)
         return NULL
@@ -123,6 +146,10 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
     if not hasattr(file_wrapper, "_file_obj"):
         log.error("Unexpected file object found in FilePath filesystem.")
         return NULL
+
+    # Open file wrappers are kept in this set and removed when closed.
+    _OPEN_FILE_WRAPPERS.add(file_wrapper)
+
     return <void *>file_wrapper
 
 ## File functions
@@ -153,11 +180,8 @@ cdef size_t filepath_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 
 
 cdef int filepath_close(void *pFile) except -1 with gil:
-    # Optional
     cdef object file_wrapper = <object>pFile
-    cdef object file_obj = file_wrapper._file_obj
-    file_obj.seek(0)
-    _ = _FILESYSTEM_INFO.pop(file_wrapper._filepath_path, None)
+    _OPEN_FILE_WRAPPERS.remove(file_wrapper)
     return 0
 
 
@@ -183,12 +207,11 @@ cdef class FilePathBase:
         # auxiliary files.
         self._dirname = dirname or str(uuid4())
 
-        if filename:
-            # GDAL's SRTMHGT driver requires the filename to be "correct" (match
-            # the bounds being written)
-            self.name = "{0}{1}/{2}".format(FILESYSTEM_PREFIX, self._dirname, filename)
-        else:
-            self.name = "{0}{1}/{1}".format(FILESYSTEM_PREFIX, self._dirname)
+        # GDAL's SRTMHGT driver requires the filename to be "correct" (match
+        # the bounds being written).
+        self._filename = filename or self._dirname
+
+        self.name = "{0}{1}/{2}".format(FILESYSTEM_PREFIX, self._dirname, self._filename)
 
         self._path = self.name.encode('utf-8')
         self._filepath_path = self._path[len(FILESYSTEM_PREFIX):]
@@ -234,4 +257,5 @@ cdef class FilePathBase:
         to the user.
 
         """
+        _ = _FILESYSTEM_INFO.pop(self._filepath_path)
         self.closed = True
