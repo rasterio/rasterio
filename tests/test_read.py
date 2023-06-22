@@ -226,6 +226,20 @@ class ReaderContextTest(unittest.TestCase):
             self.assertIsNone(s.meta['nodata'])
             self.assertRaises(ValueError, s.read)
 
+    def test_read_gtiff_band_interleave_multithread(self):
+        """Test workaround for https://github.com/rasterio/rasterio/issues/2847."""
+
+        with rasterio.Env(GDAL_NUM_THREADS='2'), rasterio.open('tests/data/rgb_deflate.tif') as s:
+            s.read(1)
+            a = s.read(2)
+            self.assertEqual(a.sum(), 25282412)
+
+        with rasterio.Env(GDAL_NUM_THREADS='2'), rasterio.open('tests/data/rgb_deflate.tif') as s:
+            a = s.read(indexes=[3,2,1])
+            self.assertEqual(a[0].sum(), 27325233)
+            self.assertEqual(a[1].sum(), 25282412)
+            self.assertEqual(a[2].sum(), 17008452)
+
 
 @pytest.mark.parametrize("shape,indexes", [
     ((72, 80), 1),          # Single band
