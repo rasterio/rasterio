@@ -4,7 +4,10 @@ Changes
 1.3.8 (2023-06-26)
 ------------------
 
-- Prevent a crash when accessing the block shapes of a multidataset HDF5 file (#).
+- Rasterio's Python file VSI plugin is now compatible with GDAL VRTs such as
+  the one used for boundless reads of datasets (#2856).
+- Prevent a crash when accessing the block shapes of a multidataset HDF5 file
+  (#2859).
 - Add a workaround for a GDAL multithreading bug introduced in 3.6.0 (#2851).
 
 1.3.7 (2023-05-22)
