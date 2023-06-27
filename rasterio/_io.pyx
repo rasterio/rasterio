@@ -191,7 +191,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
                                     retval = GDALRasterIOEx(
                                         band,
                                         <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
-                                        buf + i * bufbandspace,
+                                        <void *>(<char *>buf + i * bufbandspace),
                                         bufxsize, bufysize, buftype,
                                         bufpixelspace, buflinespace, &extras)
 
