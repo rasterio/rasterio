@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.3.8 (2023-06-26)
+1.3.8 (2023-06-28)
 ------------------
 
 - Rasterio's Python file VSI plugin is now compatible with GDAL VRTs such as
