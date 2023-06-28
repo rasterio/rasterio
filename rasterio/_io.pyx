@@ -1182,10 +1182,12 @@ cdef class MemoryFileBase:
         cdef VSILFILE *fp = NULL
 
         if file_or_bytes:
-            if hasattr(file_or_bytes, 'read'):
+            if hasattr(file_or_bytes, "read"):
                 initial_bytes = file_or_bytes.read()
             elif isinstance(file_or_bytes, bytes):
                 initial_bytes = file_or_bytes
+            elif hasattr(file_or_bytes, "itemsize"):
+                initial_bytes = bytes(file_or_bytes)
             else:
                 raise TypeError(
                     "Constructor argument must be a file opened in binary "
@@ -1196,16 +1198,11 @@ cdef class MemoryFileBase:
         # Make an in-memory directory specific to this dataset to help organize
         # auxiliary files.
         self._dirname = dirname or str(uuid4())
-        VSIMkdir("/vsimem/{0}".format(self._dirname).encode("utf-8"), 0666)
+        self._filename = filename or f"{self._dirname}.{ext.lstrip('.')}"
 
-        if filename:
-            # GDAL's SRTMHGT driver requires the filename to be "correct" (match
-            # the bounds being written)
-            self.name = "/vsimem/{0}/{1}".format(self._dirname, filename)
-        else:
-            # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = "/vsimem/{0}/{0}.{1}".format(self._dirname, ext.lstrip('.'))
+        VSIMkdir(f"/vsimem/{self._dirname}".encode('utf-8'), 0666)
 
+        self.name = f"/vsimem/{self._dirname}/{self._filename}"
         self._path = self.name.encode('utf-8')
 
         self._initial_bytes = initial_bytes

@@ -10,6 +10,7 @@ import pytest
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.shutil import copyfiles
+from rasterio.windows import Window
 
 try:
     from rasterio.io import FilePath
@@ -51,6 +52,33 @@ def test_initial_bytes(rgb_file_object):
     with FilePath(rgb_file_object) as vsifile:
         with vsifile.open() as src:
             assert src.driver == 'GTiff'
+            assert src.count == 3
+            assert src.dtypes == ("uint8", "uint8", "uint8")
+            assert src.read().shape == (3, 718, 791)
+
+
+def test_initial_bytes_boundless(rgb_file_object):
+    """FilePath contents can initialized from bytes and opened."""
+    with FilePath(rgb_file_object) as vsifile:
+        with vsifile.open() as src:
+            assert src.driver == "GTiff"
+            assert src.count == 3
+            assert src.dtypes == ("uint8", "uint8", "uint8")
+            assert src.read(window=Window(0, 0, 800, 800), boundless=True).shape == (
+                3,
+                800,
+                800,
+            )
+
+
+def test_filepath_vrt(rgb_file_object):
+    """A FilePath can be wrapped by a VRT."""
+    from rasterio.vrt import _boundless_vrt_doc
+
+    with FilePath(rgb_file_object) as vsifile, vsifile.open() as dst:
+        vrt_doc = _boundless_vrt_doc(dst)
+        with rasterio.open(vrt_doc) as src:
+            assert src.driver == "VRT"
             assert src.count == 3
             assert src.dtypes == ('uint8', 'uint8', 'uint8')
             assert src.read().shape == (3, 718, 791)

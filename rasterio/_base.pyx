@@ -518,8 +518,8 @@ cdef class DatasetBase:
         list
         """
         cdef GDALRasterBandH band = NULL
-        cdef int xsize
-        cdef int ysize
+        cdef int xsize = 0
+        cdef int ysize = 0
 
         if self._block_shapes is None:
             self._block_shapes = []
@@ -1031,8 +1031,11 @@ cdef class DatasetBase:
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
                 tiled=True)
-        else:
+        elif len(self.block_shapes) > 0:
             m.update(blockysize=self.block_shapes[0][0], tiled=False)
+        else:
+            m.update(tiled=False)
+
         if self.compression:
             m['compress'] = self.compression.name
         if self.interleaving:
