@@ -381,3 +381,9 @@ def test_write_rpcs_to_memfile(path_rgb_byte_rpc_vrt):
                 dst.rpcs = src.rpcs
                 assert dst.rpcs
 
+
+def test_close_derived_datasets():
+    with MemoryFile() as memfile:
+        dataset = memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, width=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5))
+        assert not dataset.closed
+    assert dataset.closed
