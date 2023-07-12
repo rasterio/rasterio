@@ -1274,15 +1274,17 @@ cdef class MemoryFileBase:
         VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
 
     def seek(self, offset, whence=0):
-        if not self.closed:
+        if self.closed:
+            raise OSError("I/O operation on closed MemoryFile")
+        else:
             return VSIFSeekL(self._vsif, offset, whence)
 
     def tell(self):
         if self.closed:
-            return 0
+            raise OSError("I/O operation on closed MemoryFile")
         else:
             return VSIFTellL(self._vsif)
-        
+
     def read(self, size=-1):
         """Read bytes from MemoryFile.
 
@@ -1302,7 +1304,7 @@ cdef class MemoryFileBase:
         cdef vsi_l_offset buffer_len = 0
 
         if self.closed:
-            raise OSError("Cannot read from closed MemoryFile")
+            raise OSError("I/O operation on closed MemoryFile")
 
         if size < 0:
             buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
@@ -1333,7 +1335,7 @@ cdef class MemoryFileBase:
 
         """
         if self.closed:
-            raise OSError("Cannot write to closed MemoryFile")
+            raise OSError("I/O operation on closed MemoryFile")
         cdef const unsigned char *view = <bytes>data
         n = len(data)
         result = VSIFWriteL(view, 1, n, self._vsif)
