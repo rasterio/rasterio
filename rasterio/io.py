@@ -11,6 +11,7 @@ from rasterio._io import (
     DatasetWriterBase,
     BufferedDatasetWriterBase,
     MemoryFileBase,
+    MemoryDataset as _MemoryDataset
 )
 from rasterio.windows import WindowMethodsMixin
 from rasterio.env import ensure_env
@@ -158,6 +159,11 @@ class MemoryFile(MemoryFileBase):
 
     def __exit__(self, *args):
         self.close()
+
+
+class MemoryDataset(_MemoryDataset, TransformMethodsMixin, WindowMethodsMixin):
+    """An in-memory Dataset object that uses an array for its storage"""
+    pass
 
 
 class _FilePath(FilePathBase):
