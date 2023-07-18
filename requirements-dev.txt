@@ -1,7 +1,7 @@
 -r requirements.txt
 
 # development specific requirements
-cython~=0.29
+cython>=3
 delocate
 hypothesis
 mypy
