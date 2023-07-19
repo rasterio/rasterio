@@ -143,19 +143,27 @@ def check_dtype(dt):
 def get_minimum_dtype(values):
     """Determine minimum type to represent values.
 
-    Uses range checking to determine the minimum integer or floating point
-    data type required to represent values.
+    Uses range checking to determine the minimum integer or floating
+    point data type required to represent values.
 
     Parameters
     ----------
-    values: list-like
-
+    values: array-like
 
     Returns
     -------
     rasterio dtype string
+
+    Raises
+    ------
+    ValueError: when values are not array-like numbers
+
     """
     values = np.asanyarray(values)
+
+    if values.dtype.kind not in {'c', 'f', 'i', 'u'}:
+        raise ValueError("Values are not numbers")
+
     min_value = values.min()
     max_value = values.max()
 
@@ -187,7 +195,6 @@ def get_minimum_dtype(values):
 
 def is_ndarray(array):
     """Check if array is a ndarray."""
-
     return isinstance(array, np.ndarray) or hasattr(array, '__array__')
 
 

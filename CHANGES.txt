@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next (TBD)
+----------
+
+Fixed:
+
+- dtypes.get_minimum_dtype fails more clearly if its argument is not array-like
+  or not numeric (#).
+
 1.3.8 (2023-06-26)
 ------------------
 
