@@ -168,7 +168,6 @@ def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
 
     monkeypatch.undo()
 
-
 def test_ensure_env_credentialled_decorator_fp_kwarg(monkeypatch, gdalenv):
     """Demonstrate resolution of #2267"""
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
@@ -266,6 +265,37 @@ def test_session_env_lazy(monkeypatch, gdalenv):
             'AWS_SESSION_TOKEN': 'token'}
         for k, v in expected.items():
             assert getenv()[k] == v
+
+    monkeypatch.undo()
+
+
+def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
+    """Create an Env with AWS env vars."""
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+
+    session = boto3.Session(
+        aws_access_key_id='local_id', aws_secret_access_key='local_key',
+        aws_session_token='local_token', region_name='null-island-1'
+    )
+    with rasterio.Env(session=session) as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        print(f"[ OUTER ]: {env_outer.context_options}")
+        print(f"[ OUTER ]: {env_outer.options}")
+        expected = {
+            'AWS_ACCESS_KEY_ID': 'local_id',
+            'AWS_SECRET_ACCESS_KEY': 'local_key',
+            'AWS_SESSION_TOKEN': 'local_token'}
+        for k, v in expected.items():
+            assert getenv()[k] == v
+
+        with rasterio.Env() as env_inner:
+            print(f"[ INNER ]: {env_inner.context_options}")
+            print(f"[ INNER ]: {env_inner.options}")
+            assert getenv() == rasterio.env.local._env.options
+            for k, v in expected.items():
+                assert getenv()[k] == v
 
     monkeypatch.undo()
 

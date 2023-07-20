@@ -234,6 +234,9 @@ class Env:
         options.update(**kwargs)
         return Env(*args, **options)
 
+    def aws_creds_from_context_options(self):
+        return {k: v for k, v in self.context_options.items() if k.startswith('AWS_')}
+
     def credentialize(self):
         """Get credentials and configure GDAL
 
@@ -248,6 +251,16 @@ class Env:
         cred_opts = self.session.get_credential_options()
         self.options.update(**cred_opts)
         setenv(**cred_opts)
+
+        # https://github.com/rasterio/rasterio/issues/2866
+        # if self.context_options has "AWS_*" credentials then it should
+        # always override what comes back from self.session.get_credential_options()
+        # b/c Session.from_environ might've created a session during __init__ from
+        # globally exported "AWS_*" os environ variables instead
+        # of those from existing single-threaded context
+        existing_creds = self.aws_creds_from_context_options()
+        self.options.update(**existing_creds)
+        setenv(**existing_creds)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
