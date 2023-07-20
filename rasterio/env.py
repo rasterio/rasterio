@@ -254,8 +254,8 @@ class Env:
 
         # if self.context_options has "AWS_*" credentials from parent context then it should
         # always override what comes back from self.session.get_credential_options()
-        # b/c Session.from_environ might've created a session in __init__ from
-        # globally exported "AWS_*" os environ variables
+        # b/c Session.from_environ could've created a session from globally exported
+        # "AWS_*" os environ variables
         existing_creds = self.aws_creds_from_context_options()
         self.options.update(**existing_creds)
         setenv(**existing_creds)
