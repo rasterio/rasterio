@@ -942,57 +942,6 @@ cdef class CRS:
                 _safe_osr_release(osr_s)
                 _safe_osr_release(osr_o)
 
-
-    def _matches(self, confidence_threshold=70):
-        """Find matches in authority files.
-
-        Parameters
-        ----------
-        confidence_threshold : int
-            Percent match confidence threshold (0-100).
-
-        Returns
-        -------
-        dict : {name: [codes]}
-            A dictionary in which capitalized authority names are the
-            keys and lists of codes ordered by match confidence,
-            descending, are the values.
-
-        """
-        cdef OGRSpatialReferenceH osr = NULL
-        cdef OGRSpatialReferenceH *matches = NULL
-        cdef int *confidences = NULL
-        cdef int num_matches = 0
-        cdef int i = 0
-
-        results = defaultdict(list)
-
-        try:
-            osr = exc_wrap_pointer(OSRClone(self._osr))
-
-            matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
-
-            for i in range(num_matches):
-                confidence = confidences[i]
-                c_code = OSRGetAuthorityCode(matches[i], NULL)
-                c_name = OSRGetAuthorityName(matches[i], NULL)
-
-                log.debug(
-                    "Matched. confidence=%r, c_code=%r, c_name=%r",
-                    confidence, c_code, c_name)
-
-                if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
-                    code = c_code.decode('utf-8')
-                    name = c_name.decode('utf-8')
-                    results[name].append(code)
-
-            return results
-
-        finally:
-            _safe_osr_release(osr)
-            OSRFreeSRSArray(matches)
-            CPLFree(confidences)
-
     def _projjson(self):
         """Get a PROJ JSON representation.
 
