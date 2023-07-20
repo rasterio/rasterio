@@ -252,12 +252,10 @@ class Env:
         self.options.update(**cred_opts)
         setenv(**cred_opts)
 
-        # https://github.com/rasterio/rasterio/issues/2866
-        # if self.context_options has "AWS_*" credentials then it should
+        # if self.context_options has "AWS_*" credentials from parent context then it should
         # always override what comes back from self.session.get_credential_options()
-        # b/c Session.from_environ might've created a session during __init__ from
-        # globally exported "AWS_*" os environ variables instead
-        # of those from existing single-threaded context
+        # b/c Session.from_environ might've created a session in __init__ from
+        # globally exported "AWS_*" os environ variables
         existing_creds = self.aws_creds_from_context_options()
         self.options.update(**existing_creds)
         setenv(**existing_creds)

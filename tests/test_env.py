@@ -270,7 +270,9 @@ def test_session_env_lazy(monkeypatch, gdalenv):
 
 
 def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
-    """Create an Env with AWS env vars."""
+    """for a single-thread make sure nested context manager
+    doesn't pass along credentials from global os environ vars
+    """
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
@@ -279,10 +281,8 @@ def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
         aws_access_key_id='local_id', aws_secret_access_key='local_key',
         aws_session_token='local_token', region_name='null-island-1'
     )
-    with rasterio.Env(session=session) as env_outer:
+    with rasterio.Env(session=session):
         assert getenv() == rasterio.env.local._env.options
-        print(f"[ OUTER ]: {env_outer.context_options}")
-        print(f"[ OUTER ]: {env_outer.options}")
         expected = {
             'AWS_ACCESS_KEY_ID': 'local_id',
             'AWS_SECRET_ACCESS_KEY': 'local_key',
@@ -291,11 +291,10 @@ def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
             assert getenv()[k] == v
 
         with rasterio.Env() as env_inner:
-            print(f"[ INNER ]: {env_inner.context_options}")
-            print(f"[ INNER ]: {env_inner.options}")
             assert getenv() == rasterio.env.local._env.options
             for k, v in expected.items():
                 assert getenv()[k] == v
+                assert env_inner.context_options[k] == v
 
     monkeypatch.undo()
 
