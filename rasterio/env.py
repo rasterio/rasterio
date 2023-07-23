@@ -261,6 +261,7 @@ class Env:
             # always override what comes back from self.session.get_credential_options()
             # b/c __init__ might have created a session from globally exported "AWS_*" os environ variables
             parent_context_creds = self.aws_creds_from_context_options()
+            if not parent_context_creds: return
             self.options.update(**parent_context_creds)
             # override resolution path to keep state accurate and trackable
             self.session_resolution_path = "session_from_parent_context_options"
