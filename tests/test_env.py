@@ -269,19 +269,21 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.undo()
 
 
-def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
+def test_session_nested_env_with_global_creds_no_interference(monkeypatch, gdalenv):
     """for a single-thread make sure nested context manager
     doesn't pass along credentials from global os environ vars
+    even though Session.from_environ init __init__ will
+    first create a session from global os environ variables
     """
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
 
-    session = boto3.Session(
+    session = rasterio.session.AWSSession(
         aws_access_key_id='local_id', aws_secret_access_key='local_key',
         aws_session_token='local_token', region_name='null-island-1'
     )
-    with rasterio.Env(session=session):
+    with rasterio.Env(session=session) as env_outer:
         assert getenv() == rasterio.env.local._env.options
         expected = {
             'AWS_ACCESS_KEY_ID': 'local_id',
@@ -289,11 +291,57 @@ def test_session_env_lazy_no_global_interference(monkeypatch, gdalenv):
             'AWS_SESSION_TOKEN': 'local_token'}
         for k, v in expected.items():
             assert getenv()[k] == v
+        env_outer.session_resolution_path == "session_kwarg"
 
         with rasterio.Env() as env_inner:
             assert getenv() == rasterio.env.local._env.options
             for k, v in expected.items():
                 assert getenv()[k] == v
+                assert env_inner.context_options[k] == v
+            env_outer.session_resolution_path == "session_from_environ"
+
+    monkeypatch.undo()
+
+
+def test_session_nested_env_with_global_creds_inner_session(monkeypatch, gdalenv):
+    """for a single-thread make sure nested context manager
+    can use all sessions explicitly defined even if parent context
+    manager has one already defined
+    """
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+
+    outer_session = rasterio.session.AWSSession(
+        aws_access_key_id='outer_id', aws_secret_access_key='outer_key',
+        aws_session_token='outer_token', region_name='null-island-1'
+    )
+    inner_session = rasterio.session.AWSSession(
+        aws_access_key_id='inner_id', aws_secret_access_key='inner_key',
+        aws_session_token='inner_token', region_name='null-island-1'
+    )
+    with rasterio.Env(session=outer_session) as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        outer_expected = {
+            'AWS_ACCESS_KEY_ID': 'outer_id',
+            'AWS_SECRET_ACCESS_KEY': 'outer_key',
+            'AWS_SESSION_TOKEN': 'outer_token'}
+        inner_expected = {
+            'AWS_ACCESS_KEY_ID': 'inner_id',
+            'AWS_SECRET_ACCESS_KEY': 'inner_key',
+            'AWS_SESSION_TOKEN': 'inner_token'}
+        for k, v in outer_expected.items():
+            assert getenv()[k] == v
+        env_outer.session_resolution_path == "session_kwarg"
+
+        with rasterio.Env(session=inner_session) as env_inner:
+            assert getenv() == rasterio.env.local._env.options
+            for k, v in inner_expected.items():
+                assert getenv()[k] == v
+            env_inner.session_resolution_path == "session_from_parent_context_options"
+            # even though getenv() above returns correct keys for inner context manager
+            # context options here still hold the parent context keys and that should be fine
+            for k, v in outer_expected.items():
                 assert env_inner.context_options[k] == v
 
     monkeypatch.undo()
