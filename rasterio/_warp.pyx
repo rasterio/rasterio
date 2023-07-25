@@ -223,6 +223,7 @@ def _reproject(
         num_threads=1,
         warp_mem_limit=0,
         working_data_type=0,
+        src_geoloc_array=None,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -455,8 +456,18 @@ def _reproject(
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
     imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+
     if rpcs:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
+    elif src_geoloc_array is not None:
+        geoloc_dataset = MemoryDataset(src_geoloc_array, crs=src_crs)
+        log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+        )
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+        )
 
     # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in

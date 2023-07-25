@@ -461,7 +461,7 @@ def test_reproject_ndarray():
     )
     assert (out > 0).sum() == 438113
 
-    
+
 def test_reproject_ndarray_slice():
     """Test for issue #2511, destination with strides"""
 
@@ -2146,3 +2146,70 @@ def test_issue2353bis(caplog):
     with rasterio.Env():
         transform_bounds("EPSG:6931", "EPSG:4326", *bounds)
         assert "Point outside of" in caplog.text
+
+
+def test_geoloc_warp_dataset(data, tmp_path):
+    """Warp a dataset using external geolocation arrays."""
+    filename = str(data.join("RGB.byte.tif"))
+
+    # Extract geolocation arrays and create suitable destination dataset.
+    with rasterio.open(filename) as src:
+        xs, ys = src._xygrid()
+
+        profile = src.profile
+        profile.update(
+            driver="GTiff",
+            height=800,
+            width=880,
+            transform=DST_TRANSFORM,
+            crs="EPSG:3857",
+        )
+
+    # Now alter the source's geotransform. If the geolocation arrays
+    # aren't used, we'll notice.
+    with rasterio.open(filename, "r+") as src:
+        src.transform = Affine.identity()
+
+    # Reproject the altered source file using provided geolocation
+    # arrays.
+    with rasterio.open(filename) as src:
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            reproject(
+                rasterio.band(src, src.indexes),
+                rasterio.band(dst, dst.indexes),
+                src_crs=src.crs,
+                src_geoloc_array=np.stack((xs, ys)),
+                resampling=Resampling.bilinear,
+            )
+
+    with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+        out = dst.read(1)
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 file.
+    assert np.count_nonzero(out) in [464910]
+
+
+def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
+    """Warp an array using external geolocation arrays."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        xs, ys = src._xygrid()
+        source = src.read()
+
+    output = np.zeros((3, 800, 880), dtype="uint8")
+
+    reproject(
+        source,
+        output,
+        src_crs=src.crs,
+        src_geoloc_array=np.stack((xs, ys)),
+        src_nodata=0,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_height=800,
+        dst_width=880,
+        resampling=Resampling.bilinear,
+    )
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 array.
+    assert np.count_nonzero(output[0]) in [464910]
+

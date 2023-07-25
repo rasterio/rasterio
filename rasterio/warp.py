@@ -158,11 +158,27 @@ def transform_bounds(
 
 
 @ensure_env
-def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
-              src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
-              dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,
-              resampling=Resampling.nearest, num_threads=1,
-              init_dest_nodata=True, warp_mem_limit=0, **kwargs):
+def reproject(
+    source,
+    destination=None,
+    src_transform=None,
+    gcps=None,
+    rpcs=None,
+    src_crs=None,
+    src_nodata=None,
+    dst_transform=None,
+    dst_crs=None,
+    dst_nodata=None,
+    dst_resolution=None,
+    src_alpha=0,
+    dst_alpha=0,
+    resampling=Resampling.nearest,
+    num_threads=1,
+    init_dest_nodata=True,
+    warp_mem_limit=0,
+    src_geoloc_array=None,
+    **kwargs
+):
     """Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
@@ -342,12 +358,25 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
 
     # Call the function in our extension module.
     _reproject(
-        source, destination, src_transform=src_transform, gcps=gcps, rpcs=rpcs,
-        src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
-        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
-        src_alpha=src_alpha, resampling=resampling,
-        init_dest_nodata=init_dest_nodata, num_threads=num_threads,
-        warp_mem_limit=warp_mem_limit, **kwargs)
+        source,
+        destination,
+        src_transform=src_transform,
+        gcps=gcps,
+        rpcs=rpcs,
+        src_crs=src_crs,
+        src_nodata=src_nodata,
+        dst_transform=dst_transform,
+        dst_crs=dst_crs,
+        dst_nodata=dst_nodata,
+        dst_alpha=dst_alpha,
+        src_alpha=src_alpha,
+        resampling=resampling,
+        init_dest_nodata=init_dest_nodata,
+        num_threads=num_threads,
+        warp_mem_limit=warp_mem_limit,
+        src_geoloc_array=src_geoloc_array,
+        **kwargs
+    )
 
     return destination, dst_transform
 
