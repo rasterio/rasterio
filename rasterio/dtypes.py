@@ -161,7 +161,7 @@ def get_minimum_dtype(values):
     """
     values = np.asanyarray(values)
 
-    if values.dtype.kind not in {'c', 'f', 'i', 'u'}:
+    if not numpy.issubdtype(values.dtype, numpy.number):
         raise ValueError("Values are not numbers")
 
     min_value = values.min()
