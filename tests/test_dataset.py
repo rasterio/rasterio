@@ -111,15 +111,3 @@ def test_bounds(width, height, transform, expected_bounds, image_file_with_custo
     filepath = image_file_with_custom_size_and_transform(width, height, transform)
     with rasterio.open(filepath) as dataset:
         assert_bounding_box_equal(expected_bounds, dataset.bounds)
-
-
-def test__xygrid(path_rgb_byte_tif):
-    """Get coordinate grid arrays."""
-    with rasterio.open(path_rgb_byte_tif) as dataset:
-        xs, ys = dataset._xygrid()
-        assert xs.shape == dataset.shape
-        assert ys.shape == dataset.shape
-        assert xs[0][0] == dataset.bounds.left
-        assert ys[0][0] == dataset.bounds.top
-        assert xs[-1][-1] == dataset.bounds.right - dataset.res[0]
-        assert ys[-1][-1] == dataset.bounds.bottom + dataset.res[1]

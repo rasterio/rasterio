@@ -2154,7 +2154,9 @@ def test_geoloc_warp_dataset(data, tmp_path):
 
     # Extract geolocation arrays and create suitable destination dataset.
     with rasterio.open(filename) as src:
-        xs, ys = src._xygrid()
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(src.width), np.arange(src.height)
+        )
 
         profile = src.profile
         profile.update(
@@ -2192,7 +2194,9 @@ def test_geoloc_warp_dataset(data, tmp_path):
 def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
     """Warp an array using external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        xs, ys = src._xygrid()
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(src.width), np.arange(src.height)
+        )
         source = src.read()
 
     output = np.zeros((3, 800, 880), dtype="uint8")

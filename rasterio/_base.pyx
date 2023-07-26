@@ -9,8 +9,6 @@ import math
 import os
 import warnings
 
-import numpy
-
 from libc.string cimport strncmp
 from rasterio.crs cimport CRS
 
@@ -1450,27 +1448,6 @@ cdef class DatasetBase:
     def rpcs(self, value):
         rpcs = value.to_gdal()
         self._set_rpcs(rpcs)
-
-    def _xygrid(self):
-        """Compute a pair of arrays from an affine transform matrix.
-
-        TODO: results are undefined if the dataset has only GCPs or
-        RPCs.
-
-        Values correspond to the upper left corner of raster cells.
-
-        Returns
-        -------
-        tuple
-            A pair of geolocation coordinate arrays. The first is "x"
-            (easting) coordinates of raster cell centers, the second is
-            "y" (northing) coordinates.
-        """
-        cols, rows = numpy.meshgrid(range(self.width), range(self.height))
-        xs, ys = self.xy(numpy.ravel(rows), numpy.ravel(cols), offset='ul')
-        xs = numpy.reshape(xs, self.shape)
-        ys = numpy.reshape(ys, self.shape)
-        return xs, ys
 
     @property
     def files(self):
