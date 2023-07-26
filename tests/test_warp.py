@@ -2148,6 +2148,7 @@ def test_issue2353bis(caplog):
         assert "Point outside of" in caplog.text
 
 
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
 def test_geoloc_warp_dataset(data, tmp_path):
     """Warp a dataset using external geolocation arrays."""
     filename = str(data.join("RGB.byte.tif"))
@@ -2188,9 +2189,19 @@ def test_geoloc_warp_dataset(data, tmp_path):
         out = dst.read(1)
 
     # This value is specific to DST_TRANSFORM and an 800 x 880 file.
-    assert np.count_nonzero(out) in [464910]
+    assert np.count_nonzero(out) in [464567, 464910]  # 1st value for GDAL 3.5.3
 
 
+# Before GDAL 3.5.2 geoloc array files aren't recognized and this error
+# would be seen from the following tests:
+#
+# rasterio._err.CPLE_AppDefinedError: The transformation is already
+# "north up" or a transformation between pixel/line and georeferenced
+# coordinates cannot be computed for
+# MEM:::DATAPOINTER=137539856,PIXELS=791,LINES=718,BANDS=3,DATATYPE=Byte.
+# There is no affine transformation and no GCPs. Specify transformation
+# option SRC_METHOD=NO_GEOTRANSFORM to bypass this check.
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
 def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
     """Warp an array using external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -2215,5 +2226,5 @@ def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
     )
 
     # This value is specific to DST_TRANSFORM and an 800 x 880 array.
-    assert np.count_nonzero(output[0]) in [464910]
+    assert np.count_nonzero(output[0]) in [464567, 464910]  # 1st value for GDAL 3.5.3
 
