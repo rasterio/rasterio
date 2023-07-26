@@ -460,7 +460,8 @@ def _reproject(
     if rpcs:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
     elif src_geoloc_array is not None:
-        geoloc_dataset = MemoryDataset(src_geoloc_array, crs=src_crs)
+        arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+        geoloc_dataset = MemoryDataset(arr, crs=src_crs)
         log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
         imgProjOptions = CSLSetNameValue(
             imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")

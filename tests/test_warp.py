@@ -2189,7 +2189,7 @@ def test_geoloc_warp_dataset(data, tmp_path):
         out = dst.read(1)
 
     # This value is specific to DST_TRANSFORM and an 800 x 880 file.
-    assert np.count_nonzero(out) in [464567, 464910]  # 1st value for GDAL 3.5.3
+    assert np.count_nonzero(out) in [464910]
 
 
 # Before GDAL 3.5.2 geoloc array files aren't recognized and this error
@@ -2226,5 +2226,33 @@ def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
     )
 
     # This value is specific to DST_TRANSFORM and an 800 x 880 array.
-    assert np.count_nonzero(output[0]) in [464567, 464910]  # 1st value for GDAL 3.5.3
+    assert np.count_nonzero(output[0]) in [464910]
+
+
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
+def test_geoloc_warp_array_subsampled(path_rgb_byte_tif, tmp_path):
+    """Warp an array using subsampled external geolocation arrays."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
+        )
+        source = src.read()
+
+    output = np.zeros((3, 800, 880), dtype="uint8")
+
+    reproject(
+        source,
+        output,
+        src_crs=src.crs,
+        src_geoloc_array=(xs, ys),
+        src_nodata=0,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_height=800,
+        dst_width=880,
+        resampling=Resampling.bilinear,
+    )
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 array.
+    assert np.count_nonzero(output[0]) in [471492]
 
