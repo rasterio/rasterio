@@ -332,14 +332,25 @@ def test_warp_reproject_multi_bounds_fail(runner, tmpdir):
 
 
 def test_warp_reproject_bounds_crossup_fail(runner, tmpdir):
-    """Crossed-up bounds raises click.BadParameter."""
+    """Crossed-up bounds raises RasterioIOError."""
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))
     out_bounds = [-11850000, 4810000, -11849000, 4812000]
-    result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--dst-crs', 'EPSG:4326', '--res', 0.001,
-        '--bounds'] + out_bounds)
-    assert result.exit_code == 2
+    result = runner.invoke(
+        main_group,
+        [
+            "warp",
+            srcname,
+            outputname,
+            "--dst-crs",
+            "EPSG:4326",
+            "--res",
+            0.001,
+            "--bounds",
+        ]
+        + out_bounds,
+    )
+    assert result.exit_code == 1
 
 
 def test_warp_reproject_src_bounds_res(runner, tmpdir):
@@ -604,3 +615,29 @@ def test_coordinate_operation(runner, tmp_path, wotopt):
 
     with rasterio.open(outputname) as src:
         assert src.checksum(1) == 4705
+
+
+def test_dry_run(runner, tmpdir):
+    # See also warp_reproject_bounds_crossup_fail.
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(
+        main_group,
+        [
+            "warp",
+            "--dry-run",
+            srcname,
+            outputname,
+            "--dst-crs",
+            "EPSG:4326",
+            "--res",
+            0.001,
+            "--bounds",
+        ]
+        + out_bounds,
+    )
+
+    assert result.exit_code == 0
+    assert '"width": 1000000' in result.output
+    assert '"height": 2000000' in result.output
