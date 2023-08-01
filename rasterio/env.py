@@ -191,7 +191,6 @@ class Env:
                 session = Session.aws_or_dummy(session=session)
 
             self.session = session
-            self.session_resolution_path = "session_kwarg"
 
         elif aws_access_key_id or profile_name or aws_unsigned:
             self.session = Session.aws_or_dummy(
@@ -201,15 +200,13 @@ class Env:
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
-            self.session_resolution_path = "session_aws_or_dummy"
 
         elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
             self.session = Session.from_environ()
-            self.session_resolution_path = "session_from_environ"
+            self._session_from_environ = True
 
         else:
             self.session = DummySession()
-            self.session_resolution_path = "session_dummy"
 
         self.options = options.copy()
         self.context_options = {}
@@ -256,15 +253,13 @@ class Env:
         self.options.update(**cred_opts)
         setenv(**cred_opts)
 
-        if self.session_resolution_path == "session_from_environ":
+        if getattr(self, '_session_from_environ', False):
             # if self.context_options has "AWS_*" credentials from parent context then it should
             # always override what comes back from self.session.get_credential_options()
             # b/c __init__ might have created a session from globally exported "AWS_*" os environ variables
             parent_context_creds = self.aws_creds_from_context_options()
             if not parent_context_creds: return
             self.options.update(**parent_context_creds)
-            # override resolution path to keep state accurate and trackable
-            self.session_resolution_path = "session_from_parent_context_options"
             setenv(**parent_context_creds)
 
     def drivers(self):

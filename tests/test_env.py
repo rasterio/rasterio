@@ -286,12 +286,9 @@ def test_session_env_lazy_with_nested_env(monkeypatch, gdalenv):
         assert getenv() == rasterio.env.local._env.options
         for k, v in expected.items():
             assert getenv()[k] == v
-        assert env_outer.session_resolution_path == "session_from_environ"
         with rasterio.Env() as env_inner:
             for k, v in expected.items():
                 assert getenv()[k] == v
-            # this might seem strange but it's expected if you think about the guarantees of self.context_options
-            assert env_inner.session_resolution_path == "session_from_parent_context_options"
 
     monkeypatch.undo()
 
@@ -318,13 +315,11 @@ def test_session_nested_env_with_global_creds_no_interference(monkeypatch, gdale
         assert getenv() == rasterio.env.local._env.options
         for k, v in expected.items():
             assert getenv()[k] == v
-        assert env_outer.session_resolution_path == "session_kwarg"
         with rasterio.Env() as env_inner:
             assert getenv() == rasterio.env.local._env.options
             for k, v in expected.items():
                 assert getenv()[k] == v
                 assert env_inner.context_options[k] == v
-            assert env_inner.session_resolution_path == "session_from_parent_context_options"
 
     monkeypatch.undo()
 
@@ -359,12 +354,10 @@ def test_session_nested_env_with_global_creds_inner_session(monkeypatch, gdalenv
         assert getenv() == rasterio.env.local._env.options
         for k, v in outer_expected.items():
             assert getenv()[k] == v
-        assert env_outer.session_resolution_path == "session_kwarg"
         with rasterio.Env(session=inner_session) as env_inner:
             assert getenv() == rasterio.env.local._env.options
             for k, v in inner_expected.items():
                 assert getenv()[k] == v
-            assert env_inner.session_resolution_path == "session_kwarg"
             # even though getenv() above returns correct keys for inner context manager
             # context options here still hold the parent context keys and that should be fine
             for k, v in outer_expected.items():
@@ -398,13 +391,10 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
         assert getenv() == rasterio.env.local._env.options
         for k, v in session_expected.items():
             assert getenv()[k] == v
-        assert env_outer.session_resolution_path == "session_kwarg"
-
-        EnvResult = namedtuple("EnvResult", "k v session_resolution")
 
         def reader():
             with rasterio.Env() as env_inner:
-                return [EnvResult(k, getenv()[k], env_inner.session_resolution_path) for k,v in global_expected.items()]
+                return [{k: getenv()[k]} for k,v in global_expected.items()]
 
         with futures.ThreadPoolExecutor(max_workers=2) as executor:
              fpayloads = [
@@ -414,8 +404,8 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
 
         for result_list in results:
             for result in result_list:
-                assert global_expected[result.k] == result.v
-                assert result.session_resolution == "session_from_environ"
+                for k,v in result.items():
+                    assert global_expected[k] == v
 
     monkeypatch.undo()
 
