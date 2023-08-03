@@ -404,7 +404,7 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
         for result_list in results:
             for result in result_list:
                 for k,v in result.items():
-                    assert session_expected[k] == v
+                    assert global_expected[k] == v
 
     monkeypatch.undo()
 
