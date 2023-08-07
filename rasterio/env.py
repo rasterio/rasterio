@@ -203,6 +203,7 @@ class Env:
 
         elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
             self.session = Session.from_environ()
+            self._session_from_environ = True
 
         else:
             self.session = DummySession()
@@ -234,6 +235,9 @@ class Env:
         options.update(**kwargs)
         return Env(*args, **options)
 
+    def aws_creds_from_context_options(self):
+        return {k: v for k, v in self.context_options.items() if k.startswith('AWS_')}
+
     def credentialize(self):
         """Get credentials and configure GDAL
 
@@ -248,6 +252,15 @@ class Env:
         cred_opts = self.session.get_credential_options()
         self.options.update(**cred_opts)
         setenv(**cred_opts)
+
+        if getattr(self, '_session_from_environ', False):
+            # if self.context_options has "AWS_*" credentials from parent context then it should
+            # always override what comes back from self.session.get_credential_options()
+            # b/c __init__ might have created a session from globally exported "AWS_*" os environ variables
+            parent_context_creds = self.aws_creds_from_context_options()
+            if not parent_context_creds: return
+            self.options.update(**parent_context_creds)
+            setenv(**parent_context_creds)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
