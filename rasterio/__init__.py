@@ -140,7 +140,7 @@ def open(
 
     Parameters
     ----------
-    fp : str, file, Path-like, or MemoryFile
+    fp : str, os.PathLike, file-like, or rasterio.io.MemoryFile
         A filename or URL, a file object opened in binary ('rb') mode,
         a Path object, or one of the rasterio classes that provides the
         dataset-opening interface (has an open method that returns
@@ -170,7 +170,7 @@ def open(
     crs : str, dict, or CRS, optional
         The coordinate reference system. Required in 'w' or 'w+' modes,
         it is ignored in 'r' or 'r+' modes.
-    transform : Affine, optional
+    transform : affine.Affine, optional
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
