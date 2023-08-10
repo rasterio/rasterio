@@ -127,9 +127,10 @@ def open(
     The dataset may be located in a local file, in a resource located by
     a URL, or contained within a stream of bytes. This function accepts
     different types of fp parameters. However, it is almost always best
-    to use a dataset name (str). These are passed directly to GDAL
-    protocol and format handlers. A path to a zipfile is more
-    efficiently used by GDAL than a Python ZipFile object, for example.
+    to pass a string that has a dataset name as its value. These are
+    passed directly to GDAL protocol and format handlers. A path to
+    a zipfile is more efficiently used by GDAL than a Python ZipFile
+    object, for example.
 
     In read ('r') or read/write ('r+') mode, no keyword arguments are
     required: these attributes are supplied by the opened dataset.
@@ -139,7 +140,7 @@ def open(
 
     Parameters
     ----------
-    fp : str, file object, PathLike object, FilePath, or MemoryFile
+    fp : str, file, Path-like, or MemoryFile
         A filename or URL, a file object opened in binary ('rb') mode,
         a Path object, or one of the rasterio classes that provides the
         dataset-opening interface (has an open method that returns
@@ -166,25 +167,25 @@ def open(
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    crs : str, dict, or CRS; optional
+    crs : str, dict, or CRS, optional
         The coordinate reference system. Required in 'w' or 'w+' modes,
         it is ignored in 'r' or 'r+' modes.
-    transform : Affine instance, optional
+    transform : Affine, optional
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
-    dtype : str or numpy.dtype
+    dtype : str or numpy.dtype, optional
         The data type for bands. For example: 'uint8' or
-        :attr:`rasterio.uint16`. Required in 'w' or 'w+' modes, it is
+        `rasterio.uint16`. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    nodata : int, float, or nan; optional
+    nodata : int, float, or nan, optional
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
         modes.
-    sharing : bool; optional
+    sharing : bool, optional
         To reduce overhead and prevent programs from running out of file
         descriptors, rasterio maintains a pool of shared low level
-        dataset handles. When `True` this function will use a shared
+        dataset handles. If True this function will use a shared
         handle if one is available. Multithreaded programs must avoid
         sharing and should set *sharing* to `False`.
     opener : callable, optional
@@ -202,8 +203,10 @@ def open(
 
     Returns
     -------
-    :class:`rasterio.io.DatasetReader` or
-    :class:`rasterio.io.DatasetWriter`.
+    :class:`rasterio.io.DatasetReader`
+        If `mode` is "r".
+    :class:`rasterio.io.DatasetWriter`
+        If `mode` is "r+", "w", or "w+".
 
     Raises
     ------
