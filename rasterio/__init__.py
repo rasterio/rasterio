@@ -125,21 +125,26 @@ def open(
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
-    a URL, or contained within a stream of bytes.
+    a URL, or contained within a stream of bytes. This function accepts
+    different types of fp parameters. However, it is almost always best
+    to use a dataset name (str). These are passed directly to GDAL
+    protocol and format handlers. A path to a zipfile is more
+    efficiently used by GDAL than a Python ZipFile object, for example.
 
     In read ('r') or read/write ('r+') mode, no keyword arguments are
     required: these attributes are supplied by the opened dataset.
 
-    In write ('w' or 'w+') mode, the driver, width, height, count, and dtype
-    keywords are strictly required.
+    In write ('w' or 'w+') mode, the driver, width, height, count, and
+    dtype keywords are strictly required.
 
     Parameters
     ----------
     fp : str, file object, PathLike object, FilePath, or MemoryFile
-        A filename or URL, a file object opened in binary ('rb') mode, a
-        Path object, or one of the rasterio classes that provides the
-        dataset-opening interface (has an open method that returns a
-        dataset).
+        A filename or URL, a file object opened in binary ('rb') mode,
+        a Path object, or one of the rasterio classes that provides the
+        dataset-opening interface (has an open method that returns
+        a dataset). Use a string when possible: GDAL can more
+        efficiently access a dataset if it opens it natively.
     mode : str, optional
         'r' (read, the default), 'r+' (read/write), 'w' (write), or
         'w+' (write/read).
@@ -197,11 +202,22 @@ def open(
 
     Returns
     -------
-    A ``DatasetReader`` or ``DatasetWriter`` object.
+    A :class:`rasterio.io.DatasetReader` or
+    :class:`rasterio.io.DatasetWriter` object.
+
+    Raises
+    ------
+    :class:`TypeError`
+        If arguments are of the wrong Python type.
+    :class:`rasterio.errors.RasterioIOError`
+        If the dataset can not be opened. Such as when there is no
+        dataset with the given name.
+    :class:`rasterio.errors.DriverCapabilityError`
+        If the detected format driver does not support the requested
+        opening mode.
 
     Examples
     --------
-
     To open a local GeoTIFF dataset for reading using standard driver
     discovery and no directives:
 
