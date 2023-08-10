@@ -202,8 +202,8 @@ def open(
 
     Returns
     -------
-    A :class:`rasterio.io.DatasetReader` or
-    :class:`rasterio.io.DatasetWriter` object.
+    :class:`rasterio.io.DatasetReader` or
+    :class:`rasterio.io.DatasetWriter`.
 
     Raises
     ------
