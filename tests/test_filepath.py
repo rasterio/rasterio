@@ -224,3 +224,11 @@ def test_quieter_vsi_plugin_notifications(caplog, path_rgb_byte_tif):
                 _ = src.profile
 
         assert "not found in virtual filesystem" not in caplog.text
+
+import io
+
+
+def test_opener(path_rgb_byte_tif):
+    """First test of vsi python plugin opener."""
+    with rasterio.open(path_rgb_byte_tif, opener=io.open) as src:
+        _ = src.profile

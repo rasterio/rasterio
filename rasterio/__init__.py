@@ -23,6 +23,7 @@ if platform.system() == "Windows":
                     os.add_dll_directory(os.path.abspath(p))
 
 
+from rasterio._vsiopener import _opener_registration
 from rasterio._show_versions import show_versions
 from rasterio._version import gdal_version, get_geos_version, get_proj_version
 from rasterio.crs import CRS
@@ -107,6 +108,7 @@ def parse_path(path):
 @ensure_env_with_credentials
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
          crs=None, transform=None, dtype=None, nodata=None, sharing=False,
+         opener=None,
          **kwargs):
     """Open a dataset for reading or writing.
 
@@ -236,7 +238,13 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     # dataset object that we will return. When a dataset's close method
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
-    if mode == 'r' and hasattr(fp, 'read'):
+    if opener:
+        opener_context = _opener_registration(fp, opener)
+        dataset = DatasetReader(fp, driver=driver, sharing=sharing, **kwargs)
+        dataset._env.enter_context(opener_context)
+        return dataset
+
+    elif mode == 'r' and hasattr(fp, 'read'):
         if have_vsi_plugin:
             return FilePath(fp).open(driver=driver, sharing=sharing, **kwargs)
         else:

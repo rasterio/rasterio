@@ -253,6 +253,9 @@ if "clean" not in sys.argv:
         extensions.append(
             Extension(
                 'rasterio._filepath', ['rasterio/_filepath.pyx'], **cpp_ext_options))
+        extensions.append(
+            Extension(
+                'rasterio._vsiopener', ['rasterio/_vsiopener.pyx'], **cpp_ext_options))
     ext_modules = cythonize(
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options)
 
