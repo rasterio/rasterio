@@ -5,6 +5,8 @@ Happily strings can be used throughout Numpy and so existing code will
 not break.
 
 """
+import math
+
 import numpy as np
 
 from rasterio.env import GDALVersion
@@ -118,7 +120,7 @@ def in_dtype_range(value, dtype):
     """
     Check if the value is within the dtype range
     """
-    if np.dtype(dtype).kind == "f" and (np.math.isinf(value) or np.math.isnan(value)):
+    if np.dtype(dtype).kind == "f" and (math.isinf(value) or math.isnan(value)):
         return True
     range_min, range_max = dtype_ranges[dtype]
     return range_min <= value <= range_max
