@@ -185,6 +185,8 @@ cdef GDALDatasetH open_dataset(
     cdef char **drivers = NULL
     cdef char **options = NULL
 
+    log.debug("Args: filename=%r, flags=%r", filename, flags)
+
     filename = filename.encode('utf-8')
     fname = filename
 

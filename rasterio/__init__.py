@@ -1,6 +1,7 @@
 """Rasterio"""
 
 from collections import namedtuple
+from contextlib import ExitStack
 import glob
 import logging
 from logging import NullHandler
@@ -60,7 +61,7 @@ from rasterio.io import (
 )
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
-from rasterio._path import _parse_path
+from rasterio._path import _parse_path, _UnparsedPath
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
@@ -239,9 +240,11 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
     if opener:
-        opener_context = _opener_registration(fp, opener)
-        dataset = DatasetReader(fp, driver=driver, sharing=sharing, **kwargs)
-        dataset._env.enter_context(opener_context)
+        vsi_path_ctx = _opener_registration(fp, opener)
+        stack = ExitStack()
+        registered_vsi_path = stack.enter_context(vsi_path_ctx)
+        dataset = DatasetReader(_UnparsedPath(registered_vsi_path), driver=driver, sharing=sharing, **kwargs)
+        dataset._env = stack
         return dataset
 
     elif mode == 'r' and hasattr(fp, 'read'):

@@ -29,8 +29,8 @@ cdef extern from "cpl_vsi_virtual.h":
 
 # Prefix for all in-memory paths used by GDAL's VSI system
 # Except for errors and log messages this shouldn't really be seen by the user
-cdef str FILESYSTEM_PREFIX = "/vsipyopener/"
-cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
+cdef str PREFIX = "/vsipyopener/"
+cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 
 # This is global state for the Python filesystem plugin. It currently only
 # contains path -> PyOpenerBase (or subclass) instances. This is used by
@@ -38,7 +38,6 @@ cdef bytes FILESYSTEM_PREFIX_BYTES = FILESYSTEM_PREFIX.encode("ascii")
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _OPENER_REGISTRY = {}
-cdef _OPEN_FILE_OBJS = set()
 
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -51,11 +50,8 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
     callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
     callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
 
-    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
-        log.debug("Installing PyOpener filesystem handler plugin...")
-        return VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
-    else:
-        return 0
+    log.debug("Installing PyOpener filesystem handler plugin...")
+    return VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
 
 
 cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -72,7 +68,6 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     GDAL may call this function multiple times per filename and each
     result must be seperately seekable.
     """
-    cdef object file_opener
     cdef object file_obj
 
     if pszAccess != b"r" and pszAccess != b"rb":
@@ -83,24 +78,22 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         log.error("PyOpener filesystem accessed with uninitialized filesystem info.")
         return NULL
 
-    cdef dict filesystem_info = <object>pUserData
+    cdef dict registry = <object>pUserData
+    filename = pszFilename.decode("utf-8")
 
+    log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
     try:
-        file_opener = filesystem_info[pszFilename]
+        file_opener = registry[filename]
     except KeyError:
-        log.info("Object not found in virtual filesystem: filename=%r", pszFilename)
+        log.info("Object not found: registry=%r, filename=%r", registry, filename)
         return NULL
 
-    # Extract the opener's argument from the vsi filename.
-    path = pszFilename
-    if path.startswith(FILESYSTEM_PREFIX_BYTES):
-        path = path[len(FILESYSTEM_PREFIX_BYTES):]
+    file_obj = file_opener(filename, "rb")
+    if hasattr(file_obj, "open"):
+        file_obj = file_obj.open()
 
-    file_obj = file_opener(path, "rb")
+    log.debug("Opened file object: file_obj=%r", file_obj)
     return <void *>file_obj
-
-    # Open file wrappers are kept in this set and removed when closed.
-    # _OPEN_FILE_OBJS.add(file_obj)
 
 
 cdef vsi_l_offset pyopener_tell(void *pFile) with gil:
@@ -118,10 +111,14 @@ cdef int pyopener_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1
 
 cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     cdef object file_obj = <object>pFile
+    log.debug("Reading Python file: file_obj=%r, nSize=%r, nCount=%r", file_obj, nSize, nCount)
     cdef bytes python_data = file_obj.read(nSize * nCount)
+    log.debug("Data check: python_data=%r", python_data)
+    log.debug("Data check: len=%r", len(python_data))
     cdef int num_bytes = len(python_data)
     # NOTE: We have to cast to char* first, otherwise Cython doesn't do the conversion properly
     memcpy(pBuffer, <void*><char*>python_data, num_bytes)
+    log.debug("Read Python file: num_bytes=%r", num_bytes)
     return <size_t>(num_bytes / nSize)
 
 
@@ -138,9 +135,11 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
 
 @contextlib.contextmanager
 def _opener_registration(urlpath, opener):
-    _OPENER_REGISTRY[urlpath] = opener
+    filename = urlpath
+    log.debug("Registering opener: filename=%r, opener=%r", filename, opener)
+    _OPENER_REGISTRY[filename] = opener
     try:
-        yield opener
+        yield f"{PREFIX}{filename}"
     finally:
-        _ = _OPENER_REGISTRY.pop(urlpath)
+        _ = _OPENER_REGISTRY.pop(filename)
 
