@@ -38,6 +38,7 @@ cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _OPENER_REGISTRY = {}
+cdef _OPEN_FILE_OBJS = set()
 
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -50,8 +51,11 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
     callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
     callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
 
-    log.debug("Installing PyOpener filesystem handler plugin...")
-    return VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
+    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(PREFIX_BYTES):
+        log.debug("Installing Python opener handler plugin...")
+        return VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
+    else:
+        return 0
 
 
 cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -68,14 +72,12 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     GDAL may call this function multiple times per filename and each
     result must be seperately seekable.
     """
-    cdef object file_obj
-
     if pszAccess != b"r" and pszAccess != b"rb":
-        log.error("PyOpener is currently a read-only interface.")
+        log.error("Python opener is currently a read-only interface.")
         return NULL
 
     if pUserData is NULL:
-        log.error("PyOpener filesystem accessed with uninitialized filesystem info.")
+        log.error("Python opener registry is not initialized.")
         return NULL
 
     cdef dict registry = <object>pUserData
@@ -88,15 +90,16 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         log.info("Object not found: registry=%r, filename=%r", registry, filename)
         return NULL
 
-    file_obj = file_opener(filename, "rb")
+    cdef object file_obj = file_opener(filename, "rb")
     if hasattr(file_obj, "open"):
         file_obj = file_obj.open()
 
     log.debug("Opened file object: file_obj=%r", file_obj)
+    _OPEN_FILE_OBJS.add(file_obj)
     return <void *>file_obj
 
 
-cdef vsi_l_offset pyopener_tell(void *pFile) with gil:
+cdef vsi_l_offset pyopener_tell(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
     cdef long pos = file_obj.tell()
     return <vsi_l_offset>pos
@@ -109,34 +112,34 @@ cdef int pyopener_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1
     return 0
 
 
-cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
+cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) except -1 with gil:
     cdef object file_obj = <object>pFile
-    log.debug("Reading Python file: file_obj=%r, nSize=%r, nCount=%r", file_obj, nSize, nCount)
     cdef bytes python_data = file_obj.read(nSize * nCount)
-    log.debug("Data check: python_data=%r", python_data)
-    log.debug("Data check: len=%r", len(python_data))
     cdef int num_bytes = len(python_data)
     # NOTE: We have to cast to char* first, otherwise Cython doesn't do the conversion properly
     memcpy(pBuffer, <void*><char*>python_data, num_bytes)
-    log.debug("Read Python file: num_bytes=%r", num_bytes)
     return <size_t>(num_bytes / nSize)
 
 
 cdef int pyopener_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
+    log.debug("Closing: file_obj=%r", file_obj)
     try:
         file_obj.close()
     except AttributeError:
+        log.exception()
         pass
+    except Exception:
+        log.exception()
+        raise
 
-    # _OPEN_FILE_OBJS.remove(file_obj)
+    _OPEN_FILE_OBJS.remove(file_obj)
     return 0
 
 
 @contextlib.contextmanager
 def _opener_registration(urlpath, opener):
     filename = urlpath
-    log.debug("Registering opener: filename=%r, opener=%r", filename, opener)
     _OPENER_REGISTRY[filename] = opener
     try:
         yield f"{PREFIX}{filename}"
