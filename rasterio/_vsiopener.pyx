@@ -90,7 +90,13 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         log.info("Object not found: registry=%r, filename=%r", registry, filename)
         return NULL
 
-    cdef object file_obj = file_opener(filename, "rb")
+    cdef object file_obj
+
+    try:
+        file_obj = file_opener(filename, "rb")
+    except ValueError:
+        file_obj = file_opener(filename)
+
     if hasattr(file_obj, "open"):
         file_obj = file_obj.open()
 
