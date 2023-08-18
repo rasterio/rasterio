@@ -43,17 +43,22 @@ cdef _OPEN_FILE_OBJS = set()
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
     """Install handlers for python file openers if it isn't already installed."""
-    callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
-    callbacks_struct.open = <VSIFilesystemPluginOpenCallback>pyopener_open
-    callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
-    callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
-    callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
-    callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
-    callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
+    cdef char **registered_prefixes = VSIGetFileSystemsPrefixes()
+    cdef int prefix_index = CSLFindString(registered_prefixes, PREFIX_BYTES)
+    CSLDestroy(registered_prefixes)
 
-    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(PREFIX_BYTES):
+    if prefix_index < 0:
         log.debug("Installing Python opener handler plugin...")
-        return VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
+        callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
+        callbacks_struct.open = <VSIFilesystemPluginOpenCallback>pyopener_open
+        callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
+        callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
+        callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
+        callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
+        callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
+        retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
+        VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
+        return retval
     else:
         return 0
 
@@ -107,8 +112,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
 
 cdef vsi_l_offset pyopener_tell(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
-    cdef long pos = file_obj.tell()
-    return <vsi_l_offset>pos
+    return <vsi_l_offset>file_obj.tell()
 
 
 cdef int pyopener_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
