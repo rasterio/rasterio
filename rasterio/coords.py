@@ -22,6 +22,31 @@ BoundingBox.__doc__ = \
         Top coordinate
     """
 
+
+def contains_coord(bounds, coord):
+    """Test if coord is contained in bounds.
+    Coordinate and bounds are assumed to be relative to the same CRS.
+
+    Parameters
+    ----------
+    bounds: BoundingBox
+    coord: Sequence
+        xy coordinate
+
+    Returns
+    -------
+    boolean
+    ``True`` if coord is contained in bounding box
+    ``False`` otherwise
+    """
+    x, y = coord
+    # if we are dealing with a possibly south-up bounding box
+    bottom, top = sorted((bounds.bottom, bounds.top))
+    return (bottom <= y <= top
+            and
+            bounds.left <= x <= bounds.right)
+
+
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint.
 
