@@ -202,14 +202,14 @@ def open(
     Examples
     --------
 
-    To open a GeoTIFF for reading using standard driver discovery and
-    no directives:
+    To open a local GeoTIFF dataset for reading using standard driver
+    discovery and no directives:
 
     >>> import rasterio
     >>> with rasterio.open('example.tif') as dataset:
     ...     print(dataset.profile)
 
-    To open a JPEG2000 using only the JP2OpenJPEG driver:
+    To open a local JPEG2000 dataset using only the JP2OpenJPEG driver:
 
     >>> with rasterio.open(
     ...         'example.jp2', driver='JP2OpenJPEG') as dataset:
