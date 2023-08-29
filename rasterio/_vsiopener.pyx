@@ -98,11 +98,13 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     cdef object file_obj
 
     try:
-        file_obj = file_opener(filename, "rb")
+        file_obj = file_opener(filename, mode="rb")
     except ValueError:
-        file_obj = file_opener(filename)
+        file_obj = file_opener(filename, mode="r")
 
-    if hasattr(file_obj, "open"):
+    # If the opener returned an OpenFile, we open it.
+    if not hasattr(file_obj, "f") and hasattr(file_obj, "fs") and hasattr(file_obj, "path"):
+        log.debug("Detected an OpenFile: file_obj=%r", file_obj)
         file_obj = file_obj.open()
 
     log.debug("Opened file object: file_obj=%r", file_obj)
