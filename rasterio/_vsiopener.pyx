@@ -100,10 +100,10 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
 
     try:
         file_obj = file_opener(filename, mode)
-    # ZipFile.open doesn't take a mode argument and will raise
-    # ValueError if given one.
+    # ZipFile.open doesn't accept binary modes like "rb" and will raise
+    # ValueError if given one. We strip the mode in this case.
     except ValueError as err:
-        file_obj = file_opener(filename)
+        file_obj = file_opener(filename, mode.rstrip("b"))
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
 
