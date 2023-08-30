@@ -38,7 +38,7 @@ cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
 cdef _OPENER_REGISTRY = {}
-cdef _OPEN_FILE_OBJS = set()
+cdef _OPEN_FILE_EXIT_STACKS = {}
 
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -95,20 +95,28 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         log.info("Object not found: registry=%r, filename=%r", registry, filename)
         return NULL
 
+    mode = pszAccess.decode("utf-8")
     cdef object file_obj
 
     try:
-        file_obj = file_opener(filename, mode="rb")
-    except ValueError:
-        file_obj = file_opener(filename, mode="r")
+        file_obj = file_opener(filename, mode)
+    # ZipFile.open doesn't take a mode argument and will raise
+    # ValueError if given one.
+    except ValueError as err:
+        file_obj = file_opener(filename)
 
-    # If the opener returned an OpenFile, we open it.
-    if not hasattr(file_obj, "f") and hasattr(file_obj, "fs") and hasattr(file_obj, "path"):
-        log.debug("Detected an OpenFile: file_obj=%r", file_obj)
-        file_obj = file_obj.open()
+    log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
 
-    log.debug("Opened file object: file_obj=%r", file_obj)
-    _OPEN_FILE_OBJS.add(file_obj)
+    # Before we return, we attempt to enter the file object's context
+    # and store an exit callback stack for it.
+    stack = contextlib.ExitStack()
+
+    try:
+        file_obj = stack.enter_context(file_obj)
+    except (AttributeError, TypeError):
+        log.info("File object is not a context manager: file_obj=%r", file_obj)
+
+    _OPEN_FILE_EXIT_STACKS[file_obj] = stack
     return <void *>file_obj
 
 
@@ -136,16 +144,8 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 cdef int pyopener_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
     log.debug("Closing: file_obj=%r", file_obj)
-    try:
-        file_obj.close()
-    except AttributeError:
-        log.exception()
-        pass
-    except Exception:
-        log.exception()
-        raise
-
-    _OPEN_FILE_OBJS.remove(file_obj)
+    stack = _OPEN_FILE_EXIT_STACKS.pop(file_obj)
+    stack.close()
     return 0
 
 

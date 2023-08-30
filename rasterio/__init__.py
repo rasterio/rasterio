@@ -186,9 +186,9 @@ def open(
         A custom dataset opener which can serve GDAL's virtual
         filesystem machinery via Python file-like objects. The
         underlying file-like object is obtained by calling *opener* with
-        *fp* as the sole positional argument. *opener* must return
-        a Python file-like object that provides read, seek, tell, and
-        close methods.
+        (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
+        driver's native mode. *opener* must return a Python file-like
+        object that provides read, seek, tell, and close methods.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
