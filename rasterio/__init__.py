@@ -251,21 +251,6 @@ def open(
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
-    # when opener is a callable that takes a filename or URL and returns
-    # a file-like object with read, seek, tell, and close methods, we
-    # can register it with GDAL and use it as the basis for a GDAL
-    # virtual filesystem. This is generally better than the FilePath
-    # approach introduced in version 1.3.
-    if opener:
-        vsi_path_ctx = _opener_registration(fp, opener)
-        stack = ExitStack()
-        registered_vsi_path = stack.enter_context(vsi_path_ctx)
-        dataset = DatasetReader(
-            _UnparsedPath(registered_vsi_path), driver=driver, sharing=sharing, **kwargs
-        )
-        dataset._env = stack
-        return dataset
-
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
     # hold fp's contents and store that in an ExitStack attached to the
