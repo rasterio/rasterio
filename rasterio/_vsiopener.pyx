@@ -114,7 +114,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     try:
         file_obj = stack.enter_context(file_obj)
     except (AttributeError, TypeError):
-        log.info("File object is not a context manager: file_obj=%r", file_obj)
+        log.debug("File object is not a context manager: file_obj=%r", file_obj)
 
     _OPEN_FILE_EXIT_STACKS[file_obj] = stack
     return <void *>file_obj
