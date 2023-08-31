@@ -12,6 +12,7 @@ import logging
 from uuid import uuid4
 
 from libc.string cimport memcpy
+cimport numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
         callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
+        callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
         callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
         callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
         retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
@@ -70,17 +72,13 @@ cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callback
     callbacks_struct = NULL
 
 
-cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
+cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *pszAccess) except NULL with gil:
     """Access files in the virtual filesystem.
 
     This function is mandatory in the GDAL Filesystem Plugin API.
     GDAL may call this function multiple times per filename and each
     result must be seperately seekable.
     """
-    if pszAccess != b"r" and pszAccess != b"rb":
-        log.error("Python opener is currently a read-only interface.")
-        return NULL
-
     if pUserData is NULL:
         log.error("Python opener registry is not initialized.")
         return NULL
@@ -104,6 +102,9 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     # ValueError if given one. We strip the mode in this case.
     except ValueError as err:
         file_obj = file_opener(filename, mode.rstrip("b"))
+    except Exception:
+        log.info("Failed to open file, likely because it doesn't exist.")
+        return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
 
@@ -139,6 +140,14 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
     # NOTE: We have to cast to char* first, otherwise Cython doesn't do the conversion properly
     memcpy(pBuffer, <void*><char*>python_data, num_bytes)
     return <size_t>(num_bytes / nSize)
+
+
+cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCount) except -1 with gil:
+    cdef object file_obj = <object>pFile
+    buffer_len = nSize * nCount
+    cdef np.uint8_t [:] buff_view = <np.uint8_t[:buffer_len]>pBuffer
+    log.debug("Writing data: buff_view=%r", buff_view)
+    return <size_t>file_obj.write(buff_view)
 
 
 cdef int pyopener_close(void *pFile) except -1 with gil:
