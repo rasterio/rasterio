@@ -3,6 +3,7 @@
 # development specific requirements
 cython>=3
 delocate
+fsspec
 hypothesis
 mypy
 numpydoc

@@ -1,6 +1,7 @@
 """Rasterio"""
 
 from collections import namedtuple
+from contextlib import ExitStack
 import glob
 import logging
 from logging import NullHandler
@@ -23,6 +24,7 @@ if platform.system() == "Windows":
                     os.add_dll_directory(os.path.abspath(p))
 
 
+from rasterio._vsiopener import _opener_registration
 from rasterio._show_versions import show_versions
 from rasterio._version import gdal_version, get_geos_version, get_proj_version
 from rasterio.crs import CRS
@@ -59,7 +61,7 @@ from rasterio.io import (
 )
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
-from rasterio._path import _parse_path
+from rasterio._path import _parse_path, _UnparsedPath
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
@@ -105,9 +107,21 @@ def parse_path(path):
 
 
 @ensure_env_with_credentials
-def open(fp, mode='r', driver=None, width=None, height=None, count=None,
-         crs=None, transform=None, dtype=None, nodata=None, sharing=False,
-         **kwargs):
+def open(
+    fp,
+    mode="r",
+    driver=None,
+    width=None,
+    height=None,
+    count=None,
+    crs=None,
+    transform=None,
+    dtype=None,
+    nodata=None,
+    sharing=False,
+    opener=None,
+    **kwargs
+):
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
@@ -168,6 +182,13 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         dataset handles. When `True` this function will use a shared
         handle if one is available. Multithreaded programs must avoid
         sharing and should set *sharing* to `False`.
+    opener : callable, optional
+        A custom dataset opener which can serve GDAL's virtual
+        filesystem machinery via Python file-like objects. The
+        underlying file-like object is obtained by calling *opener* with
+        (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
+        driver's native mode. *opener* must return a Python file-like
+        object that provides read, seek, tell, and close methods.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -181,14 +202,14 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     Examples
     --------
 
-    To open a GeoTIFF for reading using standard driver discovery and
-    no directives:
+    To open a local GeoTIFF dataset for reading using standard driver
+    discovery and no directives:
 
     >>> import rasterio
     >>> with rasterio.open('example.tif') as dataset:
     ...     print(dataset.profile)
 
-    To open a JPEG2000 using only the JP2OpenJPEG driver:
+    To open a local JPEG2000 dataset using only the JP2OpenJPEG driver:
 
     >>> with rasterio.open(
     ...         'example.jp2', driver='JP2OpenJPEG') as dataset:
@@ -230,13 +251,28 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
+    # when opener is a callable that takes a filename or URL and returns
+    # a file-like object with read, seek, tell, and close methods, we
+    # can register it with GDAL and use it as the basis for a GDAL
+    # virtual filesystem. This is generally better than the FilePath
+    # approach introduced in version 1.3.
+    if opener:
+        vsi_path_ctx = _opener_registration(fp, opener)
+        stack = ExitStack()
+        registered_vsi_path = stack.enter_context(vsi_path_ctx)
+        dataset = DatasetReader(
+            _UnparsedPath(registered_vsi_path), driver=driver, sharing=sharing, **kwargs
+        )
+        dataset._env = stack
+        return dataset
+
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
     # hold fp's contents and store that in an ExitStack attached to the
     # dataset object that we will return. When a dataset's close method
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
-    if mode == 'r' and hasattr(fp, 'read'):
+    elif mode == 'r' and hasattr(fp, 'read'):
         if have_vsi_plugin:
             return FilePath(fp).open(driver=driver, sharing=sharing, **kwargs)
         else:
