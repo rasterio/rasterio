@@ -7,7 +7,7 @@ Next
 - Rasterio's open() function has a new *opener* keyword argument that may be
   used to read or write datasets that can be addressed through Python file
   objects. This feature supplants the FilePath class introduced in version
-  1.3.0 (#2898, #2906).
+  1.3.0 (#2898, #2907).
 - The output file size limits of rio-warp were made redundant by changes to the
   GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
   has been added to the command. If used, the profile of the output dataset
