@@ -24,7 +24,7 @@ jobs:
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
       LD_LIBRARY_PATH: "${{ github.workspace }}/gdal_install/lib/:${LD_LIBRARY_PATH}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Update
         run: |
           apt-get update
