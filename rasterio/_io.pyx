@@ -1405,7 +1405,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef int sharing_flag = (0x20 if sharing else 0x0)
 
         # Validate write mode arguments.
-        log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
             if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
@@ -1455,9 +1454,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             kwargs["tiled"] = "TRUE"
 
         if mode in ('w', 'w+'):
-
             options = convert_options(kwargs)
 
+            # Delete this. GDALCreate has been doing the cleanup since
+            # version 3.2.0.
             if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
                 log.debug("No deletion, subdataset will be added: path=%r", path)
             else:
@@ -1469,7 +1469,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 drv = exc_wrap_pointer(GDALGetDriverByName(drv_name))
             except Exception as err:
                 raise DriverRegistrationError(str(err))
-
 
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see

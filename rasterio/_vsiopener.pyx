@@ -80,17 +80,21 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     result must be seperately seekable.
     """
     if pUserData is NULL:
-        log.error("Python opener registry is not initialized.")
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"Python opener is not initialized.")
         return NULL
 
     cdef dict registry = <object>pUserData
     filename = pszFilename.decode("utf-8")
-
     log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
+    # Note: the opener is added to the registry in rasterio.open().
+
     try:
         file_opener = registry[filename]
-    except KeyError:
-        log.info("Object not found: registry=%r, filename=%r", registry, filename)
+    except KeyError as err:
+        # GDAL is eager to discover auxiliary files and this error will
+        # occur often. The Python opener plugin does not support
+        # auxiliary files.
+        log.debug("Opener not found in registry: registry=%r, filename=%r", registry, filename)
         return NULL
 
     mode = pszAccess.decode("utf-8")
@@ -98,12 +102,15 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
 
     try:
         file_obj = file_opener(filename, mode)
-    # ZipFile.open doesn't accept binary modes like "rb" and will raise
-    # ValueError if given one. We strip the mode in this case.
     except ValueError as err:
+        # ZipFile.open doesn't accept binary modes like "rb" and will
+        # raise ValueError if given one. We strip the mode in this case.
         file_obj = file_opener(filename, mode.rstrip("b"))
-    except Exception:
-        log.info("Failed to open file, likely because it doesn't exist.")
+    except Exception as err:
+        errmsg = f"Opener failed to open file with arguments ({repr(filename)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>errmsg_b)
         return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)

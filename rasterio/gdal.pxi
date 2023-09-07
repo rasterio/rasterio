@@ -23,11 +23,9 @@ cdef extern from "cpl_error.h" nogil:
         CE_Fatal
 
     ctypedef int CPLErrorNum
-
-    # CPLErrorNum eludes me at the moment, I'm calling it 'int'
-    # for now.
     ctypedef void (*CPLErrorHandler)(CPLErr, int, const char*)
 
+    void CPLError(CPLErr eErrClass, CPLErrorNum err_no, const char *template, ...)
     void CPLErrorReset()
     int CPLGetLastErrorNo()
     const char* CPLGetLastErrorMsg()

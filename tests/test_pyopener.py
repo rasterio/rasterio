@@ -9,6 +9,14 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.errors import RasterioIOError
+
+
+def test_opener_failure():
+    """Use int as an opener :)"""
+    with pytest.raises(RasterioIOError) as exc_info:
+        rasterio.open("tests/data/RGB.byte.tif", opener=int)
+    assert exc_info.value.args[0] == "Opener failed to open file with arguments ('tests/data/RGB.byte.tif', 'rb'): TypeError(\"'str' object cannot be interpreted as an integer\")"
 
 
 def test_opener_io_open():
