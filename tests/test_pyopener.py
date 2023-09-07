@@ -25,8 +25,7 @@ def test_registration_failure():
 def test_opener_failure():
     """Use int as an opener :)"""
     with pytest.raises(RasterioIOError) as exc_info:
-        with rasterio.open("tests/data/RGB.byte.tif", opener=int) as src:
-            pass
+        rasterio.open("tests/data/RGB.byte.tif", opener=int)
     assert exc_info.value.args[0] == "Opener failed to open file with arguments ('tests/data/RGB.byte.tif', 'rb'): TypeError(\"'str' object cannot be interpreted as an integer\")"
     from rasterio._vsiopener import _registry_get
     assert _registry_get(("tests/data/RGB.byte.tif", "r")) != int
