@@ -80,7 +80,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     result must be seperately seekable.
     """
     if pUserData is NULL:
-        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"Python opener is not initialized.")
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>"Python opener is not initialized.")
         return NULL
 
     cdef dict registry = <object>pUserData
@@ -110,7 +110,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         errmsg = f"Opener failed to open file with arguments ({repr(filename)}, {repr(mode)}): {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
         # 4 is CPLE_OpenFailedError.
-        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>errmsg_b)
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
