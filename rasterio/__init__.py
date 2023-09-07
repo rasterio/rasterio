@@ -319,50 +319,54 @@ def open(
     else:
         raw_dataset_path = os.fspath(fp)
         stack = ExitStack()
-        # when opener is a callable that takes a filename or URL and returns
-        # a file-like object with read, seek, tell, and close methods, we
-        # can register it with GDAL and use it as the basis for a GDAL
-        # virtual filesystem. This is generally better than the FilePath
-        # approach introduced in version 1.3.
-        if opener:
-            vsi_path_ctx = _opener_registration(raw_dataset_path, opener)
-            registered_vsi_path = stack.enter_context(vsi_path_ctx)
-            path = _UnparsedPath(registered_vsi_path)
-        else:
-            path = _parse_path(raw_dataset_path)
+        try:
+            # when opener is a callable that takes a filename or URL and returns
+            # a file-like object with read, seek, tell, and close methods, we
+            # can register it with GDAL and use it as the basis for a GDAL
+            # virtual filesystem. This is generally better than the FilePath
+            # approach introduced in version 1.3.
+            if opener:
+                vsi_path_ctx = _opener_registration(raw_dataset_path, mode[0], opener)
+                registered_vsi_path = stack.enter_context(vsi_path_ctx)
+                path = _UnparsedPath(registered_vsi_path)
+            else:
+                path = _parse_path(raw_dataset_path)
 
-        if mode == "r":
-            dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == "r+":
-            dataset = get_writer_for_path(path, driver=driver)(
-                path, mode, driver=driver, sharing=sharing, **kwargs
-            )
-        elif mode.startswith("w"):
-            if not driver:
-                driver = driver_from_extension(path)
-            writer = get_writer_for_driver(driver)
-            if writer is not None:
-                dataset = writer(
-                    path,
-                    mode,
-                    driver=driver,
-                    width=width,
-                    height=height,
-                    count=count,
-                    crs=crs,
-                    transform=transform,
-                    dtype=dtype,
-                    nodata=nodata,
-                    sharing=sharing,
-                    **kwargs
+            if mode == "r":
+                dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+            elif mode == "r+":
+                dataset = get_writer_for_path(path, driver=driver)(
+                    path, mode, driver=driver, sharing=sharing, **kwargs
                 )
+            elif mode.startswith("w"):
+                if not driver:
+                    driver = driver_from_extension(path)
+                writer = get_writer_for_driver(driver)
+                if writer is not None:
+                    dataset = writer(
+                        path,
+                        mode,
+                        driver=driver,
+                        width=width,
+                        height=height,
+                        count=count,
+                        crs=crs,
+                        transform=transform,
+                        dtype=dtype,
+                        nodata=nodata,
+                        sharing=sharing,
+                        **kwargs
+                    )
+                else:
+                    raise DriverCapabilityError(
+                        "Writer does not exist for driver: %s" % str(driver)
+                    )
             else:
                 raise DriverCapabilityError(
-                    "Writer does not exist for driver: %s" % str(driver)
-                )
-        else:
-            raise DriverCapabilityError(
-                "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+        except Exception:
+            stack.close()
+            raise
 
         dataset._env = stack
         return dataset

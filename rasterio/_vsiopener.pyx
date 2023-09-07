@@ -14,6 +14,8 @@ from uuid import uuid4
 from libc.string cimport memcpy
 cimport numpy as np
 
+from rasterio.errors import OpenerRegistrationError
+
 log = logging.getLogger(__name__)
 
 gdal33_version_checked = False
@@ -84,30 +86,30 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         return NULL
 
     cdef dict registry = <object>pUserData
-    filename = pszFilename.decode("utf-8")
-    log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
+    urlpath = pszFilename.decode("utf-8")
+    mode = pszAccess.decode("utf-8")
+    log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
     # Note: the opener is added to the registry in rasterio.open().
 
     try:
-        file_opener = registry[filename]
+        file_opener = registry[(urlpath, mode[0])]
     except KeyError as err:
         # GDAL is eager to discover auxiliary files and this error will
         # occur often. The Python opener plugin does not support
         # auxiliary files.
-        log.debug("Opener not found in registry: registry=%r, filename=%r", registry, filename)
+        log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
         return NULL
 
-    mode = pszAccess.decode("utf-8")
     cdef object file_obj
 
     try:
-        file_obj = file_opener(filename, mode)
+        file_obj = file_opener(urlpath, mode)
     except ValueError as err:
         # ZipFile.open doesn't accept binary modes like "rb" and will
         # raise ValueError if given one. We strip the mode in this case.
-        file_obj = file_opener(filename, mode.rstrip("b"))
+        file_obj = file_opener(urlpath, mode.rstrip("b"))
     except Exception as err:
-        errmsg = f"Opener failed to open file with arguments ({repr(filename)}, {repr(mode)}): {repr(err)}"
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
         # 4 is CPLE_OpenFailedError.
         CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
@@ -166,11 +168,22 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
 
 
 @contextlib.contextmanager
-def _opener_registration(urlpath, opener):
-    filename = urlpath
-    _OPENER_REGISTRY[filename] = opener
-    try:
-        yield f"{PREFIX}{filename}"
-    finally:
-        _ = _OPENER_REGISTRY.pop(filename)
+def _opener_registration(urlpath, mode, opener):
+    if (urlpath, mode) in _OPENER_REGISTRY:
+        if _OPENER_REGISTRY[(urlpath, mode)] != opener:
+            raise OpenerRegistrationError(f"Opener {repr(_OPENER_REGISTRY[(urlpath, mode)])} already registered for urlpath and mode")
+        else:
+            yield f"{PREFIX}{urlpath}"
+    else:
+        _OPENER_REGISTRY[(urlpath, mode)] = opener
+        try:
+            yield f"{PREFIX}{urlpath}"
+        finally:
+            _ = _OPENER_REGISTRY.pop((urlpath, mode), None)
+
+
+def _registry_get(item):
+    cdef dict registry = _OPENER_REGISTRY
+    log.debug("Checking registry: registry=%r, item=%r", registry, item)
+    return registry.get(item, None)
 
