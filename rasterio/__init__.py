@@ -188,7 +188,8 @@ def open(
         underlying file-like object is obtained by calling *opener* with
         (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
         driver's native mode. *opener* must return a Python file-like
-        object that provides read, seek, tell, and close methods.
+        object that provides read, seek, tell, and close methods. Note:
+        only one opener at a time per fp, mode pair is allowed. 
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes

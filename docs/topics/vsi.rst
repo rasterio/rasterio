@@ -75,9 +75,15 @@ would work in the same way.
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
 
-    with rasterio.open("B01.tif", opener=fs.openbin) as src:
+    with rasterio.open("B01.tif", opener=fs.open) as src:
         print(src.profile)
 
 
 Where AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are placeholders for the
 appropriate credentials.
+
+Read and write access is supported, with some limitations. Only one opener at
+a time may be thus registered for a filename and access mode pair. Openers are
+unregistered when the dataset is closed or its context is exited. The other
+limitation is that auxiliary and sidecar files cannot be accessed and thus
+formats depending on them cannot be used in this way.
