@@ -6,9 +6,11 @@ Next
 
 Deprecations:
 
+- The is_valid property of the CRS class is not useful and will be removed in
+  version 2.0 (#2919).
 - The FilePath class has been supplanted by rasterio.open's new opener keyword
   argument and its associated GDAL virtual filesystem plugin. It will be
-  removed in version 2.0 (#).
+  removed in version 2.0 (#2919).
 
 New Features:
 

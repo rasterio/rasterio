@@ -168,6 +168,7 @@ class _FilePath(FilePathBase):
     .. deprecated:: 1.4.0
        FilePath is supplanted by open's new opener keyword argument,
        and will be removed in 2.0.0.
+
     """
     def __init__(self, filelike_obj, dirname=None, filename=None):
         """Create a new wrapper around the provided file-like object.

@@ -4,6 +4,7 @@ requires = ["setuptools", "wheel", "cython>=3", "oldest-supported-numpy"]
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore:FilePath is supplanted",
+    "ignore:is_valid is not useful",
     "ignore:The given matrix is",
     "ignore:Dataset has no geotransform",
 ]
