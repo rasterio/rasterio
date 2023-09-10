@@ -292,13 +292,11 @@ def open(
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
     elif mode == 'r' and hasattr(fp, 'read'):
-        if have_vsi_plugin:
-            return FilePath(fp).open(driver=driver, sharing=sharing, **kwargs)
-        else:
-            memfile = MemoryFile(fp.read())
-            dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
-            dataset._env.enter_context(memfile)
-            return dataset
+        memfile = MemoryFile(fp.read())
+        fp.seek(0)
+        dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
+        dataset._env.enter_context(memfile)
+        return dataset
 
     elif mode in ('w', 'w+') and hasattr(fp, 'write'):
         memfile = MemoryFile()

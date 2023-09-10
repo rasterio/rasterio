@@ -2,6 +2,11 @@
 requires = ["setuptools", "wheel", "cython>=3", "oldest-supported-numpy"]
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:FilePath is supplanted",
+    "ignore:The given matrix is",
+    "ignore:Dataset has no geotransform",
+]
 markers = [
     "slow: marks tests as slow",
     "gdalbin: marks test requiring GDAL binaries",

@@ -4,6 +4,14 @@ Changes
 Next
 ----
 
+Deprecations:
+
+- The FilePath class has been supplanted by rasterio.open's new opener keyword
+  argument and its associated GDAL virtual filesystem plugin. It will be
+  removed in version 2.0 (#).
+
+New Features:
+
 - The output file size limits of rio-warp were made redundant by changes to the
   GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
   has been added to the command. If used, the profile of the output dataset
