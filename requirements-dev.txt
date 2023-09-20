@@ -16,3 +16,4 @@ sphinx
 sphinx-click
 sphinx-rtd-theme
 wheel
+zarr
