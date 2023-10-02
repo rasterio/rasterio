@@ -267,7 +267,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy>=1.18",
+    "numpy",
     "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
