@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.3.8.post1 (2023-10-09)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update libwebp to version 1.3.2 to address CVE-2023-4863, and to publish
+wheels for Python 3.12.
+
 1.3.8 (2023-06-28)
 ------------------
 

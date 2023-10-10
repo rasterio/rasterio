@@ -267,7 +267,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy>=1.18",
+    "numpy",
     "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
@@ -284,7 +284,7 @@ extra_reqs = {
         "packaging",
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
-        "shapely",
+        "shapely ; python_version < '3.12'",
     ],
 }
 
@@ -307,6 +307,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3",
         "Topic :: Multimedia :: Graphics :: Graphics Conversion",
         "Topic :: Scientific/Engineering :: GIS",
