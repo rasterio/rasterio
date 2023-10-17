@@ -93,29 +93,39 @@ if _GDAL_AT_LEAST_37:
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
+f32i = numpy.finfo("float32")
+f64i = numpy.finfo("float64")
+
 dtype_ranges = {
-    'int8': (-128, 127),
-    'uint8': (0, 255),
-    'uint16': (0, 65535),
-    'int16': (-32768, 32767),
-    'uint32': (0, 4294967295),
-    'int32': (-2147483648, 2147483647),
-    'float32': (-3.4028235e+38, 3.4028235e+38),
-    'float64': (-1.7976931348623157e+308, 1.7976931348623157e+308)}
+    "int8": (-128, 127),
+    "uint8": (0, 255),
+    "uint16": (0, 65535),
+    "int16": (-32768, 32767),
+    "uint32": (0, 4294967295),
+    "int32": (-2147483648, 2147483647),
+    "float32": (float(f32i.min), float(f32i.max)),
+    "float64": (float(f64i.min), float(f64i.max)),
+}
 
 if _GDAL_AT_LEAST_35:
     dtype_ranges['int64'] = (-9223372036854775808, 9223372036854775807)
     dtype_ranges['uint64'] = (0, 18446744073709551615)
 
+dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
+
 
 def in_dtype_range(value, dtype):
-    """
-    Check if the value is within the dtype range
-    """
-    if numpy.dtype(dtype).kind == "f" and (numpy.isinf(value) or numpy.isnan(value)):
+    """Test if the value is within the dtype's range of values, Nan, or Inf."""
+    # The name of this function is a misnomer. What we're actually
+    # testing is whether the value can be represented by the data type.
+    kind = numpy.dtype(dtype).kind
+
+    # Nan and infinity are special cases.
+    if kind == "f" and (numpy.isnan(value) or numpy.isinf(value)):
         return True
-    range_min, range_max = dtype_ranges[dtype]
-    return range_min <= value <= range_max
+
+    info = dtype_info_registry[kind](dtype)
+    return info.min <= value <= info.max
 
 
 def _gdal_typename(dt):
