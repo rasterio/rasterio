@@ -415,6 +415,112 @@ def crop(window, height, width):
                   row_stop - row_start)
 
 
+def subdivide(window, height, width):
+    """Subdivide a window into non-overlapping windows of specified height and width.
+
+    Parameters
+    ----------
+    window: Window 
+        Input window to subdivide.
+    height, width: int
+        Desired height and width of sub windows. Windows of smaller
+        sizes may be returned if height and width do not evenly divide
+        the dimensions of the input window.
+
+    Returns
+    -------
+    list[Window]:
+        A list of windows that subdivide input window
+    """
+    blocks = []
+    row_blocks = divmod(window.height, height)
+    col_blocks = divmod(window.width, width)
+    for j in range(row_blocks[0] + (row_blocks[1] > 0)): # rows
+        for k in range(col_blocks[0] + (col_blocks[1] > 0)):  # cols
+            h, w = height, width
+            col_off = w * k
+            row_off = h * j
+
+            if col_off < window.width and col_off + w > window.width:
+                w = window.width % w
+            if row_off < window.height and row_off + h > window.height:
+                h = window.height % h
+            blocks.append(Window(col_off, row_off, w, h))
+    return blocks
+
+
+def are_mergeable(w1, w2):
+    """Determine if two windows are mergeable. Two windows are mergeable
+    if the windows can be unioned and exactly cover the area of the two
+    original windows.
+
+    Parameters
+    ----------
+    w1, w2: Window
+        The two windows to test
+
+    Returns
+    -------
+    bool
+        True if the windows can be merged.
+    """
+    if w1 in w2 or w2 in w1:
+        return True
+
+    if math.isclose(w1.height, w2.height):
+        # Same height check that row is same
+        if math.isclose(w1.row_off, w2.row_off):
+            w1c = w1.col_off
+            w2c = w2.col_off
+            return (w1c <= w2c <= w1c + w1.width
+                    or w2c <= w1c <= w2c + w2.width)
+    elif math.isclose(w1.width, w2.width):
+        if math.isclose(w1.col_off, w2.col_off):
+            w1r = w1.row_off
+            w2r = w2.row_off
+            return (w1r <= w2r <= w1r + w1.height
+                    or w2r <= w1r <= w2r + w2.height)
+    return False
+
+
+def merge(w1, w2):
+    """ Merge two windows that are mergeable into a single larger window """
+    if are_mergeable(w1, w2):
+        return _union(w1, w2)
+    raise WindowError("Windows are not mergeable")
+
+
+def neighbors(window, height, width):
+    """Return the 8 neighbors of window
+
+    Parameters
+    ----------
+    window: Window or tuple of (rows, cols).
+        The input window.
+    height, width: int
+        The number of rows or columns in the array that the window
+        targets.
+
+    Returns
+    -------
+    list[Window]:
+        list of neighbors. Always returned in clockwise order starting from NW corner.
+    """
+    right = window.col_off + window.width
+    bottom = window.row_off + window.height
+    _neighbors = [
+        Window(0, 0, window.col_off, window.row_off),                       # NW
+        Window(window.col_off, 0, right, window.row_off),                   # N
+        Window(right, 0, width - right, window.row_off),                    # NE
+        Window(right, window.row_off, width - right, bottom),               # E
+        Window(right, bottom, width - right, height - bottom),              # SE
+        Window(window.col_off, bottom, right, height - bottom),             # S
+        Window(0, bottom, window.col_off, height - bottom),                 # SW
+        Window(0, window.row_off, window.col_off, bottom)                   # W
+    ]
+    return list(filter(lambda w: w.area > 0, _neighbors))
+
+
 def evaluate(window, height, width, boundless=False):
     """Evaluates a window tuple that may contain relative index values.
 
@@ -560,6 +666,15 @@ class Window:
             "Window(col_off={self.col_off}, row_off={self.row_off}, "
             "width={self.width}, height={self.height})").format(
                 self=self)
+
+    def __contains__(self, other):
+        """Determine if window completely contains other"""
+        right = self.col_off + self.width
+        bottom = self.row_off + self.height
+        return (self.col_off <= other.col_off <= right
+                and self.row_off <= other.row_off <= bottom
+                and other.col_off + other.width <= right
+                and other.row_off + other.height <= bottom)
 
     def flatten(self):
         """A flattened form of the window.
@@ -773,3 +888,7 @@ class Window:
         Window
         """
         return intersection([self, other])
+
+    @property
+    def area(self):
+        return self.width * self.height
