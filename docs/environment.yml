@@ -8,3 +8,4 @@ dependencies:
 - cython=3.0.*
 - numpy=1.25.*
 - sphinx-click
+- sphinx-rtd-theme

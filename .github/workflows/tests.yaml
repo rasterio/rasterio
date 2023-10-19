@@ -87,13 +87,12 @@ jobs:
           . testenv/bin/activate
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
-          python -m pip install -r requirements-dev.txt
-          python setup.py clean
-          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+          python -m pip install --no-deps --force-reinstall -e .[test]
 
       - name: run tests
         run: |
           . testenv/bin/activate
+          python -m pip install -r requirements-dev.txt
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
   conda_test:
