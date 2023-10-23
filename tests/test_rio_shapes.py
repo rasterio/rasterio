@@ -72,9 +72,6 @@ def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):
     An area of nodata should also be represented with a shape when using
     --with-nodata option
     """
-    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
-    from shapely.geometry import shape
-
     pixelated_image[0:2, 8:10] = 255
 
     with rasterio.open(pixelated_image_file, 'r+') as out:

@@ -1,13 +1,6 @@
-"""Mapping of GDAL to Numpy data types.
+"""Mapping of GDAL to Numpy data types."""
 
-Since 0.13 we are not importing numpy here and data types are strings.
-Happily strings can be used throughout Numpy and so existing code will
-not break.
-
-"""
-import math
-
-import numpy as np
+import numpy
 
 from rasterio.env import GDALVersion
 
@@ -28,7 +21,6 @@ float64 = 'float64'
 complex_ = 'complex'
 complex64 = 'complex64'
 complex128 = 'complex128'
-
 complex_int16 = "complex_int16"
 
 dtype_fwd = {
@@ -167,7 +159,7 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
     min_value = values.min()
     max_value = values.max()
 
@@ -200,7 +192,7 @@ def get_minimum_dtype(values):
 def is_ndarray(array):
     """Check if array is a ndarray."""
 
-    return isinstance(array, np.ndarray) or hasattr(array, '__array__')
+    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
 
 
 def can_cast_dtype(values, dtype):
@@ -216,16 +208,16 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
 
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
     elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype), equal_nan=True)
+        return numpy.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
-        return np.array_equal(values, values.astype(dtype))
+        return numpy.array_equal(values, values.astype(dtype))
 
 
 def validate_dtype(values, valid_dtypes):
@@ -242,7 +234,7 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)
@@ -254,6 +246,6 @@ def _is_complex_int(dtype):
 
 def _getnpdtype(dtype):
     if _is_complex_int(dtype):
-        return np.dtype("complex64")
+        return numpy.dtype("complex64")
     else:
-        return np.dtype(dtype)
+        return numpy.dtype(dtype)
