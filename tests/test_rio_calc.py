@@ -1,7 +1,7 @@
 import pytest
 
 import rasterio
-from rasterio.rio.calc import _chunk_output
+from rasterio.rio.calc import _chunk_output, snuggs
 from rasterio.rio.main import main_group
 
 

@@ -1,32 +1,31 @@
 """$ rio calc"""
 
-from __future__ import division
-
-from collections import OrderedDict
+from collections import OrderedDict, UserDict
 from contextlib import ExitStack
 import math
+from typing import Mapping
 
 import click
-import snuggs
+import numpy
 
 import rasterio
+from rasterio._vendor import snuggs
 from rasterio.features import sieve
 from rasterio.fill import fillnodata
-from rasterio.windows import Window
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
+from rasterio.windows import Window
 
 
 def _get_bands(inputs, sources, d, i=None):
-    """Get a rasterio.Band object from calc's inputs"""
+    """Get a rasterio.Band object from calc's inputs."""
     idx = d if d in dict(inputs) else int(d) - 1
     src = sources[idx]
-    return (rasterio.band(src, i) if i else
-            [rasterio.band(src, j) for j in src.indexes])
+    return rasterio.band(src, i) if i else [rasterio.band(src, j) for j in src.indexes]
 
 
 def _read_array(ix, subix=None, dtype=None):
-    """Change the type of a read array"""
+    """Change the type of a read array."""
     arr = snuggs._ctx.lookup(ix, subix)
     if dtype:
         arr = arr.astype(dtype)
@@ -34,7 +33,7 @@ def _read_array(ix, subix=None, dtype=None):
 
 
 def _chunk_output(width, height, count, itemsize, mem_limit=1):
-    """Divide the calculation output into chunks
+    """Divide the calculation output into chunks.
 
     This function determines the chunk size such that an array of shape
     (chunk_size, chunk_size, count) with itemsize bytes per element
@@ -74,6 +73,30 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
             chunk_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
 
     return chunk_windows
+
+
+def asarray(*args):
+    if len(args) == 1 and hasattr(args[0], "__iter__"):
+        return numpy.asanyarray(list(args[0]))
+    else:
+        return numpy.asanyarray(list(args))
+
+
+class FuncMapper(UserDict, Mapping):
+    """Resolves functions from names in pipeline expressions."""
+
+    def __getitem__(self, key):
+        """Get a function by its name."""
+        if key in self.data:
+            return self.data[key]
+        elif key in __builtins__ and not key.startswith("__"):
+            return __builtins__[key]
+        else:
+            return (
+                lambda g, *args, **kwargs: getattr(g, key)(*args, **kwargs)
+                if callable(getattr(g, key))
+                else getattr(g, key)
+            )
 
 
 @click.command(short_help="Raster data calculator.")
@@ -137,85 +160,79 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
     64 MB. This number can be increased to improve speed of calculation.
 
     """
-    import numpy as np
-
     dst = None
     sources = []
 
-    try:
-        with ctx.obj["env"], ExitStack() as stack:
-            output, files = resolve_inout(
-                files=files, output=output, overwrite=overwrite
-            )
-            inputs = [tuple(n.split("=")) for n in name] + [(None, n) for n in files]
-            sources = [
-                stack.enter_context(rasterio.open(path)) for name, path in inputs
-            ]
+    with ctx.obj["env"], ExitStack() as stack:
+        output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
+        inputs = [tuple(n.split("=")) for n in name] + [(None, n) for n in files]
+        sources = [stack.enter_context(rasterio.open(path)) for name, path in inputs]
 
-            first = sources[0]
-            kwargs = first.profile
-            kwargs.update(**creation_options)
-            dtype = dtype or first.meta['dtype']
-            kwargs['dtype'] = dtype
-            kwargs.pop("driver", None)
-            if driver:
-                kwargs['driver'] = driver
+        snuggs.func_map = FuncMapper(
+            asarray=asarray,
+            take=lambda a, idx: numpy.take(a, idx - 1, axis=0),
+            read=_read_array,
+            band=lambda d, i: _get_bands(inputs, sources, d, i),
+            bands=lambda d: _get_bands(inputs, sources, d),
+            fillnodata=fillnodata,
+            sieve=sieve,
+        )
 
-            snuggs.func_map['read'] = _read_array
-            snuggs.func_map['band'] = lambda d, i: _get_bands(inputs, sources, d, i)
-            snuggs.func_map['bands'] = lambda d: _get_bands(inputs, sources, d)
-            snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
-            snuggs.func_map['sieve'] = lambda *args: sieve(*args)
+        first = sources[0]
+        kwargs = first.profile
+        kwargs.update(**creation_options)
+        dtype = dtype or first.meta["dtype"]
+        kwargs["dtype"] = dtype
+        kwargs.pop("driver", None)
+        if driver:
+            kwargs["driver"] = driver
 
-            # The windows iterator is initialized with a single sample.
-            # The actual work windows will be added in the second
-            # iteration of the loop.
-            work_windows = [(None, Window(0, 0, 16, 16))]
+        # The windows iterator is initialized with a single sample.
+        # The actual work windows will be added in the second
+        # iteration of the loop.
+        work_windows = [(None, Window(0, 0, 16, 16))]
 
-            for ij, window in work_windows:
-                ctxkwds = OrderedDict()
+        for ij, window in work_windows:
+            ctxkwds = OrderedDict()
 
-                for i, ((name, path), src) in enumerate(zip(inputs, sources)):
-                    ctxkwds[name or '_i%d' % (i + 1)] = src.read(masked=masked, window=window)
+            for i, ((name, path), src) in enumerate(zip(inputs, sources)):
+                ctxkwds[name or "_i%d" % (i + 1)] = src.read(
+                    masked=masked, window=window
+                )
 
+            try:
                 res = snuggs.eval(command, **ctxkwds)
+            except snuggs.ExpressionError as err:
+                click.echo("Expression Error:")
+                click.echo("  {}".format(err.text))
+                click.echo(" {}^".format(" " * err.offset))
+                click.echo(err)
+                raise click.Abort()
+            else:
                 results = res.astype(dtype)
 
-                if isinstance(results, np.ma.core.MaskedArray):
-                    results = results.filled(float(kwargs['nodata']))
-                    if len(results.shape) == 2:
-                        results = np.ma.asanyarray([results])
-                elif len(results.shape) == 2:
-                    results = np.asanyarray([results])
+            if isinstance(results, numpy.ma.core.MaskedArray):
+                results = results.filled(float(kwargs["nodata"]))
+                if len(results.shape) == 2:
+                    results = numpy.ma.asanyarray([results])
+            elif len(results.shape) == 2:
+                results = numpy.asanyarray([results])
 
-                # The first iteration is only to get sample results and from them
-                # compute some properties of the output dataset.
-                if dst is None:
-                    kwargs['count'] = results.shape[0]
-                    dst = rasterio.open(output, 'w', **kwargs)
-                    work_windows.extend(
-                        _chunk_output(
-                            dst.width,
-                            dst.height,
-                            dst.count,
-                            np.dtype(dst.dtypes[0]).itemsize,
-                            mem_limit=mem_limit,
-                        )
+            # The first iteration is only to get sample results and from them
+            # compute some properties of the output dataset.
+            if dst is None:
+                kwargs["count"] = results.shape[0]
+                dst = stack.enter_context(rasterio.open(output, "w", **kwargs))
+                work_windows.extend(
+                    _chunk_output(
+                        dst.width,
+                        dst.height,
+                        dst.count,
+                        numpy.dtype(dst.dtypes[0]).itemsize,
+                        mem_limit=mem_limit,
                     )
+                )
 
-                # In subsequent iterations we write results.
-                else:
-                    dst.write(results, window=window)
-
-    except snuggs.ExpressionError as err:
-        click.echo("Expression Error:")
-        click.echo("  {}".format(err.text))
-        click.echo(" {}^".format(" " * err.offset))
-        click.echo(err)
-        raise click.Abort()
-
-    finally:
-        if dst:
-            dst.close()
-        for src in sources:
-            src.close()
+            # In subsequent iterations we write results.
+            else:
+                dst.write(results, window=window)
