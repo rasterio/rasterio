@@ -556,7 +556,10 @@ def test_merge_precision(tmpdir, precision):
     runner = CliRunner()
     result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
     assert result.exit_code == 0
-    assert open(outputname).read() == textwrap.dedent(expected)
+    # GDAL 3.8 adds whitespace to the end of each line. We remove before comparing.
+    assert "\n".join(
+        [line.rstrip() for line in open(outputname).readlines()] + [""]
+    ) == textwrap.dedent(expected)
 
 
 @fixture(scope='function')
