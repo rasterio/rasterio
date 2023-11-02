@@ -1,6 +1,6 @@
 """Unittests for $ rio merge"""
 
-
+from io import StringIO
 import os
 import sys
 import textwrap
@@ -521,15 +521,17 @@ def test_merge_precision(tmpdir, precision):
         xllcorner    0.000000000000
         yllcorner    0.000000000000
         cellsize     1.000000000000
-         1 2 3 4 1 2 3 4
-         3 4 5 6 3 4 5 6
-         4 5 6 8 4 5 6 8
-         7 9 5 4 7 9 5 4
-         1 2 3 4 1 2 3 4
-         3 4 5 6 3 4 5 6
-         4 5 6 8 4 5 6 8
-         7 9 5 4 7 9 5 4
-         """
+        1 2 3 4 1 2 3 4
+        3 4 5 6 3 4 5 6
+        4 5 6 8 4 5 6 8
+        7 9 5 4 7 9 5 4
+        1 2 3 4 1 2 3 4
+        3 4 5 6 3 4 5 6
+        4 5 6 8 4 5 6 8
+        7 9 5 4 7 9 5 4
+        """
+
+    expected_file = StringIO(textwrap.dedent(expected))
 
     template = """\
         ncols 4
@@ -556,10 +558,19 @@ def test_merge_precision(tmpdir, precision):
     runner = CliRunner()
     result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
     assert result.exit_code == 0
-    # GDAL 3.8 adds whitespace to the end of each line. We remove before comparing.
-    assert "\n".join(
-        [line.rstrip() for line in open(outputname).readlines()] + [""]
-    ) == textwrap.dedent(expected)
+
+    # The arrangement of whitespace in the data part of the file
+    # changed between 3.7 and 3.8 to better conform. We will compare
+    # in a way that is more independent.
+    with open(outputname) as out_file:
+        # Compare header lines.
+        for i in range(5):
+            assert out_file.readline().strip() == expected_file.readline().strip()
+        
+        # Compare raster data as single strings.
+        out_data = " ".join(line.strip() for line in out_file.readlines())
+        expected_data = " ".join(line.strip() for line in expected_file.readlines())
+        assert out_data == expected_data
 
 
 @fixture(scope='function')
