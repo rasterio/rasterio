@@ -23,6 +23,10 @@ jobs:
       GDAL_DIR: ${{ github.workspace }}/gdal_install
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
       LD_LIBRARY_PATH: "${{ github.workspace }}/gdal_install/lib/:${LD_LIBRARY_PATH}"
+    strategy:
+      fail-fast: false
+      matrix:
+        gdal-branch: ['master', 'release/3.7']
     steps:
       - uses: actions/checkout@v3
       - name: Update
@@ -63,7 +67,7 @@ jobs:
             cmake \
             curl \
             git
-          bash ci/gdal-compile.sh git
+          bash ci/gdal-compile.sh git ${{ matrix.gdal-branch }}
 
       - name: Install dependencies
         run: |
