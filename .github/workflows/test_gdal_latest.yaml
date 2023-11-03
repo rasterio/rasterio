@@ -1,10 +1,8 @@
 name: Test GDAL Latest
 
 on:
-  push:
-    branches: [ main, 'maint-*' ]
   schedule:
-    - cron:  '0 0 * * 0'
+    - cron:  '0 2 * * 1'
   pull_request:  # also build on PRs touching this file
     paths:
       - ".github/workflows/test_gdal_latest.yaml"
@@ -23,6 +21,10 @@ jobs:
       GDAL_DIR: ${{ github.workspace }}/gdal_install
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
       LD_LIBRARY_PATH: "${{ github.workspace }}/gdal_install/lib/:${LD_LIBRARY_PATH}"
+    strategy:
+      fail-fast: false
+      matrix:
+        gdal-branch: ['master', 'release/3.7']
     steps:
       - uses: actions/checkout@v3
       - name: Update
@@ -64,7 +66,7 @@ jobs:
             cmake \
             curl \
             git
-          bash ci/gdal-compile.sh git
+          bash ci/gdal-compile.sh git ${{ matrix.gdal-branch }}
 
       - name: Install dependencies
         run: |
@@ -74,8 +76,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
           python -m pip install -r requirements-dev.txt
-          python setup.py clean
-          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+          python -m pip install --no-deps --force-reinstall -e .[test]
 
       - name: Test
         shell: bash
