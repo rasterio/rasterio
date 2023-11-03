@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next (TBD)
+----------
+
+Bug fixes:
+
+- Adjust several tests to small differences in output between GDAL 3.7 and 3.8
+  (#2959).
+
 1.3.9 (2023-10-18)
 ------------------
 
