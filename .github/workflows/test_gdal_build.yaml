@@ -1,13 +1,16 @@
 on:
   workflow_call:
     inputs:
-      branch:
+      gdal_ref:
+        required: true
+        type: string
+      rasterio_ref:
         required: true
         type: string
 
 jobs:
   test_rasterio:
-    name: Test rasterio in PROJ container with GDAL ${{ inputs.branch }}
+    name: Test rasterio ${{ inputs.rasterio_ref }} in PROJ container with GDAL ${{ inputs.gdal_ref }}
     runs-on: ubuntu-latest
     container: ghcr.io/osgeo/proj:9.2.0
     env:
@@ -15,7 +18,9 @@ jobs:
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
       LD_LIBRARY_PATH: "${{ github.workspace }}/gdal_install/lib/:${LD_LIBRARY_PATH}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.rasterio_ref }}
       - name: Update
         run: |
           apt-get update
@@ -55,7 +60,7 @@ jobs:
             cmake \
             curl \
             git
-          bash ci/gdal-compile.sh git ${{ inputs.branch }}
+          bash ci/gdal-compile.sh git ${{ inputs.gdal_ref }}
 
       - name: Install dependencies
         run: |

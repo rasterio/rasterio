@@ -17,4 +17,9 @@ jobs:
   test_gdal_branch:
     uses: ./.github/workflows/test_gdal_build.yaml
     with:
-      branch: ${{ github.event.client_payload.tag || 'master' }}
+      gdal_ref: ${{ github.event.client_payload.tag || 'master' }}
+      rasterio_ref: ${{ matrix.branch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ['main', 'maint-1.3']

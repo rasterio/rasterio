@@ -17,8 +17,9 @@ jobs:
   test_gdal_latest:
     uses: ./.github/workflows/test_gdal_build.yaml
     with:
-      branch: ${{ matrix.gdal-branch }}
+      gdal_ref: ${{ matrix.branch }}
+      rasterio_ref: ${{ github.ref }}
     strategy:
       fail-fast: false
       matrix:
-        gdal-branch: ['master', 'release/3.7']
+        branch: ['master', 'release/3.7']
