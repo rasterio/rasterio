@@ -1,0 +1,20 @@
+name: Test GDAL on demand
+
+on:
+  repository_dispatch:
+    types: [upstream_tag]
+  pull_request:  # also build on PRs touching this file
+    paths:
+      - ".github/workflows/test_gdal_dispatch.yaml"
+      - ".github/workflows/test_gdal_build.yaml"
+      - "ci/gdal-compile.sh"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_gdal_branch:
+    uses: ./.github/workflows/test_gdal_build.yaml
+    with:
+      branch: ${{ github.event.client_payload.tag || 'master' }}
