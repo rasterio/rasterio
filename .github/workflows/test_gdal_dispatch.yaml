@@ -1,4 +1,4 @@
-name: Test GDAL on demand
+name: Test on signal from GDAL
 
 on:
   repository_dispatch:

@@ -1,4 +1,4 @@
-name: Test GDAL Latest
+name: Weekly tests against latest GDAL
 
 on:
   schedule:

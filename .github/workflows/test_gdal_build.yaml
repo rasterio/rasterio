@@ -1,5 +1,3 @@
-name: Test against GDAL build from source
-
 on:
   workflow_call:
     inputs:
@@ -8,8 +6,8 @@ on:
         type: string
 
 jobs:
-  test_gdal:
-    name: Test with GDAL
+  test_rasterio:
+    name: Test rasterio in PROJ container with GDAL ${{ inputs.branch }}
     runs-on: ubuntu-latest
     container: ghcr.io/osgeo/proj:9.2.0
     env:
