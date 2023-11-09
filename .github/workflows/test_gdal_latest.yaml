@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test_gdal_latest:
-    uses: .github/workflows/test_gdal_build.yaml
+    uses: ./.github/workflows/test_gdal_build.yaml
     with:
       branch: ${{ matrix.gdal-branch }}
     strategy:
