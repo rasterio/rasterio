@@ -6,7 +6,6 @@ on:
       branch:
         required: true
         type: string
-    secrets: inherit
 
 jobs:
   test_gdal:
