@@ -26,8 +26,10 @@ jobs:
         run: echo "tags=$(python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48)" >> "$GITHUB_OUTPUT"
 
   test-gdal-tag:
-    name: Check ${{ matrix.gdal }}
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/test_gdal_build.yaml
+    with:
+      gdal_ref: ${{ matrix.gdal || 'master' }}
+      rasterio_ref: ${{ github.ref }}
     if: needs.get-tags.outputs.tags != ''
     needs: [get-tags]
     strategy:
@@ -35,7 +37,3 @@ jobs:
       max-parallel: 6
       matrix:
         gdal: ${{ fromJSON(needs.get-tags.outputs.tags) }}
-    uses: ./.github/workflows/test_gdal_build.yaml
-    with:
-      gdal_ref: ${{ matrix.gdal || 'master' }}
-      rasterio_ref: ${{ github.ref }}
