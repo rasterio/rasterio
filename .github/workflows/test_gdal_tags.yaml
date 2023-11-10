@@ -22,8 +22,9 @@ jobs:
       tags: ${{ steps.fetch-tags.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
+      - run: curl -O https://github.com/osgeo/gdal/tags.atom
       - id: fetch-tags
-        run: echo "tags=$(python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48)" >> "$GITHUB_OUTPUT"
+        run: echo "tags=$(python ci/get-new-tags.py tags.atom 36)" >> "$GITHUB_OUTPUT"
 
   test-gdal-tag:
     uses: ./.github/workflows/test_gdal_build.yaml
