@@ -22,6 +22,10 @@ jobs:
       tags: ${{ steps.fetch-tags.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          update-environment: false
       - run: curl -O https://github.com/osgeo/gdal/tags.atom
       - id: fetch-tags
         run: echo "tags=$(python ci/get-new-tags.py tags.atom 36)" >> "$GITHUB_OUTPUT"
