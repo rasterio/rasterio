@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: get-tags
-        run: python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48 >> $GITHUB_OUTPUT
+        run: echo "tags=$(python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48)" >> "$GITHUB_OUTPUT"
 
   test-gdal-tag:
     name: Check ${{ matrix.nickname }}
