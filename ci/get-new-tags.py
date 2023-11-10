@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import json
 import sys
-from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 
 _, filename, nhours = sys.argv
