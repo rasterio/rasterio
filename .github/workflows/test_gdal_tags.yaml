@@ -19,10 +19,10 @@ jobs:
     name: Find recent tags and generate test job matrix
     runs-on: ubuntu-latest
     outputs:
-      gdal-tags: ${{ steps.get-tags.outputs.tags }}
+      tags: ${{ steps.fetch-tags.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
-      - id: get-tags
+      - id: fetch-tags
         run: echo "tags=$(python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48)" >> "$GITHUB_OUTPUT"
 
   test-gdal-tag:
