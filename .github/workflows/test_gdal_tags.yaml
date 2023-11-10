@@ -34,10 +34,8 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        gdal: ${{fromJSON(needs.get-tags.outputs.tags)}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/test_gdal_build.yaml
-        with:
-          gdal_ref: ${{ matrix.gdal || 'master' }}
-          rasterio_ref: ${{ github.ref }}
+        gdal: ${{ fromJSON(needs.get-tags.outputs.tags) }}
+    uses: ./.github/workflows/test_gdal_build.yaml
+    with:
+      gdal_ref: ${{ matrix.gdal || 'master' }}
+      rasterio_ref: ${{ github.ref }}
