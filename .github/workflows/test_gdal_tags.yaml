@@ -22,8 +22,8 @@ jobs:
       gdal-tags: ${{ steps.get-tags.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
-      - run: python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48
-        id: get-tags
+      - id: get-tags
+        run: python ci/get-new-tags.py https://github.com/osgeo/gdal/tags.atom 48 >> $GITHUB_OUTPUT
 
   test-gdal-tag:
     name: Check ${{ matrix.nickname }}
@@ -35,9 +35,8 @@ jobs:
       max-parallel: 6
       matrix:
         gdal: ${{fromJSON(needs.get-tags.outputs.tags)}}
-        rasterio: ['main', 'maint-1.3']
     steps:
       - uses: ./.github/workflows/test_gdal_build.yaml
         with:
           gdal_ref: ${{ matrix.gdal || 'master' }}
-          rasterio_ref: ${{ matrix.rasterio }}
+          rasterio_ref: ${{ github.ref }}
