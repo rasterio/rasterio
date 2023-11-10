@@ -28,7 +28,7 @@ jobs:
           update-environment: false
       - run: curl -O https://github.com/osgeo/gdal/tags.atom
       - id: fetch-tags
-        run: echo "tags=$(python ci/get-new-tags.py tags.atom 36)" >> "$GITHUB_OUTPUT"
+        run: echo "tags=$(python3 ci/get-new-tags.py tags.atom 36)" >> "$GITHUB_OUTPUT"
 
   test-gdal-tag:
     uses: ./.github/workflows/test_gdal_build.yaml
