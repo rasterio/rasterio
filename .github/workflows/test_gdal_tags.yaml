@@ -34,7 +34,7 @@ jobs:
     with:
       gdal_ref: ${{ matrix.gdal || 'master' }}
       rasterio_ref: ${{ github.ref }}
-    if: needs.get-tags.outputs.tags != ''
+    if: needs.get-tags.outputs.tags != '[]'
     needs: [get-tags]
     strategy:
       fail-fast: false
