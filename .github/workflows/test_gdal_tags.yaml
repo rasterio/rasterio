@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
-      - run: cat failure-*.jsons | jq -s -c '[.[]gdal_ref]' > failed-gdal-refs.json
+      - run: cat failure-*.json | jq -s -c '[.[]gdal_ref]' > failed-gdal-refs.json
       - run: cat failed-gdal-refs.json
       - uses: actions/upload-artifact@v3
         with:
