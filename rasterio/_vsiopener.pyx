@@ -55,6 +55,7 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
         callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
+        callbacks_struct.read_multi_range = <VSIFilesystemPluginReadMultiRangeCallback>pyopener_read_multi_range
         callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
         retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
         VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
@@ -146,6 +147,47 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
     log.debug("Closing: file_obj=%r", file_obj)
     stack = _OPEN_FILE_EXIT_STACKS.pop(file_obj)
     stack.close()
+    return 0
+
+
+cdef int pyopener_read_multi_range(void *pFile,
+                                   int nRanges,
+                                   void **ppData,
+                                   vsi_l_offset *panOffsets,
+                                   size_t *panSizes) except -1 with gil:
+    """Read several ranges of bytes from file.
+
+        Reads nRanges objects of panSizes[i] bytes from the indicated file at the offset panOffsets[i] into the buffer ppData[i].
+        Ranges must be sorted in ascending start offset, and must not overlap each other.
+
+        ref: https://gdal.org/api/cpl.html#_CPPv419VSIFReadMultiRangeLiPPvPK12vsi_l_offsetPK6size_tP8VSILFILE
+
+        Parameters
+        ----------
+        pFile: File handle
+            file handle opened with VSIFOpenL().
+        nRanges : int
+            number of ranges to read.
+        ppData : array of buffer
+            Array of nRanges buffer into which the data should be read
+            (ppData[i] must be at list panSizes[i] bytes).
+        panOffsets : array of int
+            Array of nRanges offsets at which the data should be read.
+        panSizes : array of in
+            Array of nRanges sizes of objects to read (in bytes).
+
+    """
+    cdef object file_obj = <object>pFile
+
+    # Convert panOffsets and panSizes to Python lists
+    cdef list offsets = [int(panOffsets[i]) for i in range(nRanges)]
+    cdef list sizes = [int(panSizes[i]) for i in range(nRanges)]
+
+    # Call the Python method with the converted arguments
+    cdef list python_data = file_obj.read_multi_range(nRanges, offsets, sizes)
+    for i in range(nRanges):
+        memcpy(ppData[i], <void*><char*>python_data[i], len(python_data[i]))
+
     return 0
 
 
