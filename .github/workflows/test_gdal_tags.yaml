@@ -25,11 +25,33 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - run: curl -O https://github.com/osgeo/gdal/tags.atom
+      - name: Get artifacts of last workflow run
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/rasterio/rasterio/actions/workflows/test_gdal_tags.yaml/runs > runs.json
+          jq '.workflow_runs[0]' runs.json > last-run.json
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/rasterio/rasterio/actions/runs/$(jq '.id' last-run.json)/artifacts > artifacts.json
+      - name: Get failed GDAL refs from last workflow run
+      - run: |
+          jq '.artifacts[] | select(.name == "failed-gdal-refs")' artifacts.json > artifact.json
+          curl $(jq '.archive_download_url' artifact.json) > failed-gdal-refs.zip
+          unzip failed-gdal-refs.zip
+          ls -l *.json*
+          cat failed-gdal-refs.json
+      - if: ${{ failure() }}
+        run: echo "[]" > failed-gdal-refs.json
       - id: fetch-tags
-        run: echo "tags=$(python3 ci/get-new-tags.py tags.atom 12)" >> "$GITHUB_OUTPUT"
+        run: |
+          curl -O https://github.com/osgeo/gdal/tags.atom
+          python3 ci/get-new-tags.py tags.atom 12 > tags.json
+          echo "tags=$(cat failed-gdal-refs.json tags.json | jq -s -c 'add | unique')" >> "$GITHUB_OUTPUT"
 
-  test-gdal-tag:
+  test-gdal-tags:
     uses: ./.github/workflows/test_gdal_build.yaml
     with:
       gdal_ref: ${{ matrix.gdal || 'master' }}
@@ -41,3 +63,14 @@ jobs:
       max-parallel: 6
       matrix:
         gdal: ${{ fromJSON(needs.get-tags.outputs.tags) }}
+
+  collect-failures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+      - run: cat failure-*.jsons | jq -s -c '[.[]gdal_ref]' > failed-gdal-refs.json
+      - run: cat failed-gdal-refs.json
+      - uses: actions/upload-artifact@v3
+        with:
+          name: failed-gdal-refs
+          path: failed-gdal-refs.json

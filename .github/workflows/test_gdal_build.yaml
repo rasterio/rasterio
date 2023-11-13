@@ -78,3 +78,11 @@ jobs:
           export PATH="${GDAL_DIR}/bin/:${PATH}"
           . testenv/bin/activate
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+
+      - if: ${{ failure() }}
+        run: echo '{"run_id": "${{ github.run_id }}", "gdal_ref": "${{ inputs.gdal_ref }}"}' >> failure-${{ inputs.gdal_ref }}.jsons
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: failures
+          path: failure-*.jsons
