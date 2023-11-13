@@ -16,6 +16,7 @@ def test_opener_io_open():
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
+        assert src.read(out_shape=(src.count, round(src.height/2), round(src.width/2))).any()
 
 
 @pytest.mark.parametrize("urlpath", ["file://tests/data/RGB.byte.tif", "zip://*.tif::tests/data/files.zip"])
