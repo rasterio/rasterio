@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.fetch-tags.outputs.tags }}
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
