@@ -48,8 +48,7 @@ jobs:
           unzip failed-gdal-refs.zip
           ls -l *.json*
           cat failed-gdal-refs.json
-      - if: ${{ failure() }}
-        run: echo '["v3.8.0RC2"]' > failed-gdal-refs.json
+        run: test -f failed-gdal-refs.json || echo '["v3.8.0RC2"]' > failed-gdal-refs.json
       - id: fetch-tags
         run: |
           curl -O https://github.com/osgeo/gdal/tags.atom
