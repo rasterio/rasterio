@@ -38,9 +38,12 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/rasterio/rasterio/actions/runs/$(jq '.id' last-run.json)/artifacts > artifacts.json
+          jq '.' artifacts.json
       - name: Get failed GDAL refs from last workflow run
+        continue-on-error: true
         run: |
           jq '.artifacts[] | select(.name == "failed-gdal-refs")' artifacts.json > artifact.json
+          jq '.archive_download_url' artifact.json
           curl $(jq '.archive_download_url' artifact.json) > failed-gdal-refs.zip
           unzip failed-gdal-refs.zip
           ls -l *.json*
