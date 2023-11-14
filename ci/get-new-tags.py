@@ -18,7 +18,8 @@ for entry in feed.iterfind("{http://www.w3.org/2005/Atom}entry"):
     delta = now - datetime.fromisoformat(updated)
     deltah = delta.days * 24 + delta.seconds / 3600
     if deltah <= nhours:
-        tag = entry.find("{http://www.w3.org/2005/Atom}title").text
+        tid = entry.find("{http://www.w3.org/2005/Atom}id").text
+        tag = tid.split("/")[-1]
         tags.append(tag)
 
 print(json.dumps(tags))
