@@ -79,7 +79,10 @@ jobs:
           . testenv/bin/activate
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
-      - if: ${{ failure() }}
+      - if: success()
+        run: echo "Success"
+
+      - if: failure()
         run: echo '{"run_id":"${{ github.run_id }}", "gdal_ref":"${{ inputs.gdal_ref }}"}' > "failure-${{ inputs.gdal_ref }}.json"
 
       - uses: actions/upload-artifact@v3

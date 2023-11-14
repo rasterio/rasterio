@@ -7,7 +7,7 @@ echo "Building GDAL ($1) from source..."
 BUILD_GDAL_DIR=gdal-${1:0:5}
 # Download PROJ
 if [[ $1 == "git" ]]; then
-  git clone https://github.com/OSGeo/GDAL.git --branch $2 ${BUILD_GDAL_DIR}
+  git clone https://github.com/OSGeo/GDAL.git --branch "$2" ${BUILD_GDAL_DIR}
 else
   curl https://download.osgeo.org/gdal/${1:0:5}/gdal-$1.tar.gz > ${BUILD_GDAL_DIR}.tar.gz
   tar zxf ${BUILD_GDAL_DIR}.tar.gz
