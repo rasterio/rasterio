@@ -87,7 +87,8 @@ jobs:
         run: |
           echo '{"run_id":"${{ github.run_id }}", "gdal_ref":"${{ inputs.gdal_ref }}"}' > failure-${{ inputs.gdal_ref }}.json
           ls -l failure-*.json
-      - uses: actions/upload-artifact@v3
+      - if: failure()
+        uses: actions/upload-artifact@v3
         with:
           name: failures
           path: failure-*.json
