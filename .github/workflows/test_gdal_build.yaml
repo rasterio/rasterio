@@ -60,7 +60,7 @@ jobs:
             cmake \
             curl \
             git
-          bash ci/gdal-compile.sh git ${{ inputs.gdal_ref }}
+          bash ci/gdal-compile.sh git "${{ inputs.gdal_ref }}"
 
       - name: Install dependencies
         run: |
@@ -78,3 +78,17 @@ jobs:
           export PATH="${GDAL_DIR}/bin/:${PATH}"
           . testenv/bin/activate
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+
+      - if: success()
+        run: echo "Success"
+
+      - if: failure()
+        shell: bash
+        run: |
+          echo '{"run_id":"${{ github.run_id }}", "gdal_ref":"${{ inputs.gdal_ref }}"}' > failure-${{ inputs.gdal_ref }}.json
+          ls -l failure-*.json
+      - if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: failures
+          path: failure-*.json
