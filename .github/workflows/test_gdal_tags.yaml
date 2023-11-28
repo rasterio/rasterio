@@ -76,6 +76,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
       - run: |
+          touch failure-default.json
           cat failure-*.json | jq -s -c '[.[]gdal_ref]' > failed-gdal-refs.json
           cat failed-gdal-refs.json
       - uses: actions/upload-artifact@v3
