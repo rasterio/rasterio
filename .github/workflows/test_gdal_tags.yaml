@@ -52,6 +52,7 @@ jobs:
       - run: test -f failed-gdal-refs.json || echo '[]' > failed-gdal-refs.json
         if: always()
       - id: fetch-tags
+        if: always()
         run: |
           curl -O https://github.com/osgeo/gdal/tags.atom
           python3 ci/get-new-tags.py tags.atom 12 > tags.json
