@@ -40,6 +40,7 @@ jobs:
             /repos/rasterio/rasterio/actions/runs/$(jq '.id' last-run.json)/artifacts > artifacts.json
           jq '.' artifacts.json
       - name: Get failed GDAL refs from last workflow run
+        if: always()
         continue-on-error: true
         run: |
           jq '.artifacts[] | select(.name == "failures")' artifacts.json > artifact.json
@@ -49,6 +50,7 @@ jobs:
           ls -l *.json*
           cat failed-gdal-refs.json
       - run: test -f failed-gdal-refs.json || echo '[]' > failed-gdal-refs.json
+        if: always()
       - id: fetch-tags
         run: |
           curl -O https://github.com/osgeo/gdal/tags.atom
