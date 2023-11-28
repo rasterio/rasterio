@@ -28,6 +28,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Get artifacts of last workflow run
+	continue-on-error: true
         run: |
           gh api \
             -H "Accept: application/vnd.github+json" \
@@ -40,7 +41,6 @@ jobs:
             /repos/rasterio/rasterio/actions/runs/$(jq '.id' last-run.json)/artifacts > artifacts.json
           jq '.' artifacts.json
       - name: Get failed GDAL refs from last workflow run
-        if: always()
         continue-on-error: true
         run: |
           jq '.artifacts[] | select(.name == "failures")' artifacts.json > artifact.json
@@ -50,9 +50,7 @@ jobs:
           ls -l *.json*
           cat failed-gdal-refs.json
       - run: test -f failed-gdal-refs.json || echo '[]' > failed-gdal-refs.json
-        if: always()
       - id: fetch-tags
-        if: always()
         run: |
           curl -O https://github.com/osgeo/gdal/tags.atom
           python3 ci/get-new-tags.py tags.atom 12 > tags.json
