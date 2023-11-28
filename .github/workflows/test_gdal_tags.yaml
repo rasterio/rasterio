@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  get-tags:
+  get_tags:
     name: Find recent tags and generate test job matrix
     runs-on: ubuntu-latest
     outputs:
@@ -53,24 +53,25 @@ jobs:
         run: |
           curl -O https://github.com/osgeo/gdal/tags.atom
           python3 ci/get-new-tags.py tags.atom 12 > tags.json
+          echo "tags=$(cat failed-gdal-refs.json tags.json | jq -s -c 'add | unique')"
           echo "tags=$(cat failed-gdal-refs.json tags.json | jq -s -c 'add | unique')" >> "$GITHUB_OUTPUT"
 
-  test-gdal-tags:
+  test_gdal_tags:
     uses: ./.github/workflows/test_gdal_build.yaml
     with:
       gdal_ref: ${{ matrix.gdal || 'master' }}
       rasterio_ref: ${{ github.ref }}
-    if: needs.get-tags.outputs.tags != '[]'
-    needs: [get-tags]
+    if: needs.get_tags.outputs.tags != '[]'
+    needs: [get_tags]
     strategy:
       fail-fast: false
       max-parallel: 6
       matrix:
         gdal: ${{ fromJSON(needs.get-tags.outputs.tags) }}
 
-  collect-failures:
+  collect_failures:
     runs-on: ubuntu-latest
-    needs: [test-gdal-tags]
+    needs: [test_gdal_tags]
     steps:
       - uses: actions/download-artifact@v3
       - run: |
