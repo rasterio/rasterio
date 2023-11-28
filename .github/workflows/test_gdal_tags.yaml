@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Get artifacts of last workflow run
-	continue-on-error: true
+        continue-on-error: true
         run: |
           gh api \
             -H "Accept: application/vnd.github+json" \
