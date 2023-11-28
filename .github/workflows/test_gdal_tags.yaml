@@ -68,7 +68,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        gdal: ${{ fromJSON(needs.get-tags.outputs.tags) }}
+        gdal: ${{ fromJSON(needs.get_tags.outputs.tags) }}
 
   collect_failures:
     runs-on: ubuntu-latest
