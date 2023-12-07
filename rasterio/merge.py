@@ -348,10 +348,6 @@ def merge(
             int_e = src_e if src_e < dst_e else dst_e
             int_n = src_n if src_n < dst_n else dst_n
 
-            # If the output transform.e is negative, we need to change it to the positive
-            if output_transform.e < 0:
-                output_transform = output_transform * Affine.scale(1, -1)
-
             # 2. Compute the source window
             src_window = windows.from_bounds(int_w, int_s, int_e, int_n, src.transform)
 
