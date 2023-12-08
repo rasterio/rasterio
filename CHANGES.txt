@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- Deallocate list of warp extras in _reproject(), fixing a potential leak
+  (#494).
 - Adjust several tests to small differences in output between GDAL 3.7 and 3.8
   (#2959).
 - The output file size limits of rio-warp were made redundant by changes to the
