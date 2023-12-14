@@ -274,7 +274,7 @@ class Env:
         return local._env._dump_open_datasets()
 
     def _dump_vsimem(self):
-        """Returns contents of /vsimem/.
+        """Writes contents of /vsimem/.
 
         For debugging and testing purposes.
         """

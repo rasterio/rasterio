@@ -29,10 +29,10 @@ from rasterio.errors import (
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
     StatisticsError
 )
+from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -676,6 +676,7 @@ cdef class DatasetReaderBase(DatasetBase):
         # If this is a boundless read we will create an in-memory VRT
         # in order to use GDAL's windowing and compositing logic.
         else:
+            from .io import MemoryFile
 
             if fill_value is not None:
                 nodataval = fill_value
@@ -683,40 +684,57 @@ cdef class DatasetReaderBase(DatasetBase):
                 nodataval = ndv
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=nodataval, background=nodataval,
+                self,
+                nodata=nodataval,
+                background=nodataval,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window))
+                transform=self.window_transform(window)
+            )
 
-            vrt_kwds = {'driver': 'VRT'}
-            with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
-
-                out = vrt._read(
-                    indexes, out, Window(0, 0, window.width, window.height),
-                    None, resampling=resampling)
+            with MemoryFile(vrt_doc) as vrt:
+                with vrt.open() as dataset:
+                    out = dataset._read(
+                        indexes,
+                        out,
+                        Window(0, 0, window.width, window.height),
+                        None,
+                        resampling=resampling
+                    )
 
                 if masked:
-
                     # Below we use another VRT to compute the valid data mask
                     # in this special case where all source pixels are valid.
                     if all_valid:
-
                         mask_vrt_doc = _boundless_vrt_doc(
-                            self, nodata=0,
+                            self,
+                            nodata=0,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
                             transform=self.window_transform(window),
-                            masked=True)
+                            masked=True
+                        )
 
-                        with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                            mask = np.zeros(out.shape, 'uint8')
-                            mask = ~mask_vrt._read(
-                                indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
+                        with MemoryFile(vrt_doc) as vrt:
+                            with vrt.open() as dataset:
+                                mask = np.zeros(out.shape, 'uint8')
+                                mask = ~dataset._read(
+                                    indexes,
+                                    mask,
+                                    Window(0, 0, window.width, window.height),
+                                    None
+                                ).astype('bool')
 
                     else:
-                        mask = np.zeros(out.shape, 'uint8')
-                        mask = ~vrt._read(
-                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                        with vrt.open() as dataset:
+                            mask = np.zeros(out.shape, 'uint8')
+                            mask = ~dataset._read(
+                                indexes,
+                                mask,
+                                Window(0, 0, window.width, window.height),
+                                None,
+                                masks=True
+                            ).astype('bool')
 
                     kwds = {'mask': mask}
 
@@ -861,10 +879,10 @@ cdef class DatasetReaderBase(DatasetBase):
         # If this is a boundless read we will create an in-memory VRT
         # in order to use GDAL's windowing and compositing logic.
         else:
+            from .io import MemoryFile
 
             enums = self.mask_flag_enums
             all_valid = all([MaskFlags.all_valid in flags for flags in enums])
-            vrt_kwds = {'driver': 'VRT'}
 
             if all_valid:
                 blank_path = _UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
@@ -881,24 +899,34 @@ cdef class DatasetReaderBase(DatasetBase):
                         blank_dataset, nodata=0,
                         width=max(self.width, window.width) + 1,
                         height=max(self.height, window.height) + 1,
-                        transform=self.window_transform(window))
-
-                    with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                        out = np.zeros(out.shape, 'uint8')
-                        out = mask_vrt._read(
-                            indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
+                        transform=self.window_transform(window)
+                    )
+                    with MemoryFile(mask_vrt_doc) as vrt:
+                        with vrt.open() as dataset:
+                            out = np.zeros(out.shape, 'uint8')
+                            out = dataset._read(
+                                indexes,
+                                out,
+                                Window(0, 0, window.width, window.height),
+                                None
+                            ).astype('bool')
 
             else:
                 vrt_doc = _boundless_vrt_doc(
                     self, width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window))
-
-                with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
-
-                    out = vrt._read(
-                        indexes, out, Window(0, 0, window.width, window.height),
-                        None, resampling=resampling, masks=True)
+                    transform=self.window_transform(window)
+                )
+                with MemoryFile(vrt_doc) as vrt:
+                    with vrt.open() as dataset:
+                        out = dataset._read(
+                            indexes,
+                            out,
+                            Window(0, 0, window.width, window.height),
+                            None,
+                            resampling=resampling,
+                            masks=True
+                        )
 
         if return2d:
             out.shape = out.shape[1:]

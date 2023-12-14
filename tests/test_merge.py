@@ -1,5 +1,8 @@
 """Tests of rasterio.merge"""
 
+from glob import glob
+from xml.etree import ElementTree as ET
+
 import boto3
 from hypothesis import given, settings
 from hypothesis.strategies import floats
@@ -8,9 +11,11 @@ import pytest
 
 import affine
 import rasterio
-from rasterio.merge import merge
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.errors import RasterioError
+from rasterio.merge import merge, virtual_merge
+
 
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
@@ -121,3 +126,32 @@ def test_issue2202(dx, dy):
         from rasterio.plot import show
 
         show(aux_array)
+
+
+def test_virtual_merge(tmp_path):
+    """Test."""
+    xml = virtual_merge(glob("tests/data/rgb?.tif"))
+    assert b'resampling="nearest"' in xml
+
+    tmp_path.joinpath("test.vrt").write_bytes(xml)
+    with rasterio.open(tmp_path.joinpath("test.vrt")) as dataset:
+        rgb = dataset.read()
+
+    import matplotlib.pyplot as plt
+    plt.imshow(numpy.moveaxis(rgb, 0, -1))
+    plt.savefig("test_virtual_merge.png")
+
+
+@pytest.mark.parametrize("resampling", [Resampling.nearest, Resampling.bilinear])
+def test_virtual_merge_resampling(tmp_path, resampling):
+    """Test."""
+    xml = virtual_merge(glob("tests/data/rgb?.tif"), resampling=resampling)
+    root = ET.fromstring(xml)
+    assert all(
+        elem.attrib["resampling"] == resampling.name
+        for elem in root.findall(".//ComplexSource")
+    )
+    assert all(
+        elem.attrib["resampling"] == resampling.name
+        for elem in root.findall(".//SimpleSource")
+    )

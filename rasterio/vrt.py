@@ -2,10 +2,10 @@
 
 import xml.etree.ElementTree as ET
 
+from rasterio._path import _parse_path
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
-from rasterio._path import _parse_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 
@@ -245,4 +245,4 @@ def _boundless_vrt_doc(
         dstrect.attrib['xSize'] = str(src_dataset.width)
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
-    return ET.tostring(vrtdataset).decode('ascii')
+    return ET.tostring(vrtdataset, encoding="utf-8")

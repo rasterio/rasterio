@@ -244,9 +244,9 @@ def open(
     ...         transform=from_origin(-180.0, 90.0, 0.5, 0.5),
     ...         nodata=0, tiled=True, compress='lzw') as dataset:
     ...     dataset.write(...)
-    """
 
-    if not isinstance(fp, str):
+    """
+    if not isinstance(fp, (bytes, str)):
         if not (
             hasattr(fp, "read")
             or hasattr(fp, "write")
@@ -348,11 +348,15 @@ def open(
             )
         return dataset
 
-    # At this point, the fp argument is a string or path-like object
-    # which can be converted to a string.
+    # At this point, the fp argument is a byte string, unicode string,
+    # or path-like object which can be converted to a string.
     else:
-        raw_dataset_path = os.fspath(fp)
-        path = _parse_path(raw_dataset_path)
+        # XML input.
+        if isinstance(fp, bytes):
+            path = fp.decode("utf-8")
+        else:
+            raw_dataset_path = os.fspath(fp)
+            path = _parse_path(raw_dataset_path)
 
         if mode == "r":
             dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
