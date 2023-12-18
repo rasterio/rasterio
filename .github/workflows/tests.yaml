@@ -32,7 +32,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
             python-version: 3.9
@@ -63,7 +63,7 @@ jobs:
             gdal-version: '3.3.3'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Update
         run: |
@@ -110,7 +110,7 @@ jobs:
           - os: ubuntu-latest
             python-version: '3.11'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Conda Setup
         uses: s-weigand/setup-conda@v1
