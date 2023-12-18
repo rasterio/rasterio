@@ -5,7 +5,6 @@ from unittest import mock
 from affine import Affine
 import numpy as np
 import pytest
-import shapely.geometry
 
 import rasterio
 from rasterio.enums import MergeAlg
@@ -901,6 +900,7 @@ def test_rasterize__numpy_coordinates__fail():
 
 def test_shapes(basic_image):
     """Test creation of shapes from pixel values."""
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
     results = list(shapes(basic_image))
 
     assert len(results) == 2
@@ -921,6 +921,7 @@ def test_shapes(basic_image):
 
 def test_shapes_2509(basic_image):
     """Test creation of shapes from pixel values, issue #2509."""
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
     image_with_strides = np.pad(basic_image, 1)[1:-1, 1:-1]
     np.testing.assert_array_equal(basic_image, image_with_strides)
     assert image_with_strides.__array_interface__["strides"] is not None

@@ -4,19 +4,53 @@ Changes
 Next
 ----
 
+- Deallocate list of warp extras in _reproject(), fixing a potential leak
+  (#494).
+- Adjust several tests to small differences in output between GDAL 3.7 and 3.8
+  (#2959).
 - The output file size limits of rio-warp were made redundant by changes to the
   GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
   has been added to the command. If used, the profile of the output dataset
   will be printed and no warping will occur.
 
-1.3.8 (2023-06-26)
+1.3.9 (2023-10-18)
+------------------
+
+Bug fixes:
+
+- Lean on numpy for minimum and maximum values of float data types (#2946).
+- Replace rasterio.dtypes.in_dtype_range() with the version inside the
+  edit-info command (#2946).
+- Deallocate _filepath VSI filesystem plugin callback structs to prevent the
+  memory leak reported in #2932.
+
+Packaging:
+
+GDAL 3.6.4 is patched in the PyPI wheels to fix the potential GTiff
+multithreading deadlock reported in https://github.com/OSGeo/gdal/issues/8470.
+
+1.3.8.post2 (2023-10-11)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update curl to version 8.4.0 to address CVE-2023-38545 and CVE-38546.
+
+1.3.8.post1 (2023-10-09)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update libwebp to version 1.3.2 to address CVE-2023-4863, and to publish
+wheels for Python 3.12.
+
+1.3.8 (2023-06-28)
 ------------------
 
 - Rasterio's Python file VSI plugin is now compatible with GDAL VRTs such as
   the one used for boundless reads of datasets (#2856).
 - Prevent a crash when accessing the block shapes of a multidataset HDF5 file
   (#2859).
-- Add a workaround for a GDAL multithreading bug introduced in 3.6.0 (#2851).
+- Add a workaround for a GDAL multithreaded compression bug introduced in 3.6.0
+  (#2851).
 
 1.3.7 (2023-05-22)
 ------------------

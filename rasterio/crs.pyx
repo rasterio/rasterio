@@ -942,6 +942,7 @@ cdef class CRS:
                 _safe_osr_release(osr_s)
                 _safe_osr_release(osr_o)
 
+
     def _projjson(self):
         """Get a PROJ JSON representation.
 

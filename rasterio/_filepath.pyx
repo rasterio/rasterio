@@ -73,17 +73,22 @@ cdef _OPEN_FILE_OBJS = set()
 
 cdef int install_filepath_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
     """Install handlers for python file-like objects if it isn't already installed."""
-    callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
-    callbacks_struct.open = <VSIFilesystemPluginOpenCallback>filepath_open
-    callbacks_struct.tell = <VSIFilesystemPluginTellCallback>filepath_tell
-    callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>filepath_seek
-    callbacks_struct.read = <VSIFilesystemPluginReadCallback>filepath_read
-    callbacks_struct.close = <VSIFilesystemPluginCloseCallback>filepath_close
-    callbacks_struct.pUserData = <void*>_FILESYSTEM_INFO
+    cdef char **registered_prefixes = VSIGetFileSystemsPrefixes()
+    cdef int prefix_index = CSLFindString(registered_prefixes, FILESYSTEM_PREFIX_BYTES)
+    CSLDestroy(registered_prefixes)
 
-    if VSIFileManager.GetHandler("") == VSIFileManager.GetHandler(FILESYSTEM_PREFIX_BYTES):
+    if prefix_index < 0:
+        callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
+        callbacks_struct.open = <VSIFilesystemPluginOpenCallback>filepath_open
+        callbacks_struct.tell = <VSIFilesystemPluginTellCallback>filepath_tell
+        callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>filepath_seek
+        callbacks_struct.read = <VSIFilesystemPluginReadCallback>filepath_read
+        callbacks_struct.close = <VSIFilesystemPluginCloseCallback>filepath_close
+        callbacks_struct.pUserData = <void*>_FILESYSTEM_INFO
         log.debug("Installing FilePath filesystem handler plugin...")
-        return VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
+        retval = VSIInstallPluginHandler(FILESYSTEM_PREFIX_BYTES, callbacks_struct)
+        VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
+        return retval
     else:
         return 0
 
