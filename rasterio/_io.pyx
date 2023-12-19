@@ -145,8 +145,8 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
 
     cdef int xoff = <int>x0
     cdef int yoff = <int>y0
-    cdef int xsize = <int>width
-    cdef int ysize = <int>height
+    cdef int xsize = <int>max(1, width)
+    cdef int ysize = <int>max(1, height)
 
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
@@ -247,8 +247,8 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
 
     cdef int xoff = <int>x0
     cdef int yoff = <int>y0
-    cdef int xsize = <int>width
-    cdef int ysize = <int>height
+    cdef int xsize = <int>max(1, width)
+    cdef int ysize = <int>max(1, height)
 
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
@@ -939,14 +939,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
             yoff = window.row_off
             xoff = window.col_off
-
-            # Now that we have floating point windows it's easy for
-            # the number of pixels to read to slip below 1 due to
-            # loss of floating point precision. Here we ensure that
-            # we're reading at least one pixel.
-            height = max(1.0, window.height)
-            width = max(1.0, window.width)
-
+            width = window.width
+            height = window.height
         else:
             xoff = yoff = <int>0
             width = <int>self.width
