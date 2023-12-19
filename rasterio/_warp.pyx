@@ -592,6 +592,7 @@ def _reproject(
 
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
+        CSLDestroy(warp_extras)
 
         if mem_raster is not None:
             mem_raster.close()
