@@ -8,6 +8,7 @@ Based on _filepath.pyx.
 include "gdal.pxi"
 
 import contextlib
+from contextvars import ContextVar
 import logging
 from uuid import uuid4
 
@@ -37,8 +38,10 @@ cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 # the plugin to determine what "files" exist on "disk".
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
-cdef _OPENER_REGISTRY = {}
-cdef _OPEN_FILE_EXIT_STACKS = {}
+_OPENER_REGISTRY = ContextVar("opener_registery")
+_OPENER_REGISTRY.set({})
+_OPEN_FILE_EXIT_STACKS = ContextVar("open_file_exit_stacks")
+_OPEN_FILE_EXIT_STACKS.set({})
 
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -85,7 +88,8 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         log.error("Python opener registry is not initialized.")
         return NULL
 
-    cdef dict registry = <object>pUserData
+    cdef object var = <object>pUserData
+    cdef dict registry = var.get()
     filename = pszFilename.decode("utf-8")
 
     log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
@@ -116,7 +120,9 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     except (AttributeError, TypeError):
         log.debug("File object is not a context manager: file_obj=%r", file_obj)
 
-    _OPEN_FILE_EXIT_STACKS[file_obj] = stack
+    exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
+    exit_stacks[file_obj] = stack
+    _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
     return <void *>file_obj
 
 
@@ -144,17 +150,21 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 cdef int pyopener_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
     log.debug("Closing: file_obj=%r", file_obj)
-    stack = _OPEN_FILE_EXIT_STACKS.pop(file_obj)
+    exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
+    stack = exit_stacks.pop(file_obj)
     stack.close()
+    _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
     return 0
 
 
 @contextlib.contextmanager
 def _opener_registration(urlpath, opener):
-    filename = urlpath
-    _OPENER_REGISTRY[filename] = opener
+    registry = _OPENER_REGISTRY.get()
+    registry[urlpath] = opener
+    _OPENER_REGISTRY.set(registry)
     try:
-        yield f"{PREFIX}{filename}"
+        yield f"{PREFIX}{urlpath}"
     finally:
-        _ = _OPENER_REGISTRY.pop(filename)
-
+        registry = _OPENER_REGISTRY.get()
+        _ = registry.pop(urlpath)
+        _OPENER_REGISTRY.set(registry)
