@@ -137,10 +137,10 @@ class MemoryFile(MemoryFileBase):
             raise OSError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug("VSI path: {}".format(mempath.path))
-            return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+            rd = DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
-            return writer(
+            rd = writer(
                 mempath,
                 "w+",
                 driver=driver,
@@ -154,11 +154,18 @@ class MemoryFile(MemoryFileBase):
                 sharing=sharing,
                 **kwargs
             )
+        
+        # Push the new dataset's context exit onto the MemoryFile's ExitStack.
+        # This ensures that when this MemoryFile is closed, any derived dataset
+        # is also closed automatically.
+        self._env.push(rd)
+        return rd
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
+        self._env.close()
         self.close()
 
 
