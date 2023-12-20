@@ -134,7 +134,7 @@ class MemoryFile(MemoryFileBase):
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
-            raise OSError("I/O operation on closed file.")
+            raise ValueError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug("VSI path: {}".format(mempath.path))
             rd = DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
@@ -271,7 +271,7 @@ class ZipMemoryFile(MemoryFile):
         zippath = _UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
-            raise OSError("I/O operation on closed file.")
+            raise ValueError("I/O operation on closed file.")
         return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
 
 
