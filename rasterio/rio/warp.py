@@ -1,5 +1,6 @@
-"""$ rio warp"""
+"""rio warp: CLI for reprojecting rasters."""
 
+import json
 import logging
 from math import ceil, floor
 import sys
@@ -19,12 +20,6 @@ from rasterio.warp import (
     aligned_target, calculate_default_transform as calcdt)
 
 logger = logging.getLogger(__name__)
-
-# Improper usage of rio-warp can lead to accidental creation of
-# extremely large datasets. We'll put a hard limit on the size of
-# datasets and raise a usage error if the limits are exceeded.
-MAX_OUTPUT_WIDTH = 100000
-MAX_OUTPUT_HEIGHT = 100000
 
 
 @click.command(short_help='Warp a raster dataset.')
@@ -93,6 +88,11 @@ MAX_OUTPUT_HEIGHT = 100000
     callback=_cb_key_val,
     help="GDAL warper and coordinate transformer options.",
 )
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Do not create an output file, but report on its expected size and other characteristics.",
+)
 @click.pass_context
 def warp(
     ctx,
@@ -114,6 +114,7 @@ def warp(
     creation_options,
     target_aligned_pixels,
     warper_options,
+    dry_run,
 ):
     """
     Warp a raster dataset.
@@ -127,23 +128,19 @@ def warp(
     \b
         $ rio warp input.tif output.tif --like template.tif
 
-    The output coordinate reference system may be either a PROJ.4 or
-    EPSG:nnnn string,
+    The destination's coordinate reference system may be an authority
+    name, PROJ4 string, JSON-encoded PROJ4, or WKT.
 
     \b
         --dst-crs EPSG:4326
         --dst-crs '+proj=longlat +ellps=WGS84 +datum=WGS84'
-
-    or a JSON text-encoded PROJ.4 object.
-
-    \b
         --dst-crs '{"proj": "utm", "zone": 18, ...}'
 
-    If --dimensions are provided, --res and --bounds are not applicable and an
-    exception will be raised.
-    Resolution is calculated based on the relationship between the
-    raster bounds in the target coordinate system and the dimensions,
-    and may produce rectangular rather than square pixels.
+    If --dimensions are provided, --res and --bounds are not applicable
+    and an exception will be raised.  Resolution is calculated based on
+    the relationship between the raster bounds in the target coordinate
+    system and the dimensions, and may produce rectangular rather than
+    square pixels.
 
     \b
         $ rio warp input.tif output.tif --dimensions 100 200 \\
@@ -354,15 +351,6 @@ def warp(
                     # Update the dst nodata value
                     out_kwargs.update(nodata=dst_nodata)
 
-            # When the bounds option is misused, extreme values of
-            # destination width and height may result.
-            if (dst_width < 0 or dst_height < 0 or
-                    dst_width > MAX_OUTPUT_WIDTH or
-                    dst_height > MAX_OUTPUT_HEIGHT):
-                raise click.BadParameter(
-                    "Invalid output dimensions: {0}.".format(
-                        (dst_width, dst_height)))
-
             out_kwargs.update(
                 crs=dst_crs,
                 transform=dst_transform,
@@ -386,18 +374,29 @@ def warp(
 
             out_kwargs.update(**creation_options)
 
-            with rasterio.open(output, 'w', **out_kwargs) as dst:
-                reproject(
-                    source=rasterio.band(src, list(range(1, src.count + 1))),
-                    destination=rasterio.band(
-                        dst, list(range(1, src.count + 1))),
-                    src_transform=src.transform,
-                    src_crs=src.crs,
-                    src_nodata=src_nodata,
-                    dst_transform=out_kwargs['transform'],
-                    dst_crs=out_kwargs['crs'],
-                    dst_nodata=dst_nodata,
-                    resampling=resampling,
-                    num_threads=threads,
-                    **warper_options
-                )
+            if dry_run:
+                crs = out_kwargs.get("crs", None)
+                if crs:
+                    epsg = src.crs.to_epsg()
+                    if epsg:
+                        out_kwargs['crs'] = 'EPSG:{}'.format(epsg)
+                    else:
+                        out_kwargs['crs'] = src.crs.to_string()
+
+                click.echo("Output dataset profile:")
+                click.echo(json.dumps(dict(**out_kwargs), indent=2))
+            else:
+                with rasterio.open(output, "w", **out_kwargs) as dst:
+                    reproject(
+                        source=rasterio.band(src, list(range(1, src.count + 1))),
+                        destination=rasterio.band(dst, list(range(1, src.count + 1))),
+                        src_transform=src.transform,
+                        src_crs=src.crs,
+                        src_nodata=src_nodata,
+                        dst_transform=out_kwargs["transform"],
+                        dst_crs=out_kwargs["crs"],
+                        dst_nodata=dst_nodata,
+                        resampling=resampling,
+                        num_threads=threads,
+                        **warper_options
+                    )

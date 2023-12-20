@@ -50,6 +50,7 @@ cdef extern from "cpl_string.h" nogil:
                            const char *pszValue)
     char **CSLDuplicate(char **papszStrList)
     int CSLFindName(char **papszStrList, const char *pszName)
+    int CSLFindString(char **papszStrList, const char *pszString)
     int CSLFetchBoolean(char **papszStrList, const char *pszName, int default)
     const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
@@ -121,6 +122,7 @@ cdef extern from "cpl_vsi.h" nogil:
     int VSIInstallPluginHandler(const char*, const VSIFilesystemPluginCallbacksStruct*)
     VSIFilesystemPluginCallbacksStruct* VSIAllocFilesystemPluginCallbacksStruct()
     void VSIFreeFilesystemPluginCallbacksStruct(VSIFilesystemPluginCallbacksStruct*)
+    char** VSIGetFileSystemsPrefixes()
 
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
@@ -642,6 +644,11 @@ cdef extern from "gdal_alg.h" nogil:
                           int nReqOrder, int bReversed)
     void *GDALDestroyGCPTransformer( void *pTransformArg)
     int GDALGCPTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
+                          double *x, double *y, double *z, int *panSuccess)
+    void *GDALCreateTPSTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
+                          int bReversed)
+    void *GDALDestroyTPSTransformer( void *pTransformArg)
+    int GDALTPSTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
                           double *x, double *y, double *z, int *panSuccess)
     void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
                           double dfPixErrThreshold,

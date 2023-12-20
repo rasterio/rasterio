@@ -1,0 +1,11 @@
+name: _rasterio
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.11.*
+- libgdal=3.6.*
+- cython=3.0.*
+- numpy=1.25.*
+- sphinx-click
+- sphinx-rtd-theme

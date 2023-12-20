@@ -362,8 +362,8 @@ def merge(
             dst_window_rnd_off = dst_window_rnd_shp.round_offsets()
 
             temp_height, temp_width = (
-                dst_window_rnd_off.height,
-                dst_window_rnd_off.width,
+                int(dst_window_rnd_off.height),
+                int(dst_window_rnd_off.width),
             )
             temp_shape = (src_count, temp_height, temp_width)
 
@@ -378,8 +378,8 @@ def merge(
 
         # 5. Copy elements of temp into dest
         roff, coff = (
-            max(0, dst_window_rnd_off.row_off),
-            max(0, dst_window_rnd_off.col_off),
+            max(0, int(dst_window_rnd_off.row_off)),
+            max(0, int(dst_window_rnd_off.col_off)),
         )
         region = dest[:, roff : roff + temp_height, coff : coff + temp_width]
 

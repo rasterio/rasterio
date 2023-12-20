@@ -1,6 +1,24 @@
 Frequently Asked Questions
 ==========================
 
+What does "RasterioIOError: file.ecw not recognized as a supported file format." mean?
+--------------------------------------------------------------------------------------
+
+This exception is raised when none of rasterio's format drivers can successfully open the specified dataset. In some cases it might be because the path is malformed, or the file is corrupted. Often, it is because your installation of rasterio does not provide the format driver. `ECW <https://gdal.org/drivers/raster/ecw.html>`__, for example, is an optional format driver and is not provided by the rasterio wheels in the Python Package Index. We'd like to keep the size of wheels to < ~20MB, and that means some GDAL features and format drivers must be left out. Other distribution channels for rasterio, such as conda-forge, may have different and larger sets of format drivers.
+
+To see a list of the format drivers provided by your rasterio installation, run in your shell
+
+.. code-block:: console
+
+    rio env --formats
+
+or, in a python interpreter,
+
+.. code-block:: python
+
+    with rasterio.Env() as env:
+        print(list(env.drivers().items()))
+
 Where is "ERROR 4: Unable to open EPSG support file gcs.csv" coming from and what does it mean?
 -----------------------------------------------------------------------------------------------
 

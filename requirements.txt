@@ -11,3 +11,4 @@ matplotlib
 numpy>=1.21
 snuggs~=1.4.0
 setuptools>=20.0
+pyparsing~=3.1

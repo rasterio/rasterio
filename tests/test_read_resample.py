@@ -103,4 +103,4 @@ def test_resampling_rms():
         expected = np.array([
             [1.35266399, 0.95388681],
             [0.29308701, 1.54074657]], dtype=np.float32)
-        assert (rms == expected).all()  # all True.
+        assert np.allclose(rms, expected)

@@ -19,8 +19,7 @@ provides a Python API based on N-D arrays.
 
 Rasterio 1.4 works with Python 3.9+, Numpy 1.21+, and GDAL 3.3+. Official
 binary packages for Linux, macOS, and Windows with most built-in format
-drivers plus HDF5, netCDF, and OpenJPEG2000 are available on PyPI. Unofficial
-binary packages for Windows are available through other channels.
+drivers plus HDF5, netCDF, and OpenJPEG2000 are available on PyPI.
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 

@@ -5,7 +5,6 @@ from unittest import mock
 from affine import Affine
 import numpy as np
 import pytest
-import shapely.geometry
 
 import rasterio
 from rasterio.enums import MergeAlg
@@ -901,6 +900,7 @@ def test_rasterize__numpy_coordinates__fail():
 
 def test_shapes(basic_image):
     """Test creation of shapes from pixel values."""
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
     results = list(shapes(basic_image))
 
     assert len(results) == 2
@@ -921,6 +921,7 @@ def test_shapes(basic_image):
 
 def test_shapes_2509(basic_image):
     """Test creation of shapes from pixel values, issue #2509."""
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
     image_with_strides = np.pad(basic_image, 1)[1:-1, 1:-1]
     np.testing.assert_array_equal(basic_image, image_with_strides)
     assert image_with_strides.__array_interface__["strides"] is not None
@@ -1272,3 +1273,31 @@ def test_zz_no_dataset_leaks(capfd):
         env._dump_open_datasets()
         captured = capfd.readouterr()
         assert not captured.err
+
+
+def test_sieve_bands(pixelated_image, pixelated_image_file):
+    """Verify fix for gh-2782."""
+    truth = sieve(pixelated_image, 9)
+
+    with rasterio.open(pixelated_image_file) as src:
+        assert np.array_equal(truth, sieve(rasterio.band(src, [1]), 9))
+
+        # Mask band should also work but will be a no-op
+        assert np.array_equal(
+            pixelated_image,
+            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1))
+        )
+
+
+def test_sieve_dataset(pixelated_image, pixelated_image_file):
+    """Verify fix for gh-2782."""
+    truth = sieve(pixelated_image, 9)
+
+    with rasterio.open(pixelated_image_file) as src:
+        assert np.array_equal(truth, sieve(src, 9))
+
+        # Mask band should also work but will be a no-op
+        assert np.array_equal(
+            pixelated_image,
+            sieve(src, 9, mask=rasterio.band(src, 1))
+        )

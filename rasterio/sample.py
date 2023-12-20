@@ -78,7 +78,15 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     nodata = np.full(len(indexes), (dataset.nodata or 0),  dtype=dataset.dtypes[0])
     if masked:
         # Masks for masked arrays are inverted (False means valid)
-        mask = [MaskFlags.all_valid not in dataset.mask_flag_enums[i-1] for i in indexes]
+        mask_flags = [set(dataset.mask_flag_enums[i - 1]) for i in indexes]
+        dataset_is_masked = any(
+            {MaskFlags.alpha, MaskFlags.per_dataset, MaskFlags.nodata} & enums
+            for enums in mask_flags
+        )
+        mask = [
+            False if dataset_is_masked and enums == {MaskFlags.all_valid} else True
+            for enums in mask_flags
+        ]
         nodata = np.ma.array(nodata, mask=mask)
 
     for row, col in _transform_xy(dataset, xy):

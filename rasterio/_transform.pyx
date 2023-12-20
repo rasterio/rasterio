@@ -228,6 +228,7 @@ cdef class RPCTransformerBase:
 cdef class GCPTransformerBase:
     cdef void *_transformer
     cdef bint _closed
+    cdef bint _tps
 
     def __cinit__(self):
         self._transformer = NULL
@@ -236,7 +237,7 @@ cdef class GCPTransformerBase:
     def __dealloc__(self):
         self.close()
 
-    def __init__(self, gcps):
+    def __init__(self, gcps, tps=False):
         """
         Construct a new GCP transformer
 
@@ -249,12 +250,15 @@ cdef class GCPTransformerBase:
         ----------
         gcps : a sequence of GroundControlPoint
             Ground Control Points for a dataset.
+        tps : bool
+            If True, use GDALs thin plate spline transformer instead of polynomials.
         """
         super().__init__()
         cdef int bReversed = 1
         cdef int nReqOrder = 0  # let GDAL determine polynomial order
         cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
         cdef int nGCPCount = len(gcps)
+        self._tps = tps
 
         try:
             for i, obj in enumerate(gcps):
@@ -267,7 +271,10 @@ cdef class GCPTransformerBase:
                 gcplist[i].dfGCPX = obj.x
                 gcplist[i].dfGCPY = obj.y
                 gcplist[i].dfGCPZ = obj.z or 0.0
-            self._transformer = exc_wrap_pointer(GDALCreateGCPTransformer(nGCPCount, gcplist, nReqOrder, bReversed))
+            if self._tps:
+                self._transformer = exc_wrap_pointer(GDALCreateTPSTransformer(nGCPCount, gcplist, bReversed))
+            else:
+                self._transformer = exc_wrap_pointer(GDALCreateGCPTransformer(nGCPCount, gcplist, nReqOrder, bReversed))
             self._closed = False
         finally:
             CPLFree(gcplist)
@@ -322,7 +329,10 @@ cdef class GCPTransformerBase:
             z[i] = zs[i]
 
         try:
-            err = GDALGCPTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
+            if self._tps:
+                err = GDALTPSTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
+            else:
+                err = GDALGCPTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
             if err == GDALError.failure:
                 warnings.warn(
                 "Could not transform points using GCPs.",
@@ -332,7 +342,7 @@ cdef class GCPTransformerBase:
             res_zs = [0] * n
             checked = False
             for i in range(n):
-                # GDALGCPTransformer may return a success overall despite individual points failing. Warn once.
+                # GDALGCPTransformer or GDALTPSTransformer may return a success overall despite individual points failing. Warn once.
                 if not panSuccess[i] and not checked:
                     warnings.warn(
                     "One or more points could not be transformed using GCPs.",
@@ -354,7 +364,10 @@ cdef class GCPTransformerBase:
         Destroy transformer
         """
         if self._transformer != NULL:
-            GDALDestroyGCPTransformer(self._transformer)
+            if self._tps:
+                GDALDestroyTPSTransformer(self._transformer)
+            else:
+                GDALDestroyGCPTransformer(self._transformer)
         self._transformer = NULL
         self._closed = True
 

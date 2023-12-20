@@ -32,7 +32,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
             python-version: 3.9
@@ -53,15 +53,17 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11']
-        gdal-version: ['3.5.3', '3.6.3']
+        gdal-version: ['3.6.4', '3.7.0']
         include:
+          - python-version: '3.9'
+            gdal-version: '3.5.3'
           - python-version: '3.9'
             gdal-version: '3.4.3'
           - python-version: '3.9'
             gdal-version: '3.3.3'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Update
         run: |
@@ -85,13 +87,12 @@ jobs:
           . testenv/bin/activate
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
-          python -m pip install -r requirements-dev.txt
-          python setup.py clean
-          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+          python -m pip install --no-deps --force-reinstall -e .[test]
 
       - name: run tests
         run: |
           . testenv/bin/activate
+          python -m pip install -r requirements-dev.txt
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
   conda_test:
@@ -109,7 +110,7 @@ jobs:
           - os: ubuntu-latest
             python-version: '3.11'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Conda Setup
         uses: s-weigand/setup-conda@v1
@@ -121,7 +122,7 @@ jobs:
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
-          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=0.29 numpy
+          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=3 numpy
           source activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt

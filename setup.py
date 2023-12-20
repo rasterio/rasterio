@@ -253,6 +253,9 @@ if "clean" not in sys.argv:
         extensions.append(
             Extension(
                 'rasterio._filepath', ['rasterio/_filepath.pyx'], **cpp_ext_options))
+        extensions.append(
+            Extension(
+                'rasterio._vsiopener', ['rasterio/_vsiopener.pyx'], **cpp_ext_options))
     ext_modules = cythonize(
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options)
 
@@ -267,7 +270,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy>=1.21",
+    "numpy",
     "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
@@ -290,7 +293,7 @@ extra_reqs = {
         "packaging",
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
-        "shapely",
+        "shapely ; python_version < '3.12'",
     ],
 }
 

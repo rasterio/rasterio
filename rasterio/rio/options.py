@@ -22,7 +22,7 @@ Registry of common rio CLI options.  See cligj for more options.
     --height: height of raster.  In rio-info
     -i, --invert: Invert mask created from features: In rio-mask
     -j, --geojson-mask: GeoJSON for masking raster.  In rio-mask
-    --lnglat: geograhpic coordinates of center of raster.  In rio-info
+    --lnglat: geographic coordinates of center of raster.  In rio-info
     --masked/--not-masked: read masked data from source file.
         In rio-calc, rio-info
     -m, --mode: output file mode (r, r+).  In rio-insp

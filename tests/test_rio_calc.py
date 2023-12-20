@@ -6,10 +6,10 @@ from rasterio.rio.main import main_group
 
 
 def test_err(tmpdir, runner):
-    outfile = str(tmpdir.join('out.tif'))
-    result = runner.invoke(main_group, ['calc'] + [
-        '($ 0.1 (read 1))', 'tests/data/shade.tif', outfile],
-        catch_exceptions=False)
+    outfile = str(tmpdir.join("out.tif"))
+    result = runner.invoke(
+        main_group, ["calc"] + ["($ 0.1 (read 1))", "tests/data/shade.tif", outfile]
+    )
     assert result.exit_code == 1
 
 

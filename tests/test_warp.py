@@ -287,6 +287,7 @@ def test_transform_bounds__esri_wkt():
     )
 
 
+@pytest.mark.xfail(reason="Projection extents have changed with PROJ 9")
 @pytest.mark.parametrize(
     "density,expected",
     [

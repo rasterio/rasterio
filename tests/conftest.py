@@ -1,6 +1,5 @@
 """``pytest`` fixtures."""
 
-
 import functools
 import operator
 import os
