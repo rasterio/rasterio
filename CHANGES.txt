@@ -29,6 +29,8 @@ New Features:
 
 Bug fixes:
 
+- Operations on closed MemoryFile and ZipMemoryFile objects now raise
+  ValueError as with other Python file objects (#2870, #).
 - Delay clamping of I/O windows until just before GDAL methods calls to improve
   accuracy of sub-pixel reads (#2864).
 

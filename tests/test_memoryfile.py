@@ -88,7 +88,7 @@ def test_closed():
     """A closed MemoryFile can not be opened"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         memfile.open()
 
 
@@ -96,7 +96,7 @@ def test_closed_seek():
     """A closed MemoryFile cannot be seeked"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         memfile.seek(0)
 
 
@@ -104,7 +104,7 @@ def test_closed_read():
     """A closed MemoryFile cannot be read"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         memfile.read()
 
 
@@ -112,7 +112,7 @@ def test_closed_write():
     """Cannot write to a closed MemoryFile"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         memfile.write([0])
 
 
@@ -120,7 +120,7 @@ def test_closed_tell():
     """Cannot tell on a closed MemoryFile"""
     with MemoryFile() as memfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         memfile.tell()
 
 
@@ -281,7 +281,7 @@ def test_zip_closed():
     """A closed ZipMemoryFile can not be opened"""
     with ZipMemoryFile() as zipmemfile:
         pass
-    with pytest.raises(OSError):
+    with pytest.raises(ValueError):
         zipmemfile.open('foo')
 
 
