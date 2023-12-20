@@ -3,6 +3,7 @@
 
 import os
 import sys
+from concurrent import futures
 from unittest import mock
 
 import boto3
@@ -168,7 +169,6 @@ def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
 
     monkeypatch.undo()
 
-
 def test_ensure_env_credentialled_decorator_fp_kwarg(monkeypatch, gdalenv):
     """Demonstrate resolution of #2267"""
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
@@ -258,14 +258,153 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    expected = {
+        'AWS_ACCESS_KEY_ID': 'id',
+        'AWS_SECRET_ACCESS_KEY': 'key',
+        'AWS_SESSION_TOKEN': 'token'}
     with rasterio.Env():
         assert getenv() == rasterio.env.local._env.options
-        expected = {
-            'AWS_ACCESS_KEY_ID': 'id',
-            'AWS_SECRET_ACCESS_KEY': 'key',
-            'AWS_SESSION_TOKEN': 'token'}
         for k, v in expected.items():
             assert getenv()[k] == v
+
+    monkeypatch.undo()
+
+
+def test_session_env_lazy_with_nested_env(monkeypatch, gdalenv):
+    """for a single thread show how session resolves
+    but with different resolution paths in nested manager
+    """
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    expected = {
+        'AWS_ACCESS_KEY_ID': 'id',
+        'AWS_SECRET_ACCESS_KEY': 'key',
+        'AWS_SESSION_TOKEN': 'token'}
+    with rasterio.Env() as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        for k, v in expected.items():
+            assert getenv()[k] == v
+        with rasterio.Env() as env_inner:
+            for k, v in expected.items():
+                assert getenv()[k] == v
+
+    monkeypatch.undo()
+
+
+def test_session_nested_env_with_global_creds_no_interference(monkeypatch, gdalenv):
+    """for a single thread make sure nested context manager
+    doesn't pass along credentials from global os environ vars
+    even though Session.from_environ __init__ will
+    first create a session from global os environ variables
+    """
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+
+    session = rasterio.session.AWSSession(
+        aws_access_key_id='local_id', aws_secret_access_key='local_key',
+        aws_session_token='local_token', region_name='null-island-1'
+    )
+    expected = {
+        'AWS_ACCESS_KEY_ID': 'local_id',
+        'AWS_SECRET_ACCESS_KEY': 'local_key',
+        'AWS_SESSION_TOKEN': 'local_token'}
+    with rasterio.Env(session=session) as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        for k, v in expected.items():
+            assert getenv()[k] == v
+        with rasterio.Env() as env_inner:
+            assert getenv() == rasterio.env.local._env.options
+            for k, v in expected.items():
+                assert getenv()[k] == v
+                assert env_inner.context_options[k] == v
+
+    monkeypatch.undo()
+
+
+def test_session_nested_env_with_global_creds_inner_session(monkeypatch, gdalenv):
+    """for a single thread make sure nested context manager
+    can use all sessions explicitly defined even if parent context
+    manager has one already defined
+    """
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+
+    outer_session = rasterio.session.AWSSession(
+        aws_access_key_id='outer_id', aws_secret_access_key='outer_key',
+        aws_session_token='outer_token', region_name='null-island-1'
+    )
+    outer_expected = {
+        'AWS_ACCESS_KEY_ID': 'outer_id',
+        'AWS_SECRET_ACCESS_KEY': 'outer_key',
+        'AWS_SESSION_TOKEN': 'outer_token'}
+
+    inner_session = rasterio.session.AWSSession(
+        aws_access_key_id='inner_id', aws_secret_access_key='inner_key',
+        aws_session_token='inner_token', region_name='null-island-1'
+    )
+    inner_expected = {
+        'AWS_ACCESS_KEY_ID': 'inner_id',
+        'AWS_SECRET_ACCESS_KEY': 'inner_key',
+        'AWS_SESSION_TOKEN': 'inner_token'}
+    with rasterio.Env(session=outer_session) as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        for k, v in outer_expected.items():
+            assert getenv()[k] == v
+        with rasterio.Env(session=inner_session) as env_inner:
+            assert getenv() == rasterio.env.local._env.options
+            for k, v in inner_expected.items():
+                assert getenv()[k] == v
+            # even though getenv() above returns correct keys for inner context manager
+            # context options here still hold the parent context keys and that should be fine
+            for k, v in outer_expected.items():
+                assert env_inner.context_options[k] == v
+
+    monkeypatch.undo()
+
+
+def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, caplog):
+    """for multiple threads show how nested context manager
+    behaves using `threading.local` b/c these multi-threaded
+    tests don't exist yet
+    """
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+    global_expected = {
+        'AWS_ACCESS_KEY_ID': 'global_id',
+        'AWS_SECRET_ACCESS_KEY': 'global_key',
+        'AWS_SESSION_TOKEN': 'global_token'}
+
+    session = rasterio.session.AWSSession(
+        aws_access_key_id='local_id', aws_secret_access_key='local_key',
+        aws_session_token='local_token', region_name='null-island-1'
+    )
+    session_expected = {
+        'AWS_ACCESS_KEY_ID': 'local_id',
+        'AWS_SECRET_ACCESS_KEY': 'local_key',
+        'AWS_SESSION_TOKEN': 'local_token'}
+    with rasterio.Env(session=session) as env_outer:
+        assert getenv() == rasterio.env.local._env.options
+        for k, v in session_expected.items():
+            assert getenv()[k] == v
+
+        def reader():
+            with rasterio.Env() as env_inner:
+                return [{k: getenv()[k]} for k,v in global_expected.items()]
+
+        with futures.ThreadPoolExecutor(max_workers=2) as executor:
+             fpayloads = [
+                executor.submit(reader) for _ in range(2)
+             ]
+             results = [future.result() for future in futures.as_completed(fpayloads)]
+
+        for result_list in results:
+            for result in result_list:
+                for k,v in result.items():
+                    assert global_expected[k] == v
 
     monkeypatch.undo()
 

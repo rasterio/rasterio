@@ -1,11 +1,6 @@
-"""Mapping of GDAL to Numpy data types.
+"""Mapping of GDAL to Numpy data types."""
 
-Since 0.13 we are not importing numpy here and data types are strings.
-Happily strings can be used throughout Numpy and so existing code will
-not break.
-
-"""
-import numpy as np
+import numpy
 
 from rasterio.env import GDALVersion
 
@@ -26,7 +21,6 @@ float64 = 'float64'
 complex_ = 'complex'
 complex64 = 'complex64'
 complex128 = 'complex128'
-
 complex_int16 = "complex_int16"
 
 dtype_fwd = {
@@ -99,29 +93,39 @@ if _GDAL_AT_LEAST_37:
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
+f32i = numpy.finfo("float32")
+f64i = numpy.finfo("float64")
+
 dtype_ranges = {
-    'int8': (-128, 127),
-    'uint8': (0, 255),
-    'uint16': (0, 65535),
-    'int16': (-32768, 32767),
-    'uint32': (0, 4294967295),
-    'int32': (-2147483648, 2147483647),
-    'float32': (-3.4028235e+38, 3.4028235e+38),
-    'float64': (-1.7976931348623157e+308, 1.7976931348623157e+308)}
+    "int8": (-128, 127),
+    "uint8": (0, 255),
+    "uint16": (0, 65535),
+    "int16": (-32768, 32767),
+    "uint32": (0, 4294967295),
+    "int32": (-2147483648, 2147483647),
+    "float32": (float(f32i.min), float(f32i.max)),
+    "float64": (float(f64i.min), float(f64i.max)),
+}
 
 if _GDAL_AT_LEAST_35:
     dtype_ranges['int64'] = (-9223372036854775808, 9223372036854775807)
     dtype_ranges['uint64'] = (0, 18446744073709551615)
 
+dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
+
 
 def in_dtype_range(value, dtype):
-    """
-    Check if the value is within the dtype range
-    """
-    if np.dtype(dtype).kind == "f" and (np.math.isinf(value) or np.math.isnan(value)):
+    """Test if the value is within the dtype's range of values, Nan, or Inf."""
+    # The name of this function is a misnomer. What we're actually
+    # testing is whether the value can be represented by the data type.
+    kind = numpy.dtype(dtype).kind
+
+    # Nan and infinity are special cases.
+    if kind == "f" and (numpy.isnan(value) or numpy.isinf(value)):
         return True
-    range_min, range_max = dtype_ranges[dtype]
-    return range_min <= value <= range_max
+
+    info = dtype_info_registry[kind](dtype)
+    return info.min <= value <= info.max
 
 
 def _gdal_typename(dt):
@@ -155,7 +159,7 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
     min_value = values.min()
     max_value = values.max()
 
@@ -188,7 +192,7 @@ def get_minimum_dtype(values):
 def is_ndarray(array):
     """Check if array is a ndarray."""
 
-    return isinstance(array, np.ndarray) or hasattr(array, '__array__')
+    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
 
 
 def can_cast_dtype(values, dtype):
@@ -204,16 +208,16 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
 
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
     elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype), equal_nan=True)
+        return numpy.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
-        return np.array_equal(values, values.astype(dtype))
+        return numpy.array_equal(values, values.astype(dtype))
 
 
 def validate_dtype(values, valid_dtypes):
@@ -230,7 +234,7 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    values = np.asanyarray(values)
+    values = numpy.asanyarray(values)
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)
@@ -242,6 +246,6 @@ def _is_complex_int(dtype):
 
 def _getnpdtype(dtype):
     if _is_complex_int(dtype):
-        return np.dtype("complex64")
+        return numpy.dtype("complex64")
     else:
-        return np.dtype(dtype)
+        return numpy.dtype(dtype)

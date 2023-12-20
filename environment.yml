@@ -1,8 +1,0 @@
-name: _rasterio
-channels:
-- conda-forge
-- defaults
-dependencies:
-- python=3.9.*
-- libgdal=3.4.*
-- sphinx-click

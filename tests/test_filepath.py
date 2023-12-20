@@ -1,6 +1,8 @@
 """FilePath tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 3.x"""
 
+# TODO: delete at version 2.0. FilePath is deprecated in version 1.4.
+
 from io import BytesIO
 import logging
 import os.path
@@ -224,3 +226,11 @@ def test_quieter_vsi_plugin_notifications(caplog, path_rgb_byte_tif):
                 _ = src.profile
 
         assert "not found in virtual filesystem" not in caplog.text
+
+import io
+
+
+def test_opener(path_rgb_byte_tif):
+    """First test of vsi python plugin opener."""
+    with rasterio.open(path_rgb_byte_tif, opener=io.open) as src:
+        _ = src.profile
