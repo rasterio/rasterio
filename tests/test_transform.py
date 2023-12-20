@@ -507,7 +507,10 @@ def test_2421_rpc_height_ignored():
         assert abs(x2 - x1) > 0
         assert abs(y2 - y1) > 0
 
-def test_tps_transformer():
+def test_gcp_transformer_tps_option():
+    """Use thin plate spline transformation when requested."""
+    # TPS ensures that GCPs are (to within some precision) solutions of the transformation.
+    # This is not the case for polynomials transformations. 
     with GCPTransformer(gcps(), tps=True) as transformer:
         for gcp in gcps():
             x_, y_ = transformer.xy(gcp.row, gcp.col, offset='ul')
