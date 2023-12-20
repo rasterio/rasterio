@@ -645,6 +645,11 @@ cdef extern from "gdal_alg.h" nogil:
     void *GDALDestroyGCPTransformer( void *pTransformArg)
     int GDALGCPTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
                           double *x, double *y, double *z, int *panSuccess)
+    void *GDALCreateTPSTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
+                          int bReversed)
+    void *GDALDestroyTPSTransformer( void *pTransformArg)
+    int GDALTPSTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
+                          double *x, double *y, double *z, int *panSuccess)
     void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
                           double dfPixErrThreshold,
                           char **papszOptions )

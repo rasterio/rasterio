@@ -530,13 +530,14 @@ class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
 
     Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
     Ensure that GDAL transformer objects are destroyed by calling `close()`
-    method or using context manager interface.
+    method or using context manager interface. If `tps` is set to True,
+    uses GDALCreateTPSTransformer and GDALTPSTransform instead.
 
     """
-    def __init__(self, gcps):
+    def __init__(self, gcps, tps=False):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
-        super().__init__(gcps)
+        super().__init__(gcps, tps)
 
     def __repr__(self):
         return "<{} GCPTransformer>".format(
