@@ -92,6 +92,38 @@ def test_closed():
         memfile.open()
 
 
+def test_closed_seek():
+    """A closed MemoryFile cannot be seeked"""
+    with MemoryFile() as memfile:
+        pass
+    with pytest.raises(OSError):
+        memfile.seek(0)
+
+
+def test_closed_read():
+    """A closed MemoryFile cannot be read"""
+    with MemoryFile() as memfile:
+        pass
+    with pytest.raises(OSError):
+        memfile.read()
+
+
+def test_closed_write():
+    """Cannot write to a closed MemoryFile"""
+    with MemoryFile() as memfile:
+        pass
+    with pytest.raises(OSError):
+        memfile.write([0])
+
+
+def test_closed_tell():
+    """Cannot tell on a closed MemoryFile"""
+    with MemoryFile() as memfile:
+        pass
+    with pytest.raises(OSError):
+        memfile.tell()
+
+
 def test_non_initial_bytes(rgb_file_bytes):
     """MemoryFile contents can be read from bytes and opened."""
     with MemoryFile() as memfile:

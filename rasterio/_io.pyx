@@ -1215,7 +1215,16 @@ cdef class MemoryFileBase:
             raise OSError("Failed to open in-memory file.")
 
         self._env = ExitStack()
-        self.closed = False
+
+    @property
+    def closed(self):
+        """Test if the dataset is closed
+
+        Returns
+        -------
+        bool
+        """
+        return self._vsif == NULL
 
     def exists(self):
         """Test if the in-memory file exists.
@@ -1257,16 +1266,18 @@ cdef class MemoryFileBase:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
         VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
-        self.closed = True
 
     def seek(self, offset, whence=0):
-        return VSIFSeekL(self._vsif, offset, whence)
+        if self.closed:
+            raise OSError("I/O operation on closed MemoryFile")
+        else:
+            return VSIFSeekL(self._vsif, offset, whence)
 
     def tell(self):
-        if self._vsif != NULL:
-            return VSIFTellL(self._vsif)
+        if self.closed:
+            raise OSError("I/O operation on closed MemoryFile")
         else:
-            return 0
+            return VSIFTellL(self._vsif)
 
     def read(self, size=-1):
         """Read bytes from MemoryFile.
@@ -1285,6 +1296,9 @@ cdef class MemoryFileBase:
         cdef bytes result
         cdef unsigned char *buffer = NULL
         cdef vsi_l_offset buffer_len = 0
+
+        if self.closed:
+            raise OSError("I/O operation on closed MemoryFile")
 
         if size < 0:
             buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
@@ -1314,6 +1328,8 @@ cdef class MemoryFileBase:
             Number of bytes written.
 
         """
+        if self.closed:
+            raise OSError("I/O operation on closed MemoryFile")
         cdef const unsigned char *view = <bytes>data
         n = len(data)
         result = VSIFWriteL(view, 1, n, self._vsif)
