@@ -36,7 +36,8 @@ Bug fixes:
 
 Other changes:
 
-- Given an empty shapes argument, rasterize() now returns an empty array (#).
+- Given an empty shapes argument, rasterize() now returns an empty array
+  (#2993).
 - AffineTransformer's bulk transformations have been sped up by replacing
   a loop with a Numpy ufunc (#2936).
 - The crop and invert mutual exclusivity test in raster_geomtry_mask() has been
