@@ -34,6 +34,15 @@ Bug fixes:
 - Delay clamping of I/O windows until just before GDAL methods calls to improve
   accuracy of sub-pixel reads (#2864).
 
+Other changes:
+
+- Given an empty shapes argument, rasterize() now returns an empty array
+  (#2993).
+- AffineTransformer's bulk transformations have been sped up by replacing
+  a loop with a Numpy ufunc (#2936).
+- The crop and invert mutual exclusivity test in raster_geomtry_mask() has been
+  removed (#2702).
+
 1.3.9 (2023-10-18)
 ------------------
 
