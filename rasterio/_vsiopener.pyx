@@ -13,6 +13,9 @@ import logging
 from uuid import uuid4
 
 from libc.string cimport memcpy
+cimport numpy as np
+
+from rasterio.errors import OpenerRegistrationError
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +60,7 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
         callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
+        callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
         callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
         callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
         retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
@@ -73,41 +77,47 @@ cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callback
     callbacks_struct = NULL
 
 
-cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *pszAccess) with gil:
+cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *pszAccess) except NULL with gil:
     """Access files in the virtual filesystem.
 
     This function is mandatory in the GDAL Filesystem Plugin API.
     GDAL may call this function multiple times per filename and each
     result must be seperately seekable.
     """
-    if pszAccess != b"r" and pszAccess != b"rb":
-        log.error("Python opener is currently a read-only interface.")
-        return NULL
-
     if pUserData is NULL:
-        log.error("Python opener registry is not initialized.")
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>"Python opener is not initialized.")
         return NULL
 
     cdef object var = <object>pUserData
     cdef dict registry = var.get()
-    filename = pszFilename.decode("utf-8")
+    urlpath = pszFilename.decode("utf-8")
+    mode = pszAccess.decode("utf-8")
+    log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+    # Note: the opener is added to the registry in rasterio.open().
 
-    log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
     try:
-        file_opener = registry[filename]
-    except KeyError:
-        log.info("Object not found: registry=%r, filename=%r", registry, filename)
+        file_opener = registry[(urlpath, mode[0])]
+    except KeyError as err:
+        # GDAL is eager to discover auxiliary files and this error will
+        # occur often. The Python opener plugin does not support
+        # auxiliary files.
+        log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
         return NULL
 
-    mode = pszAccess.decode("utf-8")
     cdef object file_obj
 
     try:
-        file_obj = file_opener(filename, mode)
-    # ZipFile.open doesn't accept binary modes like "rb" and will raise
-    # ValueError if given one. We strip the mode in this case.
+        file_obj = file_opener(urlpath, mode)
     except ValueError as err:
-        file_obj = file_opener(filename, mode.rstrip("b"))
+        # ZipFile.open doesn't accept binary modes like "rb" and will
+        # raise ValueError if given one. We strip the mode in this case.
+        file_obj = file_opener(urlpath, mode.rstrip("b"))
+    except Exception as err:
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
 
@@ -147,6 +157,14 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
     return <size_t>(num_bytes / nSize)
 
 
+cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCount) except -1 with gil:
+    cdef object file_obj = <object>pFile
+    buffer_len = nSize * nCount
+    cdef np.uint8_t [:] buff_view = <np.uint8_t[:buffer_len]>pBuffer
+    log.debug("Writing data: buff_view=%r", buff_view)
+    return <size_t>file_obj.write(buff_view)
+
+
 cdef int pyopener_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
     log.debug("Closing: file_obj=%r", file_obj)
@@ -158,13 +176,24 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
 
 
 @contextlib.contextmanager
-def _opener_registration(urlpath, opener):
+def _opener_registration(urlpath, mode, opener):
     registry = _OPENER_REGISTRY.get()
-    registry[urlpath] = opener
-    _OPENER_REGISTRY.set(registry)
-    try:
-        yield f"{PREFIX}{urlpath}"
-    finally:
-        registry = _OPENER_REGISTRY.get()
-        _ = registry.pop(urlpath)
+    if (urlpath, mode) in registry:
+        if registry[(urlpath, mode)] != opener:
+            raise OpenerRegistrationError(f"Opener already registered for urlpath and mode")
+        else:
+            try:
+                yield f"{PREFIX}{urlpath}"
+            finally:
+                registry = _OPENER_REGISTRY.get()
+                _ = registry.pop((urlpath, mode), None)
+                _OPENER_REGISTRY.set(registry)
+    else:
+        registry[(urlpath, mode)] = opener
         _OPENER_REGISTRY.set(registry)
+        try:
+            yield f"{PREFIX}{urlpath}"
+        finally:
+            registry = _OPENER_REGISTRY.get()
+            _ = registry.pop((urlpath, mode), None)
+            _OPENER_REGISTRY.set(registry)

@@ -194,7 +194,8 @@ def open(
         underlying file-like object is obtained by calling *opener* with
         (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
         driver's native mode. *opener* must return a Python file-like
-        object that provides read, seek, tell, and close methods.
+        object that provides read, seek, tell, and close methods. Note:
+        only one opener at a time per fp, mode pair is allowed. 
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -270,21 +271,6 @@ def open(
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
-    # when opener is a callable that takes a filename or URL and returns
-    # a file-like object with read, seek, tell, and close methods, we
-    # can register it with GDAL and use it as the basis for a GDAL
-    # virtual filesystem. This is generally better than the FilePath
-    # approach introduced in version 1.3.
-    if opener:
-        vsi_path_ctx = _opener_registration(fp, opener)
-        stack = ExitStack()
-        registered_vsi_path = stack.enter_context(vsi_path_ctx)
-        dataset = DatasetReader(
-            _UnparsedPath(registered_vsi_path), driver=driver, sharing=sharing, **kwargs
-        )
-        dataset._env = stack
-        return dataset
-
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
     # hold fp's contents and store that in an ExitStack attached to the
@@ -350,41 +336,57 @@ def open(
     # which can be converted to a string.
     else:
         raw_dataset_path = os.fspath(fp)
-        path = _parse_path(raw_dataset_path)
+        stack = ExitStack()
+        try:
+            # when opener is a callable that takes a filename or URL and returns
+            # a file-like object with read, seek, tell, and close methods, we
+            # can register it with GDAL and use it as the basis for a GDAL
+            # virtual filesystem. This is generally better than the FilePath
+            # approach introduced in version 1.3.
+            if opener:
+                vsi_path_ctx = _opener_registration(raw_dataset_path, mode[0], opener)
+                registered_vsi_path = stack.enter_context(vsi_path_ctx)
+                path = _UnparsedPath(registered_vsi_path)
+            else:
+                path = _parse_path(raw_dataset_path)
 
-        if mode == "r":
-            dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == "r+":
-            dataset = get_writer_for_path(path, driver=driver)(
-                path, mode, driver=driver, sharing=sharing, **kwargs
-            )
-        elif mode.startswith("w"):
-            if not driver:
-                driver = driver_from_extension(path)
-            writer = get_writer_for_driver(driver)
-            if writer is not None:
-                dataset = writer(
-                    path,
-                    mode,
-                    driver=driver,
-                    width=width,
-                    height=height,
-                    count=count,
-                    crs=crs,
-                    transform=transform,
-                    dtype=dtype,
-                    nodata=nodata,
-                    sharing=sharing,
-                    **kwargs
+            if mode == "r":
+                dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+            elif mode == "r+":
+                dataset = get_writer_for_path(path, driver=driver)(
+                    path, mode, driver=driver, sharing=sharing, **kwargs
                 )
+            elif mode.startswith("w"):
+                if not driver:
+                    driver = driver_from_extension(path)
+                writer = get_writer_for_driver(driver)
+                if writer is not None:
+                    dataset = writer(
+                        path,
+                        mode,
+                        driver=driver,
+                        width=width,
+                        height=height,
+                        count=count,
+                        crs=crs,
+                        transform=transform,
+                        dtype=dtype,
+                        nodata=nodata,
+                        sharing=sharing,
+                        **kwargs
+                    )
+                else:
+                    raise DriverCapabilityError(
+                        "Writer does not exist for driver: %s" % str(driver)
+                    )
             else:
                 raise DriverCapabilityError(
-                    "Writer does not exist for driver: %s" % str(driver)
-                )
-        else:
-            raise DriverCapabilityError(
-                "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+        except Exception:
+            stack.close()
+            raise
 
+        dataset._env = stack
         return dataset
 
 

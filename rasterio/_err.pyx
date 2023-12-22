@@ -6,7 +6,6 @@ Exception-raising wrappers for GDAL API functions.
 
 from enum import IntEnum
 import logging
-import sys
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +13,7 @@ _GDAL_DEBUG_DOCS = (
     "https://rasterio.readthedocs.io/en/latest/topics/errors.html"
     "#debugging-internal-gdal-functions"
 )
+
 
 class CPLE_BaseError(Exception):
     """Base CPL error class

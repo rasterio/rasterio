@@ -1,10 +1,17 @@
 Virtual Filesystems
 ===================
 
-Rasterio uses GDAL's `virtual filesystem interface <https://gdal.org/user/virtual_file_systems.html>`__ to access datasets
-on the web, in cloud storage, in archive files, and in Python objects. Rasterio maps familiar URI schemes to GDAL virtual filesystem handlers. For example, the ``https`` URI scheme maps to GDAL's ``/vsicurl/``. The ``file`` URI scheme maps to GDAL's ordinary filesystem handler and is the default for dataset URIs that have no other scheme.
+Rasterio uses GDAL's `virtual filesystem interface
+<https://gdal.org/user/virtual_file_systems.html>`__ to access datasets on the
+web, in cloud storage, in archive files, and in Python objects. Rasterio maps
+familiar URI schemes to GDAL virtual filesystem handlers. For example, the
+``https`` URI scheme maps to GDAL's ``/vsicurl/``. The ``file`` URI scheme maps
+to GDAL's ordinary filesystem handler and is the default for dataset URIs that
+have no other scheme.
 
-To access a dataset in a local ZIP file like the one in Rasterio's test suite, preprend ``zip`` to the URI of the local file and add the interior path to the dataset after a ``!`` character. For example:
+To access a dataset in a local ZIP file like the one in Rasterio's test suite,
+preprend ``zip`` to the URI of the local file and add the interior path to the
+dataset after a ``!`` character. For example:
 
 .. code-block:: python
 
@@ -24,7 +31,8 @@ Or use ``zip`` as shorthand for ``zip+file``.
     # Printed:
     # (718, 791)
 
-Similarly, datasets in ZIP files served on the web can be accessed by using ``zip+https``.
+Similarly, datasets in ZIP files served on the web can be accessed by using
+``zip+https``.
 
 .. code-block:: python
 
@@ -34,9 +42,11 @@ Similarly, datasets in ZIP files served on the web can be accessed by using ``zi
     # Printed:
     # (718, 791)
 
-Tar and gzip archives can be accessed in the same manner by prepending with ``tar`` or ``gz`` instead of ``zip``.
+Tar and gzip archives can be accessed in the same manner by prepending with
+``tar`` or ``gz`` instead of ``zip``.
 
-For compatibility with legacy systems and workflows or very niche use cases, Rasterio can also use GDAL's VSI filenames.
+For compatibility with legacy systems and workflows or very niche use cases,
+Rasterio can also use GDAL's VSI filenames.
 
 .. code-block:: python
 
@@ -46,7 +56,10 @@ For compatibility with legacy systems and workflows or very niche use cases, Ras
     # Printed:
     # (718, 791)
 
-The prefixes on which GDAL filesystem handlers are registered are considered by Rasterio to be an implementation detail. You shouldn't need to think about them when using Rasterio. Use familiar and standard URIs instead, like elsewhere on the internet.
+The prefixes on which GDAL filesystem handlers are registered are considered by
+Rasterio to be an implementation detail. You shouldn't need to think about them
+when using Rasterio. Use familiar and standard URIs instead, like elsewhere on
+the internet.
 
 .. code-block:: python
 
@@ -122,11 +135,17 @@ would work in the same way.
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
 
-    with rasterio.open("B01.tif", opener=fs.openbin) as src:
+    with rasterio.open("B01.tif", opener=fs.open) as src:
         print(src.profile)
 
 
 In this code AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are placeholders for the
 appropriate credentials.
+
+Read and write access is supported, with some limitations. Only one opener at
+a time may be thus registered for a filename and access mode pair. Openers are
+unregistered when the dataset is closed or its context is exited. The other
+limitation is that auxiliary and sidecar files cannot be accessed and thus
+formats depending on them cannot be used in this way.
 
 *New in version 1.4.0*
