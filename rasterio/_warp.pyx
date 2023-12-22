@@ -229,8 +229,9 @@ def _reproject(
     Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
-    system definitions and affine transformation parameters are required
-    for reprojection.
+    system definitions and geolocation parameters are required for
+    reprojection. Only one of src_transform, gcps, rpcs, or
+    src_geoloc_array can be used.
 
     If the source and destination are rasterio Bands, shorthand for
     bands of datasets on disk, the coordinate reference systems and
@@ -238,36 +239,40 @@ def _reproject(
 
     Parameters
     ------------
-    source: ndarray or rasterio Band
+    source : ndarray or rasterio Band
         Source raster.
-    destination: ndarray or rasterio Band
+    destination : ndarray or rasterio Band
         Target raster.
-    src_transform: affine.Affine(), optional
+    src_transform : affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
-    gcps: sequence of `GroundControlPoint` instances, optional
+    gcps : sequence of `GroundControlPoint` instances, optional
         Ground control points for the source. May be used in place of
         src_transform.
-    rpcs: RPC or dict, optional
+    rpcs : RPC or dict, optional
         Rational polynomial coefficients for the source. May be used
         in place of src_transform.
-    src_crs: dict, optional
+    src_geoloc_array : array-like, optional
+        A pair of 2D arrays holding x and y coordinates, like a like
+        a dense array of ground control points that may be used in place
+        of src_transform.
+    src_crs : dict, optional
         Source coordinate reference system, in rasterio dict format.
-        Required if source and destination are ndarrays.
-        Will be derived from source if it is a rasterio Band.
-        Example: {'init': 'EPSG:4326'}
-    src_nodata: int or float, optional
+        Required if source and destination are ndarrays.  Will be
+        derived from source if it is a rasterio Band.  Example:
+        'EPSG:4326'.
+    src_nodata : int or float, optional
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
         if available.
-    dst_transform: affine.Affine(), optional
+    dst_transform : affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_crs: dict, optional
+    dst_crs : dict, optional
         Target coordinate reference system.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_nodata: int or float, optional
+    dst_nodata : int or float, optional
         The nodata value used to initialize the destination; it will remain
         in all areas not covered by the reprojected source.  Defaults to the
         nodata value of the destination image (if set), the value of
@@ -276,7 +281,7 @@ def _reproject(
         Index of a band to use as the alpha band when warping.
     dst_alpha : int, optional
         Index of a band to use as the alpha band when warping.
-    resampling: int
+    resampling : int
         Resampling method to use.  One of the following:
             Resampling.nearest,
             Resampling.bilinear,
@@ -285,7 +290,7 @@ def _reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
-    init_dest_nodata: bool
+    init_dest_nodata : bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
     num_threads : int
@@ -298,7 +303,7 @@ def _reproject(
         56 MB. The default (0) means 64 MB with GDAL 2.2.
         The warp operation's memory limit in MB. The default (0)
         means 64 MB with GDAL 2.2.
-    kwargs:  dict, optional
+    kwargs :  dict, optional
         Additional arguments passed to both the image to image
         transformer GDALCreateGenImgProjTransformer2() (for example,
         MAX_GCP_ORDER=2) and to the Warper (for example,
@@ -306,7 +311,7 @@ def _reproject(
 
     Returns
     ---------
-    out: None
+    out : None
         Output is written to destination.
     """
     cdef int src_count
@@ -320,6 +325,10 @@ def _reproject(
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
     cdef bint bUseApproxTransformer = True
+
+    # Source geolocation parameters are mutually exclusive.
+    if sum(param is not None for param in (src_transform, gcps, rpcs, src_geoloc_array)) > 1:
+        raise ValueError("Source geolocation parameters are mutually exclusive.")
 
     # Validate nodata values immediately.
     if src_nodata is not None:

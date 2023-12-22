@@ -1575,10 +1575,13 @@ def rgb_byte_profile():
         return src.profile
 
 
-def test_reproject_gcps_transform_exclusivity():
-    """gcps and transform can't be used together."""
+@pytest.mark.parametrize(
+    "params", [{"gcps": [0]}, {"rpcs": [0]}, {"src_geoloc_array": (0, 0)}]
+)
+def test_reproject_src_geoloc_exclusivity(params):
+    """Different kinds of source geolocation can't be used together."""
     with pytest.raises(ValueError):
-        reproject(1, 1, gcps=[0], src_transform=[0])
+        reproject(1, 1, src_transform=[0], **params)
 
 
 def test_reproject_gcps(rgb_byte_profile):
