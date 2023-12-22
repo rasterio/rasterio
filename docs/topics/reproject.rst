@@ -177,11 +177,12 @@ reference system with a newly computed geotransform.
 
 .. code-block:: python
 
+    import numpy as np
     import rasterio
     from rasterio.warp import reproject
     from rasterio.enums import Resampling
 
-    with rasterio.open('RGB.byte.tif') as source:
+    with rasterio.open('RGB.byte.rpc.vrt') as source:
         print(source.rpcs)
         src_crs = "EPSG:4326"  # This is the crs of the rpcs
 
@@ -196,7 +197,7 @@ reference system with a newly computed geotransform.
         dst_crs = "EPSG:3857"
 
         _, dst_transform = reproject(
-            source,
+            rasterio.band(source, 1),
             destination,
             rpcs=source.rpcs,
             src_crs=src_crs,

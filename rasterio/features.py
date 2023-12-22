@@ -180,15 +180,17 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
 @ensure_env
 def rasterize(
-        shapes,
-        out_shape=None,
-        fill=0,
-        out=None,
-        transform=IDENTITY,
-        all_touched=False,
-        merge_alg=MergeAlg.replace,
-        default_value=1,
-        dtype=None):
+    shapes,
+    out_shape=None,
+    fill=0,
+    out=None,
+    transform=IDENTITY,
+    all_touched=False,
+    merge_alg=MergeAlg.replace,
+    default_value=1,
+    dtype=None,
+    skip_invalid=True,
+):
     """Return an image array with input geometries burned in.
 
     Warnings will be raised for any invalid or empty geometries, and
@@ -208,7 +210,7 @@ def rasterize(
         Used as fill value for all areas not covered by input
         geometries.
     out : numpy.ndarray, optional
-        Array in which to store results. If not provided, out_shape 
+        Array in which to store results. If not provided, out_shape
         and dtype are required.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `source` to the
@@ -228,6 +230,9 @@ def rasterize(
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy.dtype, optional
         Used as data type for results, if `out` is not provided.
+    skip_invalid : bool, optional
+        If True (default), invalid shapes will be skipped. If False,
+        ValueError will be raised.
 
     Returns
     -------
@@ -252,7 +257,6 @@ def rasterize(
     shapes will be iterated multiple times. Performance is thus a linear
     function of buffer size. For maximum speed, ensure that
     GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
-
     """
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
@@ -291,6 +295,7 @@ def rasterize(
 
     valid_shapes = []
     shape_values = []
+
     for index, item in enumerate(shapes):
         if isinstance(item, (tuple, list)):
             geom, value = item
@@ -299,11 +304,11 @@ def rasterize(
         else:
             geom = item
             value = default_value
+
         geom = getattr(geom, '__geo_interface__', None) or geom
 
         if is_valid_geom(geom):
             shape_values.append(value)
-
             geom_type = geom['type']
 
             if geom_type == 'GeometryCollection':
@@ -324,22 +329,15 @@ def rasterize(
                 valid_shapes.append((geom, value))
 
         else:
-            # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('Invalid or empty shape {} at index {} will not be rasterized.'.format(geom, index), ShapeSkipWarning)
-
-    if not valid_shapes:
-        raise ValueError('No valid geometry objects found for rasterize')
-
-    shape_values = np.array(shape_values)
-
-    if not validate_dtype(shape_values, valid_dtypes):
-        raise ValueError(format_invalid_dtype('shape values'))
-
-    if dtype is None:
-        dtype = get_minimum_dtype(np.append(shape_values, fill))
-
-    elif not can_cast_dtype(shape_values, dtype):
-        raise ValueError(format_cast_error('shape values', dtype))
+            if skip_invalid:
+                warnings.warn(
+                    "Invalid or empty shape {} at index {} will not be rasterized.".format(
+                        geom, index
+                    ),
+                    ShapeSkipWarning,
+                )
+            else:
+                raise ValueError("Invalid or empty shape cannot be rasterized.")
 
     if out is not None:
         if _getnpdtype(out.dtype).name not in valid_dtypes:
@@ -363,7 +361,21 @@ def rasterize(
         raise ValueError("width and height must be > 0")
 
     transform = guard_transform(transform)
-    _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+
+    if valid_shapes:
+        shape_values = np.array(shape_values)
+
+        if not validate_dtype(shape_values, valid_dtypes):
+            raise ValueError(format_invalid_dtype("shape values"))
+
+        if dtype is None:
+            dtype = get_minimum_dtype(np.append(shape_values, fill))
+
+        elif not can_cast_dtype(shape_values, dtype):
+            raise ValueError(format_cast_error("shape values", dtype))
+
+        _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+
     return out
 
 

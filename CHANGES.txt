@@ -4,23 +4,83 @@ Changes
 Next
 ----
 
-- Rasterio's open() function has a new *opener* keyword argument that may be
-  used to read or write datasets that can be addressed through Python file
-  objects. This feature supplants the FilePath class introduced in version
-  1.3.0 (#2898, #2907).
+Deprecations:
+
+- The is_valid property of the CRS class is not useful and will be removed in
+  version 2.0 (#2919).
+- The FilePath class has been supplanted by rasterio.open's new opener keyword
+  argument and its associated GDAL virtual filesystem plugin. It will be
+  removed in version 2.0 (#2919).
+
+New Features:
+
+- Datasets stored in proprietary systems or addressable only through protocols
+  not directly supported by GDAL can be accessed using the new opener keyword
+  argument of rasterio.open() (#2898, #2907). This new feature is intended to
+  completely replace the FilePath class introduced in 1.3.0.
+- Deallocate list of warp extras in _reproject(), fixing a potential leak
+  (#494).
+- Adjust several tests to small differences in output between GDAL 3.7 and 3.8
+  (#2959).
 - The output file size limits of rio-warp were made redundant by changes to the
   GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
   has been added to the command. If used, the profile of the output dataset
   will be printed and no warping will occur.
 
-1.3.8 (2023-06-26)
+Bug fixes:
+
+- Operations on closed MemoryFile and ZipMemoryFile objects now raise
+  ValueError as with other Python file objects (#2870, #).
+- Delay clamping of I/O windows until just before GDAL methods calls to improve
+  accuracy of sub-pixel reads (#2864).
+
+Other changes:
+
+- Given an empty shapes argument, rasterize() now returns an empty array
+  (#2993).
+- AffineTransformer's bulk transformations have been sped up by replacing
+  a loop with a Numpy ufunc (#2936).
+- The crop and invert mutual exclusivity test in raster_geomtry_mask() has been
+  removed (#2702).
+
+1.3.9 (2023-10-18)
+------------------
+
+Bug fixes:
+
+- Lean on numpy for minimum and maximum values of float data types (#2946).
+- Replace rasterio.dtypes.in_dtype_range() with the version inside the
+  edit-info command (#2946).
+- Deallocate _filepath VSI filesystem plugin callback structs to prevent the
+  memory leak reported in #2932.
+
+Packaging:
+
+GDAL 3.6.4 is patched in the PyPI wheels to fix the potential GTiff
+multithreading deadlock reported in https://github.com/OSGeo/gdal/issues/8470.
+
+1.3.8.post2 (2023-10-11)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update curl to version 8.4.0 to address CVE-2023-38545 and CVE-38546.
+
+1.3.8.post1 (2023-10-09)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update libwebp to version 1.3.2 to address CVE-2023-4863, and to publish
+wheels for Python 3.12.
+
+1.3.8 (2023-06-28)
 ------------------
 
 - Rasterio's Python file VSI plugin is now compatible with GDAL VRTs such as
   the one used for boundless reads of datasets (#2856).
 - Prevent a crash when accessing the block shapes of a multidataset HDF5 file
   (#2859).
-- Add a workaround for a GDAL multithreading bug introduced in 3.6.0 (#2851).
+- Add a workaround for a GDAL multithreaded compression bug introduced in 3.6.0
+  (#2851).
 
 1.3.7 (2023-05-22)
 ------------------

@@ -19,16 +19,19 @@ def test_registration_failure():
             "tests/data/RGB.byte.tif", opener=io.open
         ) as a, rasterio.open("tests/data/RGB.byte.tif", opener=int) as b:
             pass
-    assert exc_info.value.args[0] == "Opener <built-in function open> already registered for urlpath and mode"
+
+    assert exc_info.value.args[0] == "Opener already registered for urlpath and mode"
 
 
 def test_opener_failure():
     """Use int as an opener :)"""
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open("tests/data/RGB.byte.tif", opener=int)
-    assert exc_info.value.args[0] == "Opener failed to open file with arguments ('tests/data/RGB.byte.tif', 'rb'): TypeError(\"'str' object cannot be interpreted as an integer\")"
-    from rasterio._vsiopener import _registry_get
-    assert _registry_get(("tests/data/RGB.byte.tif", "r")) != int
+
+    assert (
+        exc_info.value.args[0]
+        == "Opener failed to open file with arguments ('tests/data/RGB.byte.tif', 'rb'): TypeError(\"'str' object cannot be interpreted as an integer\")"
+    )
 
 
 def test_opener_io_open():
@@ -39,7 +42,9 @@ def test_opener_io_open():
         assert profile["count"] == 3
 
 
-@pytest.mark.parametrize("urlpath", ["file://tests/data/RGB.byte.tif", "zip://*.tif::tests/data/files.zip"])
+@pytest.mark.parametrize(
+    "urlpath", ["file://tests/data/RGB.byte.tif", "zip://*.tif::tests/data/files.zip"]
+)
 def test_opener_fsspec_open(urlpath):
     """Use fsspec.open as opener."""
     with rasterio.open(urlpath, opener=fsspec.open) as src:

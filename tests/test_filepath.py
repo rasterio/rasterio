@@ -1,6 +1,8 @@
 """FilePath tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 3.x"""
 
+# TODO: delete at version 2.0. FilePath is deprecated in version 1.4.
+
 from io import BytesIO
 import logging
 import os.path
