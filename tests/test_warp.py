@@ -169,6 +169,12 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
         return f
 
 
+@pytest.fixture(scope="session")
+def rpcs():
+    with rasterio.open("tests/data/RGB.byte.rpc.vrt") as src:
+        return src.rpcs
+
+
 def test_transform_src_crs_none():
     with pytest.raises(CRSError):
         transform(None, WGS84_crs, [1], [1])
@@ -351,6 +357,56 @@ def test_calculate_default_transform():
         assert dst_transform.almost_equals(target_transform)
         assert width == 835
         assert height == 696
+
+
+def test_calculate_default_transform_geoloc_array():
+    target_transform = Affine(
+        0.0028535715391804096,
+        0.0,
+        -78.95864996545055,
+        0.0,
+        -0.0028535715391804096,
+        25.550873767433984,
+    )
+
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
+        )
+        dst_transform, width, height = calculate_default_transform(
+            src.crs,
+            CRS.from_epsg(4326),
+            src.width,
+            src.height,
+            src_geoloc_array=(xs, ys),
+        )
+
+        assert dst_transform.almost_equals(target_transform, precision=1e-3)
+        assert width == 838
+        assert height == 692
+
+
+def test_calculate_default_transform_rpcs(rpcs):
+    target_transform = Affine(
+        7.516528579807828e-05,
+        0.0,
+        -123.48824818566493,
+        0.0,
+        -7.516528579807828e-05,
+        49.52797830474044,
+    )
+
+    dst_transform, width, height = calculate_default_transform(
+        CRS.from_epsg(32618),
+        CRS.from_epsg(4326),
+        791,
+        718,
+        rpcs=rpcs,
+    )
+
+    assert dst_transform.almost_equals(target_transform, precision=1e-4)
+    assert height == 553
+    assert width == 1144
 
 
 def test_calculate_default_transform_single_resolution():

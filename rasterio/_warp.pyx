@@ -632,6 +632,7 @@ def _calculate_default_transform(
     top=None,
     gcps=None,
     rpcs=None,
+    src_geoloc_array=None,
     **kwargs
 ):
     """Wraps GDAL's algorithm."""
@@ -645,6 +646,10 @@ def _calculate_default_transform(
     cdef char **imgProjOptions = NULL
     cdef char **papszMD = NULL
     cdef bint bUseApproxTransformer = True
+
+    # Source geolocation parameters are mutually exclusive.
+    # if sum(param is not None for param in (left, gcps, rpcs, src_geoloc_array)) > 1:
+    #     raise ValueError("Source geolocation parameters are mutually exclusive.")
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -660,8 +665,10 @@ def _calculate_default_transform(
     dst_crs = CRS.from_user_input(dst_crs)
     wkt_b = dst_crs.to_wkt().encode('utf-8')
     wkt = wkt_b
+
     if src_crs is not None:
         src_crs = CRS.from_user_input(src_crs)
+
     # The transformer at the heart of this function requires a dataset.
     # We use an in-memory VRT dataset.
     vrt_doc = _suggested_proxy_vrt_doc(
@@ -669,13 +676,17 @@ def _calculate_default_transform(
         height,
         transform=transform,
         crs=src_crs,
-        gcps=gcps
+        gcps=gcps,
+        rpcs=rpcs,
     ).decode('utf-8')
+
     hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+
     try:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
 
@@ -700,6 +711,17 @@ def _calculate_default_transform(
             exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
             imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
             bUseApproxTransformer = False
+
+        elif src_geoloc_array is not None:
+            arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+            geoloc_dataset = MemoryDataset(arr, crs=src_crs)
+            log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+            )
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+            )
 
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
@@ -1260,7 +1282,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             return super().read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
 
 
-def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None):
+def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None, rpcs=None):
     """Make a VRT XML document to serve _calculate_default_transform."""
     vrtdataset = ET.Element('VRTDataset')
     vrtdataset.attrib['rasterYSize'] = str(height)
@@ -1285,6 +1307,21 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None)
     elif transform:
         geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
         geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
+    elif rpcs:
+        metadata = ET.SubElement(vrtdataset, "Metadata")
+        metadata.attrib["domain"] = "RPC"
+        for key in (
+            "line_off", "samp_off", "height_off", "lat_off", "long_off",
+            "line_scale", "samp_scale", "height_scale", "lat_scale", "long_scale",
+            "err_bias", "err_rand",
+        ): 
+            item = ET.SubElement(metadata, "MDI")
+            item.attrib["key"] = key.upper()
+            item.text = str(getattr(rpcs, key))
+        for key in ("line_num_coeff", "line_den_coeff", "samp_num_coeff", "samp_den_coeff"):
+            item = ET.SubElement(metadata, "MDI")
+            item.attrib["key"] = key.upper()
+            item.text = " ".join(["{:+e}".format(val) for val in getattr(rpcs, key)]) 
 
     return ET.tostring(vrtdataset)
 
