@@ -359,6 +359,10 @@ def test_calculate_default_transform():
         assert height == 696
 
 
+@pytest.mark.skipif(
+    not gdal_version.at_least("3.5"),
+    reason="Older GDAL versions require geotransform or GCPs",
+)
 def test_calculate_default_transform_geoloc_array():
     target_transform = Affine(
         0.0028535715391804096,
