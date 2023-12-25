@@ -79,7 +79,7 @@ jobs:
           touch failure-default.json
           cat failure-*.json | jq -s -c '[.[].gdal_ref] | unique' > failed-gdal-refs.json
           cat failed-gdal-refs.json
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: failed-gdal-refs
           path: failed-gdal-refs.json
