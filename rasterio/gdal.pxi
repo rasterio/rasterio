@@ -23,11 +23,9 @@ cdef extern from "cpl_error.h" nogil:
         CE_Fatal
 
     ctypedef int CPLErrorNum
-
-    # CPLErrorNum eludes me at the moment, I'm calling it 'int'
-    # for now.
     ctypedef void (*CPLErrorHandler)(CPLErr, int, const char*)
 
+    void CPLError(CPLErr eErrClass, CPLErrorNum err_no, const char *template, ...)
     void CPLErrorReset()
     int CPLGetLastErrorNo()
     const char* CPLGetLastErrorMsg()
@@ -644,6 +642,11 @@ cdef extern from "gdal_alg.h" nogil:
                           int nReqOrder, int bReversed)
     void *GDALDestroyGCPTransformer( void *pTransformArg)
     int GDALGCPTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
+                          double *x, double *y, double *z, int *panSuccess)
+    void *GDALCreateTPSTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
+                          int bReversed)
+    void *GDALDestroyTPSTransformer( void *pTransformArg)
+    int GDALTPSTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
                           double *x, double *y, double *z, int *panSuccess)
     void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
                           double dfPixErrThreshold,

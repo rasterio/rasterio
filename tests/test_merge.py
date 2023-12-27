@@ -99,6 +99,7 @@ def test_unsafe_casting():
     dy=floats(min_value=-0.05, max_value=0.05),
 )
 def test_issue2202(dx, dy):
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
     import rasterio.merge
     from shapely import wkt
     from shapely.affinity import translate

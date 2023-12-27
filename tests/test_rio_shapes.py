@@ -6,7 +6,6 @@ import re
 
 import numpy as np
 import pytest
-from shapely.geometry import shape
 
 import rasterio
 from rasterio.rio.main import main_group
@@ -73,7 +72,6 @@ def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):
     An area of nodata should also be represented with a shape when using
     --with-nodata option
     """
-
     pixelated_image[0:2, 8:10] = 255
 
     with rasterio.open(pixelated_image_file, 'r+') as out:
@@ -139,6 +137,8 @@ def test_shapes_precision(runner, pixelated_image_file):
 
 def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     """ --mask should extract the nodata area of the image """
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
+    from shapely.geometry import shape
 
     pixelated_image[0:5, 0:10] = 255
     pixelated_image[0:10, 0:3] = 255
@@ -160,6 +160,9 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     """using --sampling with the mask should snap coordinates to the nearest
     factor of 5
     """
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
+    from shapely.geometry import shape
+
     pixelated_image[0:5, 0:10] = 255
     pixelated_image[0:10, 0:3] = 255
     pixelated_image[8:10, 8:10] = 255
@@ -184,6 +187,8 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     When using --as-mask option, pixel value should not matter, only depends
     on pixels being contiguous.
     """
+    shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
+    from shapely.geometry import shape
 
     pixelated_image[2:3, 2:3] = 4
 

@@ -1,7 +1,14 @@
 [build-system]
-requires = ["setuptools", "wheel", "cython>=3", "oldest-supported-numpy"]
+requires = ["setuptools>=67.8", "cython~=3.0.2", "oldest-supported-numpy"]
+build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:FilePath is supplanted",
+    "ignore:is_valid is not useful",
+    "ignore:The given matrix is",
+    "ignore:Dataset has no geotransform",
+]
 markers = [
     "slow: marks tests as slow",
     "gdalbin: marks test requiring GDAL binaries",

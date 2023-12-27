@@ -162,3 +162,7 @@ class WarpOperationError(RasterioError):
 
 class StatisticsError(RasterioError):
     """Raised when dataset statistics cannot be computed."""
+
+
+class OpenerRegistrationError(RasterioError):
+    """Raised when a Python file opener can not be registered."""

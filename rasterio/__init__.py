@@ -125,21 +125,27 @@ def open(
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
-    a URL, or contained within a stream of bytes.
+    a URL, or contained within a stream of bytes. This function accepts
+    different types of fp parameters. However, it is almost always best
+    to pass a string that has a dataset name as its value. These are
+    passed directly to GDAL protocol and format handlers. A path to
+    a zipfile is more efficiently used by GDAL than a Python ZipFile
+    object, for example.
 
     In read ('r') or read/write ('r+') mode, no keyword arguments are
     required: these attributes are supplied by the opened dataset.
 
-    In write ('w' or 'w+') mode, the driver, width, height, count, and dtype
-    keywords are strictly required.
+    In write ('w' or 'w+') mode, the driver, width, height, count, and
+    dtype keywords are strictly required.
 
     Parameters
     ----------
-    fp : str, file object, PathLike object, FilePath, or MemoryFile
-        A filename or URL, a file object opened in binary ('rb') mode, a
-        Path object, or one of the rasterio classes that provides the
-        dataset-opening interface (has an open method that returns a
-        dataset).
+    fp : str, os.PathLike, file-like, or rasterio.io.MemoryFile
+        A filename or URL, a file object opened in binary ('rb') mode,
+        a Path object, or one of the rasterio classes that provides the
+        dataset-opening interface (has an open method that returns
+        a dataset). Use a string when possible: GDAL can more
+        efficiently access a dataset if it opens it natively.
     mode : str, optional
         'r' (read, the default), 'r+' (read/write), 'w' (write), or
         'w+' (write/read).
@@ -161,25 +167,25 @@ def open(
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    crs : str, dict, or CRS; optional
+    crs : str, dict, or CRS, optional
         The coordinate reference system. Required in 'w' or 'w+' modes,
         it is ignored in 'r' or 'r+' modes.
-    transform : Affine instance, optional
+    transform : affine.Affine, optional
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
-    dtype : str or numpy.dtype
+    dtype : str or numpy.dtype, optional
         The data type for bands. For example: 'uint8' or
-        :attr:`rasterio.uint16`. Required in 'w' or 'w+' modes, it is
+        `rasterio.uint16`. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    nodata : int, float, or nan; optional
+    nodata : int, float, or nan, optional
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
         modes.
-    sharing : bool; optional
+    sharing : bool, optional
         To reduce overhead and prevent programs from running out of file
         descriptors, rasterio maintains a pool of shared low level
-        dataset handles. When `True` this function will use a shared
+        dataset handles. If True this function will use a shared
         handle if one is available. Multithreaded programs must avoid
         sharing and should set *sharing* to `False`.
     opener : callable, optional
@@ -188,7 +194,8 @@ def open(
         underlying file-like object is obtained by calling *opener* with
         (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
         driver's native mode. *opener* must return a Python file-like
-        object that provides read, seek, tell, and close methods.
+        object that provides read, seek, tell, and close methods. Note:
+        only one opener at a time per fp, mode pair is allowed. 
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -197,11 +204,24 @@ def open(
 
     Returns
     -------
-    A ``DatasetReader`` or ``DatasetWriter`` object.
+    :class:`rasterio.io.DatasetReader`
+        If `mode` is "r".
+    :class:`rasterio.io.DatasetWriter`
+        If `mode` is "r+", "w", or "w+".
+
+    Raises
+    ------
+    :class:`TypeError`
+        If arguments are of the wrong Python type.
+    :class:`rasterio.errors.RasterioIOError`
+        If the dataset can not be opened. Such as when there is no
+        dataset with the given name.
+    :class:`rasterio.errors.DriverCapabilityError`
+        If the detected format driver does not support the requested
+        opening mode.
 
     Examples
     --------
-
     To open a local GeoTIFF dataset for reading using standard driver
     discovery and no directives:
 
@@ -258,13 +278,11 @@ def open(
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
     elif mode == 'r' and hasattr(fp, 'read'):
-        if have_vsi_plugin:
-            return FilePath(fp).open(driver=driver, sharing=sharing, **kwargs)
-        else:
-            memfile = MemoryFile(fp.read())
-            dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
-            dataset._env.enter_context(memfile)
-            return dataset
+        memfile = MemoryFile(fp.read())
+        fp.seek(0)
+        dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
+        dataset._env.enter_context(memfile)
+        return dataset
 
     elif mode in ('w', 'w+') and hasattr(fp, 'write'):
         memfile = MemoryFile()
@@ -317,59 +335,64 @@ def open(
     # At this point, the fp argument is a string or path-like object
     # which can be converted to a string.
     else:
+        raw_dataset_path = os.fspath(fp)
         stack = ExitStack()
-
+    
         if hasattr(fp, "path") and hasattr(fp, "fs"):
             log.debug("Detected fp is an OpenFile: fp=%r", fp)
             raw_dataset_path = fp.path
             opener = fp.fs.open
         else:
             raw_dataset_path = os.fspath(fp)
+ 
+        try:
+            # when opener is a callable that takes a filename or URL and returns
+            # a file-like object with read, seek, tell, and close methods, we
+            # can register it with GDAL and use it as the basis for a GDAL
+            # virtual filesystem. This is generally better than the FilePath
+            # approach introduced in version 1.3.
+            if opener:
+                vsi_path_ctx = _opener_registration(raw_dataset_path, mode[0], opener)
+                registered_vsi_path = stack.enter_context(vsi_path_ctx)
+                path = _UnparsedPath(registered_vsi_path)
+            else:
+                path = _parse_path(raw_dataset_path)
 
-        # when opener is a callable that takes a filename or URL and returns
-        # a file-like object with read, seek, tell, and close methods, we
-        # can register it with GDAL and use it as the basis for a GDAL
-        # virtual filesystem. This is generally better than the FilePath
-        # approach introduced in version 1.3.
-        if opener:
-            vsi_path_ctx = _opener_registration(raw_dataset_path, opener)
-            registered_vsi_path = stack.enter_context(vsi_path_ctx)
-            path = _UnparsedPath(registered_vsi_path)
-        else:
-            path = _parse_path(raw_dataset_path)
-
-        if mode == "r":
-            dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == "r+":
-            dataset = get_writer_for_path(path, driver=driver)(
-                path, mode, driver=driver, sharing=sharing, **kwargs
-            )
-        elif mode.startswith("w"):
-            if not driver:
-                driver = driver_from_extension(path)
-            writer = get_writer_for_driver(driver)
-            if writer is not None:
-                dataset = writer(
-                    path,
-                    mode,
-                    driver=driver,
-                    width=width,
-                    height=height,
-                    count=count,
-                    crs=crs,
-                    transform=transform,
-                    dtype=dtype,
-                    nodata=nodata,
-                    sharing=sharing,
-                    **kwargs
+            if mode == "r":
+                dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+            elif mode == "r+":
+                dataset = get_writer_for_path(path, driver=driver)(
+                    path, mode, driver=driver, sharing=sharing, **kwargs
                 )
+            elif mode.startswith("w"):
+                if not driver:
+                    driver = driver_from_extension(path)
+                writer = get_writer_for_driver(driver)
+                if writer is not None:
+                    dataset = writer(
+                        path,
+                        mode,
+                        driver=driver,
+                        width=width,
+                        height=height,
+                        count=count,
+                        crs=crs,
+                        transform=transform,
+                        dtype=dtype,
+                        nodata=nodata,
+                        sharing=sharing,
+                        **kwargs
+                    )
+                else:
+                    raise DriverCapabilityError(
+                        "Writer does not exist for driver: %s" % str(driver)
+                    )
             else:
                 raise DriverCapabilityError(
-                    "Writer does not exist for driver: %s" % str(driver)
-                )
-        else:
-            raise DriverCapabilityError(
-                "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+        except Exception:
+            stack.close()
+            raise
 
         dataset._env = stack
         return dataset

@@ -158,20 +158,37 @@ def transform_bounds(
 
 
 @ensure_env
-def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
-              src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
-              dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,
-              resampling=Resampling.nearest, num_threads=1,
-              init_dest_nodata=True, warp_mem_limit=0, **kwargs):
+def reproject(
+    source,
+    destination=None,
+    src_transform=None,
+    gcps=None,
+    rpcs=None,
+    src_crs=None,
+    src_nodata=None,
+    dst_transform=None,
+    dst_crs=None,
+    dst_nodata=None,
+    dst_resolution=None,
+    src_alpha=0,
+    dst_alpha=0,
+    resampling=Resampling.nearest,
+    num_threads=1,
+    init_dest_nodata=True,
+    warp_mem_limit=0,
+    src_geoloc_array=None,
+    **kwargs
+):
     """Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
-    system definitions and affine transformation parameters or ground
-    control points (gcps) are required for reprojection.
+    system definitions and geolocation parameters are required for
+    reprojection. Only one of src_transform, gcps, rpcs, or
+    src_geoloc_array can be used.
 
     If the source and destination are rasterio Bands, shorthand for
     bands of datasets on disk, the coordinate reference systems and
-    transforms or GCPs will be read from the appropriate datasets.
+    transforms will be read from the appropriate datasets.
 
     Parameters
     ------------
@@ -199,6 +216,10 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
         Rational polynomial coefficients for the source. An error will
         be raised if this parameter is defined together with src_transform
         or gcps.
+    src_geoloc_array : array-like, optional
+        A pair of 2D arrays holding x and y coordinates, like a like
+        a dense array of ground control points that may be used in place
+        of src_transform.
     src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -258,19 +279,23 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
     dst_transform: Affine
         THe affine transformation matrix of the destination.
     """
-
-    # Only one type of georeferencing is permitted.
-    if (src_transform and gcps) or (src_transform and rpcs) or (gcps and rpcs):
-        raise ValueError("src_transform, gcps, and rpcs are mutually "
-                         "exclusive parameters and may not be used together.")
+    # Source geolocation parameters are mutually exclusive.
+    if (
+        sum(
+            param is not None for param in (src_transform, gcps, rpcs, src_geoloc_array)
+        )
+        > 1
+    ):
+        raise ValueError(
+            "src_transform, gcps, rpcs, and src_geoloc_array are mutually "
+            "exclusive parameters and may not be used together."
+        )
 
     # Guard against invalid or unsupported resampling algorithms.
     try:
         if resampling == 7:
             raise ValueError("Gauss resampling is not supported")
-
         Resampling(resampling)
-
     except ValueError:
         raise ValueError(
             "resampling must be one of: {0}".format(", ".join(
@@ -322,6 +347,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
         dst_height = None
         dst_width = None
         dst_count = src_count
+
         if isinstance(destination, np.ndarray):
             if destination.ndim == 3:
                 dst_count, dst_height, dst_width = destination.shape
@@ -331,23 +357,47 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
 
         left, bottom, right, top = src_bounds
         dst_transform, dst_width, dst_height = calculate_default_transform(
-            src_crs=src_crs, dst_crs=dst_crs, width=src_width, height=src_height,
-            left=left, bottom=bottom, right=right, top=top,
-            gcps=gcps, rpcs=rpcs, dst_width=dst_width, dst_height=dst_height,
-            resolution=dst_resolution)
+            src_crs=src_crs,
+            dst_crs=dst_crs,
+            width=src_width,
+            height=src_height,
+            left=left,
+            bottom=bottom,
+            right=right,
+            top=top,
+            gcps=gcps,
+            rpcs=rpcs,
+            src_geoloc_array=src_geoloc_array,
+            dst_width=dst_width,
+            dst_height=dst_height,
+            resolution=dst_resolution,
+        )
 
         if destination is None:
-            destination = np.empty((int(dst_count), int(dst_height), int(dst_width)),
-                                   dtype=source.dtype)
+            destination = np.empty(
+                (int(dst_count), int(dst_height), int(dst_width)), dtype=source.dtype
+            )
 
-    # Call the function in our extension module.
     _reproject(
-        source, destination, src_transform=src_transform, gcps=gcps, rpcs=rpcs,
-        src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
-        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
-        src_alpha=src_alpha, resampling=resampling,
-        init_dest_nodata=init_dest_nodata, num_threads=num_threads,
-        warp_mem_limit=warp_mem_limit, **kwargs)
+        source,
+        destination,
+        src_transform=src_transform,
+        gcps=gcps,
+        rpcs=rpcs,
+        src_crs=src_crs,
+        src_nodata=src_nodata,
+        dst_transform=dst_transform,
+        dst_crs=dst_crs,
+        dst_nodata=dst_nodata,
+        dst_alpha=dst_alpha,
+        src_alpha=src_alpha,
+        resampling=resampling,
+        init_dest_nodata=init_dest_nodata,
+        num_threads=num_threads,
+        warp_mem_limit=warp_mem_limit,
+        src_geoloc_array=src_geoloc_array,
+        **kwargs
+    )
 
     return destination, dst_transform
 
@@ -396,46 +446,65 @@ def aligned_target(transform, width, height, resolution):
 
 @ensure_env
 def calculate_default_transform(
-        src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
-        top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None, **kwargs):
-    """Output dimensions and transform for a reprojection.
-
-    Source and destination coordinate reference systems and source
-    width and height are the first four, required, parameters. Source
-    georeferencing can be specified using either ground control points
-    (gcps) or spatial bounds (left, bottom, right, top). These two
-    forms of georeferencing are mutually exclusive.
-
-    The destination transform is anchored at the left, top coordinate.
+    src_crs,
+    dst_crs,
+    width,
+    height,
+    left=None,
+    bottom=None,
+    right=None,
+    top=None,
+    gcps=None,
+    rpcs=None,
+    resolution=None,
+    dst_width=None,
+    dst_height=None,
+    src_geoloc_array=None,
+    **kwargs
+):
+    """Computes the default dimensions and transform for a reprojection.
 
     Destination width and height (and resolution if not provided), are
-    calculated using GDAL's method for suggest warp output.
+    calculated using GDAL's method for suggest warp output.  The
+    destination transform is anchored at the left, top coordinate.
+
+    Source georeferencing can be specified using either ground control
+    points (GCPs), rational polynomial coefficients (RPCs), geolocation
+    arrays, or spatial bounds (left, bottom, right, top). These forms of
+    georeferencing are mutually exclusive.
+
+    Source and destination coordinate reference systems and source
+    width and height are the first four, required, parameters.
 
     Parameters
     ----------
-    src_crs: CRS or dict
+    src_crs : CRS or dict
         Source coordinate reference system, in rasterio dict format.
         Example: CRS({'init': 'EPSG:4326'})
-    dst_crs: CRS or dict
+    dst_crs : CRS or dict
         Target coordinate reference system.
-    width, height: int
+    width, height : int
         Source raster width and height.
-    left, bottom, right, top: float, optional
+    left, bottom, right, top : float, optional
         Bounding coordinates in src_crs, from the bounds property of a
         raster. Required unless using gcps.
-    gcps: sequence of GroundControlPoint, optional
+    gcps : sequence of GroundControlPoint, optional
         Instead of a bounding box for the source, a sequence of ground
         control points may be provided.
-    rpcs: RPC or dict, optional
+    rpcs : RPC or dict, optional
         Instead of a bounding box for the source, rational polynomial
         coefficients may be provided.
-    resolution: tuple (x resolution, y resolution) or float, optional
+    src_geoloc_array : array-like, optional
+        A pair of 2D arrays holding x and y coordinates, like a like
+        a dense array of ground control points that may be used in place
+        of src_transform.
+    resolution : tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference
         system.
-    dst_width, dst_height: int, optional
+    dst_width, dst_height : int, optional
         Output file size in pixels and lines. Cannot be used together
         with resolution.
-    kwargs:  dict, optional
+    kwargs :  dict, optional
         Additional arguments passed to transformation function.
 
     Returns
@@ -456,20 +525,15 @@ def calculate_default_transform(
         NO
             reproject coordinates beyond valid bound limits
     """
-    if any(x is not None for x in (left, bottom, right, top)) and gcps:
-        raise ValueError("Bounding values and ground control points may not"
-                         " be used together.")
-    if any(x is not None for x in (left, bottom, right, top)) and rpcs:
-        raise ValueError("Bounding values and rational polynomial coefficients may not"
-                         " be used together.")
+    if sum(param is not None for param in (left, gcps, rpcs, src_geoloc_array)) < 1:
+        raise ValueError("Bounds, gcps, rpcs, or src_geoloc_array are required.")
 
-    if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
-        raise ValueError("Either four bounding values, ground control points,"
-                         " or rational polynomial coefficients must be specified")
-
-    if gcps and rpcs:
-        raise ValueError("ground control points and rational polynomial",
-                         " coefficients may not be used together.")
+    # Source geolocation parameters are mutually exclusive.
+    elif sum(param is not None for param in (left, gcps, rpcs, src_geoloc_array)) > 1:
+        raise ValueError(
+            "Bounds, gcps, rpcs, and src_geoloc_array are mutually "
+            "exclusive parameters and may not be used together."
+        )
 
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
@@ -484,7 +548,18 @@ def calculate_default_transform(
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, gcps, rpcs, **kwargs
+        src_crs,
+        dst_crs,
+        width,
+        height,
+        left=left,
+        bottom=bottom,
+        right=right,
+        top=top,
+        gcps=gcps,
+        rpcs=rpcs,
+        src_geoloc_array=src_geoloc_array,
+        **kwargs
     )
 
     # If resolution is specified, Keep upper-left anchored
@@ -495,8 +570,11 @@ def calculate_default_transform(
         try:
             res = (float(resolution), float(resolution))
         except TypeError:
-            res = (resolution[0], resolution[0]) \
-                if len(resolution) == 1 else resolution[0:2]
+            res = (
+                (resolution[0], resolution[0])
+                if len(resolution) == 1
+                else resolution[0:2]
+            )
 
         # Assume yres is provided as positive,
         # needs to be negative for north-up affine

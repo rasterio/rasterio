@@ -8,11 +8,14 @@ Based on _filepath.pyx.
 include "gdal.pxi"
 
 import contextlib
+from contextvars import ContextVar
 import logging
 from uuid import uuid4
 
 from libc.string cimport memcpy
 cimport numpy as np
+
+from rasterio.errors import OpenerRegistrationError
 
 log = logging.getLogger(__name__)
 
@@ -38,8 +41,10 @@ cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 # the plugin to determine what "files" exist on "disk".
 # Currently the only way to "create" a file in the filesystem is to add
 # an entry to this dictionary. GDAL will then Open the path later.
-cdef _OPENER_REGISTRY = {}
-cdef _OPEN_FILE_EXIT_STACKS = {}
+_OPENER_REGISTRY = ContextVar("opener_registery")
+_OPENER_REGISTRY.set({})
+_OPEN_FILE_EXIT_STACKS = ContextVar("open_file_exit_stacks")
+_OPEN_FILE_EXIT_STACKS.set({})
 
 
 cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_struct):
@@ -80,30 +85,38 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     result must be seperately seekable.
     """
     if pUserData is NULL:
-        log.error("Python opener registry is not initialized.")
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>"Python opener is not initialized.")
         return NULL
 
-    cdef dict registry = <object>pUserData
-    filename = pszFilename.decode("utf-8")
-
-    log.debug("Looking up opener: registry=%r, filename=%r", registry, filename)
-    try:
-        file_opener = registry[filename]
-    except KeyError:
-        log.info("Object not found: registry=%r, filename=%r", registry, filename)
-        return NULL
-
+    cdef object var = <object>pUserData
+    cdef dict registry = var.get()
+    urlpath = pszFilename.decode("utf-8")
     mode = pszAccess.decode("utf-8")
+    log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+    # Note: the opener is added to the registry in rasterio.open().
+
+    try:
+        file_opener = registry[(urlpath, mode[0])]
+    except KeyError as err:
+        # GDAL is eager to discover auxiliary files and this error will
+        # occur often. The Python opener plugin does not support
+        # auxiliary files.
+        log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+        return NULL
+
     cdef object file_obj
 
     try:
-        file_obj = file_opener(filename, mode)
-    # ZipFile.open doesn't accept binary modes like "rb" and will raise
-    # ValueError if given one. We strip the mode in this case.
+        file_obj = file_opener(urlpath, mode)
     except ValueError as err:
-        file_obj = file_opener(filename, mode.rstrip("b"))
-    except Exception:
-        log.info("Failed to open file, likely because it doesn't exist.")
+        # ZipFile.open doesn't accept binary modes like "rb" and will
+        # raise ValueError if given one. We strip the mode in this case.
+        file_obj = file_opener(urlpath, mode.rstrip("b"))
+    except Exception as err:
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
@@ -117,7 +130,9 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     except (AttributeError, TypeError):
         log.debug("File object is not a context manager: file_obj=%r", file_obj)
 
-    _OPEN_FILE_EXIT_STACKS[file_obj] = stack
+    exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
+    exit_stacks[file_obj] = stack
+    _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
     return <void *>file_obj
 
 
@@ -153,17 +168,32 @@ cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCou
 cdef int pyopener_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
     log.debug("Closing: file_obj=%r", file_obj)
-    stack = _OPEN_FILE_EXIT_STACKS.pop(file_obj)
+    exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
+    stack = exit_stacks.pop(file_obj)
     stack.close()
+    _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
     return 0
 
 
 @contextlib.contextmanager
-def _opener_registration(urlpath, opener):
-    filename = urlpath
-    _OPENER_REGISTRY[filename] = opener
-    try:
-        yield f"{PREFIX}{filename}"
-    finally:
-        _ = _OPENER_REGISTRY.pop(filename)
-
+def _opener_registration(urlpath, mode, opener):
+    registry = _OPENER_REGISTRY.get()
+    if (urlpath, mode) in registry:
+        if registry[(urlpath, mode)] != opener:
+            raise OpenerRegistrationError(f"Opener already registered for urlpath and mode")
+        else:
+            try:
+                yield f"{PREFIX}{urlpath}"
+            finally:
+                registry = _OPENER_REGISTRY.get()
+                _ = registry.pop((urlpath, mode), None)
+                _OPENER_REGISTRY.set(registry)
+    else:
+        registry[(urlpath, mode)] = opener
+        _OPENER_REGISTRY.set(registry)
+        try:
+            yield f"{PREFIX}{urlpath}"
+        finally:
+            registry = _OPENER_REGISTRY.get()
+            _ = registry.pop((urlpath, mode), None)
+            _OPENER_REGISTRY.set(registry)
