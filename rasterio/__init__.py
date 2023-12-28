@@ -246,10 +246,10 @@ def open(
     ...         nodata=0, tiled=True, compress='lzw') as dataset:
     ...     dataset.write(...)
     """
-
     if not isinstance(fp, str):
         if not (
-            hasattr(fp, "read")
+            hasattr(fp, "open")
+            or hasattr(fp, "read")
             or hasattr(fp, "write")
             or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
         ):
@@ -335,8 +335,15 @@ def open(
     # At this point, the fp argument is a string or path-like object
     # which can be converted to a string.
     else:
-        raw_dataset_path = os.fspath(fp)
         stack = ExitStack()
+
+        if hasattr(fp, "path") and hasattr(fp, "fs"):
+            log.debug("Detected fp is an OpenFile: fp=%r", fp)
+            raw_dataset_path = fp.path
+            opener = fp.fs.open
+        else:
+            raw_dataset_path = os.fspath(fp)
+ 
         try:
             # when opener is a callable that takes a filename or URL and returns
             # a file-like object with read, seek, tell, and close methods, we

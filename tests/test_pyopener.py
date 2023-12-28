@@ -93,3 +93,26 @@ def test_opener_fsspec_fs_write(tmp_path):
         assert src.mask_flag_enums == ([MaskFlags.nodata],)
         arr = src.read()
         assert list(arr.flatten()) == [0, 0, 2]
+
+
+def test_fp_fsspec_openfile_write(tmp_path):
+    """Use an fsspec OpenFile for writing."""
+    data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
+    of = fsspec.open((tmp_path / "test.tif").as_posix(), "wb")
+    with rasterio.open(
+        of,
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+        nodata=0,
+    ) as dst:
+        dst.write(data, indexes=1)
+
+    # Expect the dataset's nodata value in the first two pixels.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.nodata],)
+        arr = src.read()
+        assert list(arr.flatten()) == [0, 0, 2]
