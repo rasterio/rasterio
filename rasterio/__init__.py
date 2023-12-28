@@ -335,9 +335,8 @@ def open(
     # At this point, the fp argument is a string or path-like object
     # which can be converted to a string.
     else:
-        raw_dataset_path = os.fspath(fp)
         stack = ExitStack()
-    
+
         if hasattr(fp, "path") and hasattr(fp, "fs"):
             log.debug("Detected fp is an OpenFile: fp=%r", fp)
             raw_dataset_path = fp.path
