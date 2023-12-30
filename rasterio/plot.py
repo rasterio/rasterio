@@ -5,6 +5,7 @@ Most can handle a numpy array or `rasterio.Band()`.
 Primarily supports `$ rio insp`.
 """
 
+import builtins
 from collections import OrderedDict
 import logging
 
@@ -228,7 +229,16 @@ def reshape_as_raster(arr):
     return im
 
 
-def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=None, hist_range=None, **kwargs):
+def show_hist(
+    source,
+    bins=10,
+    masked=True,
+    title="Histogram",
+    ax=None,
+    label=None,
+    range=None,
+    **kwargs
+):
     """Easily display a histogram with matplotlib.
 
     Parameters
@@ -249,7 +259,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
     label : str, optional
         String, or list of strings. If passed, matplotlib will use this label list.
         Otherwise, a default label list will be automatically created
-    hist_range : list, optional
+    range : list, optional
         List of `[min, max]` values. If passed, matplotlib will use this range.
         Otherwise, a default range will be automatically created
     **kwargs : optional keyword arguments
@@ -264,14 +274,10 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
     else:
         arr = source
 
-    if "range" in kwargs:
-        # Avoid TypeError: matplotlib.axes._axes.Axes.hist() got multiple values for keyword argument 'range'
-        hist_range = kwargs.pop("range")
-
-    if hist_range is None:
+    if range is None:
         # The histogram is computed individually for each 'band' in the array
         # so we need the overall min/max to constrain the plot
-        hist_range = np.nanmin(arr), np.nanmax(arr)
+        range = np.nanmin(arr), np.nanmax(arr)
 
     if len(arr.shape) == 2:
         arr = np.expand_dims(arr.flatten(), 0).T
@@ -299,7 +305,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
         if isinstance(source, (tuple, rasterio.Band)):
             labels = [str(source[1])]
         else:
-            labels = [str(i + 1) for i in range(len(arr))]
+            labels = [str(i + 1) for i in builtins.range(len(arr))]
 
     if ax:
         show = False
@@ -309,12 +315,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
 
     fig = ax.get_figure()
 
-    ax.hist(arr,
-            bins=bins,
-            color=colors,
-            label=labels,
-            range=hist_range,
-            **kwargs)
+    ax.hist(arr, bins=bins, color=colors, label=labels, range=range, **kwargs)
 
     ax.legend(loc="upper right")
     ax.set_title(title, fontweight='bold')
