@@ -202,6 +202,22 @@ def test_show_hist():
         except ImportError:
             pass
 
+        try:
+            show_hist(src.read(), range=[0, 255])
+            fig = plt.gcf()
+            plt.close(fig)
+        except ImportError:
+            pass
+
+        try:
+            show_hist(src)
+            fig = plt.gcf()
+            ax = plt.gca()
+            assert ax.get_legend_handles_labels()[1] == ["1", "2", "3"]
+            plt.close(fig)
+        except ImportError:
+            pass
+
 
 def test_show_hist_mplargs():
     """
@@ -211,7 +227,8 @@ def test_show_hist_mplargs():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
             show_hist(src, bins=50, lw=0.0, stacked=False, alpha=0.3,
-               histtype='stepfilled', title="World Histogram overlaid")
+               histtype='stepfilled', title="World Histogram overlaid",
+               range=[0, 255])
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:

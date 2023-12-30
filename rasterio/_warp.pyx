@@ -223,13 +223,15 @@ def _reproject(
         num_threads=1,
         warp_mem_limit=0,
         working_data_type=0,
+        src_geoloc_array=None,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
-    system definitions and affine transformation parameters are required
-    for reprojection.
+    system definitions and geolocation parameters are required for
+    reprojection. Only one of src_transform, gcps, rpcs, or
+    src_geoloc_array can be used.
 
     If the source and destination are rasterio Bands, shorthand for
     bands of datasets on disk, the coordinate reference systems and
@@ -237,36 +239,40 @@ def _reproject(
 
     Parameters
     ------------
-    source: ndarray or rasterio Band
+    source : ndarray or rasterio Band
         Source raster.
-    destination: ndarray or rasterio Band
+    destination : ndarray or rasterio Band
         Target raster.
-    src_transform: affine.Affine(), optional
+    src_transform : affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
-    gcps: sequence of `GroundControlPoint` instances, optional
+    gcps : sequence of `GroundControlPoint` instances, optional
         Ground control points for the source. May be used in place of
         src_transform.
-    rpcs: RPC or dict, optional
+    rpcs : RPC or dict, optional
         Rational polynomial coefficients for the source. May be used
         in place of src_transform.
-    src_crs: dict, optional
+    src_geoloc_array : array-like, optional
+        A pair of 2D arrays holding x and y coordinates, like a like
+        a dense array of ground control points that may be used in place
+        of src_transform.
+    src_crs : dict, optional
         Source coordinate reference system, in rasterio dict format.
-        Required if source and destination are ndarrays.
-        Will be derived from source if it is a rasterio Band.
-        Example: {'init': 'EPSG:4326'}
-    src_nodata: int or float, optional
+        Required if source and destination are ndarrays.  Will be
+        derived from source if it is a rasterio Band.  Example:
+        'EPSG:4326'.
+    src_nodata : int or float, optional
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
         if available.
-    dst_transform: affine.Affine(), optional
+    dst_transform : affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_crs: dict, optional
+    dst_crs : dict, optional
         Target coordinate reference system.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_nodata: int or float, optional
+    dst_nodata : int or float, optional
         The nodata value used to initialize the destination; it will remain
         in all areas not covered by the reprojected source.  Defaults to the
         nodata value of the destination image (if set), the value of
@@ -275,7 +281,7 @@ def _reproject(
         Index of a band to use as the alpha band when warping.
     dst_alpha : int, optional
         Index of a band to use as the alpha band when warping.
-    resampling: int
+    resampling : int
         Resampling method to use.  One of the following:
             Resampling.nearest,
             Resampling.bilinear,
@@ -284,7 +290,7 @@ def _reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
-    init_dest_nodata: bool
+    init_dest_nodata : bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
     num_threads : int
@@ -297,7 +303,7 @@ def _reproject(
         56 MB. The default (0) means 64 MB with GDAL 2.2.
         The warp operation's memory limit in MB. The default (0)
         means 64 MB with GDAL 2.2.
-    kwargs:  dict, optional
+    kwargs :  dict, optional
         Additional arguments passed to both the image to image
         transformer GDALCreateGenImgProjTransformer2() (for example,
         MAX_GCP_ORDER=2) and to the Warper (for example,
@@ -305,7 +311,7 @@ def _reproject(
 
     Returns
     ---------
-    out: None
+    out : None
         Output is written to destination.
     """
     cdef int src_count
@@ -319,6 +325,10 @@ def _reproject(
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
     cdef bint bUseApproxTransformer = True
+
+    # Source geolocation parameters are mutually exclusive.
+    if sum(param is not None for param in (src_transform, gcps, rpcs, src_geoloc_array)) > 1:
+        raise ValueError("Source geolocation parameters are mutually exclusive.")
 
     # Validate nodata values immediately.
     if src_nodata is not None:
@@ -455,8 +465,19 @@ def _reproject(
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
     imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+
     if rpcs:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
+    elif src_geoloc_array is not None:
+        arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+        geoloc_dataset = MemoryDataset(arr, crs=src_crs)
+        log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+        )
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+        )
 
     # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
@@ -592,6 +613,7 @@ def _reproject(
 
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
+        CSLDestroy(warp_extras)
 
         if mem_raster is not None:
             mem_raster.close()
@@ -611,6 +633,7 @@ def _calculate_default_transform(
     top=None,
     gcps=None,
     rpcs=None,
+    src_geoloc_array=None,
     **kwargs
 ):
     """Wraps GDAL's algorithm."""
@@ -624,6 +647,10 @@ def _calculate_default_transform(
     cdef char **imgProjOptions = NULL
     cdef char **papszMD = NULL
     cdef bint bUseApproxTransformer = True
+
+    # Source geolocation parameters are mutually exclusive.
+    # if sum(param is not None for param in (left, gcps, rpcs, src_geoloc_array)) > 1:
+    #     raise ValueError("Source geolocation parameters are mutually exclusive.")
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -639,8 +666,10 @@ def _calculate_default_transform(
     dst_crs = CRS.from_user_input(dst_crs)
     wkt_b = dst_crs.to_wkt().encode('utf-8')
     wkt = wkt_b
+
     if src_crs is not None:
         src_crs = CRS.from_user_input(src_crs)
+
     # The transformer at the heart of this function requires a dataset.
     # We use an in-memory VRT dataset.
     vrt_doc = _suggested_proxy_vrt_doc(
@@ -648,13 +677,17 @@ def _calculate_default_transform(
         height,
         transform=transform,
         crs=src_crs,
-        gcps=gcps
+        gcps=gcps,
+        rpcs=rpcs,
     ).decode('utf-8')
+
     hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+
     try:
         imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
 
@@ -679,6 +712,17 @@ def _calculate_default_transform(
             exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
             imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
             bUseApproxTransformer = False
+
+        elif src_geoloc_array is not None:
+            arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+            geoloc_dataset = MemoryDataset(arr, crs=src_crs)
+            log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+            )
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+            )
 
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
@@ -1239,7 +1283,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             return super().read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
 
 
-def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None):
+def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None, rpcs=None):
     """Make a VRT XML document to serve _calculate_default_transform."""
     vrtdataset = ET.Element('VRTDataset')
     vrtdataset.attrib['rasterYSize'] = str(height)
@@ -1264,6 +1308,21 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None)
     elif transform:
         geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
         geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
+    elif rpcs:
+        metadata = ET.SubElement(vrtdataset, "Metadata")
+        metadata.attrib["domain"] = "RPC"
+        for key in (
+            "line_off", "samp_off", "height_off", "lat_off", "long_off",
+            "line_scale", "samp_scale", "height_scale", "lat_scale", "long_scale",
+            "err_bias", "err_rand",
+        ): 
+            item = ET.SubElement(metadata, "MDI")
+            item.attrib["key"] = key.upper()
+            item.text = str(getattr(rpcs, key))
+        for key in ("line_num_coeff", "line_den_coeff", "samp_num_coeff", "samp_den_coeff"):
+            item = ET.SubElement(metadata, "MDI")
+            item.attrib["key"] = key.upper()
+            item.text = " ".join(["{:+e}".format(val) for val in getattr(rpcs, key)]) 
 
     return ET.tostring(vrtdataset)
 

@@ -29,7 +29,7 @@ import re
 
 import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
-from rasterio.errors import CRSError
+from rasterio.errors import CRSError, RasterioDeprecationWarning
 from rasterio.enums import WktVersion
 
 from rasterio._base cimport osr_set_traditional_axis_mapping_strategy
@@ -119,11 +119,15 @@ cdef class CRS:
     def is_valid(self):
         """Test that the CRS is a geographic or projected CRS.
 
+        .. deprecated:: 1.4.0
+           This property is not useful and will be removed in 2.0.0.
+
         Returns
         -------
         bool
 
         """
+        warnings.warn("is_valid is not useful and will be removed in 2.0.0.", RasterioDeprecationWarning)
         return self.is_geographic or self.is_projected
 
     @property

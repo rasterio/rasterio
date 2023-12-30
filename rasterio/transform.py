@@ -435,24 +435,20 @@ class TransformerBase:
         else:
             raise TransformError("Invalid offset")
 
-        # shift input coordinates according to offset
-        T = IDENTITY.translation(coff, roff)
-        offset_rows = []
-        offset_cols = []
         try:
-            for colrow in zip(cols, rows):
-                offset_col, offset_row = T * colrow
-                offset_rows.append(offset_row)
-                offset_cols.append(offset_col)
-
+            # shift input coordinates according to offset
+            T = IDENTITY.translation(coff, roff)
+            identity_transformer = AffineTransformer(T)
+            offset_cols, offset_rows = identity_transformer._transform(
+                cols, rows, zs, transform_direction=TransformDirection.forward
+            )
             new_xs, new_ys = self._transform(
                 offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
             )
-
             if len(new_xs) == 1 and not AS_ARR:
                 return (new_xs[0], new_ys[0])
             else:
-                return (new_xs, new_ys)
+                return (list(new_xs), list(new_ys))
         except TypeError:
             raise TransformError("Invalid inputs")
 
@@ -486,20 +482,21 @@ class AffineTransformer(TransformerBase):
         self._transformer = affine_transform
 
     def _transform(self, xs, ys, zs, transform_direction):
-        resxs = []
-        resys = []
-
         if transform_direction is TransformDirection.forward:
             transform = self._transformer
         elif transform_direction is TransformDirection.reverse:
             transform = ~self._transformer
 
-        for x, y in zip(xs, ys):
-            resx, resy = transform * (x, y)
-            resxs.append(resx)
-            resys.append(resy)
+        is_arr = True if type(xs) in [list, tuple] else False
+        if is_arr:
+            a, b, c, d, e, f, _, _, _ = transform
+            transform_matrix = np.array([[a, b, c], [d, e, f]])
+            input_matrix = np.array([xs, ys, np.ones(len(xs))])
+            output_matrix = np.dot(transform_matrix, input_matrix)
+            return (list(output_matrix[0]), list(output_matrix[1]))
+        else:
+            return transform * (xs, ys)
 
-        return (resxs, resys)
 
     def __repr__(self):
         return "<AffineTransformer>"
@@ -533,13 +530,14 @@ class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
 
     Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
     Ensure that GDAL transformer objects are destroyed by calling `close()`
-    method or using context manager interface.
+    method or using context manager interface. If `tps` is set to True,
+    uses GDALCreateTPSTransformer and GDALTPSTransform instead.
 
     """
-    def __init__(self, gcps):
+    def __init__(self, gcps, tps=False):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
-        super().__init__(gcps)
+        super().__init__(gcps, tps)
 
     def __repr__(self):
         return "<{} GCPTransformer>".format(
