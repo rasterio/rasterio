@@ -4,7 +4,7 @@ ChangesD
 Next
 ----
 
-- Rasterio now vendors and modifies the snuggs module (#).
+- Rasterio now vendors and modifies the snuggs module (#2956).
 - The output file size limits of rio-warp were made redundant by changes to the
   GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
   has been added to the command. If used, the profile of the output dataset
