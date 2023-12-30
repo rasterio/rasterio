@@ -14,6 +14,8 @@ Deprecations:
 
 New Features:
 
+- An optional range keyword argument (like that of numpy.histogram()) has been
+  added to show_hist() (#2873).
 - Datasets stored in proprietary systems or addressable only through protocols
   not directly supported by GDAL can be accessed using the new opener keyword
   argument of rasterio.open() (#2898, #2907). This new feature is intended to

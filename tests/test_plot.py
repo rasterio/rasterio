@@ -203,7 +203,7 @@ def test_show_hist():
             pass
 
         try:
-            show_hist(src.read(), hist_range=[0, 255])
+            show_hist(src.read(), range=[0, 255])
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:
