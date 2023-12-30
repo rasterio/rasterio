@@ -228,7 +228,7 @@ def reshape_as_raster(arr):
     return im
 
 
-def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=None, **kwargs):
+def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=None, hist_range=None, **kwargs):
     """Easily display a histogram with matplotlib.
 
     Parameters
@@ -246,9 +246,12 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
         Title for the figure.
     ax : matplotlib.axes.Axes, optional
         The raster will be added to this axes if passed.
-    label : matplotlib labels (opt)
-        If passed, matplotlib will use this label list.
+    label : str, optional
+        String, or list of strings. If passed, matplotlib will use this label list.
         Otherwise, a default label list will be automatically created
+    hist_range : list, optional
+        List of `[min, max]` values. If passed, matplotlib will use this range.
+        Otherwise, a default range will be automatically created
     **kwargs : optional keyword arguments
         These will be passed to the :meth:`matplotlib.axes.Axes.hist` method.
     """
@@ -261,9 +264,14 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
     else:
         arr = source
 
-    # The histogram is computed individually for each 'band' in the array
-    # so we need the overall min/max to constrain the plot
-    rng = np.nanmin(arr), np.nanmax(arr)
+    if "range" in kwargs:
+        # Avoid TypeError: matplotlib.axes._axes.Axes.hist() got multiple values for keyword argument 'range'
+        hist_range = kwargs.pop("range")
+
+    if hist_range is None:
+        # The histogram is computed individually for each 'band' in the array
+        # so we need the overall min/max to constrain the plot
+        hist_range = np.nanmin(arr), np.nanmax(arr)
 
     if len(arr.shape) == 2:
         arr = np.expand_dims(arr.flatten(), 0).T
@@ -291,7 +299,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
         if isinstance(source, (tuple, rasterio.Band)):
             labels = [str(source[1])]
         else:
-            labels = (str(i + 1) for i in range(len(arr)))
+            labels = [str(i + 1) for i in range(len(arr))]
 
     if ax:
         show = False
@@ -305,7 +313,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=No
             bins=bins,
             color=colors,
             label=labels,
-            range=rng,
+            range=hist_range,
             **kwargs)
 
     ax.legend(loc="upper right")
