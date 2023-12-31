@@ -271,7 +271,6 @@ inst_reqs = [
     "click>=4.0",
     "cligj>=0.5",
     "numpy",
-    "snuggs>=1.4.1",
     "click-plugins",
     "setuptools",
 ]

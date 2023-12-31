@@ -38,6 +38,7 @@ Bug fixes:
 
 Other changes:
 
+- Rasterio now vendors and modifies the snuggs module (#2956).
 - Given an empty shapes argument, rasterize() now returns an empty array
   (#2993).
 - AffineTransformer's bulk transformations have been sped up by replacing
