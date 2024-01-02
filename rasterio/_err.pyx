@@ -228,7 +228,7 @@ def stack_errors():
 
     # chaining_error_handler (better name a TODO) records GDAL errors
     # in the order they occur and converts to exceptions.
-    CPLPushErrorHandlerEx(chaining_error_handler, <void *>error_stack)
+    CPLPushErrorHandlerEx(<CPLErrorHandler>chaining_error_handler, <void *>error_stack)
 
     # Run code in the `with` block.
     yield

@@ -965,7 +965,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
 
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Read or write failed. See context for details.") from cplerr
 
         return out
 

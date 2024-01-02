@@ -7,7 +7,6 @@ import pytest
 import rasterio
 from rasterio._err import CPLE_AppDefinedError
 from rasterio.errors import DatasetIOShapeError, RasterioIOError
-from rasterio.io import MemoryFile
 
 # Find out if we've got HDF support (needed below).
 try:
@@ -340,17 +339,27 @@ def test_read_out_mask(path_rgb_byte_tif, out):
 def test_chained_io_errors(path_rgb_byte_tif):
     """Get chained exceptions."""
     with rasterio.open("tests/data/corrupt.tif") as src:
+        # RasterioIOError is at the top of the stack (~0).
         with pytest.raises(RasterioIOError) as excinfo:
             src.read()
-        assert isinstance(excinfo.value.__context__, CPLE_AppDefinedError)
-        assert excinfo.value.__context__.errmsg.startswith(
-            "tests/data/corrupt.tif, band 1: IReadBlock failed at X offset 1, Y offset 1"
-        )
-        assert isinstance(excinfo.value.__context__.__cause__, CPLE_AppDefinedError)
-        assert isinstance(
-            excinfo.value.__context__.__cause__.__cause__, CPLE_AppDefinedError
-        )
-        assert (
-            excinfo.value.__context__.__cause__.__cause__.errmsg
-            == "TIFFFillTile:Read error at row 512, col 0, tile 3; got 38232 bytes, expected 47086"
-        )
+
+        assert "Read or write failed. See context for details." == str(excinfo.value)
+
+        # Exception ~1 is a GDAL AppDefinedError mentioning IReadBlock.
+        exc = excinfo.value.__cause__
+        assert isinstance(exc, CPLE_AppDefinedError)
+        msg = str(exc)
+        assert msg.startswith("tests/data/corrupt.tif")
+        assert "IReadBlock failed" in msg
+
+        # Exception ~2 is another AppDefinedError mentioning TIFFReadEncodedTile.
+        exc = excinfo.value.__cause__.__cause__
+        assert isinstance(exc, CPLE_AppDefinedError)
+        msg = str(exc)
+        assert "TIFFReadEncodedTile()" in msg
+
+        # Exception ~3 is another AppDefinedError mentioning TIFFFillTile.
+        exc = excinfo.value.__cause__.__cause__.__cause__
+        assert isinstance(exc, CPLE_AppDefinedError)
+        msg = str(exc)
+        assert "TIFFFillTile:Read error" in msg
