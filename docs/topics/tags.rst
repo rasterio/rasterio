@@ -19,7 +19,7 @@ I'm going to use the rasterio interactive inspector in these examples below.
     >>> 
 
 Tags belong to namespaces. To get a copy of a dataset's tags from the default
-namespace, call ``tags()`` with no arguments.
+namespace, call :meth:`~.DatasetReader.tags` with no arguments.
 
 .. code-block:: pycon
 
@@ -29,7 +29,7 @@ namespace, call ``tags()`` with no arguments.
     {'AREA_OR_POINT': 'Area'}
 
 A dataset's bands may have tags, too. Here are the tags from the default namespace
-for the first band, accessed using the positional band index argument of ``tags()``.
+for the first band, accessed using the positional band index argument of :meth:`~.DatasetReader.tags`.
 
 .. code-block:: pycon
 
@@ -42,7 +42,7 @@ update of the tags when the band's image data changes.
 
 The 3 standard, non-default GDAL tag namespaces are 'SUBDATASETS', 'IMAGE_STRUCTURE', 
 and 'RPC'. You can get the tags from these namespaces using the `ns` keyword of
-``tags()``.
+:meth:`~.DatasetReader.tags`.
 
 .. code-block:: pycon
 
@@ -62,7 +62,7 @@ Writing tags
 ------------
 
 You can add new tags to a dataset or band, in the default or another namespace,
-using the ``update_tags()`` method. Unicode tag values, too, at least for TIFF
+using the :meth:`~.DatasetWriter.update_tags` method. Unicode tag values, too, at least for TIFF
 files.
 
 .. code-block:: python

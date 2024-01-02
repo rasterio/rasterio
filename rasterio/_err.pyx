@@ -8,9 +8,13 @@ import contextlib
 from enum import IntEnum
 from itertools import zip_longest
 import logging
-import sys
 
 log = logging.getLogger(__name__)
+
+_GDAL_DEBUG_DOCS = (
+    "https://rasterio.readthedocs.io/en/latest/topics/errors.html"
+    "#debugging-internal-gdal-functions"
+)
 
 
 class CPLE_BaseError(Exception):
@@ -254,6 +258,9 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
         exc = exc_check()
         if exc:
             raise exc
+        raise SystemError(
+            f"Unknown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
+        )
     CPLErrorReset()
     return ptr
 
@@ -268,5 +275,8 @@ cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *vsifile) except NULL:
         exc = exc_check()
         if exc:
             raise exc
+        raise SystemError(
+            f"Unknown GDAL Error. To debug: {_GDAL_DEBUG_DOCS}"
+        )
     CPLErrorReset()
     return vsifile

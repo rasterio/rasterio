@@ -1,6 +1,6 @@
 """Unittests for $ rio merge"""
 
-
+from io import StringIO
 import os
 import sys
 import textwrap
@@ -14,7 +14,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.merge import merge
+from rasterio.merge import merge, MERGE_METHODS
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
@@ -486,7 +486,7 @@ def test_merge_out_of_range_nodata(tiffs):
 
     with pytest.warns(UserWarning):
         rv, transform = merge(datasets, nodata=9999)
-    assert not (rv == np.uint8(9999)).any()
+    assert not (rv == (9999 % 256)).any()
 
 def test_merge_rgb(tmpdir, runner):
     """Get back original image"""
@@ -521,15 +521,17 @@ def test_merge_precision(tmpdir, precision):
         xllcorner    0.000000000000
         yllcorner    0.000000000000
         cellsize     1.000000000000
-         1 2 3 4 1 2 3 4
-         3 4 5 6 3 4 5 6
-         4 5 6 8 4 5 6 8
-         7 9 5 4 7 9 5 4
-         1 2 3 4 1 2 3 4
-         3 4 5 6 3 4 5 6
-         4 5 6 8 4 5 6 8
-         7 9 5 4 7 9 5 4
-         """
+        1 2 3 4 1 2 3 4
+        3 4 5 6 3 4 5 6
+        4 5 6 8 4 5 6 8
+        7 9 5 4 7 9 5 4
+        1 2 3 4 1 2 3 4
+        3 4 5 6 3 4 5 6
+        4 5 6 8 4 5 6 8
+        7 9 5 4 7 9 5 4
+        """
+
+    expected_file = StringIO(textwrap.dedent(expected))
 
     template = """\
         ncols 4
@@ -556,7 +558,19 @@ def test_merge_precision(tmpdir, precision):
     runner = CliRunner()
     result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
     assert result.exit_code == 0
-    assert open(outputname).read() == textwrap.dedent(expected)
+
+    # The arrangement of whitespace in the data part of the file
+    # changed between 3.7 and 3.8 to better conform. We will compare
+    # in a way that is more independent.
+    with open(outputname) as out_file:
+        # Compare header lines.
+        for i in range(5):
+            assert out_file.readline().strip() == expected_file.readline().strip()
+        
+        # Compare raster data as single strings.
+        out_data = " ".join(line.strip() for line in out_file.readlines())
+        expected_data = " ".join(line.strip() for line in expected_file.readlines())
+        assert out_data == expected_data
 
 
 @fixture(scope='function')
@@ -700,3 +714,27 @@ def test_merge_no_gap(tiffs, runner):
     with rasterio.open(outputname) as src:
         data = src.read(1)
         assert data[184, 61] != 0
+
+
+@pytest.mark.parametrize(
+    "method",
+    list(MERGE_METHODS)
+)
+def test_rio_merge_method(test_data_dir_1, method, runner):
+    outputname = str(test_data_dir_1.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_1.listdir()]
+
+    merged, _ = merge(
+        inputs, output_count=1, method=method, dtype=rasterio.uint8
+    )
+
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] +
+        ['--method', method])
+
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(outputname) as dst:
+        output_raster = dst.read()
+
+    np.testing.assert_array_equal(output_raster, merged)

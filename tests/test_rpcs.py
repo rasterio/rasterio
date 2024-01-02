@@ -1,4 +1,3 @@
-import attr
 import rasterio
 from rasterio.rpc import RPC
 

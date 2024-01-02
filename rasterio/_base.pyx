@@ -24,6 +24,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
@@ -148,21 +149,28 @@ def _raster_driver_extensions():
 
         for extension in extensions.split():
             driver_extensions[extension] = drivername
+
+    # ensure default driver for tif to be GTiff instead of COG
+    driver_extensions.update(
+        {'tif': 'GTiff', 'tiff': 'GTiff'}
+    )
     return driver_extensions
 
 
 cdef _band_dtype(GDALRasterBandH band):
-    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
+    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity."""
     cdef const char * ptype
     cdef int gdal_dtype = GDALGetRasterDataType(band)
-    if gdal_dtype == GDT_Byte:
-        # Can be uint8 or int8, need to check PIXELTYPE property
+    if gdal_dtype == GDT_Byte and dtypes.dtype_rev["int8"] == 1:
+        # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+        # with PIXELTYPE=SIGNEDBYTE metadata item in IMAGE_STRUCTURE
+        # metadata domain.
         ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
+
         if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
             return 'int8'
         else:
             return 'uint8'
-
 
     return dtypes.dtype_fwd[gdal_dtype]
 
@@ -212,8 +220,8 @@ cdef GDALDatasetH open_dataset(
     try:
         return exc_wrap_pointer(hds)
     finally:
-            CSLDestroy(drivers)
-            CSLDestroy(options)
+        CSLDestroy(drivers)
+        CSLDestroy(options)
 
 
 cdef class DatasetBase:
@@ -434,6 +442,7 @@ cdef class DatasetBase:
         self._closed = True
 
     def __enter__(self):
+        self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *exc_details):
@@ -509,8 +518,8 @@ cdef class DatasetBase:
         list
         """
         cdef GDALRasterBandH band = NULL
-        cdef int xsize
-        cdef int ysize
+        cdef int xsize = 0
+        cdef int ysize = 0
 
         if self._block_shapes is None:
             self._block_shapes = []
@@ -680,7 +689,7 @@ cdef class DatasetBase:
 
         Returns
         -------
-        list of str
+        tuple[str | None, ...]
         """
         if not self._descriptions:
             descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
@@ -1022,8 +1031,11 @@ cdef class DatasetBase:
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
                 tiled=True)
+        elif len(self.block_shapes) > 0:
+            m.update(blockysize=self.block_shapes[0][0], tiled=False)
         else:
             m.update(tiled=False)
+
         if self.compression:
             m['compress'] = self.compression.name
         if self.interleaving:
@@ -1032,12 +1044,18 @@ cdef class DatasetBase:
             m['photometric'] = self.photometric.name
         return m
 
-    def lnglat(self):
+    def lnglat(self) -> tuple[float, float]:
+        """Geographic coordinates of the dataset's center.
+
+        Returns
+        -------
+        (longitude, latitude) of centroid.
+
+        """
         w, s, e, n = self.bounds
-        cx = (w + e)/2.0
-        cy = (s + n)/2.0
-        lng, lat = _transform(
-                self.crs, {'init': 'epsg:4326'}, [cx], [cy], None)
+        cx = (w + e) / 2.0
+        cy = (s + n) / 2.0
+        lng, lat = _transform(self.crs, "EPSG:4326", [cx], [cy], None)
         return lng.pop(), lat.pop()
 
     def _get_crs(self):

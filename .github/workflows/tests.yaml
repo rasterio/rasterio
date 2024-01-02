@@ -29,23 +29,41 @@ on:
     - cron:  '0 0 * * 0'
 
 jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+            python-version: 3.9
+      - name: Code Linting
+        shell: bash
+        run: |
+          python -m pip install pre-commit
+          pre-commit run --show-diff-on-failure --all-files
+
   docker_tests:
+    needs: linting
     runs-on: ubuntu-latest
     name: Docker | GDAL=${{ matrix.gdal-version }} | python=${{ matrix.python-version }}
-    container: osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
+    container: ghcr.io/osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
+    env:
+        DEBIAN_FRONTEND: noninteractive
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10']
-        gdal-version: ['3.5.0', '3.4.3']
+        python-version: ['3.9', '3.10', '3.11']
+        gdal-version: ['3.6.4', '3.7.0']
         include:
-          - python-version: '3.8'
+          - python-version: '3.9'
+            gdal-version: '3.5.3'
+          - python-version: '3.9'
+            gdal-version: '3.4.3'
+          - python-version: '3.9'
             gdal-version: '3.3.3'
-          - python-version: '3.8'
-            gdal-version: '3.2.3'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Update
         run: |
@@ -69,28 +87,30 @@ jobs:
           . testenv/bin/activate
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
-          python -m pip install -r requirements-dev.txt
-          python setup.py clean
-          python -m pip install --no-deps --force-reinstall --no-use-pep517 -e .[test]
+          python -m pip install --no-deps --force-reinstall -e .[test]
 
       - name: run tests
         run: |
           . testenv/bin/activate
+          python -m pip install -r requirements-dev.txt
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
   conda_test:
+    needs: linting
     name: Conda | ${{ matrix.os }} | python=${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
         os: [macos-latest]
-        python-version: ['3.8' , '3.9']
+        python-version: ['3.9', '3.10', '3.11']
         include:
           - os: ubuntu-latest
             python-version: '3.10'
+          - os: ubuntu-latest
+            python-version: '3.11'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Conda Setup
         uses: s-weigand/setup-conda@v1
@@ -102,7 +122,7 @@ jobs:
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
-          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.10.3 cython=0.29 numpy
+          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=3 numpy
           source activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt
@@ -128,4 +148,4 @@ jobs:
           source activate test
           python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
 
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3

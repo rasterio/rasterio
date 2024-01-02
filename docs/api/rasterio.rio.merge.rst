@@ -1,7 +1,3 @@
-rasterio.rio.merge module
-=========================
-
-.. automodule:: rasterio.rio.merge
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.merge:merge
+   :prog: rio merge
+   :show-nested:

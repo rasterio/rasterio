@@ -27,7 +27,7 @@ Color interpretation can be set when creating a new datasource with the
     >>> with rasterio.open("/tmp/rgb.tif", 'w', **profile) as dst:
     ...     dst.write(src.read())
 
-or via the ``colorinterp`` property when a datasource is opened in
+or via the :attr:`~.DatasetWriter.colorinterp` property when a datasource is opened in
 update mode:
 
 .. code:: python
@@ -49,7 +49,7 @@ Writing colormaps
 -----------------
 
 Mappings from 8-bit (rasterio.uint8) pixel values to RGBA values can be attached
-to bands using the ``write_colormap()`` method.
+to bands using the :meth:`~.DatasetWriter.write_colormap` method.
 
 .. code-block:: python
 
@@ -85,6 +85,6 @@ yields the image below:
 Reading colormaps
 -----------------
 
-As shown above, the ``colormap()`` returns a dict holding the colormap for the 
+As shown above, the :meth:`~.DatasetReader.colormap` returns a dict holding the colormap for the 
 given band index. For TIFF format files, the colormap will have 256 items, and
 all but two of those would map to (0, 0, 0, 0) in the example above.

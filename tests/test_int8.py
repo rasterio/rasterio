@@ -3,9 +3,12 @@ import numpy
 import pytest
 
 import rasterio
+from rasterio.env import GDALVersion
+
+from .conftest import gdal_version
 
 
-@pytest.mark.xfail(reason="Likely upstream bug")
+@pytest.mark.xfail(gdal_version < GDALVersion(3, 7), reason="GDAL < 3.7 doesn't handle signed int8 correctly")
 @pytest.mark.parametrize("nodata", [-1, -128])
 def test_write_int8_mem(nodata):
     profile = {

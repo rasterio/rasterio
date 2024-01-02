@@ -4,29 +4,31 @@ Instances of these classes are called dataset objects.
 """
 
 import logging
+import warnings
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._base import (
-        get_dataset_driver, driver_can_create, driver_can_create_copy)
-    from rasterio._io import (
-        DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
-        MemoryFileBase)
-    from rasterio.windows import WindowMethodsMixin
-    from rasterio.env import ensure_env
-    from rasterio.transform import TransformMethodsMixin
-    from rasterio._path import _UnparsedPath
-    try:
-        from rasterio._filepath import FilePathBase
-    except ImportError:
-        FilePathBase = object
+from rasterio._base import get_dataset_driver, driver_can_create, driver_can_create_copy
+from rasterio._io import (
+    DatasetReaderBase,
+    DatasetWriterBase,
+    BufferedDatasetWriterBase,
+    MemoryFileBase,
+)
+from rasterio.windows import WindowMethodsMixin
+from rasterio.env import ensure_env
+from rasterio.errors import RasterioDeprecationWarning
+from rasterio.transform import TransformMethodsMixin
+from rasterio._path import _UnparsedPath
+
+try:
+    from rasterio._filepath import FilePathBase
+except ImportError:
+    FilePathBase = object
 
 
 log = logging.getLogger(__name__)
 
 
-class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
-                    TransformMethodsMixin):
+class DatasetReader(DatasetReaderBase, WindowMethodsMixin, TransformMethodsMixin):
     """An unbuffered data and metadata reader"""
 
     def __repr__(self):
@@ -34,8 +36,7 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
-                    TransformMethodsMixin):
+class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
     directly to disk.
     """
@@ -45,8 +46,9 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
-                            TransformMethodsMixin):
+class BufferedDatasetWriter(
+    BufferedDatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin
+):
     """Maintains data and metadata in a buffer, writing to disk or
     network only when `close()` is called.
 
@@ -91,7 +93,8 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
+
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext=".tif"):
         """Create a new file in memory
 
         Parameters
@@ -131,57 +134,49 @@ class MemoryFile(MemoryFileBase):
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
-            raise OSError("I/O operation on closed file.")
+            raise ValueError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug("VSI path: {}".format(mempath.path))
-            return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+            rd = DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
-            return writer(mempath, 'w+', driver=driver, width=width,
-                          height=height, count=count, crs=crs,
-                          transform=transform, dtype=dtype,
-                          nodata=nodata, sharing=sharing, **kwargs)
+            rd = writer(
+                mempath,
+                "w+",
+                driver=driver,
+                width=width,
+                height=height,
+                count=count,
+                crs=crs,
+                transform=transform,
+                dtype=dtype,
+                nodata=nodata,
+                sharing=sharing,
+                **kwargs
+            )
+        
+        # Push the new dataset's context exit onto the MemoryFile's ExitStack.
+        # This ensures that when this MemoryFile is closed, any derived dataset
+        # is also closed automatically.
+        self._env.push(rd)
+        return rd
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
+        self._env.close()
         self.close()
 
 
 class _FilePath(FilePathBase):
-    """A BytesIO-like object, backed by an in-memory file.
+    """A BytesIO-like object, backed by a Python file object.
 
-    This allows formatted files to be read and written without I/O.
-
-    A MemoryFile created with initial bytes becomes immutable. A
-    MemoryFile created without initial bytes may be written to using
-    either file-like or dataset interfaces.
-
-    Examples
-    --------
-
-    A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
-    format driver
-
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, FilePath(f) as vsi_file:
-    ...     with vsi_file.open() as src:
-    ...         pprint.pprint(src.profile)
-    ...
-    {'count': 3,
-     'crs': CRS({'init': 'epsg:32618'}),
-     'driver': 'GTiff',
-     'dtype': 'uint8',
-     'height': 718,
-     'interleave': 'pixel',
-     'nodata': 0.0,
-     'tiled': False,
-     'transform': Affine(300.0379266750948, 0.0, 101985.0,
-           0.0, -300.041782729805, 2826915.0),
-     'width': 791}
+    .. deprecated:: 1.4.0
+       FilePath is supplanted by open's new opener keyword argument,
+       and will be removed in 2.0.0.
 
     """
-
     def __init__(self, filelike_obj, dirname=None, filename=None):
         """Create a new wrapper around the provided file-like object.
 
@@ -196,6 +191,10 @@ class _FilePath(FilePathBase):
         -------
         PythonVSIFile
         """
+        warnings.warn(
+            "FilePath is supplanted by open's new opener keyword argument, and will be removed in 2.0.0.",
+            RasterioDeprecationWarning,
+        )
         super().__init__(
             filelike_obj, dirname=dirname, filename=filename
         )
@@ -209,13 +208,25 @@ class _FilePath(FilePathBase):
 
         Parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
+
+        Returns
+        -------
+        DatasetReader
+
+        Raises
+        ------
+        IOError
+            If the memory file is closed.
+
         """
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
+
         # Assume we were given a non-empty file-like object
         log.debug("VSI path: {}".format(mempath.path))
+
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
     def __enter__(self):
@@ -260,7 +271,7 @@ class ZipMemoryFile(MemoryFile):
         zippath = _UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
-            raise OSError("I/O operation on closed file.")
+            raise ValueError("I/O operation on closed file.")
         return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
 
 

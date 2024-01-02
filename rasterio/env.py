@@ -1,6 +1,5 @@
 """Rasterio's GDAL/AWS environment"""
 
-from contextlib import ExitStack
 from functools import wraps, total_ordering
 from inspect import getfullargspec as getargspec
 import logging
@@ -11,15 +10,17 @@ import warnings
 
 import attr
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    from rasterio._env import (
-            GDALEnv, get_gdal_config, set_gdal_config,
-            GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
-    from rasterio._version import gdal_version
-    from rasterio.errors import (
-        EnvError, GDALVersionError, RasterioDeprecationWarning)
-    from rasterio.session import Session, DummySession
+from rasterio._env import (
+    GDALEnv,
+    get_gdal_config,
+    set_gdal_config,
+    GDALDataFinder,
+    PROJDataFinder,
+    set_proj_data_search_path,
+)
+from rasterio._version import gdal_version
+from rasterio.errors import EnvError, GDALVersionError, RasterioDeprecationWarning
+from rasterio.session import Session, DummySession
 
 
 class ThreadEnv(threading.local):
@@ -202,6 +203,7 @@ class Env:
 
         elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
             self.session = Session.from_environ()
+            self._session_from_environ = True
 
         else:
             self.session = DummySession()
@@ -233,6 +235,9 @@ class Env:
         options.update(**kwargs)
         return Env(*args, **options)
 
+    def aws_creds_from_context_options(self):
+        return {k: v for k, v in self.context_options.items() if k.startswith('AWS_')}
+
     def credentialize(self):
         """Get credentials and configure GDAL
 
@@ -248,6 +253,15 @@ class Env:
         self.options.update(**cred_opts)
         setenv(**cred_opts)
 
+        if getattr(self, '_session_from_environ', False):
+            # if self.context_options has "AWS_*" credentials from parent context then it should
+            # always override what comes back from self.session.get_credential_options()
+            # b/c __init__ might have created a session from globally exported "AWS_*" os environ variables
+            parent_context_creds = self.aws_creds_from_context_options()
+            if not parent_context_creds: return
+            self.options.update(**parent_context_creds)
+            setenv(**parent_context_creds)
+
     def drivers(self):
         """Return a mapping of registered drivers."""
         return local._env.drivers()
@@ -258,6 +272,13 @@ class Env:
         For debugging and testing purposes.
         """
         return local._env._dump_open_datasets()
+
+    def _dump_vsimem(self):
+        """Returns contents of /vsimem/.
+
+        For debugging and testing purposes.
+        """
+        return local._env._dump_vsimem()
 
     def __enter__(self):
         log.debug("Entering env context: %r", self)
@@ -646,7 +667,12 @@ if 'GDAL_DATA' not in os.environ:
             set_gdal_config("GDAL_DATA", path)
             log.debug("GDAL data found in other locations: path=%r.", path)
 
-if "PROJ_LIB" in os.environ:
+if "PROJ_DATA" in os.environ:
+    # PROJ 9.1+
+    path = os.environ["PROJ_DATA"]
+    set_proj_data_search_path(path)
+elif "PROJ_LIB" in os.environ:
+    # PROJ < 9.1
     path = os.environ["PROJ_LIB"]
     set_proj_data_search_path(path)
 

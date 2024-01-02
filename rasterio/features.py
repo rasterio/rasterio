@@ -7,20 +7,18 @@ import warnings
 
 import numpy as np
 
-import rasterio._loading
-
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
-    from rasterio.enums import MergeAlg
-    from rasterio.env import ensure_env, GDALVersion
-    from rasterio.errors import ShapeSkipWarning
-    from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-    from rasterio import warp
-    from rasterio.rio.helpers import coords
-    from rasterio.transform import Affine
-    from rasterio.transform import IDENTITY, guard_transform, rowcol
-    from rasterio.windows import Window
+import rasterio
+from rasterio import warp
+from rasterio._base import DatasetBase
+from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
+from rasterio.enums import MergeAlg
+from rasterio.env import ensure_env, GDALVersion
+from rasterio.errors import ShapeSkipWarning
+from rasterio.rio.helpers import coords
+from rasterio.transform import Affine
+from rasterio.transform import IDENTITY, guard_transform
+from rasterio.windows import Window
 
 log = logging.getLogger(__name__)
 
@@ -41,23 +39,24 @@ def geometry_mask(
     ----------
     geometries : iterable over geometries (GeoJSON-like objects)
     out_shape : tuple or list
-        Shape of output numpy ndarray.
+        Shape of output :class:`numpy.ndarray`.
     transform : Affine transformation object
         Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
         If True, all pixels touched by geometries will be burned in.  If
-        false, only pixels whose center is within the polygon or that
+        False, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
+        False by default
     invert: boolean, optional
         If True, mask will be True for pixels that overlap shapes.
         False by default.
 
     Returns
     -------
-    numpy ndarray of type 'bool'
-        Result
+    numpy.ndarray :
+        Type is :class:`numpy.bool_`
 
     Notes
     -----
@@ -81,15 +80,15 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     Parameters
     ----------
-    source : array, dataset object, Band, or tuple(dataset, bidx)
+    source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
-    mask : numpy ndarray or rasterio Band object, optional
+    mask : numpy.ndarray or rasterio Band object, optional
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
         of False or 0 will be excluded from feature generation.  Note
         well that this is the inverse sense from Numpy's, where a mask
         value of True indicates invalid data in an array. If `source` is
-        a Numpy masked array and `mask` is None, the source's mask will
+        a :class:`numpy.ma.MaskedArray` and `mask` is None, the source's mask will
         be inverted and used in place of `mask`.
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
@@ -131,19 +130,23 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
 @ensure_env
 def sieve(source, size, out=None, mask=None, connectivity=4):
-    """Replace small polygons in `source` with value of their largest neighbor.
+    """Remove small polygon regions from a raster.
 
-    Polygons are found for each set of neighboring pixels of the same value.
+    Polygons are found for each set of neighboring pixels of the same
+    value.
 
     Parameters
     ----------
-    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
-        Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
-        rasterio.uint16, or rasterio.float32
+    source : ndarray, dataset, or Band
+        The source is a 2 or 3-D ndarray, a dataset opened in "r" mode,
+        or a single or a multiple Rasterio Band object. Must be of type
+        rasterio.int16, rasterio.int32, rasterio.uint8, rasterio.uint16,
+        or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray, optional
-        Array of same shape and data type as `source` in which to store results.
+        Array of same shape and data type as `source` in which to store
+        results.
     mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -152,39 +155,43 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Returns
     -------
-    out : numpy ndarray
+    out : numpy.ndarray
         Result
 
     Notes
     -----
-    GDAL only supports values that can be cast to 32-bit integers for this
-    operation.
+    GDAL only supports values that can be cast to 32-bit integers for
+    this operation.
 
-    The amount of memory used by this algorithm is proportional to the number
-    and complexity of polygons found in the image.  This algorithm is most
-    appropriate for simple thematic data.  Data with high pixel-to-pixel
-    variability, such as imagery, may produce one polygon per pixel and consume
-    large amounts of memory.
+    The amount of memory used by this algorithm is proportional to the
+    number and complexity of polygons found in the image.  This
+    algorithm is most appropriate for simple thematic data.  Data with
+    high pixel-to-pixel variability, such as imagery, may produce one
+    polygon per pixel and consume large amounts of memory.
 
     """
+    if isinstance(source, DatasetBase):
+        source = rasterio.band(source, source.indexes)
 
     if out is None:
         out = np.zeros(source.shape, source.dtype)
-    _sieve(source, size, out, mask, connectivity)
-    return out
+
+    return _sieve(source, size, out, mask, connectivity)
 
 
 @ensure_env
 def rasterize(
-        shapes,
-        out_shape=None,
-        fill=0,
-        out=None,
-        transform=IDENTITY,
-        all_touched=False,
-        merge_alg=MergeAlg.replace,
-        default_value=1,
-        dtype=None):
+    shapes,
+    out_shape=None,
+    fill=0,
+    out=None,
+    transform=IDENTITY,
+    all_touched=False,
+    merge_alg=MergeAlg.replace,
+    default_value=1,
+    dtype=None,
+    skip_invalid=True,
+):
     """Return an image array with input geometries burned in.
 
     Warnings will be raised for any invalid or empty geometries, and
@@ -199,13 +206,13 @@ def rasterize(
         the `default_value` will be used. If `value` is `None` the
         `fill` value will be used.
     out_shape : tuple or list with 2 integers
-        Shape of output numpy ndarray.
+        Shape of output :class:`numpy.ndarray`.
     fill : int or float, optional
         Used as fill value for all areas not covered by input
         geometries.
-    out : numpy ndarray, optional
-        Array of same shape and data type as `source` in which to store
-        results.
+    out : numpy.ndarray, optional
+        Array in which to store results. If not provided, out_shape
+        and dtype are required.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
@@ -222,12 +229,15 @@ def rasterize(
                 the new value will be added to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
-    dtype : rasterio or numpy data type, optional
+    dtype : rasterio or numpy.dtype, optional
         Used as data type for results, if `out` is not provided.
+    skip_invalid : bool, optional
+        If True (default), invalid shapes will be skipped. If False,
+        ValueError will be raised.
 
     Returns
     -------
-    numpy ndarray
+    numpy.ndarray :
         If `out` was not None then `out` is returned, it will have been
         modified in-place. If `out` was None, this will be a new array.
 
@@ -248,13 +258,14 @@ def rasterize(
     shapes will be iterated multiple times. Performance is thus a linear
     function of buffer size. For maximum speed, ensure that
     GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
-
     """
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
     if GDALVersion.runtime().at_least("3.5"):
-        valid_dtypes = valid_dtypes + ("int64", "uint64")
+        valid_dtypes += ("int64", "uint64")
+    if GDALVersion.runtime().at_least("3.7"):
+        valid_dtypes += ("int8",)
 
     def format_invalid_dtype(param):
         return '{0} dtype must be one of: {1}'.format(
@@ -285,6 +296,7 @@ def rasterize(
 
     valid_shapes = []
     shape_values = []
+
     for index, item in enumerate(shapes):
         if isinstance(item, (tuple, list)):
             geom, value = item
@@ -293,11 +305,11 @@ def rasterize(
         else:
             geom = item
             value = default_value
+
         geom = getattr(geom, '__geo_interface__', None) or geom
 
         if is_valid_geom(geom):
             shape_values.append(value)
-
             geom_type = geom['type']
 
             if geom_type == 'GeometryCollection':
@@ -318,22 +330,15 @@ def rasterize(
                 valid_shapes.append((geom, value))
 
         else:
-            # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('Invalid or empty shape {} at index {} will not be rasterized.'.format(geom, index), ShapeSkipWarning)
-
-    if not valid_shapes:
-        raise ValueError('No valid geometry objects found for rasterize')
-
-    shape_values = np.array(shape_values)
-
-    if not validate_dtype(shape_values, valid_dtypes):
-        raise ValueError(format_invalid_dtype('shape values'))
-
-    if dtype is None:
-        dtype = get_minimum_dtype(np.append(shape_values, fill))
-
-    elif not can_cast_dtype(shape_values, dtype):
-        raise ValueError(format_cast_error('shape values', dtype))
+            if skip_invalid:
+                warnings.warn(
+                    "Invalid or empty shape {} at index {} will not be rasterized.".format(
+                        geom, index
+                    ),
+                    ShapeSkipWarning,
+                )
+            else:
+                raise ValueError("Invalid or empty shape cannot be rasterized.")
 
     if out is not None:
         if _getnpdtype(out.dtype).name not in valid_dtypes:
@@ -357,7 +362,21 @@ def rasterize(
         raise ValueError("width and height must be > 0")
 
     transform = guard_transform(transform)
-    _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+
+    if valid_shapes:
+        shape_values = np.array(shape_values)
+
+        if not validate_dtype(shape_values, valid_dtypes):
+            raise ValueError(format_invalid_dtype("shape values"))
+
+        if dtype is None:
+            dtype = get_minimum_dtype(np.append(shape_values, fill))
+
+        elif not can_cast_dtype(shape_values, dtype):
+            raise ValueError(format_cast_error("shape values", dtype))
+
+        _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+
     return out
 
 

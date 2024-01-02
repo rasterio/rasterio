@@ -4,20 +4,16 @@ from contextlib import contextmanager
 import logging
 import os
 import math
-from pathlib import Path
 import warnings
 
 import numpy as np
 
-import rasterio._loading
-
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.coords import disjoint_bounds
-    from rasterio.enums import Resampling
-    from rasterio.errors import RasterioDeprecationWarning
-    from rasterio import windows
-    from rasterio.transform import Affine
+import rasterio
+from rasterio.coords import disjoint_bounds
+from rasterio.enums import Resampling
+from rasterio.errors import RasterioDeprecationWarning, RasterioError
+from rasterio import windows
+from rasterio.transform import Affine
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +129,7 @@ def merge(
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
-    dtype: numpy dtype or string
+    dtype: numpy.dtype or string
         dtype to use in outputfile. If not set, uses the dtype value in the
         first input raster.
     precision: int, optional
@@ -185,7 +181,7 @@ def merge(
 
         Two elements:
 
-            dest: numpy ndarray
+            dest: numpy.ndarray
                 Contents of all input rasters in single array
 
             out_transform: affine.Affine()
@@ -223,6 +219,7 @@ def merge(
 
     with dataset_opener(datasets[0]) as first:
         first_profile = first.profile
+        first_crs = first.crs
         first_res = first.res
         nodataval = first.nodatavals[0]
         dt = first.dtypes[0]
@@ -328,9 +325,20 @@ def merge(
             # This approach uses the maximum amount of memory to solve the
             # problem. Making it more efficient is a TODO.
 
+            # 0. Precondition checks
+            #    - Check that source is within destination bounds
+            #    - Check that CRS is same
+
             if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                logger.debug("Skipping source: src=%r, window=%r", src)
+                logger.debug(
+                    "Skipping source: src=%r, bounds=%r",
+                    src,
+                    (dst_w, dst_s, dst_e, dst_n),
+                )
                 continue
+
+            if first_crs != src.crs:
+                raise RasterioError(f"CRS mismatch with source: {dataset}")
 
             # 1. Compute spatial intersection of destination and source
             src_w, src_s, src_e, src_n = src.bounds
@@ -354,8 +362,8 @@ def merge(
             dst_window_rnd_off = dst_window_rnd_shp.round_offsets()
 
             temp_height, temp_width = (
-                dst_window_rnd_off.height,
-                dst_window_rnd_off.width,
+                int(dst_window_rnd_off.height),
+                int(dst_window_rnd_off.width),
             )
             temp_shape = (src_count, temp_height, temp_width)
 
@@ -370,8 +378,8 @@ def merge(
 
         # 5. Copy elements of temp into dest
         roff, coff = (
-            max(0, dst_window_rnd_off.row_off),
-            max(0, dst_window_rnd_off.col_off),
+            max(0, int(dst_window_rnd_off.row_off)),
+            max(0, int(dst_window_rnd_off.col_off)),
         )
         region = dest[:, roff : roff + temp_height, coff : coff + temp_width]
 

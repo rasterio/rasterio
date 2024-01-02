@@ -19,7 +19,7 @@ This shapefile contains a single polygon, a box near the center of the raster, s
             out_image, out_transform = rasterio.mask.mask(src, shapes, crop=True)
             out_meta = src.meta
 
-Using ``plot`` and ``imshow`` from ``matplotlib``, we can see the region defined by the shapefile in red overlaid on the original raster.
+Using  :func:`matplotlib.pyplot.plot` and :func:`matplotlib.pyplot.imshow`, we can see the region defined by the shapefile in red overlaid on the original raster.
 
 .. image:: ../img/box_rgb.png
 

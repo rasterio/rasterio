@@ -19,7 +19,8 @@ import threading
 
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
-from rasterio._filepath cimport install_filepath_plugin, uninstall_filepath_plugin
+from rasterio._filepath cimport install_filepath_plugin
+from rasterio._vsiopener cimport install_pyopener_plugin
 from rasterio._version import gdal_version
 
 from libc.stdio cimport stderr
@@ -65,6 +66,7 @@ except ImportError:
 cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 cdef VSIFilesystemPluginCallbacksStruct* filepath_plugin = NULL
+cdef VSIFilesystemPluginCallbacksStruct* pyopener_plugin = NULL
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
@@ -364,6 +366,7 @@ cdef class GDALEnv(ConfigEnv):
                     GDALAllRegister()
                     OGRRegisterAll()
                     install_filepath_plugin(filepath_plugin)
+                    install_pyopener_plugin(pyopener_plugin)
 
                     if 'GDAL_DATA' in os.environ:
                         log.debug("GDAL_DATA found in environment.")
@@ -387,7 +390,13 @@ cdef class GDALEnv(ConfigEnv):
                                 log.debug("GDAL data found in other locations: path=%r.", path)
                                 self.update_config_options(GDAL_DATA=path)
 
-                    if 'PROJ_LIB' in os.environ:
+                    if 'PROJ_DATA' in os.environ:
+                        # PROJ 9.1+
+                        log.debug("PROJ_DATA found in environment.")
+                        path = os.environ["PROJ_DATA"]
+                        set_proj_data_search_path(path)
+                    elif 'PROJ_LIB' in os.environ:
+                        # PROJ < 9.1
                         log.debug("PROJ_LIB found in environment.")
                         path = os.environ["PROJ_LIB"]
                         set_proj_data_search_path(path)
@@ -443,6 +452,14 @@ cdef class GDALEnv(ConfigEnv):
 
     def _dump_open_datasets(self):
         GDALDumpOpenDatasets(stderr)
+
+    def _dump_vsimem(self):
+        dirs = VSIReadDir("/vsimem/")
+        num_dirs = CSLCount(dirs)
+        try:
+            return list([dirs[i] for i in range(num_dirs) if str(dirs[i])])
+        finally:
+            CSLDestroy(dirs)
 
 
 def set_proj_data_search_path(path):

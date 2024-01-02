@@ -5,7 +5,6 @@ import logging
 import shutil
 
 import affine
-import boto3
 import numpy
 import pytest
 
@@ -20,15 +19,9 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import gdal_version
+from .conftest import gdal_version, credentials
 
 log = logging.getLogger(__name__)
-
-# Custom markers.
-credentials = pytest.mark.skipif(
-    not (boto3.Session().get_credentials()),
-    reason="S3 raster access requires credentials",
-)
 
 DST_CRS = "EPSG:3857"
 
@@ -99,24 +92,25 @@ def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
 
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
-    with rasterio.open(path_rgb_msk_byte_tif) as src:
-        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
-        assert vrt.src_nodata is None
-        assert vrt.dst_nodata is None
-        assert vrt.count == 4
-        assert vrt.mask_flag_enums == (
-            [MaskFlags.per_dataset, MaskFlags.alpha],
-        ) * 3 + (
-            [MaskFlags.all_valid],
-        )
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
+        with rasterio.open(path_rgb_msk_byte_tif) as src:
+            vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
+            assert vrt.src_nodata is None
+            assert vrt.dst_nodata is None
+            assert vrt.count == 4
+            assert vrt.mask_flag_enums == (
+                [MaskFlags.per_dataset, MaskFlags.alpha],
+            ) * 3 + (
+                [MaskFlags.all_valid],
+            )
 
-        caplog.set_level(logging.DEBUG)
-        with rasterio.Env(CPL_DEBUG=True):
-            masks = vrt.read_masks()
-            assert masks[0, 0, 0] == 0
-            assert masks[0].mean() > 0
+            caplog.set_level(logging.DEBUG)
+            with rasterio.Env(CPL_DEBUG=True):
+                masks = vrt.read_masks()
+                assert masks[0, 0, 0] == 0
+                assert masks[0].mean() > 0
 
-        assert "RGB2.byte.tif.msk" in caplog.text
+            assert "RGB2.byte.tif.msk" in caplog.text
 
 
 def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
@@ -246,18 +240,18 @@ def test_transformer_options__width_height(path_rgb_byte_tif):
 @pytest.mark.network
 def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
-    L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
+    L8TIF = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif"
     with rasterio.open(L8TIF) as src:
         with WarpedVRT(src, crs=DST_CRS, src_nodata=0, nodata=0) as vrt:
             assert vrt.crs == DST_CRS
             assert tuple(round(x, 1) for x in vrt.bounds) == (
-                9556764.6, 2345109.3, 9804595.9, 2598509.1
+                9222324.9, -14139657.4, 9730075.2, -13635650.5
             )
-            assert vrt.name == "WarpedVRT(s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF)"
+            assert vrt.name == f"WarpedVRT({L8TIF})"
             assert vrt.indexes == (1,)
             assert vrt.nodatavals == (0,)
             assert vrt.dtypes == ("uint16",)
-            assert vrt.shape == (7827, 7655)
+            assert vrt.shape == (1885, 1899)
 
 
 def test_warped_vrt_nodata_read(path_rgb_byte_tif):
@@ -382,18 +376,19 @@ def test_hit_ovr(red_green):
     # GDAL doesn't log overview hits for local files , so we copy the
     # overviews of green.tif over the red overviews and expect to find
     # green pixels below.
-    green_ovr = red_green.join("green.tif.ovr")
-    shutil.move(green_ovr, red_green.join("red.tif.ovr"))
-    assert not green_ovr.exists()
-    with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
-        data = ovr.read()
-        assert (data[1] == 204).all()
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
+        green_ovr = red_green.join("green.tif.ovr")
+        shutil.move(green_ovr, red_green.join("red.tif.ovr"))
+        assert not green_ovr.exists()
+        with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
+            data = ovr.read()
+            assert (data[1] == 204).all()
 
-    with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(src) as vrt:
-        data = vrt.read(out_shape=(vrt.count, vrt.height // 2, vrt.width // 2))
-        image = numpy.moveaxis(data, 0, -1)
-        assert image[0, 0, 0] == 17
-        assert image[0, 0, 1] == 204
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(src) as vrt:
+            data = vrt.read(out_shape=(vrt.count, vrt.height // 2, vrt.width // 2))
+            image = numpy.moveaxis(data, 0, -1)
+            assert image[0, 0, 0] == 17
+            assert image[0, 0, 1] == 204
 
 
 def test_warped_vrt_1band_add_alpha():
@@ -672,3 +667,18 @@ def test_warpedvrt_rpcs__width_height():
             assert vrt.dst_transform.almost_equals(
                 affine.Affine(0.008598908695300157, 0.0, -123.48824818566573, 0.0, -0.0041566403046337285, 49.52797830474037)
             )
+
+
+def test_warpedvrt_dst_alpha():
+    """When using using Uint16 data with Alpha band we should keep the original values"""
+    with rasterio.open('tests/data/RGBA.uint16.tif') as src:
+        arr = src.read(1)
+        assert numpy.unique(arr).tolist() == [10000]
+
+        with WarpedVRT(src, add_alpha=False, init_dest=1) as vrt:
+            vrt_arr = vrt.read(1)
+
+            # When using WarpedVRT, the `masked` data will be initialized to the
+            # `init_dest` value (1) so the unique values in the array should be
+            # 1 and 10000 (the original unique value).
+            assert numpy.unique(vrt_arr).tolist() == [1, 10000]

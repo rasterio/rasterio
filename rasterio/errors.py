@@ -158,3 +158,11 @@ class DatasetIOShapeError(RasterioError):
 
 class WarpOperationError(RasterioError):
     """Raised when a warp operation fails."""
+
+
+class StatisticsError(RasterioError):
+    """Raised when dataset statistics cannot be computed."""
+
+
+class OpenerRegistrationError(RasterioError):
+    """Raised when a Python file opener can not be registered."""

@@ -1,5 +1,4 @@
-"""$ rio blocks"""
-
+"""rio blocks prints a dataset's blocks as GeoJSON features."""
 
 import json
 import logging
@@ -96,43 +95,42 @@ class _Collection:
     help="Index of the band that is the source of shapes.")
 @click.pass_context
 def blocks(
-        ctx, input, output, precision, indent, compact, projection, sequence,
-        use_rs, bidx):
-
+    ctx, input, output, precision, indent, compact, projection, sequence, use_rs, bidx
+):
     """Write dataset blocks as GeoJSON features.
 
-    This command writes features describing a raster's internal blocks, which
-    are used directly for raster I/O.  These features can be used to visualize
-    how a windowed operation would operate using those blocks.
+    This command prints features describing a raster's internal blocks,
+    which are used directly for raster I/O.  These features can be used
+    to visualize how a windowed operation would operate using those
+    blocks.
 
-    Output features have two JSON encoded properties: block and window.  Block
-    is a two element array like '[0, 0]' describing the window's position
-    in the input band's window layout.  Window is a two element array
-    containing two more two element arrays like '[[0, 256], [0, 256]' and
-    describes the range of pixels the window covers in the input band.  Values
-    are JSON encoded for better interoperability.
+    Output features have two JSON encoded properties: block and window.
+    Block is a two element array like [0, 0] describing the window's
+    position in the input band's window layout. Window is a JSON
+    serialization of rasterio's Window class like {"col_off": 0,
+    "height": 3, "row_off": 705, "width": 791}.
 
-    Block windows are extracted from the dataset (all bands must have matching
-    block windows) by default, or from the band specified using the '--bidx
-    option:
+    Block windows are extracted from the dataset (all bands must have
+    matching block windows) by default, or from the band specified using
+    the --bidx option:
     \b
 
-        $ rio shapes --bidx 3 tests/data/RGB.byte.tif
+        rio blocks --bidx 3 tests/data/RGB.byte.tif
 
-    By default a GeoJSON 'FeatureCollection' is written, but the --sequence'
-    option produces a GeoJSON feature stream instead.
+    By default a GeoJSON FeatureCollection is written, but the
+    --sequence option produces a GeoJSON feature stream instead.
     \b
 
-        $ rio shapes tests/data/RGB.byte.tif --sequence
+        rio blocks tests/data/RGB.byte.tif --sequence
 
-    Output features are reprojected to 'WGS84' unless the '--projected' flag is
-    provided, which causes the output to be kept in the input datasource's
-    coordinate reference system.
+    Output features are reprojected to OGC:CRS84 (WGS 84) unless the
+    --projected flag is provided, which causes the output to be kept in
+    the input datasource's coordinate reference system.
 
-    For more information on exactly what blocks and windows represent, see
-    'dataset.block_windows()'.
+    For more information on exactly what blocks and windows represent,
+    see block_windows().
+
     """
-
     dump_kwds = {'sort_keys': True}
 
     if indent:
@@ -152,11 +150,13 @@ def blocks(
             dataset=src,
             bidx=bidx,
             precision=precision,
-            geographic=projection != 'projected')
-
+            geographic=projection != "projected",
+        )
         write_features(
-            stdout, collection,
+            stdout,
+            collection,
             sequence=sequence,
-            geojson_type='feature' if sequence else 'collection',
+            geojson_type="feature" if sequence else "collection",
             use_rs=use_rs,
-            **dump_kwds)
+            **dump_kwds
+        )

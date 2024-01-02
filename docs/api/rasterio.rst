@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 2
 
    rasterio.rio
 
@@ -44,5 +45,6 @@ Module contents
 
 .. automodule:: rasterio
    :members:
+   :exclude-members: CRS, Env
    :undoc-members:
    :show-inheritance:

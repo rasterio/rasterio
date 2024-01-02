@@ -1,7 +1,3 @@
-rasterio.rio.sample module
-==========================
-
-.. automodule:: rasterio.rio.sample
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.sample:sample
+   :prog: rio sample
+   :show-nested:

@@ -30,6 +30,7 @@ SCHEMES = {
     'az': 'az',
 }
 
+ARCHIVESCHEMES = set
 CURLSCHEMES = set([k for k, v in SCHEMES.items() if v == 'curl'])
 
 # TODO: extend for other cloud plaforms.
@@ -64,19 +65,26 @@ class _ParsedPath(_Path):
     @classmethod
     def from_uri(cls, uri):
         parts = urlparse(uri)
-        path = parts.path
+        path = pathlib.Path(parts.path).as_posix() if parts.path else parts.path
         scheme = parts.scheme or None
 
         if parts.query:
             path += "?" + parts.query
 
-        if parts.scheme and parts.netloc:
-            path = parts.netloc + path
+        if scheme and scheme.startswith(("gzip", "tar", "zip")):
+            path_parts = path.split('!')
+            path = path_parts.pop() if path_parts else None
+            archive = path_parts.pop() if path_parts else None
+        else:
+            archive = None
 
-        parts = path.split('!')
-        path = parts.pop() if parts else None
-        archive = parts.pop() if parts else None
-        return _ParsedPath(pathlib.Path(path).as_posix(), archive, scheme)
+        if parts.scheme and parts.netloc:
+            if archive:
+                archive = parts.netloc + archive
+            else:
+                path = parts.netloc + path
+
+        return _ParsedPath(path, archive, scheme)
 
     @property
     def name(self):

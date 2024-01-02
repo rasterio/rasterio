@@ -23,11 +23,9 @@ cdef extern from "cpl_error.h" nogil:
         CE_Fatal
 
     ctypedef int CPLErrorNum
-
-    # CPLErrorNum eludes me at the moment, I'm calling it 'int'
-    # for now.
     ctypedef void (*CPLErrorHandler)(CPLErr, int, const char*)
 
+    void CPLError(CPLErr eErrClass, CPLErrorNum err_no, const char *template, ...)
     void CPLErrorReset()
     int CPLGetLastErrorNo()
     const char* CPLGetLastErrorMsg()
@@ -52,6 +50,7 @@ cdef extern from "cpl_string.h" nogil:
                            const char *pszValue)
     char **CSLDuplicate(char **papszStrList)
     int CSLFindName(char **papszStrList, const char *pszName)
+    int CSLFindString(char **papszStrList, const char *pszString)
     int CSLFetchBoolean(char **papszStrList, const char *pszName, int default)
     const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
@@ -67,7 +66,7 @@ cdef extern from "sys/stat.h" nogil:
 
 cdef extern from "cpl_vsi.h" nogil:
 
-    ctypedef int vsi_l_offset
+    ctypedef unsigned long long vsi_l_offset
     ctypedef FILE VSILFILE
     ctypedef stat VSIStatBufL
     ctypedef enum VSIRangeStatus:
@@ -123,6 +122,7 @@ cdef extern from "cpl_vsi.h" nogil:
     int VSIInstallPluginHandler(const char*, const VSIFilesystemPluginCallbacksStruct*)
     VSIFilesystemPluginCallbacksStruct* VSIAllocFilesystemPluginCallbacksStruct()
     void VSIFreeFilesystemPluginCallbacksStruct(VSIFilesystemPluginCallbacksStruct*)
+    char** VSIGetFileSystemsPrefixes()
 
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
@@ -133,7 +133,9 @@ cdef extern from "cpl_vsi.h" nogil:
     int VSIFCloseL(VSILFILE *fp)
     int VSIUnlink(const char *path)
     int VSIMkdir(const char *path, long mode)
+    char** VSIReadDir(const char *path)
     int VSIRmdir(const char *path)
+    int VSIRmdirRecursive(const char *path)
     int VSIFFlushL(VSILFILE *fp)
     size_t VSIFReadL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIFSeekL(VSILFILE *fp, vsi_l_offset nOffset, int nWhence)
@@ -223,6 +225,7 @@ cdef extern from "gdal.h" nogil:
     ctypedef enum GDALDataType:
         GDT_Unknown
         GDT_Byte
+        GDT_Int8
         GDT_UInt16
         GDT_Int16
         GDT_UInt32
@@ -641,6 +644,11 @@ cdef extern from "gdal_alg.h" nogil:
                           int nReqOrder, int bReversed)
     void *GDALDestroyGCPTransformer( void *pTransformArg)
     int GDALGCPTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
+                          double *x, double *y, double *z, int *panSuccess)
+    void *GDALCreateTPSTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
+                          int bReversed)
+    void *GDALDestroyTPSTransformer( void *pTransformArg)
+    int GDALTPSTransform( void *pTransformArg, int bDstToSrc, int nPointCount,
                           double *x, double *y, double *z, int *panSuccess)
     void *GDALCreateRPCTransformer( GDALRPCInfo *psRPC, int bReversed,
                           double dfPixErrThreshold,

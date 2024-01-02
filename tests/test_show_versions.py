@@ -36,7 +36,6 @@ def test_get_deps_info():
     assert "cython" in deps_info
     assert "numpy" in deps_info
     assert "setuptools" in deps_info
-    assert "snuggs" in deps_info
 
 
 def test_show_versions_with_gdal(capsys):

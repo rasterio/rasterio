@@ -25,7 +25,7 @@ these are exponents of 2
 
 To control the visual quality of the overviews, the 'nearest', 'cubic',
 'average', 'mode', and 'gauss' resampling alogrithms are available. These are
-available through the ``Resampling`` enum
+available through the :class:`.Resampling` enum
 
 .. code-block:: python
 

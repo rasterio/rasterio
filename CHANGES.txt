@@ -1,12 +1,229 @@
 Changes
 =======
 
-1.3.1 ()
+Next
+----
+
+Deprecations:
+
+- The is_valid property of the CRS class is not useful and will be removed in
+  version 2.0 (#2919).
+- The FilePath class has been supplanted by rasterio.open's new opener keyword
+  argument and its associated GDAL virtual filesystem plugin. It will be
+  removed in version 2.0 (#2919).
+
+New Features:
+
+- An optional range keyword argument (like that of numpy.histogram()) has been
+  added to show_hist() (#2873, #3001).
+- Datasets stored in proprietary systems or addressable only through protocols
+  not directly supported by GDAL can be accessed using the new opener keyword
+  argument of rasterio.open() (#2898, #2907). This new feature is intended to
+  completely replace the FilePath class introduced in 1.3.0.
+- Deallocate list of warp extras in _reproject(), fixing a potential leak
+  (#494).
+- Adjust several tests to small differences in output between GDAL 3.7 and 3.8
+  (#2959).
+- The output file size limits of rio-warp were made redundant by changes to the
+  GTiff driver in GDAL 2.1 and have been removed (#2889). A --dry-run option
+  has been added to the command. If used, the profile of the output dataset
+  will be printed and no warping will occur.
+
+Bug fixes:
+
+- Operations on closed MemoryFile and ZipMemoryFile objects now raise
+  ValueError as with other Python file objects (#2870, #).
+- Delay clamping of I/O windows until just before GDAL methods calls to improve
+  accuracy of sub-pixel reads (#2864).
+
+Other changes:
+
+- Rasterio now vendors and modifies the snuggs module (#2956).
+- Given an empty shapes argument, rasterize() now returns an empty array
+  (#2993).
+- AffineTransformer's bulk transformations have been sped up by replacing
+  a loop with a Numpy ufunc (#2936).
+- The crop and invert mutual exclusivity test in raster_geomtry_mask() has been
+  removed (#2702).
+
+1.3.9 (2023-10-18)
 ------------------
 
 Bug fixes:
 
-- Support arrays with strides in `MemoryDataset` (#2511, #2509)
+- Lean on numpy for minimum and maximum values of float data types (#2946).
+- Replace rasterio.dtypes.in_dtype_range() with the version inside the
+  edit-info command (#2946).
+- Deallocate _filepath VSI filesystem plugin callback structs to prevent the
+  memory leak reported in #2932.
+
+Packaging:
+
+GDAL 3.6.4 is patched in the PyPI wheels to fix the potential GTiff
+multithreading deadlock reported in https://github.com/OSGeo/gdal/issues/8470.
+
+1.3.8.post2 (2023-10-11)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update curl to version 8.4.0 to address CVE-2023-38545 and CVE-38546.
+
+1.3.8.post1 (2023-10-09)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels
+that update libwebp to version 1.3.2 to address CVE-2023-4863, and to publish
+wheels for Python 3.12.
+
+1.3.8 (2023-06-28)
+------------------
+
+- Rasterio's Python file VSI plugin is now compatible with GDAL VRTs such as
+  the one used for boundless reads of datasets (#2856).
+- Prevent a crash when accessing the block shapes of a multidataset HDF5 file
+  (#2859).
+- Add a workaround for a GDAL multithreaded compression bug introduced in 3.6.0
+  (#2851).
+
+1.3.7 (2023-05-22)
+------------------
+
+- The sieve function now accepts as input opened datasets or multiband
+  Band objects (#2838).
+- Allow color values greater than 256 in colormaps (#2769).
+- Fix the GDAL datatype mapping of Rasterio's uint64 and int64 data types. They
+  were reversed in previous versions.
+- Special characters, specifically "!", in an HTTP(S) URI's userinfo
+  subcomponent no longer break Rasterio's path parser (#2776).
+- Missing documentation for rio-blocks has been added to the CLI docs (#2835).
+- Ensure that the nodata mask value for all non-alpha bands is True in
+  sample_gen() (#2832).
+- GDAL often searches for sidecar files that may or may not exist. For the
+  Python file VSI plugin in _filepath.pyx, we have turned the logging level for
+  these events down from ERROR to INFO (#2827).
+- Full support for signed byte data in GDAL 3.7 has been added.
+- The math for array_bounds has been fixed. It can now handle rotated arrays
+  (#2787).
+
+1.3.6 (2023-02-13)
+------------------
+
+- Tests that use matplotlib have been cleaned up and the one in test_warp.py
+  which uses our vendored rangehttpserver has been marked as needing a network
+  (#).
+- When computing the bounds of a sequence of feature or geometry objects, we
+  dodge empty "features" and "geometries" sequences that could be provided by,
+  e.g., Fiona 1.9.0 (#2745).
+- Decouple our Affine transformer from GDAL environments, fixing a performance
+  regression introduced in 1.3.0 (#2754).
+- StatisticsError is raised when dataset statistics cannot be computed (#2760).
+- In DatasetBase.__enter__ an Env is added to the dataset's context stack if
+  needed, making an explicit `with Env():` optional when using an opened
+  dataset as a context manager (#2760).
+
+1.3.5.post1 (2023-02-02)
+------------------------
+
+There are no code changes in this release. This is only to create new wheels as
+the 1.3.5 macosx 10.15 wheels are defective.
+
+1.3.5 (2023-01-25)
+------------------
+
+Bug fixes:
+
+- Fixed plot.show(adjust=True) with respect to 16-bit integer data (#2733).
+- Align offsets in rio-clip as well as height and width to match gdal_translate
+  with -projwin (#2729).
+- Allow rio-warp's --target-aligned-pixels option to be used with --dst-bounds
+  or --src-bounds (#2729).
+- Normalize paths before calling os.add_dll_directory on Windows (#2705).
+- Affine version 2.4.0 exposes a bug in Rasterio's test_deprecated.py module, a
+  test than erroneously fails. This test has been fixed and passes with all
+  versions of the affine module.
+- Better, recursive cleanup of MemoryFile /vsimem/ directories.
+- Python ignores SIGPIPE by default. By never catching BrokenPipeError via
+  `except Exception` when, for example, piping the output of rio-shapes to
+  the Unix head program, we avoid getting an unhandled BrokenPipeError message
+  when the interpreter shuts down (#2689).
+- Fixes for unsigned access to S3 (#2688, backport of #2669).
+- Ignore blockysize when converting untiled datasets to tiled datasets (#2687,
+  backport of #2678).
+
+1.3.4 (2022-11-16)
+------------------
+
+This version is good for use with GDAL 3.6.0 as well as previous versions.
+
+Changes:
+
+- Resampling tests have been updated to account for changes in GDAL 3.6.0
+  (#2653).
+- Variables in TransformerBase.xy have been renamed for better clarity (#2609).
+- Avoid use of a fixed port for the warp test server (#2619).
+
+Bug fixes:
+
+- Use Python long for FilePath VSI plugin's file position (#2652).
+- In the case that a GDAL function returns NULL but doesn't set an error, we
+  now raise SystemError instead of silently failing (#2645).
+- Azure storage access key can be taken from the environment if not explicitly
+  provided to AzureSession (#2637).
+- Skip empty parts of PATH on Windows when adding DLL directories (#2626).
+- get_data_window is fixed for the case where the nodata value is nan (#2629).
+- Ensure that GTiff, not COG, driver is used by default for TIFFs (#2634).
+
+1.3.3 (2022-10-19)
+------------------
+
+Packaging:
+
+The rasterio._loading module, which supports DLL loading on Windows,
+has been moved into __init__.py and is no longer used anywhere else
+(#2594).
+
+Bug fixes:
+
+- GeoTIFF profiles combining tiled=False and a defined blockysize are now
+  supported (#2599).
+- URLs with // in the query string are now properly parsed (#2603).
+- Rasterio's Python file VSI plugin now sets the position of the underlying
+  stream to 0 on close, resolving #2550.
+
+1.3.2 (2022-08-19)
+------------------
+
+Packaging:
+
+1.3.1 was released from a branch lacking the advertised bug fixes. 1.3.2
+contains the fixes listed under 1.3.1.
+
+1.3.1 (2022-08-17)
+------------------
+
+Packaging:
+
+Wheels for 1.3.1 are built using the version of rasterio-wheels dated
+2022-08-17 and include PROJ 9.0.1 and GDAL 3.5.1.
+
+Bug fixes:
+
+- get_data_window has been improved and extended to 1D (#2510).
+- Broadcasting of coordinates in transform.xy has been restored (#2538).
+- A bug in nodata filling (#2474) has been fixed by patching GDAL (wheels
+  only).
+- Support for PROJ_DATA has been added (#2530).
+- Non-informative errors arising from opening a dataset in write mode are
+  silenced (#2525).
+- N-D arrays are once again accepted by sampling.sample_gen (#2547).
+- MemoryDataset's memory layout has been fixed to properly support
+  non-contiguous data (#2512).
+
+1.3.0.post1 (2022-08-09)
+------------------------
+
+This version corrects errors made in building binary wheels for 1.3.0. There
+are no bug fixes or new features in this version.
 
 1.3.0 (2022-07-05)
 ------------------

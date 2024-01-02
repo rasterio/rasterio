@@ -1,0 +1,20 @@
+version: 2
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "mambaforge-4.10"
+
+sphinx:
+  configuration: docs/conf.py
+  fail_on_warning: false
+
+formats: all
+
+conda:
+  environment: docs/environment.yml
+
+python:
+  install:
+    - method: setuptools
+      path: .

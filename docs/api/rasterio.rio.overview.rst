@@ -1,7 +1,3 @@
-rasterio.rio.overview module
-============================
-
-.. automodule:: rasterio.rio.overview
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.overview:overview
+   :prog: rio overview
+   :show-nested:

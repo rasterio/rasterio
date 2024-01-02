@@ -58,7 +58,7 @@ Rasterio
         with rasterio.open('data/stefan_full_greyalpha.tif') as dataset:
            # Suite of code accessing dataset ``ds`` follows...
 
-The object returned when you call :class:`rasterio.Env()` is a context manager.  It
+The object returned when you call :class:`rasterio.Env` is a context manager.  It
 handles the GDAL configuration for a specific block of code and resets the
 configuration when the block exits for any reason, success or failure. The
 Rasterio ``with rasterio.Env()`` pattern organizes GDAL configuration into single
@@ -80,11 +80,11 @@ to a name like so.
 When to use rasterio.Env()
 --------------------------
 
-Rasterio code is often without the use of an ``Env`` context block. For instance,
-you could use ``rasterio.open()`` directly without explicity creating an ``Env``.
-In that case, the ``open`` function will initialize a default environment in
+Rasterio code is often without the use of an :class:`.Env` context block. For instance,
+you could use :func:`rasterio.open` directly without explicity creating an :class:`.Env`.
+In that case, the :func:`~rasterio.open` function will initialize a default environment in
 which to execute the code. Often this default environment is sufficient for most
-use cases and you only need to create an explicit ``Env`` if you are customizing
+use cases and you only need to create an explicit :class:`.Env` if you are customizing
 the default GDAL or format options.
 
 

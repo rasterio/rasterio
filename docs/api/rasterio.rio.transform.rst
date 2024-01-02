@@ -1,7 +1,3 @@
-rasterio.rio.transform module
-=============================
-
-.. automodule:: rasterio.rio.transform
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.transform:transform
+   :prog: rio transform
+   :show-nested:

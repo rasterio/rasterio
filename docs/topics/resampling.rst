@@ -57,7 +57,7 @@ When you change the raster cell grid, you must recalculate the pixel values.
 There is no "correct" way to do this as all methods involve some interpolation.
 
 The current resampling methods can be found in the
-:class:`rasterio.enums.Resampling()` class.
+:class:`rasterio.enums.Resampling` class.
 
 Of note, the default :attr:`~rasterio.enums.Resampling.nearest` method may not
 be suitable for continuous data. In those cases,

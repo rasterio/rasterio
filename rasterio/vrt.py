@@ -2,15 +2,12 @@
 
 import xml.etree.ElementTree as ET
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio._warp import WarpedVRTReaderBase
-    from rasterio.dtypes import _gdal_typename
-    from rasterio.enums import MaskFlags
-    from rasterio._path import _parse_path
-    from rasterio.transform import TransformMethodsMixin
-    from rasterio.windows import WindowMethodsMixin
+from rasterio._warp import WarpedVRTReaderBase
+from rasterio.dtypes import _gdal_typename
+from rasterio.enums import MaskFlags
+from rasterio._path import _parse_path
+from rasterio.transform import TransformMethodsMixin
+from rasterio.windows import WindowMethodsMixin
 
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
@@ -57,6 +54,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         or one-eigth of a pixel.
     src_alpha : int, optional
         Index of a source band to use as an alpha band for warping.
+    dst_alpha : int, optional
+        Index of a destination band to use as an alpha band for warping.
     add_alpha : bool, optional
         Whether to add an alpha masking band to the virtual dataset.
         Default: False. This option will cause deletion of the VRT

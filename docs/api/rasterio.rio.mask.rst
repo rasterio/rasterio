@@ -1,7 +1,3 @@
-rasterio.rio.mask module
-========================
-
-.. automodule:: rasterio.rio.mask
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.mask:mask
+   :prog: rio mask
+   :show-nested:

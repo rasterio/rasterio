@@ -1,6 +1,5 @@
 """rasterio.warp module tests"""
 
-import json
 import logging
 import os
 import sys
@@ -15,7 +14,6 @@ from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
 from rasterio.errors import (
     CRSError,
     GDALVersionError,
@@ -35,10 +33,9 @@ from rasterio.warp import (
 from rasterio import windows
 
 from . import rangehttpserver
+from .conftest import gdal_version
 
 log = logging.getLogger(__name__)
-
-gdal_version = GDALVersion.runtime()
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
@@ -55,9 +52,17 @@ def flatten_coords(coordinates):
                 yield x
 
 
-reproj_expected = (
-    ({"CHECK_WITH_INVERT_PROJ": False}, 6644), ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
-)
+if gdal_version.at_least("3.6"):
+    # GH2662
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6646),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6646)
+    )
+else:
+    reproj_expected = (
+        ({"CHECK_WITH_INVERT_PROJ": False}, 6644),
+        ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
+    )
 
 
 class ReprojectParams:
@@ -162,6 +167,12 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
         return f
+
+
+@pytest.fixture(scope="session")
+def rpcs():
+    with rasterio.open("tests/data/RGB.byte.rpc.vrt") as src:
+        return src.rpcs
 
 
 def test_transform_src_crs_none():
@@ -282,23 +293,26 @@ def test_transform_bounds__esri_wkt():
     )
 
 
+@pytest.mark.xfail(reason="Projection extents have changed with PROJ 9")
 @pytest.mark.parametrize(
     "density,expected",
     [
-        (0, (-1688721.99764, -350040.36880, 1688799.61159, 2236495.86829)),
-        (100, (-1688721.99764, -555239.84875, 1688799.61159, 2236495.86829)),
+        (0, (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559)),
+        (100, (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559)),
     ],
 )
 def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(2163)
-    with rasterio.Env(OSR_USE_NON_DEPRECATED="NO"):
-        assert np.allclose(
-            expected,
-            transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
-        )
+    dst_crs = CRS.from_proj4(
+        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 "
+        "+a=6370997 +b=6370997 +units=m +no_defs"
+    )
+    assert np.allclose(
+        expected,
+        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
+    )
 
 
 def test_transform_bounds_no_change():
@@ -343,6 +357,60 @@ def test_calculate_default_transform():
         assert dst_transform.almost_equals(target_transform)
         assert width == 835
         assert height == 696
+
+
+@pytest.mark.skipif(
+    not gdal_version.at_least("3.5"),
+    reason="Older GDAL versions require geotransform or GCPs",
+)
+def test_calculate_default_transform_geoloc_array():
+    target_transform = Affine(
+        0.0028535715391804096,
+        0.0,
+        -78.95864996545055,
+        0.0,
+        -0.0028535715391804096,
+        25.550873767433984,
+    )
+
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
+        )
+        dst_transform, width, height = calculate_default_transform(
+            src.crs,
+            CRS.from_epsg(4326),
+            src.width,
+            src.height,
+            src_geoloc_array=(xs, ys),
+        )
+
+        assert dst_transform.almost_equals(target_transform, precision=1e-3)
+        assert width == 838
+        assert height == 692
+
+
+def test_calculate_default_transform_rpcs(rpcs):
+    target_transform = Affine(
+        7.516528579807828e-05,
+        0.0,
+        -123.48824818566493,
+        0.0,
+        -7.516528579807828e-05,
+        49.52797830474044,
+    )
+
+    dst_transform, width, height = calculate_default_transform(
+        CRS.from_epsg(32618),
+        CRS.from_epsg(4326),
+        791,
+        718,
+        rpcs=rpcs,
+    )
+
+    assert dst_transform.almost_equals(target_transform, precision=1e-4)
+    assert height == 553
+    assert width == 1144
 
 
 def test_calculate_default_transform_single_resolution():
@@ -453,7 +521,7 @@ def test_reproject_ndarray():
     )
     assert (out > 0).sum() == 438113
 
-    
+
 def test_reproject_ndarray_slice():
     """Test for issue #2511, destination with strides"""
 
@@ -529,7 +597,11 @@ def test_reproject_view():
         resampling=Resampling.nearest,
     )
 
-    assert (out > 0).sum() == 299199
+    expected_sum = 299199
+    if gdal_version.at_least("3.6"):
+        # GH2662
+        expected_sum = 299231
+    assert (out > 0).sum() == expected_sum
 
 
 def test_reproject_epsg():
@@ -1201,14 +1273,14 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
-        Resampling.sum: [439118],
+        Resampling.sum: [439118, 439142],  # 439142 for GDAL 3.6+
         Resampling.rms: [439385],
     }
 
@@ -1294,14 +1366,14 @@ def test_reproject_resampling_alpha(method):
         Resampling.cubic: [437888],
         Resampling.cubic_spline: [440475],
         Resampling.lanczos: [436001],
-        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.average: [439172],
         Resampling.mode: [437298],
         Resampling.max: [439464],
         Resampling.min: [436397],
         Resampling.med: [437194],
         Resampling.q1: [436397],
         Resampling.q3: [438948],
-        Resampling.sum: [439118],
+        Resampling.sum: [439118, 439142],  # 439142 for GDAL 3.6+
         Resampling.rms: [439385],
     }
 
@@ -1563,10 +1635,13 @@ def rgb_byte_profile():
         return src.profile
 
 
-def test_reproject_gcps_transform_exclusivity():
-    """gcps and transform can't be used together."""
+@pytest.mark.parametrize(
+    "params", [{"gcps": [0]}, {"rpcs": [0]}, {"src_geoloc_array": (0, 0)}]
+)
+def test_reproject_src_geoloc_exclusivity(params):
+    """Different kinds of source geolocation can't be used together."""
     with pytest.raises(ValueError):
-        reproject(1, 1, gcps=[0], src_transform=[0])
+        reproject(1, 1, src_transform=[0], **params)
 
 
 def test_reproject_gcps(rgb_byte_profile):
@@ -1728,6 +1803,34 @@ def test_issue_1446():
     )
     assert round(g["coordinates"][0], 1) == 542630.9
     assert round(g["coordinates"][1], 1) == 4212702.1
+
+
+def test_transform_geom_geometry_collection():
+    output = transform_geom(
+        "EPSG:4326",
+        "EPSG:3857",
+        {
+            "type": "GeometryCollection",
+            "geometries": [
+                {
+                    "type": "Point",
+                    "coordinates": [1, 2]
+                }
+            ]
+        }
+    )
+    assert output == {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {
+                'type': 'Point',
+                'coordinates': (
+                    pytest.approx(111319.49079327357),
+                    pytest.approx(222684.20850554405)
+                )
+            }
+        ]
+    }
 
 
 def test_reproject_init_dest_nodata():
@@ -1959,6 +2062,7 @@ def test_reproject_rpcs_approx_transformer(caplog):
         assert "Created approximate transformer" in caplog.text
 
 
+@pytest.mark.network
 @pytest.fixture
 def http_error_server(data):
     """Serves files from the test data directory, poorly."""
@@ -1966,12 +2070,11 @@ def http_error_server(data):
     import multiprocessing
     import http.server
 
-    PORT = 8000
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
-    httpd = http.server.HTTPServer(("", PORT), Handler)
+    httpd = http.server.HTTPServer(("", 0), Handler)
     p = multiprocessing.Process(target=httpd.serve_forever)
     p.start()
-    yield
+    yield f'{httpd.server_name}:{httpd.server_port}'
     p.terminate()
     p.join()
 
@@ -1984,7 +2087,7 @@ def test_reproject_error_propagation(http_error_server, caplog):
     """Propagate errors up from ChunkAndWarpMulti and check for a retry."""
 
     with rasterio.open(
-        "/vsicurl?max_retry=1&retry_delay=.1&url=http://localhost:8000/RGB.byte.tif"
+        f"/vsicurl?max_retry=1&retry_delay=.1&url=http://{http_error_server}/RGB.byte.tif"
     ) as src:
         out = np.zeros((src.count, src.height, src.width), dtype="uint8")
 
@@ -2097,7 +2200,7 @@ def test_coordinate_pipeline(tmp_path):
 
 
 @pytest.mark.skipif(
-    not gdal_version.at_least('3.4'),
+    not gdal_version.at_least('3.4') or gdal_version.at_least("3.5"),
     reason="Requires GDAL 3.4.x")
 def test_issue2353bis(caplog):
     """Errors left by a successful transformation are cleaned up."""
@@ -2106,3 +2209,113 @@ def test_issue2353bis(caplog):
     with rasterio.Env():
         transform_bounds("EPSG:6931", "EPSG:4326", *bounds)
         assert "Point outside of" in caplog.text
+
+
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
+def test_geoloc_warp_dataset(data, tmp_path):
+    """Warp a dataset using external geolocation arrays."""
+    filename = str(data.join("RGB.byte.tif"))
+
+    # Extract geolocation arrays and create suitable destination dataset.
+    with rasterio.open(filename) as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(src.width), np.arange(src.height)
+        )
+
+        profile = src.profile
+        profile.update(
+            driver="GTiff",
+            height=800,
+            width=880,
+            transform=DST_TRANSFORM,
+            crs="EPSG:3857",
+        )
+
+    # Now alter the source's geotransform. If the geolocation arrays
+    # aren't used, we'll notice.
+    with rasterio.open(filename, "r+") as src:
+        src.transform = Affine.identity()
+
+    # Reproject the altered source file using provided geolocation
+    # arrays.
+    with rasterio.open(filename) as src:
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            reproject(
+                rasterio.band(src, src.indexes),
+                rasterio.band(dst, dst.indexes),
+                src_crs=src.crs,
+                src_geoloc_array=np.stack((xs, ys)),
+                resampling=Resampling.bilinear,
+            )
+
+    with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+        out = dst.read(1)
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 file.
+    assert np.count_nonzero(out) in [464910]
+
+
+# Before GDAL 3.5.2 geoloc array files aren't recognized and this error
+# would be seen from the following tests:
+#
+# rasterio._err.CPLE_AppDefinedError: The transformation is already
+# "north up" or a transformation between pixel/line and georeferenced
+# coordinates cannot be computed for
+# MEM:::DATAPOINTER=137539856,PIXELS=791,LINES=718,BANDS=3,DATATYPE=Byte.
+# There is no affine transformation and no GCPs. Specify transformation
+# option SRC_METHOD=NO_GEOTRANSFORM to bypass this check.
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
+def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
+    """Warp an array using external geolocation arrays."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(src.width), np.arange(src.height)
+        )
+        source = src.read()
+
+    output = np.zeros((3, 800, 880), dtype="uint8")
+
+    reproject(
+        source,
+        output,
+        src_crs=src.crs,
+        src_geoloc_array=np.stack((xs, ys)),
+        src_nodata=0,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_height=800,
+        dst_width=880,
+        resampling=Resampling.bilinear,
+    )
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 array.
+    assert np.count_nonzero(output[0]) in [464910]
+
+
+@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
+def test_geoloc_warp_array_subsampled(path_rgb_byte_tif, tmp_path):
+    """Warp an array using subsampled external geolocation arrays."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        xs, ys = src.transform * np.meshgrid(
+            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
+        )
+        source = src.read()
+
+    output = np.zeros((3, 800, 880), dtype="uint8")
+
+    reproject(
+        source,
+        output,
+        src_crs=src.crs,
+        src_geoloc_array=(xs, ys),
+        src_nodata=0,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_height=800,
+        dst_width=880,
+        resampling=Resampling.bilinear,
+    )
+
+    # This value is specific to DST_TRANSFORM and an 800 x 880 array.
+    assert np.count_nonzero(output[0]) in [471492]
+

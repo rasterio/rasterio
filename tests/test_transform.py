@@ -1,40 +1,74 @@
 """Tests of the transform module."""
 
-from array import array
 import logging
-
-from affine import Affine
-import pytest
+import math
+from array import array
 
 import numpy
+import pytest
+from affine import Affine
 
 import rasterio
+from rasterio.control import GroundControlPoint
+from rasterio.errors import TransformError
 from rasterio import transform
 from rasterio.transform import (
-    get_transformer,
-    xy, 
-    rowcol,
     AffineTransformer,
     GCPTransformer,
-    RPCTransformer
+    RPCTransformer,
+    get_transformer,
+    rowcol,
+    xy,
 )
-from rasterio.errors import TransformError
-from rasterio.windows import Window
-from rasterio.control import GroundControlPoint
+
+from .conftest import assert_bounding_box_equal
 
 
 def gcps():
     return [
-        GroundControlPoint(row=11521.5, col=0.5, x=-123.6185142817931, y=48.99561141948625, z=89.13533782958984, id='217', info=''), 
-        GroundControlPoint(row=11521.5, col=7448.5, x=-122.8802747777599, y=48.91210259315549, z=89.13533782958984, id='234', info=''), 
-        GroundControlPoint(row=0.5, col=0.5, x=-123.4809665720148, y=49.52809729106944, z=89.13533782958984, id='1', info=''), 
-        GroundControlPoint(row=0.5, col=7448.5, x=-122.7345733674704, y=49.44455878004666, z=89.13533782958984, id='18', info='')
+        GroundControlPoint(
+            row=11521.5,
+            col=0.5,
+            x=-123.6185142817931,
+            y=48.99561141948625,
+            z=89.13533782958984,
+            id="217",
+            info="",
+        ),
+        GroundControlPoint(
+            row=11521.5,
+            col=7448.5,
+            x=-122.8802747777599,
+            y=48.91210259315549,
+            z=89.13533782958984,
+            id="234",
+            info="",
+        ),
+        GroundControlPoint(
+            row=0.5,
+            col=0.5,
+            x=-123.4809665720148,
+            y=49.52809729106944,
+            z=89.13533782958984,
+            id="1",
+            info="",
+        ),
+        GroundControlPoint(
+            row=0.5,
+            col=7448.5,
+            x=-122.7345733674704,
+            y=49.44455878004666,
+            z=89.13533782958984,
+            id="18",
+            info="",
+        ),
     ]
 
 
 def rpcs():
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         return src.rpcs
+
 
 def test_window_transform():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -72,6 +106,64 @@ def test_array_bounds():
         width = src.width
         tr = transform.from_bounds(w, s, e, n, src.width, src.height)
     assert (w, s, e, n) == transform.array_bounds(height, width, tr)
+
+
+@pytest.mark.parametrize(
+    ["width", "height", "affine_transform", "expected_bounds"],
+    [
+        pytest.param(
+            2, 2, Affine.identity(), (0.0, 2.0, 2.0, 0.0), id="Identity transform"
+        ),
+        pytest.param(
+            2, 2, Affine.scale(1, -1), (0.0, -2.0, 2.0, 0.0), id="North-up transform"
+        ),
+        pytest.param(
+            2,
+            2,
+            Affine.translation(2, 2) * Affine.scale(1, -1),
+            (2.0, 0.0, 4.0, 2.0),
+            id="Translated transform",
+        ),
+        pytest.param(
+            2,
+            2,
+            Affine.scale(4) * Affine.scale(1, -1),
+            (0.0, -8.0, 8.0, 0.0),
+            id="Scaled transform",
+        ),
+        pytest.param(
+            2,
+            2,
+            Affine.rotation(90) * Affine.scale(1, -1),
+            (0.0, 0.0, 2.0, 2.0),
+            id="90 degree rotated transform",
+        ),
+        pytest.param(
+            2,
+            2,
+            Affine.rotation(45) * Affine.scale(1, -1),
+            (0.0, -math.sqrt(2), 2 * math.sqrt(2), math.sqrt(2)),
+            id="45 degree rotated transform",
+        ),
+        pytest.param(
+            2,
+            2,
+            Affine.scale(4, 1) * Affine.scale(1, -1),
+            (0, -2.0, 8.0, 0.0),
+            id="Rectangular pixel transform",
+        ),
+        pytest.param(
+            6,
+            2,
+            Affine.scale(1, -1),
+            (0, -2.0, 6.0, 0.0),
+            id="Differing width and height",
+        ),
+    ],
+)
+def test_array_bounds_from_transforms(width, height, affine_transform, expected_bounds):
+    actual_bounds = transform.array_bounds(height, width, affine_transform)
+    assert_bounding_box_equal(expected_bounds, actual_bounds)
 
 
 def test_window_bounds():
@@ -144,6 +236,7 @@ def test_xy_offset(offset, exp_xy, aff):
     """Check offset keyword arg."""
     assert xy(aff, 0, 0, offset=offset) == exp_xy
 
+
 @pytest.mark.parametrize(
     'dataset,transform_attr,coords,expected',
     [
@@ -200,7 +293,7 @@ def test_xy_input(rows, cols, exp_xy, aff):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("rows, cols", [(0, [0]), ("0", "0")])
+@pytest.mark.parametrize("rows, cols", [([0, 1, 2], [0, 1]), ("0", "0")])
 def test_invalid_xy_input(rows, cols, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
@@ -255,10 +348,16 @@ def test_rowcol_input(xs, ys, exp_rowcol):
     'dataset,transform_attr,coords,expected',
     [
         (
-            'tests/data/RGB.byte.gcp.vrt',
-            'gcps',
-            [(-123.40736757459366, 49.52003804469494), (-123.478928146875, 49.5280898698975), (-123.4886516975216, 49.491531881517595), (-123.41709112524026, 49.48348005631504), (-123.40736757459366, 49.52003804469494)], 
-            [(0, 718), (0, 0), (791, 0), (791, 718), (0, 718)]
+            "tests/data/RGB.byte.gcp.vrt",
+            "gcps",
+            [
+                (-123.40736757459366, 49.52003804469494),
+                (-123.478928146875, 49.5280898698975),
+                (-123.4886516975216, 49.491531881517595),
+                (-123.41709112524026, 49.48348005631504),
+                (-123.40736757459366, 49.52003804469494),
+            ],
+            [(0, 718), (0, 0), (791, 0), (791, 718), (0, 718)],
         ),
         (
             'tests/data/RGB.byte.rpc.vrt',
@@ -294,7 +393,7 @@ def test_xy_rowcol_inverse(transform):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("xs, ys", [(0, [0]), ("0", "0")])
+@pytest.mark.parametrize("xs, ys", [([0, 1, 2], [0, 1]), ("0", "0")])
 def test_invalid_rowcol_input(xs, ys, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
@@ -308,37 +407,64 @@ def test_from_gcps():
         assert len(aff) == 9
         assert not transform.tastes_like_gdal(aff)
 
+
 @pytest.mark.parametrize(
-    'transformer_cls,transform', 
-    [
-        (GCPTransformer,gcps()), 
-        (RPCTransformer,rpcs())
-    ]
+    "transformer_cls,transform", [(GCPTransformer, gcps()), (RPCTransformer, rpcs())]
 )
 def test_transformer_open_closed(transformer_cls, transform):
     # open or closed does not matter for pure Python AffineTransformer
     with transformer_cls(transform) as transformer:
-        assert not transformer.closed 
+        assert not transformer.closed
     assert transformer.closed
     with pytest.raises(ValueError):
         transformer.xy(0, 0)
 
+
 @pytest.mark.parametrize(
     'coords,expected',
     [
-        ((0,0), (0,0)),
-        (([0],[0]), ([0], [0])),
-        (([0,1],[0,1]), ([0,1],[0,1]))
+        ((0, 1), (1, 0)),
+        (([0],[1]), ([1], [0])),
+        ((0,[1]), ([1], [0])),
+        (([0], 1), ([1], [0])),
+        (([0, 1], [2, 3]), ([2, 3],[0, 1])),
+        ((0, [1, 2]), ([1, 2], [0, 0])),
+        (([0, 1], 2), ([2, 2], [0, 1])),
+        (([0], [1, 2]), ([1, 2], [0, 0])),
+        (([0, 1], [2]), ([2, 2], [0, 1])),
     ]
 )
 def test_ensure_arr_input(coords, expected):
     transformer = transform.AffineTransformer(Affine.identity())
     assert transformer.xy(*coords, offset='ul') == expected
 
+
 def test_ensure_arr_input_same_shape():
     transformer = transform.AffineTransformer(Affine.identity())
     with pytest.raises(TransformError):
-        transformer.xy([0], [0, 1])
+        transformer.xy([0, 1, 2], [0, 1])
+
+
+def test_ensure_arr_input_with_default_zs():
+    assert AffineTransformer._ensure_arr_input(0, 1) == AffineTransformer._ensure_arr_input(0, 1, zs=0)
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=0)
+    assert all(zs == [0, 0])
+
+
+def test_ensure_arr_input_with_zs():
+    _, _, zs = AffineTransformer._ensure_arr_input(0, 1, zs=2)
+    assert all(zs == [2])
+    _, _, zs = AffineTransformer._ensure_arr_input(0, [1, 2], zs=3)
+    assert all(zs == [3, 3])
+    _, _, zs = AffineTransformer._ensure_arr_input([0, 1], 2, zs=3)
+    assert all(zs == [3, 3])
+    xs, ys, zs = AffineTransformer._ensure_arr_input(0, 1, zs=[2, 3])
+    assert all(zs == [2, 3])
+    assert all(ys == [1, 1])
+    assert all(xs == [0, 0])
+    with pytest.raises(TransformError):
+        AffineTransformer._ensure_arr_input(0, [1, 2], zs=[3, 4, 5])
+
 
 @pytest.mark.parametrize(
     'transformer_cls,transform',
@@ -358,6 +484,7 @@ def test_rpctransformer_options(caplog):
             assert "RPC_MAX_ITERATIONS" in caplog.text
             assert "DUMMY_OPTION" in caplog.text
 
+
 @pytest.mark.parametrize(
     'dataset,transform_method,expected',
     [
@@ -371,6 +498,7 @@ def test_dataset_mixins(dataset, transform_method, expected):
         assert src.xy(0, 0, transform_method=transform_method) == pytest.approx(expected)
         assert src.index(*expected, transform_method=transform_method) == (0, 0)
 
+
 def test_2421_rpc_height_ignored():
     transform_method = rasterio.enums.TransformMethod.rpcs
     with rasterio.open("tests/data/RGB.byte.rpc.vrt") as src:
@@ -378,3 +506,16 @@ def test_2421_rpc_height_ignored():
         x2, y2 = src.xy(0, 0, z=2000, transform_method=transform_method)
         assert abs(x2 - x1) > 0
         assert abs(y2 - y1) > 0
+
+def test_gcp_transformer_tps_option():
+    """Use thin plate spline transformation when requested."""
+    # TPS ensures that GCPs are (to within some precision) solutions of the transformation.
+    # This is not the case for polynomials transformations. 
+    with GCPTransformer(gcps(), tps=True) as transformer:
+        for gcp in gcps():
+            x_, y_ = transformer.xy(gcp.row, gcp.col, offset='ul')
+            assert gcp.x == pytest.approx(x_)
+            assert gcp.y == pytest.approx(y_)
+            row_, col_ = transformer.rowcol(gcp.x, gcp.y, op=lambda arg: arg)
+            assert gcp.row == pytest.approx(row_)
+            assert gcp.col == pytest.approx(col_)

@@ -1,7 +1,3 @@
-rasterio.rio.blocks module
-==========================
-
-.. automodule:: rasterio.rio.blocks
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.blocks:blocks
+   :prog: rio blocks
+   :show-nested:

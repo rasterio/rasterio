@@ -6,10 +6,8 @@ https://github.com/rasterio/rasterio/issues/1300.
 
 import json
 
-import rasterio._loading
-with rasterio._loading.add_gdal_dll_directories():
-    import rasterio
-    from rasterio.features import dataset_features
+import rasterio
+from rasterio.features import dataset_features
 
 
 class JSONSequenceTool:

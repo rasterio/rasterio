@@ -137,7 +137,6 @@ def test_boundless_mask_not_all_valid():
     assert masked.mask[-1, :].all()
 
 
-@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_fill_value():
     """Confirm resolution of issue #1471"""
     with rasterio.open("tests/data/red.tif") as src:
@@ -168,7 +167,6 @@ def test_boundless_mask_special():
     assert not mask[-1, :].any()
 
 
-@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:
@@ -176,7 +174,6 @@ def test_boundless_fill_value_overview_masks():
     assert (data[:, 0] == 5).all()
 
 
-@pytest.mark.xfail(reason="fill_value requires GDAL 3.1.4 or equivalent patches")
 def test_boundless_masked_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:

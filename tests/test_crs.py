@@ -356,8 +356,9 @@ def test_dataset_compound_crs():
 
 @pytest.mark.wheel
 def test_environ_patch(gdalenv, monkeypatch):
-    """PROJ_LIB is patched when rasterio._crs is imported"""
+    """PROJ_LIB (PROJ < 9.1) | PROJ_DATA (PROJ 9.1+) is patched when rasterio._crs is imported"""
     monkeypatch.delenv('GDAL_DATA', raising=False)
+    monkeypatch.delenv('PROJ_DATA', raising=False)
     monkeypatch.delenv('PROJ_LIB', raising=False)
     with env_ctx_if_needed():
         assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)

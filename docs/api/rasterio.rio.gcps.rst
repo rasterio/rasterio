@@ -1,7 +1,3 @@
-rasterio.rio.gcps module
-========================
-
-.. automodule:: rasterio.rio.gcps
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. click:: rasterio.rio.gcps:gcps
+   :prog: rio gcps
+   :show-nested:

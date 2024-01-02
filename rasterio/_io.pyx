@@ -16,15 +16,18 @@ import numpy as np
 
 from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
+from rasterio._env import catch_errors
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
+    GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
+    CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
+    StatisticsError
 )
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
@@ -142,8 +145,8 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
 
     cdef int xoff = <int>x0
     cdef int yoff = <int>y0
-    cdef int xsize = <int>width
-    cdef int ysize = <int>height
+    cdef int xsize = <int>max(1, width)
+    cdef int ysize = <int>max(1, height)
 
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
@@ -163,17 +166,50 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     for i in range(count):
         bandmap[i] = <int>indexes[i]
 
-    with stack_errors():
-        try:
+    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 6, 0) and (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) < (3, 7, 1):
+        # Workaround for https://github.com/rasterio/rasterio/issues/2847
+        # (bug when reading TIFF PlanarConfiguration=Separate images with
+        # multi-threading)
+        # To be removed when GDAL >= 3.7.1 is required
+        cdef const char* interleave = NULL
+        cdef GDALDriverH driver = NULL
+        cdef const char* driver_name = NULL
+        cdef GDALRasterBandH band = NULL
+        if CPLGetConfigOption("GDAL_NUM_THREADS", NULL):
+            interleave = GDALGetMetadataItem(hds, "INTERLEAVE", "IMAGE_STRUCTURE")
+            if interleave and interleave == b"BAND":
+                driver = GDALGetDatasetDriver(hds)
+                if driver:
+                    driver_name = GDALGetDescription(driver)
+                    if driver_name and driver_name == b"GTiff":
+                        try:
+                            for i in range(count):
+                                band = GDALGetRasterBand(hds, bandmap[i])
+                                if band == NULL:
+                                    raise ValueError("Null band")
+                                with stack_errors():
+                                    with nogil:
+                                        retval = GDALRasterIOEx(
+                                            band,
+                                            <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
+                                            <void *>(<char *>buf + i * bufbandspace),
+                                            bufxsize, bufysize, buftype,
+                                            bufpixelspace, buflinespace, &extras)
+                                    return retval
+                        finally:
+                            CPLFree(bandmap)
+
+    # Chain errors coming from GDAL.
+    try:
+        with stack_errors():
             with nogil:
                 retval = GDALDatasetRasterIOEx(
                     hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
                     bufxsize, bufysize, buftype, count, bandmap,
                     bufpixelspace, buflinespace, bufbandspace, &extras)
             return retval
-            # return exc_wrap_int(retval)
-        finally:
-            CPLFree(bandmap)
+    finally:
+        CPLFree(bandmap)
 
 
 cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
@@ -207,8 +243,8 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
 
     cdef int xoff = <int>x0
     cdef int yoff = <int>y0
-    cdef int xsize = <int>width
-    cdef int ysize = <int>height
+    cdef int xsize = <int>max(1, width)
+    cdef int ysize = <int>max(1, height)
 
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
@@ -271,7 +307,8 @@ cdef _delete_dataset_if_exists(path):
     cdef const char *path_c = NULL
 
     try:
-        dataset = open_dataset(path, 0x40, None, None, None)
+        with catch_errors():
+            dataset = open_dataset(path, 0x40, None, None, None)
     except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError) as exc:
         log.debug("Skipped delete for overwrite, dataset does not exist: %r", path)
     else:
@@ -318,7 +355,7 @@ cdef bint in_dtype_range(value, dtype):
 cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) except -1:
     """Convenience function to handle IO with a GDAL band.
 
-    :param data: a numpy ndarray
+    :param data: a numpy.ndarray
     :param band: an instance of GDALGetRasterBand
     :param write: 1 (True) uses write mode (writes data into band),
                   0 (False) uses read mode (reads band into data)
@@ -354,7 +391,7 @@ cdef char **convert_options(kwargs):
     for k, v in kwargs.items():
         if k.lower() in ['affine']:
             continue
-        elif k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+        elif k in ['BLOCKXSIZE'] and not tiled:
             continue
 
         # Special cases for enums and tuples.
@@ -405,7 +442,7 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
@@ -416,7 +453,7 @@ cdef class DatasetReaderBase(DatasetBase):
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
-        out_dtype : str or numpy dtype
+        out_dtype : str or numpy.dtype
             The desired output data type. For example: 'uint8' or
             rasterio.uint16.
         out_shape : tuple, optional
@@ -442,7 +479,7 @@ cdef class DatasetReaderBase(DatasetBase):
             are not cached.
         fill_value : scalar
             Fill value applied in the `boundless=True` case only. Like
-            the fill_value of numpy.ma.MaskedArray, should be value
+            the fill_value of :class:`numpy.ma.MaskedArray`, should be value
             valid for the dataset's data type.
 
         Returns
@@ -708,7 +745,7 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes : int or list, optional
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
             and width of `out` differ from that of the specified
@@ -898,14 +935,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
             yoff = window.row_off
             xoff = window.col_off
-
-            # Now that we have floating point windows it's easy for
-            # the number of pixels to read to slip below 1 due to
-            # loss of floating point precision. Here we ensure that
-            # we're reading at least one pixel.
-            height = max(1.0, window.height)
-            width = max(1.0, window.width)
-
+            width = window.width
+            height = window.height
         else:
             xoff = yoff = <int>0
             width = <int>self.width
@@ -944,7 +975,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         Parameters
         ----------
-        out : numpy ndarray, optional
+        out : numpy.ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
@@ -1105,8 +1136,8 @@ cdef class DatasetReaderBase(DatasetBase):
             exc_wrap_int(
                 GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
             )
-        except CPLE_BaseError:
-            raise
+        except CPLE_AppDefinedError as exc:
+            raise StatisticsError("No valid pixels found in sampling.") from exc
         else:
             return Statistics(min, max, mean, std)
 
@@ -1141,10 +1172,12 @@ cdef class MemoryFileBase:
         cdef VSILFILE *fp = NULL
 
         if file_or_bytes:
-            if hasattr(file_or_bytes, 'read'):
+            if hasattr(file_or_bytes, "read"):
                 initial_bytes = file_or_bytes.read()
             elif isinstance(file_or_bytes, bytes):
                 initial_bytes = file_or_bytes
+            elif hasattr(file_or_bytes, "itemsize"):
+                initial_bytes = bytes(file_or_bytes)
             else:
                 raise TypeError(
                     "Constructor argument must be a file opened in binary "
@@ -1155,16 +1188,11 @@ cdef class MemoryFileBase:
         # Make an in-memory directory specific to this dataset to help organize
         # auxiliary files.
         self._dirname = dirname or str(uuid4())
-        VSIMkdir("/vsimem/{0}".format(self._dirname).encode("utf-8"), 0666)
+        self._filename = filename or f"{self._dirname}.{ext.lstrip('.')}"
 
-        if filename:
-            # GDAL's SRTMHGT driver requires the filename to be "correct" (match
-            # the bounds being written)
-            self.name = "/vsimem/{0}/{1}".format(self._dirname, filename)
-        else:
-            # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = "/vsimem/{0}/{0}.{1}".format(self._dirname, ext.lstrip('.'))
+        VSIMkdir(f"/vsimem/{self._dirname}".encode('utf-8'), 0666)
 
+        self.name = f"/vsimem/{self._dirname}/{self._filename}"
         self._path = self.name.encode('utf-8')
 
         self._initial_bytes = initial_bytes
@@ -1183,7 +1211,16 @@ cdef class MemoryFileBase:
             raise OSError("Failed to open in-memory file.")
 
         self._env = ExitStack()
-        self.closed = False
+
+    @property
+    def closed(self):
+        """Test if the dataset is closed
+
+        Returns
+        -------
+        bool
+        """
+        return self._vsif == NULL
 
     def exists(self):
         """Test if the in-memory file exists.
@@ -1224,18 +1261,19 @@ cdef class MemoryFileBase:
         if self._vsif != NULL:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
-        _delete_dataset_if_exists(self.name)
-        VSIRmdir(self._dirname.encode("utf-8"))
-        self.closed = True
+        VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
 
     def seek(self, offset, whence=0):
-        return VSIFSeekL(self._vsif, offset, whence)
+        if self.closed:
+            raise ValueError("I/O operation on closed MemoryFile")
+        else:
+            return VSIFSeekL(self._vsif, offset, whence)
 
     def tell(self):
-        if self._vsif != NULL:
-            return VSIFTellL(self._vsif)
+        if self.closed:
+            raise ValueError("I/O operation on closed MemoryFile")
         else:
-            return 0
+            return VSIFTellL(self._vsif)
 
     def read(self, size=-1):
         """Read bytes from MemoryFile.
@@ -1254,6 +1292,9 @@ cdef class MemoryFileBase:
         cdef bytes result
         cdef unsigned char *buffer = NULL
         cdef vsi_l_offset buffer_len = 0
+
+        if self.closed:
+            raise ValueError("I/O operation on closed MemoryFile")
 
         if size < 0:
             buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
@@ -1283,6 +1324,8 @@ cdef class MemoryFileBase:
             Number of bytes written.
 
         """
+        if self.closed:
+            raise ValueError("I/O operation on closed MemoryFile")
         cdef const unsigned char *view = <bytes>data
         n = len(data)
         result = VSIFWriteL(view, 1, n, self._vsif)
@@ -1327,7 +1370,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
-        dtype : str or numpy dtype
+        dtype : str or numpy.dtype
             The data type for bands. For example: 'uint8' or
             ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
@@ -1368,7 +1411,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef int sharing_flag = (0x20 if sharing else 0x0)
 
         # Validate write mode arguments.
-        log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode in ('w', 'w+'):
             if not isinstance(driver, str):
                 raise TypeError("A driver name string is required.")
@@ -1409,14 +1451,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if tiled:
             blockxsize = kwargs.get("blockxsize", None)
             blockysize = kwargs.get("blockysize", None)
-            if (blockxsize and int(blockxsize) % 16) or (blockysize and int(blockysize) % 16):
+            if blockxsize is None or blockysize is None:
+                # ignore if only one provided
+                kwargs.pop("blockxsize", None)
+                kwargs.pop("blockysize", None)
+            elif int(blockxsize) % 16 or int(blockysize) % 16:
                 raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
         if mode in ('w', 'w+'):
-
             options = convert_options(kwargs)
 
+            # Delete this. GDALCreate has been doing the cleanup since
+            # version 3.2.0.
             if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
                 log.debug("No deletion, subdataset will be added: path=%r", path)
             else:
@@ -1429,13 +1476,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             except Exception as err:
                 raise DriverRegistrationError(str(err))
 
-
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
-            if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
+            # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
+            # with PIXELTYPE=SIGNEDBYTE creation option.
+            if _getnpdtype(self._init_dtype) == _getnpdtype('int8') and gdal_dtype == 1:
                 options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.
@@ -1640,7 +1688,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         Parameters
         ----------
         arr : array-like
-            This may be a numpy MaskedArray.
+            This may be a :class:`numpy.ma.MaskedArray`.
         indexes : int or list, optional
             Which bands of the dataset to write to. The default is all.
         window : Window, optional
@@ -1680,7 +1728,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 arr = arr.filled(fill_value)
 
         else:
-            arr = np.array(arr, copy=False)
+            arr = np.asanyarray(arr)
 
         if indexes is None:
             indexes = self.indexes
@@ -1829,14 +1877,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         ----------
         bidx : int
             Index of the band (starting with 1).
-
-        value: string
+        value : str
             A label for the band's unit of measure such as 'meters' or
             'degC'.  See the Pint project for a suggested list of units.
 
         Returns
         -------
         None
+
         """
         cdef GDALRasterBandH hband = NULL
 
@@ -1846,7 +1894,23 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._units = ()
 
     def write_colormap(self, bidx, colormap):
-        """Write a colormap for a band to the dataset."""
+        """Write a colormap for a band to the dataset.
+
+        A colormap maps pixel values of a single-band dataset to RGB or
+        RGBA colors.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+        colormap : Mapping
+            Keys are integers and values are 3 or 4-tuples of ints.
+
+        Returns
+        -------
+        None
+
+        """
         cdef GDALRasterBandH hBand = NULL
         cdef GDALColorTableH hTable = NULL
         cdef GDALColorEntry color
@@ -1854,36 +1918,45 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         hBand = self.band(bidx)
 
         # RGB only for now. TODO: the other types.
-        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
+        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2, GPI_HLS=3
         hTable = GDALCreateColorTable(1)
-        vals = range(256)
 
-        for i, rgba in colormap.items():
+        try:
+            for i, rgba in colormap.items():
+                if len(rgba) == 3:
+                    rgba = tuple(rgba) + (255,)
+                color.c1, color.c2, color.c3, color.c4 = rgba
+                GDALSetColorEntry(hTable, i, &color)
 
-            if len(rgba) == 3:
-                rgba = tuple(rgba) + (255,)
+            # TODO: other color interpretations?
+            GDALSetRasterColorInterpretation(hBand, <GDALColorInterp>1)
+            GDALSetRasterColorTable(hBand, hTable)
 
-            if i not in vals:
-                log.warning("Invalid colormap key %d", i)
-                continue
-
-            color.c1, color.c2, color.c3, color.c4 = rgba
-            GDALSetColorEntry(hTable, i, &color)
-
-        # TODO: other color interpretations?
-        GDALSetRasterColorInterpretation(hBand, <GDALColorInterp>1)
-        GDALSetRasterColorTable(hBand, hTable)
-        GDALDestroyColorTable(hTable)
+        finally:
+            GDALDestroyColorTable(hTable)
 
     def write_mask(self, mask_array, window=None):
-        """Write the valid data mask src array into the dataset's band
-        mask.
+        """Write to the dataset's band mask.
 
-        The optional `window` argument takes a tuple like:
+        Values > 0 represent valid data.
 
-            ((row_start, row_stop), (col_start, col_stop))
+        Parameters
+        ----------
+        mask_array : ndarray
+            Values of 0 represent invalid or missing data. Values > 0
+            represent valid data.
+        window : Window, optional
+            A subset of the dataset's band mask.
 
-        specifying a raster subset to write into.
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RasterioIOError
+            When no mask is written.
+
         """
         cdef GDALRasterBandH band = NULL
         cdef GDALRasterBandH mask = NULL
@@ -1915,9 +1988,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             height = self.height
 
         try:
-            if mask_array is True:
+            if mask_array is True or mask_array is np.True_:
                 GDALFillRaster(mask, 255, 0)
-            elif mask_array is False:
+            elif mask_array is False or mask_array is np.False_:
                 GDALFillRaster(mask, 0, 0)
             elif mask_array.dtype == bool:
                 array = 255 * mask_array.astype(np.uint8)
@@ -2137,7 +2210,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
-        dtype : str or numpy dtype
+        dtype : str or numpy.dtype
             The data type for bands. For example: 'uint8' or
             ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.

@@ -1,10 +1,8 @@
-rasterio.rio package
+rio CLI
 ====================
 
-Submodules
-----------
-
 .. toctree::
+   :maxdepth: 1
 
    rasterio.rio.blocks
    rasterio.rio.bounds
@@ -14,10 +12,8 @@ Submodules
    rasterio.rio.edit_info
    rasterio.rio.env
    rasterio.rio.gcps
-   rasterio.rio.helpers
    rasterio.rio.info
    rasterio.rio.insp
-   rasterio.rio.main
    rasterio.rio.mask
    rasterio.rio.merge
    rasterio.rio.options
@@ -29,11 +25,3 @@ Submodules
    rasterio.rio.stack
    rasterio.rio.transform
    rasterio.rio.warp
-
-Module contents
----------------
-
-.. automodule:: rasterio.rio
-    :members:
-    :undoc-members:
-    :show-inheritance:

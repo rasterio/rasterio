@@ -1,0 +1,25 @@
+name: Weekly tests against latest GDAL
+
+on:
+  schedule:
+    - cron:  '0 2 * * 1'
+  pull_request:  # also build on PRs touching this file
+    paths:
+      - ".github/workflows/test_gdal_latest.yaml"
+      - ".github/workflows/test_gdal_build.yaml"
+      - "ci/gdal-compile.sh"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_gdal_latest:
+    uses: ./.github/workflows/test_gdal_build.yaml
+    with:
+      gdal_ref: ${{ matrix.branch }}
+      rasterio_ref: ${{ github.ref }}
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ['master', 'release/3.8']

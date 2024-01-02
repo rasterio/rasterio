@@ -1,7 +1,6 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 
-from collections import OrderedDict
 import json
 import warnings
 
@@ -10,6 +9,7 @@ import click
 import rasterio
 import rasterio.crs
 from rasterio.crs import CRS
+from rasterio.dtypes import in_dtype_range
 from rasterio.enums import ColorInterp
 from rasterio.errors import CRSError
 from rasterio.rio import options
@@ -164,17 +164,6 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
       rio edit-info example.tif --like template.tif --transform like
 
     """
-    import numpy as np
-
-    def in_dtype_range(value, dtype):
-        kind = np.dtype(dtype).kind
-        if kind == 'f' and (np.isnan(value) or np.isinf(value)):
-            return True
-        infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
-                 'u': np.iinfo}
-        rng = infos[kind](dtype)
-        return rng.min <= value <= rng.max
-
     # If '--all' is given before '--like' on the commandline then 'allmd'
     # is the string 'like'.  This is caused by '--like' not having an
     # opportunity to populate metadata before '--all' is evaluated.
