@@ -46,8 +46,9 @@ def geometry_mask(
         property of dataset objects.
     all_touched : boolean, optional
         If True, all pixels touched by geometries will be burned in.  If
-        false, only pixels whose center is within the polygon or that
+        False, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
+        False by default
     invert: boolean, optional
         If True, mask will be True for pixels that overlap shapes.
         False by default.
