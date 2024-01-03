@@ -18,7 +18,7 @@ from rasterio._base import _transform
 from rasterio._base cimport open_dataset
 from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
-    CPLE_AppDefinedError, CPLE_OpenFailedError)
+    CPLE_AppDefinedError, CPLE_OpenFailedError, stack_errors)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
@@ -36,7 +36,7 @@ cimport numpy as np
 from libc.math cimport HUGE_VAL
 
 from rasterio._base cimport get_driver_name
-from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int, StackChecker
 from rasterio._io cimport (
     DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
@@ -101,6 +101,7 @@ def _transform_geom(
     transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src._osr, dst._osr))
 
     factory = new OGRGeometryFactory()
+
     try:
         if isinstance(geom, (dict, Mapping, UserDict)) or hasattr(geom, "__geo_interface__"):
             out_geom = _transform_single_geom(geom, factory, transform, options, precision)
@@ -577,6 +578,7 @@ def _reproject(
     cdef GDALWarpOperation oWarper
     cdef int rows
     cdef int cols
+    cdef StackChecker checker
 
     try:
         exc_wrap_int(oWarper.Initialize(psWOptions))
@@ -589,15 +591,17 @@ def _reproject(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
 
-        if num_threads > 1:
-            with nogil:
-                err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-        else:
-            with nogil:
-                err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
-
         try:
-            exc_wrap_int(err)
+            with stack_errors() as checker:
+                if num_threads > 1:
+                    with nogil:
+                        err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+                else:
+                    with nogil:
+                        err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+
+                err = checker.exc_wrap_int(err)
+
         except CPLE_BaseError as base:
             raise WarpOperationError("Chunk and warp failed") from base
 

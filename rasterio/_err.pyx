@@ -112,6 +112,14 @@ class CPLE_AWSError(CPLE_BaseError):
     pass
 
 
+level_map = {
+    0: 0,
+    1: logging.DEBUG,
+    2: logging.WARNING,
+    3: logging.ERROR,
+    4: logging.CRITICAL
+}
+
 # Map of GDAL error numbers to the Python exceptions.
 exception_map = {
     1: CPLE_AppDefinedError,
@@ -189,20 +197,67 @@ cdef int exc_wrap(int retval) except -1:
     return retval
 
 
-cdef void chaining_error_handler(
+cdef void log_error(
     CPLErr err_class,
     int err_no,
-    const char* msg
+    const char* msg,
 ) noexcept with gil:
-    global chained_error_stack
-    if err_class == 3:
-        stack = chained_error_stack.get()
-        msg_b = msg
-        message = msg_b.decode("utf-8")
-        stack.append(
-            exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
-        )
-        chained_error_stack.set(stack)
+    """Send CPL errors to Python's logger.
+
+    Because this function is called by GDAL with no Python context, we
+    can't propagate exceptions that we might raise here. They'll be
+    ignored.
+
+    """
+    if err_no in exception_map:
+        # We've observed that some GDAL functions may emit multiple
+        # ERROR level messages and yet succeed. We want to see those
+        # messages in our log file, but not at the ERROR level. We
+        # turn the level down to INFO.
+        if err_class == 3:
+            log.info(
+                "GDAL signalled an error: err_no=%r, msg=%r",
+                err_no,
+                msg
+            )
+        else:
+            log.log(level_map[err_class], "%s in %s", exception_map[err_no], msg)
+    else:
+        log.info("Unknown error number %r", err_no)
+
+
+IF UNAME_SYSNAME == "Windows":
+    cdef void __stdcall chaining_error_handler(
+        CPLErr err_class,
+        int err_no,
+        const char* msg
+    ) noexcept with gil:
+        global chained_error_stack
+        log_error(err_class, err_no, msg)
+        if err_class == 3:
+            stack = chained_error_stack.get()
+            msg_b = msg
+            message = msg_b.decode("utf-8")
+            stack.append(
+                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
+            )
+            chained_error_stack.set(stack)
+ELSE:
+    cdef void chaining_error_handler(
+        CPLErr err_class,
+        int err_no,
+        const char* msg
+    ) noexcept with gil:
+        global chained_error_stack
+        log_error(err_class, err_no, msg)
+        if err_class == 3:
+            stack = chained_error_stack.get()
+            msg_b = msg
+            message = msg_b.decode("utf-8")
+            stack.append(
+                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
+            )
+            chained_error_stack.set(stack)
 
 
 cdef int exc_wrap_int(int err) except -1:
