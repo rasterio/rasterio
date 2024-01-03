@@ -42,7 +42,7 @@ from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
 
 cimport numpy as np
 
@@ -131,6 +131,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     """
     validate_resampling(resampling)
 
+    cdef StackChecker checker
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
@@ -175,6 +176,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
         cdef GDALDriverH driver = NULL
         cdef const char* driver_name = NULL
         cdef GDALRasterBandH band = NULL
+
         if CPLGetConfigOption("GDAL_NUM_THREADS", NULL):
             interleave = GDALGetMetadataItem(hds, "INTERLEAVE", "IMAGE_STRUCTURE")
             if interleave and interleave == b"BAND":
@@ -187,7 +189,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
                                 band = GDALGetRasterBand(hds, bandmap[i])
                                 if band == NULL:
                                     raise ValueError("Null band")
-                                with stack_errors():
+                                with stack_errors() as checker:
                                     with nogil:
                                         retval = GDALRasterIOEx(
                                             band,
@@ -195,19 +197,19 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
                                             <void *>(<char *>buf + i * bufbandspace),
                                             bufxsize, bufysize, buftype,
                                             bufpixelspace, buflinespace, &extras)
-                                    return retval
+                                    return checker.exc_wrap_int(retval)
                         finally:
                             CPLFree(bandmap)
 
     # Chain errors coming from GDAL.
     try:
-        with stack_errors():
+        with stack_errors() as checker:
             with nogil:
                 retval = GDALDatasetRasterIOEx(
                     hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
                     bufxsize, bufysize, buftype, count, bandmap,
                     bufpixelspace, buflinespace, bufbandspace, &extras)
-            return retval
+            return checker.exc_wrap_int(retval)
     finally:
         CPLFree(bandmap)
 

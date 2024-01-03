@@ -5,11 +5,15 @@ Exception-raising wrappers for GDAL API functions.
 """
 
 import contextlib
+from contextvars import ContextVar
 from enum import IntEnum
 from itertools import zip_longest
 import logging
 
 log = logging.getLogger(__name__)
+
+chained_error_stack = ContextVar("error_stack")
+chained_error_stack.set([])
 
 _GDAL_DEBUG_DOCS = (
     "https://rasterio.readthedocs.io/en/latest/topics/errors.html"
@@ -185,13 +189,20 @@ cdef int exc_wrap(int retval) except -1:
     return retval
 
 
-cdef void chaining_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
-    msg_b = msg
-    message = msg_b.decode("utf-8")
-    exception = exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message)
-    error_stack = <object>CPLGetErrorHandlerUserData()
+cdef void chaining_error_handler(
+    CPLErr err_class,
+    int err_no,
+    const char* msg
+) noexcept with gil:
+    global chained_error_stack
     if err_class == 3:
-        error_stack.append(exception)
+        stack = chained_error_stack.get()
+        msg_b = msg
+        message = msg_b.decode("utf-8")
+        stack.append(
+            exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
+        )
+        chained_error_stack.set(stack)
 
 
 cdef int exc_wrap_int(int err) except -1:
@@ -219,34 +230,46 @@ cdef OGRErr exc_wrap_ogrerr(OGRErr err) except -1:
         raise CPLE_BaseError(3, err, "OGR Error code {}".format(err))
 
 
+cdef class StackChecker:
+
+    def __init__(self, error_stack=None):
+        self.error_stack = error_stack or {}
+
+    cdef int exc_wrap_int(self, int err) except -1:
+        """Wrap a GDAL/OGR function that returns CPLErr (int).
+
+        Raises a Rasterio exception if a non-fatal error has be set.
+        """
+        if err:
+            stack = self.error_stack.get()
+            for error, cause in zip_longest(stack[::-1], stack[::-1][1:]):
+                if error is not None and cause is not None:
+                    error.__cause__ = cause
+
+            if stack:
+                last = stack.pop()
+                if last is not None:
+                    raise last
+
+        return err
+
+
 @contextlib.contextmanager
 def stack_errors():
-    """TODO: better name."""
-    # Set up.
+    # TODO: better name?
+    # Note: this manager produces one chain of errors and thus assumes
+    # that no more than one GDAL function is called.
     CPLErrorReset()
-    error_stack = []
 
     # chaining_error_handler (better name a TODO) records GDAL errors
     # in the order they occur and converts to exceptions.
-    CPLPushErrorHandlerEx(<CPLErrorHandler>chaining_error_handler, <void *>error_stack)
+    CPLPushErrorHandlerEx(<CPLErrorHandler>chaining_error_handler, NULL)
 
     # Run code in the `with` block.
-    yield
-
-    # Link errors via __cause__.
-    for error, cause in zip_longest(error_stack[::-1], error_stack[::-1][1:]):
-        if error is not None and cause is not None:
-            error.__cause__ = cause
-
-    # Tear down.
+    yield StackChecker(chained_error_stack)
+    
     CPLPopErrorHandler()
     CPLErrorReset()
-
-    # Raise the final exception.
-    if error_stack:
-        last = error_stack.pop()
-        if last is not None:
-            raise last
 
 
 cdef void *exc_wrap_pointer(void *ptr) except NULL:
