@@ -343,7 +343,7 @@ def test_chained_io_errors(path_rgb_byte_tif):
         with pytest.raises(RasterioIOError) as excinfo:
             src.read()
 
-        assert "Read or write failed. See context for details." == str(excinfo.value)
+        assert "Read failed. See previous exception for details." == str(excinfo.value)
 
         # Exception ~1 is a GDAL AppDefinedError mentioning IReadBlock.
         exc = excinfo.value.__cause__

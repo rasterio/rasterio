@@ -1,3 +1,4 @@
+# cython: c_string_type=unicode, c_string_encoding=utf8
 """rasterio._err
 
 Exception-raising wrappers for GDAL API functions.
@@ -144,6 +145,26 @@ exception_map = {
     17: CPLE_AWSError
 }
 
+code_map = {
+    0: 'CPLE_None',
+    1: 'CPLE_AppDefined',
+    2: 'CPLE_OutOfMemory',
+    3: 'CPLE_FileIO',
+    4: 'CPLE_OpenFailed',
+    5: 'CPLE_IllegalArg',
+    6: 'CPLE_NotSupported',
+    7: 'CPLE_AssertionFailed',
+    8: 'CPLE_NoWriteAccess',
+    9: 'CPLE_UserInterrupt',
+    10: 'ObjectNull',
+    11: 'CPLE_HttpResponse',
+    12: 'CPLE_AWSBucketNotFound',
+    13: 'CPLE_AWSObjectNotFound',
+    14: 'CPLE_AWSAccessDenied',
+    15: 'CPLE_AWSInvalidCredentials',
+    16: 'CPLE_AWSSignatureDoesNotMatch',
+    17: 'CPLE_AWSError'
+}
 
 # CPL Error types as an enum.
 class GDALError(IntEnum):
@@ -162,26 +183,25 @@ cdef inline object exc_check():
     An Exception, SystemExit, or None
 
     """
-    cdef const char *msg_c = NULL
+    cdef const char *msg = NULL
 
     err_type = CPLGetLastErrorType()
     err_no = CPLGetLastErrorNo()
-    msg_c = CPLGetLastErrorMsg()
+    msg = CPLGetLastErrorMsg()
 
-    if msg_c == NULL:
-        msg = "No error message."
+    if msg == NULL:
+        message = "No error message."
     else:
-        msg_b = msg_c
-        msg = msg_b.decode('utf-8')
-        msg = msg.replace("`", "'")
-        msg = msg.replace("\n", " ")
+        message = msg
+        message = message.replace("`", "'")
+        message = message.replace("\n", " ")
 
     if err_type == 3:
-        exception = exception_map.get(err_no, CPLE_BaseError)(err_type, err_no, msg)
+        exception = exception_map.get(err_no, CPLE_BaseError)(err_type, err_no, message)
         CPLErrorReset()
         return exception
     elif err_type == 4:
-        exception = SystemExit("Fatal error: {0}".format((err_type, err_no, msg)))
+        exception = SystemExit("Fatal error: {0}".format((err_type, err_no, message)))
         CPLErrorReset()
         return exception
     else:
@@ -209,7 +229,7 @@ cdef void log_error(
     ignored.
 
     """
-    if err_no in exception_map:
+    if err_no in code_map:
         # We've observed that some GDAL functions may emit multiple
         # ERROR level messages and yet succeed. We want to see those
         # messages in our log file, but not at the ERROR level. We
@@ -220,8 +240,10 @@ cdef void log_error(
                 err_no,
                 msg
             )
+        elif err_no == 0:
+            log.log(level_map[err_class], "%s", msg)
         else:
-            log.log(level_map[err_class], "%s in %s", exception_map[err_no], msg)
+            log.log(level_map[err_class], "%s:%s", code_map[err_no], msg)
     else:
         log.info("Unknown error number %r", err_no)
 
@@ -236,10 +258,8 @@ IF UNAME_SYSNAME == "Windows":
         log_error(err_class, err_no, msg)
         if err_class == 3:
             stack = chained_error_stack.get()
-            msg_b = msg
-            message = msg_b.decode("utf-8")
             stack.append(
-                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
+                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, msg),
             )
             chained_error_stack.set(stack)
 ELSE:
@@ -252,10 +272,8 @@ ELSE:
         log_error(err_class, err_no, msg)
         if err_class == 3:
             stack = chained_error_stack.get()
-            msg_b = msg
-            message = msg_b.decode("utf-8")
             stack.append(
-                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, message),
+                exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, msg),
             )
             chained_error_stack.set(stack)
 
@@ -315,6 +333,8 @@ def stack_errors():
     # Note: this manager produces one chain of errors and thus assumes
     # that no more than one GDAL function is called.
     CPLErrorReset()
+    global chained_error_stack
+    chained_error_stack.set([])
 
     # chaining_error_handler (better name a TODO) records GDAL errors
     # in the order they occur and converts to exceptions.
@@ -322,8 +342,9 @@ def stack_errors():
 
     # Run code in the `with` block.
     yield StackChecker(chained_error_stack)
-    
+
     CPLPopErrorHandler()
+    chained_error_stack.set([])
     CPLErrorReset()
 
 

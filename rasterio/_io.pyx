@@ -96,6 +96,7 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     cdef int ysize = <int>height
     cdef int retval = 3
 
+    cdef StackChecker checker
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
     extras.eResampleAlg = <GDALRIOResampleAlg>resampling
@@ -107,12 +108,12 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
-    with nogil:
-        retval = GDALRasterIOEx(
-            band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
-            buftype, bufpixelspace, buflinespace, &extras)
-
-    return exc_wrap_int(retval)
+    with stack_errors() as checker:
+        with nogil:
+            retval = GDALRasterIOEx(
+                band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
+                buftype, bufpixelspace, buflinespace, &extras)
+        return checker.exc_wrap_int(retval)
 
 
 cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
@@ -249,6 +250,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     cdef int xsize = <int>max(1, width)
     cdef int ysize = <int>max(1, height)
 
+    cdef StackChecker checker
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
     extras.eResampleAlg = <GDALRIOResampleAlg>resampling
@@ -274,15 +276,15 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
         buf = <void *>np.PyArray_DATA(data[i])
         if buf == NULL:
             raise ValueError("NULL data")
-        with nogil:
-            retval = GDALRasterIOEx(
-                hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
-                bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
 
-            if retval:
-                break
+        with stack_errors() as checker:
+            with nogil:
+                retval = GDALRasterIOEx(
+                    hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
+                    bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
+            retval = checker.exc_wrap_int(retval)
 
-    return exc_wrap_int(retval)
+    return retval
 
 
 cdef _delete_dataset_if_exists(path):
@@ -380,6 +382,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
         else:
             raise ValueError("Specified data must have 2 or 3 dimensions")
 
+    # TODO: don't handle, it's inconsistent with the other io_* functions.
     except CPLE_BaseError as cplerr:
         raise RasterioIOError(str(cplerr))
 
@@ -968,7 +971,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
 
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. See context for details.") from cplerr
+            raise RasterioIOError("Read failed. See previous exception for details.") from cplerr
 
         return out
 
@@ -1789,7 +1792,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         try:
             io_multi_band(self._hds, 1, xoff, yoff, width, height, arr, indexes_arr)
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Write failed. See previous exception for details.") from cplerr
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
@@ -2002,7 +2005,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 io_band(mask, 1, xoff, yoff, width, height, mask_array)
 
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Write failed. See previous exception for details.") from cplerr
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all
