@@ -13,7 +13,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-chained_error_stack = ContextVar("error_stack")
+_ERROR_STACK = ContextVar("error_stack")
 chained_error_stack.set([])
 
 _GDAL_DEBUG_DOCS = (
@@ -113,7 +113,7 @@ class CPLE_AWSError(CPLE_BaseError):
     pass
 
 
-level_map = {
+cdef dict _LEVEL_MAP = {
     0: 0,
     1: logging.DEBUG,
     2: logging.WARNING,
@@ -145,7 +145,7 @@ exception_map = {
     17: CPLE_AWSError
 }
 
-code_map = {
+cdef dict _CODE_MAP = {
     0: 'CPLE_None',
     1: 'CPLE_AppDefined',
     2: 'CPLE_OutOfMemory',
