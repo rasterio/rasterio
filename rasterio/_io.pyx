@@ -197,7 +197,8 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
                                             <void *>(<char *>buf + i * bufbandspace),
                                             bufxsize, bufysize, buftype,
                                             bufpixelspace, buflinespace, &extras)
-                                    return checker.exc_wrap_int(retval)
+                                    checker.exc_wrap_int(retval)
+                            return 0
                         finally:
                             CPLFree(bandmap)
 
