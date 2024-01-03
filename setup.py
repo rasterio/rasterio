@@ -270,7 +270,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy",
+    "numpy<2",
     "click-plugins",
     "setuptools",
 ]
