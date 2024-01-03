@@ -14,7 +14,7 @@ import logging
 log = logging.getLogger(__name__)
 
 _ERROR_STACK = ContextVar("error_stack")
-chained_error_stack.set([])
+_ERROR_STACK.set([])
 
 _GDAL_DEBUG_DOCS = (
     "https://rasterio.readthedocs.io/en/latest/topics/errors.html"
@@ -229,7 +229,7 @@ cdef void log_error(
     ignored.
 
     """
-    if err_no in code_map:
+    if err_no in _CODE_MAP:
         # We've observed that some GDAL functions may emit multiple
         # ERROR level messages and yet succeed. We want to see those
         # messages in our log file, but not at the ERROR level. We
@@ -241,9 +241,9 @@ cdef void log_error(
                 msg
             )
         elif err_no == 0:
-            log.log(level_map[err_class], "%s", msg)
+            log.log(_LEVEL_MAP[err_class], "%s", msg)
         else:
-            log.log(level_map[err_class], "%s:%s", code_map[err_no], msg)
+            log.log(_LEVEL_MAP[err_class], "%s:%s", _CODE_MAP[err_no], msg)
     else:
         log.info("Unknown error number %r", err_no)
 
@@ -254,28 +254,28 @@ IF UNAME_SYSNAME == "Windows":
         int err_no,
         const char* msg
     ) noexcept with gil:
-        global chained_error_stack
+        global _ERROR_STACK
         log_error(err_class, err_no, msg)
         if err_class == 3:
-            stack = chained_error_stack.get()
+            stack = _ERROR_STACK.get()
             stack.append(
                 exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, msg),
             )
-            chained_error_stack.set(stack)
+            _ERROR_STACK.set(stack)
 ELSE:
     cdef void chaining_error_handler(
         CPLErr err_class,
         int err_no,
         const char* msg
     ) noexcept with gil:
-        global chained_error_stack
+        global _ERROR_STACK
         log_error(err_class, err_no, msg)
         if err_class == 3:
-            stack = chained_error_stack.get()
+            stack = _ERROR_STACK.get()
             stack.append(
                 exception_map.get(err_no, CPLE_BaseError)(err_class, err_no, msg),
             )
-            chained_error_stack.set(stack)
+            _ERROR_STACK.set(stack)
 
 
 cdef int exc_wrap_int(int err) except -1:
@@ -333,18 +333,18 @@ def stack_errors():
     # Note: this manager produces one chain of errors and thus assumes
     # that no more than one GDAL function is called.
     CPLErrorReset()
-    global chained_error_stack
-    chained_error_stack.set([])
+    global _ERROR_STACK
+    _ERROR_STACK.set([])
 
     # chaining_error_handler (better name a TODO) records GDAL errors
     # in the order they occur and converts to exceptions.
     CPLPushErrorHandlerEx(<CPLErrorHandler>chaining_error_handler, NULL)
 
     # Run code in the `with` block.
-    yield StackChecker(chained_error_stack)
+    yield StackChecker(_ERROR_STACK)
 
     CPLPopErrorHandler()
-    chained_error_stack.set([])
+    _ERROR_STACK.set([])
     CPLErrorReset()
 
 
