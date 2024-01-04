@@ -258,10 +258,6 @@ def rasterize(
     function of buffer size. For maximum speed, ensure that
     GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
     """
-
-    def format_invalid_dtype(param):
-        return "{0} dtype must be one of: {1}".format(param, ", ".join(valid_dtypes))
-
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
@@ -278,7 +274,6 @@ def rasterize(
         raise ValueError(
             "Data type specified by out array or dtype parameter is not supported."
         )
-        # format_invalid_dtype("dtype"))
 
     valid_shapes = []
     shape_values = []
