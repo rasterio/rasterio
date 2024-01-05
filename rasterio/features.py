@@ -333,6 +333,8 @@ def rasterize(
             lo, hi = values_arr.min(), values_arr.max()
             if -2147483648 <= lo and hi <= 2147483647:
                 dtype = "int32"
+            elif 0 <= lo and hi <= 4294967295:
+                dtype = "uint32"
             else:
                 raise ValueError("GDAL versions < 3.6 cannot rasterize int64 values.")
 

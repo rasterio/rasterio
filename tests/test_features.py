@@ -686,6 +686,7 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
     )
 
 
+@pytest.mark.xfail(reason="Fill arg no longer determines data type")
 def test_rasterize_invalid_fill_value(basic_geometry):
     """A fill value that requires an int64 should raise an exception."""
     if gdal_version.at_least("3.5"):
@@ -750,10 +751,10 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
 @requires_gdal_lt_35
 def test_rasterize_invalid_value(basic_geometry):
     """A shape value that requires an int64 should raise an exception."""
-    with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
-        rasterize(
-            [(basic_geometry, 1000000000000)], out_shape=DEFAULT_SHAPE
-        )
+    with pytest.raises(
+        ValueError, match="GDAL versions < 3.6 cannot rasterize int64 values."
+    ):
+        rasterize([(basic_geometry, 1000000000000)], out_shape=DEFAULT_SHAPE)
 
 
 @pytest.mark.parametrize(
@@ -761,13 +762,7 @@ def test_rasterize_invalid_value(basic_geometry):
     [
         ("int16", -32768),
         ("int32", -2147483648),
-        pytest.param(
-            "uint32",
-            4294967295,
-            marks=pytest.mark.xfail(
-                gdal_version.at_least("3.5"), reason="GDAL regression? Works with 3.4.3"
-            ),
-        ),
+        ("uint32", 4294967295),
         pytest.param(
             "int8",
             -128,
