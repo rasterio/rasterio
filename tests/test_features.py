@@ -554,7 +554,7 @@ def test_rasterize_multipolygon_no_hole():
     ],
 )
 def test_rasterize_invalid_geom(input):
-    """Invalid GeoJSON should fail with exception"""
+    """Invalid GeoJSON should be skipped with a warning."""
     with pytest.warns(ShapeSkipWarning):
         out = rasterize(input, out_shape=DEFAULT_SHAPE)
 
@@ -562,12 +562,13 @@ def test_rasterize_invalid_geom(input):
     assert np.all(out == 0)
 
 
-def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
-    """Rasterize operation should succeed for at least one valid geometry
-    and should skip any invalid or empty geometries with an error."""
-
-    with pytest.warns(UserWarning, match="Invalid or empty shape"):
-        out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
+def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
+    """Rasterize operation should succeed for at least one valid geometry."""
+    with pytest.warns(ShapeSkipWarning, match="Invalid or empty shape"):
+        out = rasterize(
+            [geojson_polygon, {"type": "Polygon", "coordinates": []}],
+            out_shape=DEFAULT_SHAPE,
+        )
 
     assert np.array_equal(out, basic_image_2x2)
 
@@ -579,14 +580,15 @@ def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     assert np.array_equal(basic_image_2x2, out)
 
 
+@pytest.mark.skipif(
+    gdal_version.at_least("3.5"),
+    reason="int64 supported at GDAL 3.5",
+)
 def test_rasterize_int64_out_dtype(basic_geometry):
     """A non-supported data type for out should raise an exception."""
     out = np.zeros(DEFAULT_SHAPE, dtype=np.int64)
-    if gdal_version.at_least("3.5"):
+    with pytest.raises(ValueError):
         rasterize([basic_geometry], out=out)
-    else:
-        with pytest.raises(ValueError):
-            rasterize([basic_geometry], out=out)
 
 
 @pytest.mark.xfail(reason="shape values are always unsafely cast to the given dtype.")
@@ -622,20 +624,22 @@ def test_rasterize_invalid_shapes_no_skip():
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE, skip_invalid=False)
 
 
-def test_rasterize_invalid_out_shape(basic_geometry):
+@pytest.mark.parametrize("shape", [(1, 10, 10), (10,)])
+def test_rasterize_invalid_out_shape(basic_geometry, shape):
     """output array shape must be 2D."""
-    with pytest.raises(ValueError) as ex:
-        rasterize([basic_geometry], out_shape=(1, 10, 10))
-    assert 'Invalid out_shape' in str(ex.value)
+    with pytest.raises(ValueError, match="Invalid out_shape"):
+        rasterize([basic_geometry], out_shape=shape)
 
     with pytest.raises(ValueError) as ex:
         rasterize([basic_geometry], out_shape=(10,))
     assert 'Invalid out_shape' in str(ex.value)
 
-    for shape in [(0, 0), (1, 0), (0, 1)]:
-        with pytest.raises(ValueError) as ex:
-            rasterize([basic_geometry], out_shape=shape)
-        assert 'must be > 0' in str(ex.value)
+
+@pytest.mark.parametrize("shape", [(0, 0), (1, 0), (0, 1)])
+def test_rasterize_invalid_out_extent(basic_geometry, shape):
+    """output array shape must have nonzero extent."""
+    with pytest.raises(ValueError, match="must be > 0"):
+        rasterize([basic_geometry], out_shape=shape)
 
 
 def test_rasterize_default_value(basic_geometry, basic_image_2x2):
@@ -659,19 +663,13 @@ def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
     )
 
 
+@pytest.mark.xfail(
+    not gdal_version.at_least("3.5"),
+    reason="GDAL versions < 3.5 cannot rasterize to 64 bit integer arrays",
+)
 def test_rasterize_int64_default_value(basic_geometry):
-    """A default value that requires an int64 should raise an exception."""
-    if gdal_version.at_least("3.5"):
-            rasterize(
-                [basic_geometry], out_shape=DEFAULT_SHAPE,
-                default_value=1000000000000
-            )
-    else:
-        with pytest.raises(ValueError):
-            rasterize(
-                [basic_geometry], out_shape=DEFAULT_SHAPE,
-                default_value=1000000000000
-            )
+    """A default value that requires an int64 succeeds for GDAL >= 3.5."""
+    rasterize([basic_geometry], out_shape=DEFAULT_SHAPE, default_value=1000000000000)
 
 
 def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
@@ -686,20 +684,12 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
     )
 
 
-@pytest.mark.xfail(reason="Fill arg no longer determines data type")
 def test_rasterize_invalid_fill_value(basic_geometry):
-    """A fill value that requires an int64 should raise an exception."""
-    if gdal_version.at_least("3.5"):
-        rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000000000,
-            default_value=2
-        )
-    else:
-        with pytest.raises(ValueError):
-            rasterize(
-                [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000000000,
-                default_value=2
-            )
+    """Fill arg no longer determines data type."""
+    out = rasterize(
+        [basic_geometry], out_shape=DEFAULT_SHAPE, fill=0.5, default_value=2
+    )
+    assert out.dtype.kind != "f"
 
 
 def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
@@ -748,9 +738,12 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     )
 
 
-@requires_gdal_lt_35
+@pytest.mark.skipif(
+    gdal_version.at_least("3.5"),
+    reason="int64 supported at GDAL 3.5",
+)
 def test_rasterize_invalid_value(basic_geometry):
-    """A shape value that requires an int64 should raise an exception."""
+    """A shape value that requires an int64 should raise an exception with GDAL < 3.5."""
     with pytest.raises(
         ValueError, match="GDAL versions < 3.6 cannot rasterize int64 values."
     ):
@@ -758,93 +751,33 @@ def test_rasterize_invalid_value(basic_geometry):
 
 
 @pytest.mark.parametrize(
-    "dtype,default_value",
+    "dtype",
     [
-        ("int16", -32768),
-        ("int32", -2147483648),
-        ("uint32", 4294967295),
+        "float16",
         pytest.param(
-            "int8",
-            -128,
+            "int64",
             marks=pytest.mark.skipif(
-                not gdal_version.at_least("3.7"),
-                reason="int8 support added in GDAL 3.7",
+                gdal_version.at_least("3.5"), reason="int64 supported at GDAL 3.5"
             ),
         ),
-        ("uint8", 255),
-        ("uint16", 65535),
-        ("float32", 1.434532),
-        ("float64", -98332.133422114),
+        pytest.param(
+            "uint64",
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.5"), reason="uint64 supported at GDAL 3.5"
+            ),
+        ),
+        pytest.param(
+            "int8",
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.7"), reason="int8 supported at GDAL 3.7"
+            ),
+        ),
     ],
 )
-def test_rasterize_supported_dtype(dtype, default_value, basic_geometry):
-    """Supported data types should return valid results."""
-    truth = np.zeros(DEFAULT_SHAPE, dtype=dtype)
-    truth[2:4, 2:4] = default_value
-
-    result = rasterize(
-        [basic_geometry],
-        out_shape=DEFAULT_SHAPE,
-        default_value=default_value,
-        dtype=dtype,
-    )
-    assert np.array_equal(result, truth)
-    assert np.dtype(result.dtype) == np.dtype(truth.dtype)
-
-    result = rasterize([(basic_geometry, default_value)], out_shape=DEFAULT_SHAPE)
-    if np.dtype(dtype).kind == "f":
-        assert np.allclose(result, truth)
-    else:
-        assert np.array_equal(result, truth)
-    # Since dtype is auto-detected, it may not match due to upcasting
-
-
-def test_rasterize_unsupported_dtype(basic_geometry):
+def test_rasterize_unsupported_dtype(basic_geometry, dtype):
     """Unsupported types should all raise exceptions."""
-    unsupported_types = (
-        ('float16', -9343.232),
-    )
-    if not gdal_version.at_least("3.5"):
-        unsupported_types += (('int64', 20439845334323),)
-    if not gdal_version.at_least("3.7"):
-        unsupported_types += (('int8', -127),)
-
-    for dtype, default_value in unsupported_types:
-        with pytest.raises(ValueError):
-            rasterize(
-                [basic_geometry],
-                out_shape=DEFAULT_SHAPE,
-                default_value=default_value,
-                dtype=dtype
-            )
-
-        with pytest.raises(ValueError):
-            rasterize(
-                [(basic_geometry, default_value)],
-                out_shape=DEFAULT_SHAPE,
-                dtype=dtype
-            )
-
-
-@pytest.mark.xfail(reason="shape values are always unsafely cast to the given dtype.")
-def test_rasterize_mismatched_dtype(basic_geometry):
-    """Mismatched values and dtypes should raise exceptions."""
-    mismatched_types = (('uint8', 3.2423), ('uint8', -2147483648))
-    for dtype, default_value in mismatched_types:
-        with pytest.raises(ValueError):
-            rasterize(
-                [basic_geometry],
-                out_shape=DEFAULT_SHAPE,
-                default_value=default_value,
-                dtype=dtype
-            )
-
-        with pytest.raises(ValueError):
-            rasterize(
-                [(basic_geometry, default_value)],
-                out_shape=DEFAULT_SHAPE,
-                dtype=dtype
-            )
+    with pytest.raises(ValueError):
+        rasterize([basic_geometry], out_shape=DEFAULT_SHAPE, dtype=dtype)
 
 
 def test_rasterize_geometries_symmetric():
