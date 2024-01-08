@@ -13,8 +13,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface, gdal_version, requires_gdal_lt_35
-
+from .conftest import MockGeoInterface, gdal_version
 
 DEFAULT_SHAPE = (10, 10)
 
