@@ -40,7 +40,7 @@ Other changes:
 
 - rasterize() better matches the behavior of Numpy array constructors. It no
   longer reduces the bit width of output, returning either float64 or int64
-  arrays unless a data type is explicitly selected, and the fill parameters no
+  arrays unless a data type is explicitly selected, and the fill parameter no
   longer has an effect on the default data type (#3003).
 - Rasterio now vendors and modifies the snuggs module (#2956).
 - Given an empty shapes argument, rasterize() now returns an empty array
