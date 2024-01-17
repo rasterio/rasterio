@@ -301,3 +301,13 @@ def test_plot_normalize():
     a = np.linspace(1, 6, 10)
     b = adjust_band(a, 'linear')
     np.testing.assert_array_almost_equal(np.linspace(0, 1, 10), b)
+
+
+def test_issue3007():
+    """Don't squeeze further than 2D."""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        arr = src.read(1)[0:1, :]
+        assert arr.shape == (1, 791)
+        show(arr)
+        fig = plt.gcf()
+        plt.close(fig)

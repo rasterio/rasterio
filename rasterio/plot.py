@@ -111,9 +111,10 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
                 arr = source.read(1, masked=True)
     else:
         # The source is a numpy array reshape it to image if it has 3+ bands
-        source = np.ma.squeeze(source)
+        if source.ndim >= 3:
+            source = np.ma.squeeze(source)
 
-        if len(source.shape) >= 3:
+        if source.ndim >= 3:
             arr = reshape_as_image(source)
         else:
             arr = source
