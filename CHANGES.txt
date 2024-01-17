@@ -31,7 +31,7 @@ New Features:
 
 Bug fixes:
 
-- Avoid squeezing narrow 2-D arrays to 1-D (#).
+- Avoid squeezing narrow 2-D arrays to 1-D (#3008).
 - Operations on closed MemoryFile and ZipMemoryFile objects now raise
   ValueError as with other Python file objects (#2870, #).
 - Delay clamping of I/O windows until just before GDAL methods calls to improve
