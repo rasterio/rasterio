@@ -1005,17 +1005,7 @@ cdef class DatasetBase:
 
     @property
     def is_tiled(self):
-        if len(self.block_shapes) == 0:
-            return False
-        else:
-            blockysize, blockxsize = self.block_shapes[0]
-            if blockxsize % 16 or blockysize % 16:
-                return False
-            # Perfectly square is a special case/
-            if blockxsize == blockysize == self.height == self.width:
-                return True
-            else:
-                return blockxsize < self.width or blockxsize > self.width
+        return self.block_shapes and self.block_shapes[0][1] != self.width
 
     @property
     def profile(self):
@@ -1026,15 +1016,12 @@ cdef class DatasetBase:
         """
         m = Profile(**self.meta)
 
-        if self.is_tiled:
+        if self.block_shapes:
             m.update(
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
-                tiled=True)
-        elif len(self.block_shapes) > 0:
-            m.update(blockysize=self.block_shapes[0][0], tiled=False)
-        else:
-            m.update(tiled=False)
+                )
+        m.update(tiled=self.block_shapes and self.block_shapes[0][1] != self.width)
 
         if self.compression:
             m['compress'] = self.compression.name

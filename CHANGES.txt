@@ -39,6 +39,8 @@ Bug fixes:
 
 Other changes:
 
+- The logic of is_tiled has been simplified to match GDAL's own internal logic
+  and do nothing more (#).
 - rasterize() better matches the behavior of Numpy array constructors. It no
   longer reduces the bit width of output, returning either float64 or int64
   arrays unless a data type is explicitly selected, and the fill parameter no
