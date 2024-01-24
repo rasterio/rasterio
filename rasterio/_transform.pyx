@@ -163,7 +163,7 @@ cdef class RPCTransformerBase:
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
 
-        cdef int i
+        cdef Py_ssize_t i, n
         cdef double *x = NULL
         cdef double *y = NULL
         cdef double *z = NULL
@@ -173,19 +173,19 @@ cdef class RPCTransformerBase:
 
         cdef double[:] rxview, ryview, rzview
 
-        n = len(xs)
+        n = xs.size
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
-        rxview = xs
-        ryview = ys
-        rzview = zs
+        rxview = xs.astype('float64')
+        ryview = ys.astype('float64')
+        rzview = zs.astype('float64')
         for i in range(n):
-            x[i] = xs[i]
-            y[i] = ys[i]
-            z[i] = zs[i]
+            x[i] = rxview[i]
+            y[i] = ryview[i]
+            z[i] = rzview[i]
 
         try:
             err = GDALRPCTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
@@ -318,7 +318,7 @@ cdef class GCPTransformerBase:
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
 
-        cdef int i
+        cdef Py_ssize_t i, n
         cdef double *x = NULL
         cdef double *y = NULL
         cdef double *z = NULL
@@ -328,19 +328,19 @@ cdef class GCPTransformerBase:
 
         cdef double[:] rxview, ryview, rzview
 
-        n = len(xs)
+        n = xs.size
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
-        rxview = xs
-        ryview = ys
-        rzview = zs
+        rxview = xs.astype('float64')
+        ryview = ys.astype('float64')
+        rzview = zs.astype('float64')
         for i in range(n):
-            x[i] = xs[i]
-            y[i] = ys[i]
-            z[i] = zs[i]
+            x[i] = rxview[i]
+            y[i] = ryview[i]
+            z[i] = rzview[i]
 
         try:
             if self._tps:
