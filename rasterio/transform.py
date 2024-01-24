@@ -452,7 +452,7 @@ class TransformerBase:
         tuple of float or list of float
 
         """
-        AS_ARR = True if hasattr(rows, "__iter__") else False
+        IS_SCALAR = isinstance(rows, Number) and isinstance(cols, Number)
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
 
         if offset == 'center':
@@ -478,10 +478,11 @@ class TransformerBase:
             new_xs, new_ys = self._transform(
                 offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
             )
-            if len(new_xs) == 1 and not AS_ARR:
-                return (new_xs[0], new_ys[0])
+
+            if IS_SCALAR:
+                return new_xs[0], new_ys[0]
             else:
-                return (list(new_xs), list(new_ys))
+                return new_xs.tolist(), new_ys.tolist()
         except TypeError:
             raise TransformError("Invalid inputs")
 
