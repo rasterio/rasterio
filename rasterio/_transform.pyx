@@ -201,7 +201,7 @@ cdef class RPCTransformerBase:
             checked = False
             for i in range(n):
                 # GDALRPCTransformer may return a success overall despite individual points failing. Warn once.
-                if not panSuccess[i] and not checked:
+                if not checked and not panSuccess[i]:
                     warnings.warn(
                     "One or more points could not be transformed using RPCs.",
                     TransformWarning)
@@ -359,7 +359,7 @@ cdef class GCPTransformerBase:
             checked = False
             for i in range(n):
                 # GDALGCPTransformer or GDALTPSTransformer may return a success overall despite individual points failing. Warn once.
-                if not panSuccess[i] and not checked:
+                if not checked and not panSuccess[i]:
                     warnings.warn(
                     "One or more points could not be transformed using GCPs.",
                     TransformWarning)
