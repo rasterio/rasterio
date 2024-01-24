@@ -407,10 +407,22 @@ class TransformerBase:
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
 
+            is_op_ufunc = isinstance(op, np.ufunc)
+            if is_op_ufunc:
+                op(new_rows, out=new_rows)
+                op(new_cols, out=new_cols)
+            
+            new_rows = new_rows.tolist()
+            new_cols = new_cols.tolist()
+
+            if not is_op_ufunc:
+                new_rows = list(map(op, new_rows))
+                new_cols = list(map(op, new_cols))
+            
             if IS_SCALAR:
-                return (op(new_rows[0]), op(new_cols[0]))
+                return new_rows[0], new_cols[0]
             else:
-                return ([op(r) for r in new_rows], [op(c) for c in new_cols])
+                return new_rows, new_cols
         except TypeError:
             raise TransformError("Invalid inputs")
 
