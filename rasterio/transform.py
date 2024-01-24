@@ -5,6 +5,7 @@ from functools import partial
 import math
 import numpy as np
 import warnings
+from numbers import Number
 
 from affine import Affine
 
@@ -330,13 +331,33 @@ class TransformerBase:
         TransformError
             If input coordinates are not all of the same length
         """
+        xs = np.atleast_1d(xs)
+        ys = np.atleast_1d(ys)
+        if zs is not None:
+            zs = np.atleast_1d(zs)
+        else:
+            zs = np.zeros(xs.size)
+
+        if xs.ndim == ys.ndim == zs.ndim == 1 and xs.size == ys.size == zs.size:
+            return xs, ys, zs
+
         try:
-            xs, ys, zs = np.broadcast_arrays(xs, ys, 0 if zs is None else zs)
+            broadcasted = np.broadcast(xs, ys, zs)
+            if broadcasted.ndim != 1:
+                raise TransformError(
+                    "Input coordinates must be broadcastable to a 1d array"
+                )
         except ValueError as error:
-            raise TransformError(
-                "Input coordinates must be broadcastable to a 1d array"
-            ) from error
-        return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
+            raise TransformError() from error
+
+        size = broadcasted.size
+        px = np.zeros(size)
+        py = np.zeros(size)
+        pz = np.zeros(size)
+        px[:] = xs
+        py[:] = ys
+        pz[:] = zs
+        return px, py, pz
 
     def __enter__(self):
         return self
@@ -378,7 +399,7 @@ class TransformerBase:
                 RasterioDeprecationWarning,
             )
 
-        AS_ARR = True if hasattr(xs, "__iter__") else False
+        IS_SCALAR = isinstance(xs, Number) and isinstance(ys, Number)
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
 
         try:
@@ -386,7 +407,7 @@ class TransformerBase:
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
 
-            if len(new_rows) == 1 and not AS_ARR:
+            if IS_SCALAR:
                 return (op(new_rows[0]), op(new_cols[0]))
             else:
                 return ([op(r) for r in new_rows], [op(c) for c in new_cols])
