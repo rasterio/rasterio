@@ -8,6 +8,8 @@ from contextlib import ExitStack
 import logging
 import warnings
 
+import numpy as np
+
 from rasterio._err import GDALError
 from rasterio._err cimport exc_wrap_pointer
 from rasterio.errors import NotGeoreferencedWarning, TransformWarning
@@ -132,7 +134,7 @@ cdef class RPCTransformerBase:
 
         Parameters
         ----------
-        xs, ys, zs : list
+        xs, ys, zs : ndarray
             List of coordinates to be transformed. May be either pixel/line/height or
             lon/lat/height)
         transform_direction : TransformDirection
@@ -151,7 +153,7 @@ cdef class RPCTransformerBase:
 
         Returns
         -------
-        tuple of list
+        tuple of ndarray
     
         Notes
         -----
@@ -169,12 +171,17 @@ cdef class RPCTransformerBase:
         cdef int src_count
         cdef int *panSuccess = NULL
 
+        cdef double[:] rxview, ryview, rzview
+
         n = len(xs)
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
+        rxview = xs
+        ryview = ys
+        rzview = zs
         for i in range(n):
             x[i] = xs[i]
             y[i] = ys[i]
@@ -186,9 +193,11 @@ cdef class RPCTransformerBase:
                 warnings.warn(
                 "Could not transform points using RPCs.",
                 TransformWarning)
-            res_xs = [0] * n
-            res_ys = [0] * n
-            res_zs = [0] * n
+            res_xs = np.zeros(n)
+            res_ys = np.zeros(n)
+            #res_zs = np.zeros(n)
+            rxview = res_xs
+            ryview = res_ys
             checked = False
             for i in range(n):
                 # GDALRPCTransformer may return a success overall despite individual points failing. Warn once.
@@ -197,9 +206,9 @@ cdef class RPCTransformerBase:
                     "One or more points could not be transformed using RPCs.",
                     TransformWarning)
                     checked = True
-                res_xs[i] = x[i]
-                res_ys[i] = y[i]
-                res_zs[i] = z[i]
+                rxview[i] = x[i]
+                ryview[i] = y[i]
+                #res_zs[i] = z[i]
         finally:
             CPLFree(x)
             CPLFree(y)
@@ -285,7 +294,7 @@ cdef class GCPTransformerBase:
 
         Parameters
         ----------
-        xs, ys, zs : list
+        xs, ys, zs : ndarray
             List of coordinates to be transformed. May be either pixel/line/height or
             lon/lat/height)
         transform_direction : TransformDirection
@@ -304,7 +313,7 @@ cdef class GCPTransformerBase:
 
         Returns
         -------
-        tuple of list
+        tuple of ndarray
         """
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
@@ -317,12 +326,17 @@ cdef class GCPTransformerBase:
         cdef int src_count
         cdef int *panSuccess = NULL
 
+        cdef double[:] rxview, ryview, rzview
+
         n = len(xs)
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
+        rxview = xs
+        ryview = ys
+        rzview = zs
         for i in range(n):
             x[i] = xs[i]
             y[i] = ys[i]
@@ -337,9 +351,11 @@ cdef class GCPTransformerBase:
                 warnings.warn(
                 "Could not transform points using GCPs.",
                 TransformWarning)
-            res_xs = [0] * n
-            res_ys = [0] * n
-            res_zs = [0] * n
+            res_xs = np.zeros(n)
+            res_ys = np.zeros(n)
+            #res_zs = np.zeros(n)
+            rxview = res_xs
+            ryview = res_ys
             checked = False
             for i in range(n):
                 # GDALGCPTransformer or GDALTPSTransformer may return a success overall despite individual points failing. Warn once.
@@ -348,9 +364,9 @@ cdef class GCPTransformerBase:
                     "One or more points could not be transformed using GCPs.",
                     TransformWarning)
                     checked = True
-                res_xs[i] = x[i]
-                res_ys[i] = y[i]
-                res_zs[i] = z[i]
+                rxview[i] = x[i]
+                ryview[i] = y[i]
+                #res_zs[i] = z[i]
         finally:
             CPLFree(x)
             CPLFree(y)
