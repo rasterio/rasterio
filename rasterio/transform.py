@@ -336,10 +336,7 @@ class TransformerBase:
         if zs is not None:
             zs = np.atleast_1d(zs)
         else:
-            zs = np.zeros(xs.size)
-
-        if xs.ndim == ys.ndim == zs.ndim == 1 and xs.size == ys.size == zs.size:
-            return xs, ys, zs
+            zs = np.zeros(1)
 
         try:
             broadcasted = np.broadcast(xs, ys, zs)
@@ -350,14 +347,7 @@ class TransformerBase:
         except ValueError as error:
             raise TransformError() from error
 
-        size = broadcasted.size
-        px = np.zeros(size)
-        py = np.zeros(size)
-        pz = np.zeros(size)
-        px[:] = xs
-        py[:] = ys
-        pz[:] = zs
-        return px, py, pz
+        return xs, ys, zs
 
     def __enter__(self):
         return self
