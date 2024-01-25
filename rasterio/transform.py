@@ -87,7 +87,7 @@ class TransformMethodsMixin:
         x,
         y,
         z=None,
-        op=math.floor,
+        op=np.floor,
         precision=None,
         transform_method=TransformMethod.affine,
         **rpc_options
@@ -252,7 +252,7 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
         return transformer.xy(rows, cols, zs=zs, offset=offset)
 
 
-def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_options):
+def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_options):
     """Get rows and cols of the pixels containing (x, y).
 
     Parameters
@@ -355,7 +355,7 @@ class TransformerBase:
     def __exit__(self, *args):
         pass
 
-    def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
+    def rowcol(self, xs, ys, zs=None, op=np.floor, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
 
         Parameters
