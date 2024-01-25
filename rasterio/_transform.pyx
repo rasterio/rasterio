@@ -163,7 +163,8 @@ cdef class RPCTransformerBase:
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
 
-        cdef Py_ssize_t i, n
+        cdef Py_ssize_t i
+        cdef int n
         cdef double *x = NULL
         cdef double *y = NULL
         cdef double *z = NULL
@@ -172,20 +173,19 @@ cdef class RPCTransformerBase:
         cdef int *panSuccess = NULL
 
         cdef double[:] rxview, ryview, rzview
+        cdef tuple xyz
 
-        n = xs.size
+        bi = np.broadcast(xs, ys, zs)
+        n = bi.size
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
-        rxview = xs.astype('float64')
-        ryview = ys.astype('float64')
-        rzview = zs.astype('float64')
-        for i in range(n):
-            x[i] = rxview[i]
-            y[i] = ryview[i]
-            z[i] = rzview[i]
+        for i, xyz in enumerate(bi):
+            x[i] = <double>xyz[0]
+            y[i] = <double>xyz[1]
+            z[i] = <double>xyz[2]
 
         try:
             err = GDALRPCTransform(self._transformer, bDstToSrc, n, x, y, z, panSuccess)
@@ -318,7 +318,8 @@ cdef class GCPTransformerBase:
         if self._transformer == NULL:
             raise ValueError("Unexpected NULL transformer")
 
-        cdef Py_ssize_t i, n
+        cdef Py_ssize_t i
+        cdef int n
         cdef double *x = NULL
         cdef double *y = NULL
         cdef double *z = NULL
@@ -327,20 +328,19 @@ cdef class GCPTransformerBase:
         cdef int *panSuccess = NULL
 
         cdef double[:] rxview, ryview, rzview
+        cdef tuple xyz
 
-        n = xs.size
+        bi = np.broadcast(xs, ys, zs)
+        n = bi.size
         x = <double *>CPLMalloc(n * sizeof(double))
         y = <double *>CPLMalloc(n * sizeof(double))
         z = <double *>CPLMalloc(n * sizeof(double))
         panSuccess = <int *>CPLMalloc(n * sizeof(int))
 
-        rxview = xs.astype('float64')
-        ryview = ys.astype('float64')
-        rzview = zs.astype('float64')
-        for i in range(n):
-            x[i] = rxview[i]
-            y[i] = ryview[i]
-            z[i] = rzview[i]
+        for i, xyz in enumerate(bi):
+            x[i] = <double>xyz[0]
+            y[i] = <double>xyz[1]
+            z[i] = <double>xyz[2]
 
         try:
             if self._tps:
