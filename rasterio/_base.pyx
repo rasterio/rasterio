@@ -1005,7 +1005,16 @@ cdef class DatasetBase:
 
     @property
     def is_tiled(self):
-        return self.block_shapes and self.block_shapes[0][1] != self.width
+        warnings.warn(
+            "is_tiled will be removed in a future version. "
+            "Please consider copying the body of this function "
+            "into your program or module.",
+            PendingDeprecationWarning
+        )
+        # It's rare but possible that a dataset's bands have different
+        # block structure. Therefore we check them all against the
+        # width of the dataset.
+        return self.block_shapes and all(self.width != w for _, w in self.block_shapes)
 
     @property
     def profile(self):
@@ -1020,8 +1029,12 @@ cdef class DatasetBase:
             m.update(
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
-                )
-        m.update(tiled=self.block_shapes and self.block_shapes[0][1] != self.width)
+            )
+
+        # It's rare but possible that a dataset's bands have different
+        # block structure. Therefore we check them all against the
+        # width of the dataset.
+        m.update(tiled=self.block_shapes and all(self.width != w for _, w in self.block_shapes))
 
         if self.compression:
             m['compress'] = self.compression.name
