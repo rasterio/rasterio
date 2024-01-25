@@ -513,9 +513,10 @@ class AffineTransformer(TransformerBase):
         elif transform_direction is TransformDirection.reverse:
             transform.flat[:] = ~self._transformer
 
-        input_matrix = np.empty((3, len(xs)))
-        input_matrix[0] = xs
-        input_matrix[1] = ys
+        bi = np.broadcast(xs, ys)
+        input_matrix = np.empty((3, bi.size))
+        input_matrix[0] = bi.iters[0]
+        input_matrix[1] = bi.iters[1]
         input_matrix[2] = 1
         transform.dot(input_matrix, out=input_matrix)
         return input_matrix[0], input_matrix[1]
