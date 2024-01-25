@@ -2,7 +2,6 @@
 
 from contextlib import ExitStack
 from functools import partial
-import math
 import numpy as np
 import warnings
 from numbers import Number
