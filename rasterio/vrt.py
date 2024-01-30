@@ -2,10 +2,11 @@
 
 import xml.etree.ElementTree as ET
 
+from rasterio._path import _parse_path
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
-from rasterio._path import _parse_path
+from rasterio.env import ensure_env
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 
@@ -246,3 +247,87 @@ def _boundless_vrt_doc(
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
     return ET.tostring(vrtdataset).decode('ascii')
+
+
+class VirtualDataset:
+    """A lazily evaluated virtual dataset based on GDAL's VRT.
+
+    Attributes
+    ----------
+    height : int
+        Virtual raster height in rows.
+    width : int
+        Virtual raster width in columns.
+
+    """
+
+    def __init__(self, height=0, width=0):
+        self._tree = ET.Element(
+            "VRTDataset", rasterXSize=str(width), rasterYSize=str(height)
+        )
+        self._memfile = None
+
+    @classmethod
+    def fromstring(cls, text):
+        """Create a virtual dataset from XML.
+
+        Paramters
+        ---------
+        text : bytes or str
+            XML as a byte or unicode string.
+
+        Returns
+        -------
+        VirtualDataset
+
+        """
+        vrt = cls()
+        vrt._tree = ET.fromstring(text)
+        return vrt
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._memfile is not None:
+            self._memfile.close()
+
+    @property
+    def height(self):
+        return int(self._tree.get("rasterYSize"))
+
+    @height.setter
+    def height(self, value):
+        self._tree.set("rasterYSize", str(value))
+
+    @property
+    def width(self):
+        return int(self._tree.get("rasterXSize"))
+
+    @width.setter
+    def width(self, value):
+        self._tree.set("rasterXSize", str(value))
+
+    @ensure_env
+    def open(self, sharing=False, **kwargs):
+        """Return a Rasterio dataset object in read-only mode.
+
+        Parameters
+        ----------
+        sharing : bool
+
+        kwargs : dict
+            Optional dataset opening options to be passed to
+            rasterio.open().
+
+        Note well that there are no path or mode parameters. A Virtual
+        Dataset contains its own paths and mode does not apply.
+
+        """
+        # To avoid a circular import.
+        from rasterio.io import MemoryFile
+
+        # TODO: consider implications of calling open a second time.
+        self._memfile = MemoryFile(ET.tostring(self._tree))
+        return self._memfile.open(driver="VRT", sharing=sharing, **kwargs)
+
