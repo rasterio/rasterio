@@ -208,10 +208,8 @@ def test_merge_destination_2(tmp_path):
         data = src.read()
 
         from rasterio import windows
-        from rasterio import enums
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            dst.write(numpy.ones((dst.count, dst.height, dst.width)) * 255)
             for _, chunk_window in _chunk_output(
                 dst.width, dst.height, dst.count, 32, mem_limit=0.5
             ):
@@ -224,7 +222,6 @@ def test_merge_destination_2(tmp_path):
                     width=round(target_window.width),
                     height=round(target_window.height),
                 )
-                print(_, chunk_window, target_window)
                 dst.write(chunk_arr, window=target_window)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
