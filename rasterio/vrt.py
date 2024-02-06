@@ -4,14 +4,13 @@ import xml.etree.ElementTree as ET
 
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
-from rasterio.enums import MaskFlags
+from rasterio.enums import MaskFlags, Resampling
 from rasterio._path import _parse_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 
 
-class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
-                TransformMethodsMixin):
+class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin, TransformMethodsMixin):
     """A virtual warped dataset.
 
     Abstracts the details of raster warping and allows access to data
@@ -123,8 +122,16 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
 
 
 def _boundless_vrt_doc(
-        src_dataset, nodata=None, background=None, hidenodata=False,
-        width=None, height=None, transform=None, masked=False):
+    src_dataset,
+    nodata=None,
+    background=None,
+    hidenodata=False,
+    width=None,
+    height=None,
+    transform=None,
+    masked=False,
+    resampling=Resampling.nearest,
+):
     """Make a VRT XML document.
 
     Parameters
@@ -155,10 +162,15 @@ def _boundless_vrt_doc(
     geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
     geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
 
-    for bidx, ci, block_shape, dtype in zip(src_dataset.indexes, src_dataset.colorinterp, src_dataset.block_shapes, src_dataset.dtypes):
-        vrtrasterband = ET.SubElement(vrtdataset, 'VRTRasterBand')
-        vrtrasterband.attrib['dataType'] = _gdal_typename(dtype)
-        vrtrasterband.attrib['band'] = str(bidx)
+    for bidx, ci, block_shape, dtype in zip(
+        src_dataset.indexes,
+        src_dataset.colorinterp,
+        src_dataset.block_shapes,
+        src_dataset.dtypes,
+    ):
+        vrtrasterband = ET.SubElement(vrtdataset, "VRTRasterBand")
+        vrtrasterband.attrib["dataType"] = _gdal_typename(dtype)
+        vrtrasterband.attrib["band"] = str(bidx)
 
         if background is not None or nodata is not None:
             nodatavalue = ET.SubElement(vrtrasterband, 'NoDataValue')
@@ -172,6 +184,7 @@ def _boundless_vrt_doc(
         colorinterp.text = ci.name.capitalize()
 
         complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
+        complexsource.attrib["resampling"] = resampling.name.replace("_", "")
         sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.attrib["shared"] = "0"

@@ -686,27 +686,28 @@ cdef class DatasetReaderBase(DatasetBase):
                 self, nodata=nodataval, background=nodataval,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window))
+                transform=self.window_transform(window),
+                resampling=resampling
+            )
 
             vrt_kwds = {'driver': 'VRT'}
-            with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
+            with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
                 out = vrt._read(
-                    indexes, out, Window(0, 0, window.width, window.height),
-                    None, resampling=resampling)
+                    indexes, out, Window(0, 0, window.width, window.height), None)
 
                 if masked:
-
                     # Below we use another VRT to compute the valid data mask
                     # in this special case where all source pixels are valid.
                     if all_valid:
-
                         mask_vrt_doc = _boundless_vrt_doc(
                             self, nodata=0,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
                             transform=self.window_transform(window),
-                            masked=True)
+                            masked=True,
+                            resampling=resampling
+                        )
 
                         with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
@@ -881,7 +882,9 @@ cdef class DatasetReaderBase(DatasetBase):
                         blank_dataset, nodata=0,
                         width=max(self.width, window.width) + 1,
                         height=max(self.height, window.height) + 1,
-                        transform=self.window_transform(window))
+                        transform=self.window_transform(window),
+                        resampling=resampling
+                    )
 
                     with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
@@ -892,13 +895,13 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_doc = _boundless_vrt_doc(
                     self, width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window))
+                    transform=self.window_transform(window),
+                    resampling=resampling
+                )
 
                 with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
-
                     out = vrt._read(
-                        indexes, out, Window(0, 0, window.width, window.height),
-                        None, resampling=resampling, masks=True)
+                        indexes, out, Window(0, 0, window.width, window.height), None, masks=True)
 
         if return2d:
             out.shape = out.shape[1:]
@@ -963,10 +966,10 @@ cdef class DatasetReaderBase(DatasetBase):
                         if MaskFlags.nodata in flags:
                             warnings.warn(NodataShadowWarning())
 
-                io_multi_mask(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
+                io_multi_mask(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling.value)
 
             else:
-                io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
+                io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling.value)
 
         except CPLE_BaseError as cplerr:
             raise RasterioIOError("Read or write failed. {}".format(cplerr))

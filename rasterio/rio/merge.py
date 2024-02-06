@@ -1,4 +1,4 @@
-"""$ rio merge"""
+"""The rio merge CLI command."""
 
 import warnings
 
@@ -11,11 +11,12 @@ from rasterio.rio.helpers import resolve_inout
 from rasterio.merge import MERGE_METHODS
 
 
-def deprecated_precision(*args):
-    warnings.warn(
-        "The --precision option is unused, deprecated, and will be removed in 2.0.0.",
-        RasterioDeprecationWarning,
-    )
+def deprecated_precision(ctx, param, value):
+    if value is not None:
+        warnings.warn(
+            "The --precision option is unused, deprecated, and will be removed in 2.0.0.",
+            RasterioDeprecationWarning,
+        )
     return None
 
 

@@ -88,7 +88,7 @@ MERGE_METHODS = {
 
 
 def merge(
-    datasets,
+    sources,
     bounds=None,
     res=None,
     nodata=None,
@@ -117,8 +117,8 @@ def merge(
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode, filenames or PathLike objects
-        source datasets to be merged.
+    sources : list of dataset objects opened in 'r' mode, filenames or PathLike objects
+        source sources to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input rasters.
@@ -204,7 +204,7 @@ def merge(
                          .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], (str, os.PathLike)):
+    if isinstance(sources[0], (str, os.PathLike)):
         dataset_opener = rasterio.open
     else:
 
@@ -217,7 +217,7 @@ def merge(
 
         dataset_opener = nullcontext
 
-    with dataset_opener(datasets[0]) as first:
+    with dataset_opener(sources[0]) as first:
         first_profile = first.profile
         first_crs = first.crs
         first_res = first.res
@@ -246,7 +246,7 @@ def merge(
         # scan input files
         xs = []
         ys = []
-        for dataset in datasets:
+        for dataset in sources:
             with dataset_opener(dataset) as src:
                 left, bottom, right, top = src.bounds
             xs.extend([left, right])
@@ -319,7 +319,7 @@ def merge(
     else:
         nodataval = 0
 
-    for idx, dataset in enumerate(datasets):
+    for idx, dataset in enumerate(sources):
         with dataset_opener(dataset) as src:
             # Real World (tm) use of boundless reads.
             # This approach uses the maximum amount of memory to solve the
@@ -340,46 +340,33 @@ def merge(
             if first_crs != src.crs:
                 raise RasterioError(f"CRS mismatch with source: {dataset}")
 
-            # 1. Compute spatial intersection of destination and source
-            src_w, src_s, src_e, src_n = src.bounds
+            # 1. Compute the source window
+            src_window = windows.from_bounds(dst_w, dst_s, dst_e, dst_n, src.transform)
 
-            int_w = src_w if src_w > dst_w else dst_w
-            int_s = src_s if src_s > dst_s else dst_s
-            int_e = src_e if src_e < dst_e else dst_e
-            int_n = src_n if src_n < dst_n else dst_n
-
-            # 2. Compute the source window
-            src_window = windows.from_bounds(int_w, int_s, int_e, int_n, src.transform)
-
-            # 3. Compute the destination window
+            # 2. Compute the destination window
             dst_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, output_transform
+                dst_w, dst_s, dst_e, dst_n, output_transform
             )
 
-            # 4. Read data in source window into temp
-            src_window_rnd_shp = src_window.round_lengths()
-            dst_window_rnd_shp = dst_window.round_lengths()
-            dst_window_rnd_off = dst_window_rnd_shp.round_offsets()
-
+            # 3. Read data in source window into temp
             temp_height, temp_width = (
-                int(dst_window_rnd_off.height),
-                int(dst_window_rnd_off.width),
+                int(round(dst_window.height)),
+                int(round(dst_window.width)),
             )
             temp_shape = (src_count, temp_height, temp_width)
-
             temp_src = src.read(
                 out_shape=temp_shape,
-                window=src_window_rnd_shp,
-                boundless=False,
+                window=src_window,
+                boundless=True,
                 masked=True,
                 indexes=indexes,
                 resampling=resampling,
             )
 
-        # 5. Copy elements of temp into dest
+        # Copy elements of temp into dest
         roff, coff = (
-            max(0, int(dst_window_rnd_off.row_off)),
-            max(0, int(dst_window_rnd_off.col_off)),
+            max(0, int(dst_window.row_off)),
+            max(0, int(dst_window.col_off)),
         )
         region = dest[:, roff : roff + temp_height, coff : coff + temp_width]
 

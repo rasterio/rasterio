@@ -609,6 +609,7 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
         res = src.res[0]
         expected_raster = src.read(
             out_shape=tuple(dim * 2 for dim in src.shape),
+            boundless=True,
             resampling=resampling
         )
     result = runner.invoke(

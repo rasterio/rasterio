@@ -12,6 +12,7 @@ from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import RasterioError
 
+
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
 @pytest.fixture(scope="function")
@@ -121,3 +122,112 @@ def test_issue2202(dx, dy):
         from rasterio.plot import show
 
         show(aux_array)
+
+
+import math
+from rasterio import windows
+from rasterio.warp import aligned_target
+
+
+def _chunk_output(width, height, count, itemsize, mem_limit=1):
+    """Divide the calculation output into chunks.
+
+    This function determines the chunk size such that an array of shape
+    (chunk_size, chunk_size, count) with itemsize bytes per element
+    requires no more than mem_limit megabytes of memory.
+
+    Output chunks are described by rasterio Windows.
+
+    Parameters
+    ----------
+    width : int
+        Output width
+    height : int
+        Output height
+    count : int
+        Number of output bands
+    itemsize : int
+        Number of bytes per pixel
+    mem_limit : int, default
+        The maximum size in memory of a chunk array
+
+    Returns
+    -------
+    sequence of Windows
+    """
+    max_pixels = mem_limit * 1.0e6 / itemsize * count
+    chunk_size = int(math.floor(math.sqrt(max_pixels)))
+    ncols = int(math.ceil(width / chunk_size))
+    nrows = int(math.ceil(height / chunk_size))
+    chunk_windows = []
+
+    for col in range(ncols):
+        col_offset = col * chunk_size
+        w = min(chunk_size, width - col_offset)
+        for row in range(nrows):
+            row_offset = row * chunk_size
+            h = min(chunk_size, height - row_offset)
+            chunk_windows.append(
+                ((row, col), windows.Window(col_offset, row_offset, w, h))
+            )
+
+    return chunk_windows
+
+
+def test_merge_destination_1(tmp_path):
+    """Merge into an opened dataset."""
+    with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
+        profile = src.profile
+        data = src.read()
+
+        from rasterio import windows
+
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            for _, chunk_window in _chunk_output(
+                dst.width, dst.height, dst.count, 64, mem_limit=1
+            ):
+                chunk_bounds = windows.bounds(chunk_window, dst.transform)
+                chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
+                target_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                dst.write(chunk_arr, window=target_window)
+
+        with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+            result = dst.read()
+            assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
+
+
+def test_merge_destination_2(tmp_path):
+    """Merge into an opened, target-aligned dataset."""
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        profile = src.profile
+        dst_transform, dst_width, dst_height = aligned_target(
+            src.transform, src.width, src.height, src.res
+        )
+        profile.update(transform=dst_transform, width=dst_width, height=dst_height)
+
+        data = src.read()
+
+        from rasterio import windows
+        from rasterio import enums
+
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            dst.write(numpy.ones((dst.count, dst.height, dst.width)) * 255)
+            for _, chunk_window in _chunk_output(
+                dst.width, dst.height, dst.count, 32, mem_limit=0.5
+            ):
+                chunk_bounds = windows.bounds(chunk_window, dst.transform)
+                chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
+                target_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                target_window = windows.Window(
+                    col_off=round(target_window.col_off),
+                    row_off=round(target_window.row_off),
+                    width=round(target_window.width),
+                    height=round(target_window.height),
+                )
+                print(_, chunk_window, target_window)
+                dst.write(chunk_arr, window=target_window)
+
+        with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+            result = dst.read()
+            assert result.shape == (3, 719, 792)
+            assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
