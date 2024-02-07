@@ -15,7 +15,7 @@ namespace and handling of context variables.
 
 .. code-block:: console
 
-    $ rio --help                                                                                                                         ⏎
+    $ rio --help
     Usage: rio [OPTIONS] COMMAND [ARGS]...
 
       Rasterio command line interface.
@@ -28,6 +28,7 @@ namespace and handling of context variables.
       --aws-requester-pays    Requester pays data transfer costs
       --version               Show the version and exit.
       --gdal-version
+      --show-versions         Show dependency versions
       --help                  Show this message and exit.
 
     Commands:
@@ -36,6 +37,7 @@ namespace and handling of context variables.
       calc       Raster data calculator.
       clip       Clip a raster to given bounds.
       convert    Copy and convert raster dataset.
+      create     Create an empty or filled dataset.
       edit-info  Edit dataset metadata.
       env        Print information about the Rasterio environment.
       gcps       Print ground control points as GeoJSON.
@@ -52,10 +54,8 @@ namespace and handling of context variables.
       transform  Transform coordinates.
       warp       Warp a raster dataset.
 
-
 Commands are shown below. See ``--help`` of individual commands for more
 details.
-
 
 creation options
 ----------------
@@ -161,7 +161,6 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
 Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing
 ``rio bounds tests/data/RGB.byte.tif | geojsonio``.
 
-
 calc
 ----
 
@@ -245,6 +244,28 @@ as uint8:
 
 You can use `--rgb` as shorthand for `--co photometric=rgb`.
 
+create
+------
+
+The ``create`` command creates an empty dataset.
+
+The fundamental, required parameters are: format driver name, data type.  count
+of bands, height and width in pixels. Long and short options are provided for
+each of these. Coordinate reference system and affine transformation matrix are
+not strictly required and have long options only.  All other format specific
+creation outputs must be specified using the --co option.
+
+The pixel values of an empty dataset are format specific. "Smart" formats like
+GTiff use 0 or the nodata value if provided.
+
+For example:
+
+.. code-block:: console
+
+    $ rio create new.tif -f GTiff -t uint8 -n 3 -h 512 -w 512 \
+    > --co tiled=true --co blockxsize=256 --co blockysize=256
+
+The command above produces a 3-band GeoTIFF with 256 x 256 internal tiling.
 
 edit-info
 ---------
