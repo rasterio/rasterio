@@ -370,5 +370,5 @@ sequence_opt = click.option(
          "feature collection object.")
 
 format_opt = click.option(
-    '-f', '--format', '--driver', 'driver',
-    help="Output format driver")
+    "-f", "--format", "--driver", "driver", help="Output format driver."
+)

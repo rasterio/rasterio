@@ -14,6 +14,7 @@ Deprecations:
 
 New Features:
 
+- The new "rio create" command allows creation of new, empty datasets (#).
 - An optional range keyword argument (like that of numpy.histogram()) has been
   added to show_hist() (#2873, #3001).
 - Datasets stored in proprietary systems or addressable only through protocols
