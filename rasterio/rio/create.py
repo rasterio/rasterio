@@ -93,7 +93,7 @@ def create(
     """Create an empty dataset.
 
     The fundamental, required parameters are: format driver name, data
-    type. count of bands, height and width in pixels. Long and short
+    type, count of bands, height and width in pixels. Long and short
     options are provided for each of these. Coordinate reference system
     and affine transformation matrix are not strictly required and have
     long options only. All other format specific creation outputs must
