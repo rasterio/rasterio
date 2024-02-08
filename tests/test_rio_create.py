@@ -86,6 +86,54 @@ def test_create_empty(tmp_path, runner):
         assert (dataset.read() == 0).all()
 
 
+def test_create_bounds(tmp_path, runner):
+    """Create a new empty tif with a bounding box."""
+    outfile = str(tmp_path.joinpath("out.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "create",
+            "--format",
+            "GTiff",
+            "--dtype",
+            "uint8",
+            "--count",
+            "3",
+            "--height",
+            "512",
+            "--width",
+            "256",
+            "--crs",
+            "EPSG:32618",
+            "--bounds",
+            ",".join(
+                (
+                    str(x)
+                    for x in [
+                        101985.0,
+                        2826915.0 - 512 * 300.0,
+                        101985.0 + 256 * 300.0,
+                        2826915.0,
+                    ]
+                )
+            ),
+            outfile,
+        ],
+    )
+    assert result.exit_code == 0
+
+    with rasterio.open(outfile) as dataset:
+        assert dataset.shape == (512, 256)
+        assert dataset.count == 3
+        assert dataset.dtypes == ("uint8", "uint8", "uint8")
+        assert dataset.driver == "GTiff"
+        assert dataset.crs == CRS.from_epsg(32618)
+        assert dataset.res == (300.0, 300.0)
+        assert dataset.transform.xoff == 101985.0
+        assert dataset.transform.yoff == 2826915.0
+        assert (dataset.read() == 0).all()
+
+
 def test_create_short_opts(tmp_path, runner):
     """Create a new empty tif using short options."""
     outfile = str(tmp_path.joinpath("out.tif"))

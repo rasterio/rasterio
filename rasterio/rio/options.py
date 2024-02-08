@@ -264,10 +264,13 @@ bidx_magic_opt = click.option(
     multiple=True,
     help="Indexes of input file bands.")
 
-# TODO: may be better suited to cligj
+# TODO: may be better suited to cligj?
 bounds_opt = click.option(
-    '--bounds', default=None, callback=bounds_handler,
-    help='Bounds: "left bottom right top" or "[left, bottom, right, top]".')
+    "--bounds",
+    default=None,
+    callback=bounds_handler,
+    help="Bounds: 'left bottom right top' or '[left, bottom, right, top]'.",
+)
 
 dimensions_opt = click.option(
     '--dimensions',

@@ -8,7 +8,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.errors import CRSError, FileOverwriteError, RasterioIOError
 from rasterio.rio import options
-from rasterio.transform import guard_transform
+from rasterio.transform import Affine, guard_transform
 
 
 def crs_handler(ctx, param, value):
@@ -22,19 +22,6 @@ def crs_handler(ctx, param, value):
                 f"{value} is not a recognized CRS.", param=param, param_hint="crs"
             )
     return retval
-
-
-def nodata_handler(ctx, param, value):
-    """Return a float or None"""
-    if value is None or value.lower() in ["null", "nil", "none", "nada"]:
-        return None
-    else:
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            raise click.BadParameter(
-                f"{value} is not a number.", param=param, param_hint="nodata"
-            )
 
 
 def transform_handler(ctx, param, value):
@@ -60,19 +47,16 @@ def transform_handler(ctx, param, value):
 @click.option("--count", "-n", type=int, help="Number of raster bands.")
 @click.option("--height", "-h", type=int, help="Raster height, or number of rows.")
 @click.option("--width", "-w", type=int, help="Raster width, or number of columns.")
-@click.option(
-    "--nodata",
-    callback=nodata_handler,
-    default=None,
-    metavar="NUMBER|nan|null",
-    help="Raster nodata value.",
-)
+@options.nodata_opt
 @click.option(
     "--crs", callback=crs_handler, default=None, help="Coordinate reference system."
 )
 @click.option(
-    "--transform", callback=transform_handler, help="Affine transform matrix."
+    "--transform",
+    callback=transform_handler,
+    help="Affine transform matrix. Overrides any given bounds option.",
 )
+@options.bounds_opt
 @options.overwrite_opt
 @options.creation_options
 @click.pass_context
@@ -87,6 +71,7 @@ def create(
     nodata,
     crs,
     transform,
+    bounds,
     overwrite,
     creation_options,
 ):
@@ -138,6 +123,17 @@ def create(
                         "Object exists and won't be overwritten without use of the '--overwrite' option."
                     )
 
+    # Prepare the dataset's georeferencing.
+    geo_transform = None
+
+    if bounds:
+        left, bottom, right, top = bounds
+        sx = (right - left) / width
+        sy = (bottom - top) / height
+        geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
+    if transform:
+        geo_transform = transform
+
     profile = dict(
         driver=driver,
         dtype=dtype,
@@ -146,7 +142,7 @@ def create(
         width=width,
         nodata=nodata,
         crs=crs,
-        transform=transform,
+        transform=geo_transform,
         **creation_options,
     )
 
