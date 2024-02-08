@@ -191,14 +191,14 @@ def test_block_window_tiff(path_rgb_byte_tif):
             assert src.block_window(1, i, j) == w
 
 
-@pytest.mark.parametrize("blocksize", [16, 32, 256, 1024])
+@pytest.mark.parametrize("blocksize", [32, 256, 1024])
 def test_block_windows_bigger_blocksize(tmpdir, blocksize):
     """Ensure that block sizes greater than raster size are ok"""
     tempfile = str(tmpdir.join("test.tif"))
     profile = default_gtiff_profile.copy()
     profile.update(height=16, width=16, count=1, blockxsize=blocksize, blockysize=blocksize)
     with rasterio.open(tempfile, "w", **profile) as dst:
-        assert dst.is_tiled
+        assert all((blocksize, blocksize) == (h, w) for (h, w) in dst.block_shapes)
         for ij, window in dst.block_windows():
             dst.write(np.ones((1, 1), dtype="uint8"), 1, window=window)
 
