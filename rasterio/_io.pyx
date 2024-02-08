@@ -1459,8 +1459,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 # ignore if only one provided
                 kwargs.pop("blockxsize", None)
                 kwargs.pop("blockysize", None)
-            elif int(blockxsize) % 16 or int(blockysize) % 16:
-                raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
         if mode in ('w', 'w+'):
@@ -1496,6 +1494,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     GDALCreate(drv, fname, width, height, count, gdal_dtype, options)
                 )
 
+            except CPLE_AppDefinedError as exc:
+                if "Bad value" in str(exc):
+                    raise RasterBlockError(
+                        "The height and width of TIFF dataset blocks must be multiples of 16"
+                    )
+                else:
+                    raise RasterioIOError(str(exc))
             except CPLE_BaseError as exc:
                 raise RasterioIOError(str(exc))
 

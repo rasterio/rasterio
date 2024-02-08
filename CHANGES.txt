@@ -6,6 +6,11 @@ Next
 
 Deprecations:
 
+- The is_tiled property of a dataset will be removed in a future version and
+  a pending deprecation warning will be raised if it is used (#3015). This
+  warning may be changed to a deprecation warning at version 1.5.0. Please
+  consider copying the body of the property to your own project. It's just one
+  line.
 - The is_valid property of the CRS class is not useful and will be removed in
   version 2.0 (#2919).
 - The FilePath class has been supplanted by rasterio.open's new opener keyword
@@ -40,6 +45,9 @@ Bug fixes:
 
 Other changes:
 
+- The logic of is_tiled has been simplified to match GDAL's own internal logic
+  and do nothing more. It's now only a test that a raster's block width is not
+  equal to the raster width (#3015).
 - rasterize() better matches the behavior of Numpy array constructors. It no
   longer reduces the bit width of output, returning either float64 or int64
   arrays unless a data type is explicitly selected, and the fill parameter no
