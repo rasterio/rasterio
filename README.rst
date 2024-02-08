@@ -4,11 +4,14 @@ Rasterio
 
 Rasterio reads and writes geospatial raster data.
 
-.. image:: https://app.travis-ci.com/rasterio/rasterio.svg?branch=master
-   :target: https://app.travis-ci.com/rasterio/rasterio
+.. image:: https://github.com/rasterio/rasterio/actions/workflows/tests.yaml/badge.svg
+   :target: https://github.com/rasterio/rasterio/actions/workflows/tests.yaml
 
-.. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
-   :target: https://coveralls.io/github/mapbox/rasterio?branch=master
+.. image:: https://github.com/rasterio/rasterio/actions/workflows/test_gdal_latest.yaml/badge.svg
+   :target: https://github.com/rasterio/rasterio/actions/workflows/test_gdal_latest.yaml
+
+.. image:: https://github.com/rasterio/rasterio/actions/workflows/test_gdal_tags.yaml/badge.svg
+   :target: https://github.com/rasterio/rasterio/actions/workflows/test_gdal_tags.yaml
 
 .. image:: https://img.shields.io/pypi/v/rasterio
    :target: https://pypi.org/project/rasterio/

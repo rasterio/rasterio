@@ -89,9 +89,10 @@ def test_creation_untiled_blockysize(tmp_path, blockysize):
         pass
 
     with rasterio.open(tmpfile) as dataset:
-        assert not dataset.is_tiled
+        blockysize, blockxsize = dataset.block_shapes[0]
+        assert blockxsize == dataset.width
         assert dataset.profile["blockysize"] == min(blockysize, 61)
-        assert dataset.block_shapes[0][0] == min(blockysize, 61)
+        assert blockysize == min(blockysize, 61)
 
 
 @pytest.mark.parametrize(

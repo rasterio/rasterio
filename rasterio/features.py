@@ -11,7 +11,6 @@ import rasterio
 from rasterio import warp
 from rasterio._base import DatasetBase
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype, _getnpdtype
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import ShapeSkipWarning
@@ -267,32 +266,14 @@ def rasterize(
     if GDALVersion.runtime().at_least("3.7"):
         valid_dtypes += ("int8",)
 
-    def format_invalid_dtype(param):
-        return '{0} dtype must be one of: {1}'.format(
-            param, ', '.join(valid_dtypes)
+    # The output data type is determined by the output array or dtype
+    # parameter.
+    dtype = out.dtype.name if out is not None else dtype
+
+    if dtype is not None and dtype not in valid_dtypes:
+        raise ValueError(
+            "Data type specified by out array or dtype parameter is not supported."
         )
-
-    def format_cast_error(param, dtype):
-        return '{0} cannot be cast to specified dtype: {1}'.format(param, dtype)
-
-    if fill != 0:
-        fill_array = np.array([fill])
-        if not validate_dtype(fill_array, valid_dtypes):
-            raise ValueError(format_invalid_dtype('fill'))
-
-        if dtype is not None and not can_cast_dtype(fill_array, dtype):
-            raise ValueError(format_cast_error('fill', dtype))
-
-    if default_value != 1:
-        default_value_array = np.array([default_value])
-        if not validate_dtype(default_value_array, valid_dtypes):
-            raise ValueError(format_invalid_dtype('default_value'))
-
-        if dtype is not None and not can_cast_dtype(default_value_array, dtype):
-            raise ValueError(format_cast_error('default_vaue', dtype))
-
-    if dtype is not None and _getnpdtype(dtype).name not in valid_dtypes:
-        raise ValueError(format_invalid_dtype('dtype'))
 
     valid_shapes = []
     shape_values = []
@@ -340,18 +321,29 @@ def rasterize(
             else:
                 raise ValueError("Invalid or empty shape cannot be rasterized.")
 
-    if out is not None:
-        if _getnpdtype(out.dtype).name not in valid_dtypes:
-            raise ValueError(format_invalid_dtype('out'))
+    # If neither an out array or dtype were given, we get the output
+    # data type from the shapes values, including the default.
+    if not dtype and valid_shapes:
+        values_arr = np.array(shape_values)
+        dtype = values_arr.dtype.name
+        assert dtype in ("int64", "float64")
 
-        if not can_cast_dtype(shape_values, out.dtype):
-            raise ValueError(format_cast_error('shape values', out.dtype.name))
+        # GDAL 3.5 doesn't support int64 output. We'll try int32.
+        if dtype not in valid_dtypes and dtype.startswith("int"):
+            lo, hi = values_arr.min(), values_arr.max()
+            if -2147483648 <= lo and hi <= 2147483647:
+                dtype = "int32"
+            elif 0 <= lo and hi <= 4294967295:
+                dtype = "uint32"
+            else:
+                raise ValueError("GDAL versions < 3.6 cannot rasterize int64 values.")
+
+    if out is not None:
+        pass
 
     elif out_shape is not None:
-
         if len(out_shape) != 2:
             raise ValueError('Invalid out_shape, must be 2D')
-
         out = np.empty(out_shape, dtype=dtype)
         out.fill(fill)
 
@@ -364,17 +356,6 @@ def rasterize(
     transform = guard_transform(transform)
 
     if valid_shapes:
-        shape_values = np.array(shape_values)
-
-        if not validate_dtype(shape_values, valid_dtypes):
-            raise ValueError(format_invalid_dtype("shape values"))
-
-        if dtype is None:
-            dtype = get_minimum_dtype(np.append(shape_values, fill))
-
-        elif not can_cast_dtype(shape_values, dtype):
-            raise ValueError(format_cast_error("shape values", dtype))
-
         _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
 
     return out

@@ -6,6 +6,11 @@ Next
 
 Deprecations:
 
+- The is_tiled property of a dataset will be removed in a future version and
+  a pending deprecation warning will be raised if it is used (#3015). This
+  warning may be changed to a deprecation warning at version 1.5.0. Please
+  consider copying the body of the property to your own project. It's just one
+  line.
 - The is_valid property of the CRS class is not useful and will be removed in
   version 2.0 (#2919).
 - The FilePath class has been supplanted by rasterio.open's new opener keyword
@@ -17,6 +22,7 @@ New Features:
 - Errors that GDAL handles internally within GDALDatasetRasterIO() and
   GDALRasterIO() and WarpAndChunk() are chained together to be visible and
   accessable from Python (#2526).
+- The new "rio create" command allows creation of new, empty datasets (#3023).
 - An optional range keyword argument (like that of numpy.histogram()) has been
   added to show_hist() (#2873, #3001).
 - Datasets stored in proprietary systems or addressable only through protocols
@@ -34,6 +40,7 @@ New Features:
 
 Bug fixes:
 
+- Avoid squeezing narrow 2-D arrays to 1-D (#3008).
 - Operations on closed MemoryFile and ZipMemoryFile objects now raise
   ValueError as with other Python file objects (#2870, #).
 - Delay clamping of I/O windows until just before GDAL methods calls to improve
@@ -41,6 +48,13 @@ Bug fixes:
 
 Other changes:
 
+- The logic of is_tiled has been simplified to match GDAL's own internal logic
+  and do nothing more. It's now only a test that a raster's block width is not
+  equal to the raster width (#3015).
+- rasterize() better matches the behavior of Numpy array constructors. It no
+  longer reduces the bit width of output, returning either float64 or int64
+  arrays unless a data type is explicitly selected, and the fill parameter no
+  longer has an effect on the default data type (#3003).
 - Rasterio now vendors and modifies the snuggs module (#2956).
 - Given an empty shapes argument, rasterize() now returns an empty array
   (#2993).
