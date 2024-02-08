@@ -6,7 +6,11 @@ import os
 
 import rasterio
 from rasterio.crs import CRS
-from rasterio.errors import CRSError, FileOverwriteError, RasterioIOError
+from rasterio.errors import (
+    CRSError,
+    FileOverwriteError,
+    RasterioIOError,
+)
 from rasterio.rio import options
 from rasterio.transform import Affine, guard_transform
 
@@ -84,6 +88,12 @@ def create(
     long options only. All other format specific creation outputs must
     be specified using the --co option.
 
+    Simple north-up, non-rotated georeferencing can be set by using the
+    --bounds option. The --transform option will assign an arbitrarily
+    rotated affine transformation matrix to the dataset. Ground control
+    points, rational polynomial coefficients, and geolocation matrices
+    are not supported.
+
     The pixel values of an empty dataset are format specific. "Smart"
     formats like GTiff use 0 or the nodata value if provided.
 
@@ -132,6 +142,12 @@ def create(
         sy = (bottom - top) / height
         geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
     if transform:
+        if geo_transform is not None:
+            click.echo(
+                "--transform value is overriding --bounds value. "
+                "Use only one of these options to avoid this warning.",
+                err=True,
+            )
         geo_transform = transform
 
     profile = dict(
