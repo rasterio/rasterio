@@ -188,7 +188,9 @@ def test_merge_destination_1(tmp_path):
             ):
                 chunk_bounds = windows.bounds(chunk_window, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                target_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                target_window = windows.from_bounds(*chunk_bounds, dst.transform).round(
+                    3
+                )
                 dst.write(chunk_arr, window=target_window)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
@@ -211,16 +213,12 @@ def test_merge_destination_2(tmp_path):
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
             for _, chunk_window in _chunk_output(
-                dst.width, dst.height, dst.count, 32, mem_limit=0.5
+                dst.width, dst.height, dst.count, 32, mem_limit=1
             ):
                 chunk_bounds = windows.bounds(chunk_window, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                target_window = windows.from_bounds(*chunk_bounds, dst.transform)
-                target_window = windows.Window(
-                    col_off=round(target_window.col_off),
-                    row_off=round(target_window.row_off),
-                    width=round(target_window.width),
-                    height=round(target_window.height),
+                target_window = windows.from_bounds(*chunk_bounds, dst.transform).round(
+                    3
                 )
                 dst.write(chunk_arr, window=target_window)
 

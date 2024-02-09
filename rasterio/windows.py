@@ -528,8 +528,7 @@ def validate_length_value(instance, attribute, value):
         raise ValueError("Number of columns or rows must be non-negative")
 
 
-@attr.s(slots=True,
-        frozen=True)
+@attr.s(slots=True, frozen=True)
 class Window:
     """Windows are rectangular subsets of rasters.
 
@@ -754,6 +753,19 @@ class Window:
         row_off = operator(self.row_off)
         col_off = operator(self.col_off)
         return Window(col_off, row_off, self.width, self.height)
+
+    def round(self, ndigits=None):
+        """Round a window's offsets and lengths
+
+        Rounding to a very small fraction of a pixel can help treat
+        floating point issues arising from computation of windows.
+        """
+        return Window(
+            round(self.col_off, ndigits=ndigits),
+            round(self.row_off, ndigits=ndigits),
+            round(self.width, ndigits=ndigits),
+            round(self.height, ndigits=ndigits),
+        )
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""
