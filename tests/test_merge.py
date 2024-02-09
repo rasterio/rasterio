@@ -12,6 +12,8 @@ from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import RasterioError
 
+from .conftest import gdal_version
+
 
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
@@ -129,44 +131,38 @@ from rasterio import windows
 from rasterio.warp import aligned_target
 
 
-def _chunk_output(width, height, count, itemsize, mem_limit=1):
-    """Divide the calculation output into chunks.
+def window_split(height, width, max_pixels=1048576):
+    """Divide the row-column domain of a dataset into smaller windows.
 
-    This function determines the chunk size such that an array of shape
-    (chunk_size, chunk_size, count) with itemsize bytes per element
-    requires no more than mem_limit megabytes of memory.
-
-    Output chunks are described by rasterio Windows.
+    This function determines the window size such that windows have no
+    more than max_pixels number of pixels. Windows are roughly square,
+    except at the right and bottom edges of the domain, and have integer
+    offsets and lengths.
 
     Parameters
     ----------
-    width : int
-        Output width
     height : int
-        Output height
-    count : int
-        Number of output bands
-    itemsize : int
-        Number of bytes per pixel
-    mem_limit : int, default
-        The maximum size in memory of a chunk array
+        Domain height.
+    width : int
+        Domain width.
+    max_pixels : int, optional
+        The maximum number of pixels per window.
 
     Returns
     -------
-    sequence of Windows
+    list of Windows
     """
-    max_pixels = mem_limit * 1.0e6 / itemsize * count
-    chunk_size = int(math.floor(math.sqrt(max_pixels)))
-    ncols = int(math.ceil(width / chunk_size))
-    nrows = int(math.ceil(height / chunk_size))
+    length = int(math.floor(math.sqrt(max_pixels)))
+    ncols = int(math.ceil(width / length))
+    nrows = int(math.ceil(height / length))
     chunk_windows = []
 
     for col in range(ncols):
-        col_offset = col * chunk_size
-        w = min(chunk_size, width - col_offset)
+        col_offset = col * length
+        w = min(length, width - col_offset)
         for row in range(nrows):
-            row_offset = row * chunk_size
-            h = min(chunk_size, height - row_offset)
+            row_offset = row * length
+            h = min(length, height - row_offset)
             chunk_windows.append(
                 ((row, col), windows.Window(col_offset, row_offset, w, h))
             )
@@ -183,21 +179,20 @@ def test_merge_destination_1(tmp_path):
         from rasterio import windows
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for _, chunk_window in _chunk_output(
-                dst.width, dst.height, dst.count, 64, mem_limit=1
-            ):
-                chunk_bounds = windows.bounds(chunk_window, dst.transform)
+            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+                chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                target_window = windows.from_bounds(*chunk_bounds, dst.transform).round(
-                    3
-                )
-                dst.write(chunk_arr, window=target_window)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
+                dst.write(chunk_arr, window=dst_window)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
             assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
 
 
+@pytest.mark.skipif(
+    not gdal_version.at_least("3.4"), reason="Precise windowing requires 3.4"
+)
 def test_merge_destination_2(tmp_path):
     """Merge into an opened, target-aligned dataset."""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
@@ -212,15 +207,11 @@ def test_merge_destination_2(tmp_path):
         from rasterio import windows
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for _, chunk_window in _chunk_output(
-                dst.width, dst.height, dst.count, 32, mem_limit=1
-            ):
-                chunk_bounds = windows.bounds(chunk_window, dst.transform)
+            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+                chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                target_window = windows.from_bounds(*chunk_bounds, dst.transform).round(
-                    3
-                )
-                dst.write(chunk_arr, window=target_window)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
+                dst.write(chunk_arr, window=dst_window)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
