@@ -69,7 +69,11 @@ cdef VSIFilesystemPluginCallbacksStruct* filepath_plugin = NULL
 cdef VSIFilesystemPluginCallbacksStruct* pyopener_plugin = NULL
 
 
-cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
+cdef void log_error(
+    CPLErr err_class,
+    int err_no,
+    const char* msg,
+) noexcept with gil:
     """Send CPL errors to Python's logger.
 
     Because this function is called by GDAL with no Python context, we
@@ -97,10 +101,18 @@ cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
 # Definition of GDAL callback functions, one for Windows and one for
 # other platforms. Each calls log_error().
 IF UNAME_SYSNAME == "Windows":
-    cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
+    cdef void __stdcall logging_error_handler(
+        CPLErr err_class,
+        int err_no,
+        const char* msg,
+    ) noexcept with gil:
         log_error(err_class, err_no, msg)
 ELSE:
-    cdef void logging_error_handler(CPLErr err_class, int err_no, const char* msg) with gil:
+    cdef void logging_error_handler(
+        CPLErr err_class,
+        int err_no,
+        const char* msg,
+    ) noexcept with gil:
         log_error(err_class, err_no, msg)
 
 

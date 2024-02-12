@@ -19,6 +19,9 @@ Deprecations:
 
 New Features:
 
+- Errors that GDAL handles internally within GDALDatasetRasterIO() and
+  GDALRasterIO() and WarpAndChunk() are chained together to be visible and
+  accessable from Python (#2526).
 - The new "rio create" command allows creation of new, empty datasets (#3023).
 - An optional range keyword argument (like that of numpy.histogram()) has been
   added to show_hist() (#2873, #3001).
