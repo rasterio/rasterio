@@ -11,6 +11,8 @@ import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import RasterioError
+from rasterio.warp import aligned_target
+from rasterio.windows import window_split
 
 from .conftest import gdal_version
 
@@ -124,50 +126,6 @@ def test_issue2202(dx, dy):
         from rasterio.plot import show
 
         show(aux_array)
-
-
-import math
-from rasterio import windows
-from rasterio.warp import aligned_target
-
-
-def window_split(height, width, max_pixels=1048576):
-    """Divide the row-column domain of a dataset into smaller windows.
-
-    This function determines the window size such that windows have no
-    more than max_pixels number of pixels. Windows are roughly square,
-    except at the right and bottom edges of the domain, and have integer
-    offsets and lengths.
-
-    Parameters
-    ----------
-    height : int
-        Domain height.
-    width : int
-        Domain width.
-    max_pixels : int, optional
-        The maximum number of pixels per window.
-
-    Returns
-    -------
-    list of Windows
-    """
-    length = int(math.floor(math.sqrt(max_pixels)))
-    ncols = int(math.ceil(width / length))
-    nrows = int(math.ceil(height / length))
-    chunk_windows = []
-
-    for col in range(ncols):
-        col_offset = col * length
-        w = min(length, width - col_offset)
-        for row in range(nrows):
-            row_offset = row * length
-            h = min(length, height - row_offset)
-            chunk_windows.append(
-                ((row, col), windows.Window(col_offset, row_offset, w, h))
-            )
-
-    return chunk_windows
 
 
 def test_merge_destination_1(tmp_path):

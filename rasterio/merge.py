@@ -15,6 +15,7 @@ from rasterio.errors import RasterioDeprecationWarning, RasterioError
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
+from rasterio.windows import window_split
 
 logger = logging.getLogger(__name__)
 
@@ -86,45 +87,6 @@ MERGE_METHODS = {
     "sum": copy_sum,
     "count": copy_count,
 }
-
-
-def window_split(height, width, max_pixels=1048576):
-    """Divide the row-column domain of a dataset into smaller windows.
-
-    This function determines the window size such that windows have no
-    more than max_pixels number of pixels. Windows are roughly square,
-    except at the right and bottom edges of the domain, and have integer
-    offsets and lengths.
-
-    Parameters
-    ----------
-    height : int
-        Domain height.
-    width : int
-        Domain width.
-    max_pixels : int, optional
-        The maximum number of pixels per window.
-
-    Returns
-    -------
-    list of Windows
-    """
-    length = min(int(math.floor(math.sqrt(max_pixels))), height, width)
-    ncols = int(math.ceil(width / length))
-    nrows = int(math.ceil(height / length))
-    chunk_windows = []
-
-    for col in range(ncols):
-        col_offset = col * length
-        w = min(length, width - col_offset)
-        for row in range(nrows):
-            row_offset = row * length
-            h = min(length, height - row_offset)
-            chunk_windows.append(
-                ((row, col), windows.Window(col_offset, row_offset, w, h))
-            )
-
-    return chunk_windows
 
 
 def merge(
