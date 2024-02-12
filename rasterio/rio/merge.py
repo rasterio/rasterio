@@ -45,6 +45,17 @@ def deprecated_precision(ctx, param, value):
     callback=deprecated_precision,
     help="Unused, deprecated, and will be removed in 2.0.0.",
 )
+@click.option(
+    "--target-aligned-pixels/--no-target-aligned-pixels",
+    default=False,
+    help="Align the output bounds based on the resolution.",
+)
+@click.option(
+    "--mem-limit",
+    type=int,
+    default=64,
+    help="Limit on memory used to perform calculations, in MB.",
+)
 @options.creation_options
 @click.pass_context
 def merge(
@@ -61,6 +72,8 @@ def merge(
     bidx,
     overwrite,
     precision,
+    target_aligned_pixels,
+    mem_limit,
     creation_options,
 ):
     """Copy valid pixels from input files to an output file.
@@ -102,6 +115,8 @@ def merge(
             indexes=(bidx or None),
             resampling=resampling,
             method=method,
+            target_aligned_pixels=target_aligned_pixels,
+            mem_limit=mem_limit,
             dst_path=output,
             dst_kwds=creation_options,
         )
