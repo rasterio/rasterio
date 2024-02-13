@@ -152,9 +152,9 @@ def test_merge_with_nodata(test_data_dir_1, runner):
 
 
 @pytest.mark.filterwarnings("ignore:Input file's nodata value")
-def test_merge_error(test_data_dir_1, runner):
+def test_merge_error(test_data_dir_1, tmp_path, runner):
     """A nodata value outside the valid range results in an error"""
-    outputname = str(test_data_dir_1.join('merged.tif'))
+    outputname = tmp_path.joinpath('merged.tif').as_posix()
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
     with pytest.warns(UserWarning):
@@ -609,6 +609,7 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
         res = src.res[0]
         expected_raster = src.read(
             out_shape=tuple(dim * 2 for dim in src.shape),
+            boundless=True,
             resampling=resampling
         )
     result = runner.invoke(

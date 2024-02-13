@@ -1,6 +1,6 @@
 """Copy valid pixels from input files to an output file."""
 
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import logging
 import os
 import math
@@ -12,8 +12,10 @@ import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
 from rasterio.errors import RasterioDeprecationWarning, RasterioError
+from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
+from rasterio.windows import window_split
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +90,7 @@ MERGE_METHODS = {
 
 
 def merge(
-    datasets,
+    sources,
     bounds=None,
     res=None,
     nodata=None,
@@ -99,6 +101,7 @@ def merge(
     resampling=Resampling.nearest,
     method="first",
     target_aligned_pixels=False,
+    mem_limit=64,
     dst_path=None,
     dst_kwds=None,
 ):
@@ -117,8 +120,8 @@ def merge(
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode, filenames or PathLike objects
-        source datasets to be merged.
+    sources : list of dataset objects opened in 'r' mode, filenames or PathLike objects
+        source sources to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input rasters.
@@ -169,6 +172,8 @@ def merge(
         Whether to adjust output image bounds so that pixel coordinates
         are integer multiples of pixel size, matching the ``-tap``
         options of GDAL utilities.  Default: False.
+    mem_limit : int, optional
+        Process merge output in chunks of mem_limit MB in size.
     dst_path : str or PathLike, optional
         Path of output dataset
     dst_kwds : dict, optional
@@ -178,16 +183,12 @@ def merge(
     Returns
     -------
     tuple
-
         Two elements:
-
             dest: numpy.ndarray
                 Contents of all input rasters in single array
-
             out_transform: affine.Affine()
                 Information for mapping pixel coordinates in `dest` to another
                 coordinate system
-
     """
     if precision is not None:
         warnings.warn(
@@ -204,7 +205,7 @@ def merge(
                          .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], (str, os.PathLike)):
+    if isinstance(sources[0], (str, os.PathLike)):
         dataset_opener = rasterio.open
     else:
 
@@ -217,189 +218,198 @@ def merge(
 
         dataset_opener = nullcontext
 
-    with dataset_opener(datasets[0]) as first:
-        first_profile = first.profile
-        first_crs = first.crs
-        first_res = first.res
-        nodataval = first.nodatavals[0]
-        dt = first.dtypes[0]
+    dst = None
 
-        if indexes is None:
-            src_count = first.count
-        elif isinstance(indexes, int):
-            src_count = indexes
-        else:
-            src_count = len(indexes)
+    with ExitStack() as exit_stack:
+        with dataset_opener(sources[0]) as first:
+            first_profile = first.profile
+            first_crs = first.crs
+            first_res = first.res
+            nodataval = first.nodatavals[0]
+            dt = first.dtypes[0]
 
-        try:
-            first_colormap = first.colormap(1)
-        except ValueError:
-            first_colormap = None
-
-    if not output_count:
-        output_count = src_count
-
-    # Extent from option or extent of all inputs
-    if bounds:
-        dst_w, dst_s, dst_e, dst_n = bounds
-    else:
-        # scan input files
-        xs = []
-        ys = []
-        for dataset in datasets:
-            with dataset_opener(dataset) as src:
-                left, bottom, right, top = src.bounds
-            xs.extend([left, right])
-            ys.extend([bottom, top])
-        dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
-
-    # Resolution/pixel size
-    if not res:
-        res = first_res
-    elif not np.iterable(res):
-        res = (res, res)
-    elif len(res) == 1:
-        res = (res[0], res[0])
-
-    if target_aligned_pixels:
-        dst_w = math.floor(dst_w / res[0]) * res[0]
-        dst_e = math.ceil(dst_e / res[0]) * res[0]
-        dst_s = math.floor(dst_s / res[1]) * res[1]
-        dst_n = math.ceil(dst_n / res[1]) * res[1]
-
-    # Compute output array shape. We guarantee it will cover the output
-    # bounds completely
-    output_width = int(round((dst_e - dst_w) / res[0]))
-    output_height = int(round((dst_n - dst_s) / res[1]))
-
-    output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(res[0], -res[1])
-
-    if dtype is not None:
-        dt = dtype
-        logger.debug("Set dtype: %s", dt)
-
-    out_profile = first_profile
-    out_profile.update(**(dst_kwds or {}))
-
-    out_profile["transform"] = output_transform
-    out_profile["height"] = output_height
-    out_profile["width"] = output_width
-    out_profile["count"] = output_count
-    out_profile["dtype"] = dt
-    if nodata is not None:
-        out_profile["nodata"] = nodata
-
-    # create destination array
-    dest = np.zeros((output_count, output_height, output_width), dtype=dt)
-
-    if nodata is not None:
-        nodataval = nodata
-        logger.debug("Set nodataval: %r", nodataval)
-
-    if nodataval is not None:
-        # Only fill if the nodataval is within dtype's range
-        inrange = False
-        if np.issubdtype(dt, np.integer):
-            info = np.iinfo(dt)
-            inrange = (info.min <= nodataval <= info.max)
-        elif np.issubdtype(dt, np.floating):
-            if math.isnan(nodataval):
-                inrange = True
+            if indexes is None:
+                src_count = first.count
+            elif isinstance(indexes, int):
+                src_count = indexes
             else:
-                info = np.finfo(dt)
-                inrange = (info.min <= nodataval <= info.max)
-        if inrange:
-            dest.fill(nodataval)
+                src_count = len(indexes)
+
+            try:
+                first_colormap = first.colormap(1)
+            except ValueError:
+                first_colormap = None
+
+        if not output_count:
+            output_count = src_count
+
+        # Extent from option or extent of all inputs
+        if bounds:
+            dst_w, dst_s, dst_e, dst_n = bounds
         else:
-            warnings.warn(
-                "The nodata value, %s, is beyond the valid "
-                "range of the chosen data type, %s. Consider overriding it "
-                "using the --nodata option for better results." % (
-                    nodataval, dt))
-    else:
-        nodataval = 0
+            # scan input files
+            xs = []
+            ys = []
+            for dataset in sources:
+                with dataset_opener(dataset) as src:
+                    left, bottom, right, top = src.bounds
+                xs.extend([left, right])
+                ys.extend([bottom, top])
+            dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
-    for idx, dataset in enumerate(datasets):
-        with dataset_opener(dataset) as src:
-            # Real World (tm) use of boundless reads.
-            # This approach uses the maximum amount of memory to solve the
-            # problem. Making it more efficient is a TODO.
+        # Resolution/pixel size
+        if not res:
+            res = first_res
+        elif not np.iterable(res):
+            res = (res, res)
+        elif len(res) == 1:
+            res = (res[0], res[0])
 
-            # 0. Precondition checks
-            #    - Check that source is within destination bounds
-            #    - Check that CRS is same
+        if target_aligned_pixels:
+            dst_w = math.floor(dst_w / res[0]) * res[0]
+            dst_e = math.ceil(dst_e / res[0]) * res[0]
+            dst_s = math.floor(dst_s / res[1]) * res[1]
+            dst_n = math.ceil(dst_n / res[1]) * res[1]
 
-            if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                logger.debug(
-                    "Skipping source: src=%r, bounds=%r",
-                    src,
-                    (dst_w, dst_s, dst_e, dst_n),
-                )
-                continue
+        # Compute output array shape. We guarantee it will cover the output
+        # bounds completely
+        output_width = int(round((dst_e - dst_w) / res[0]))
+        output_height = int(round((dst_n - dst_s) / res[1]))
 
-            if first_crs != src.crs:
-                raise RasterioError(f"CRS mismatch with source: {dataset}")
-
-            # 1. Compute spatial intersection of destination and source
-            src_w, src_s, src_e, src_n = src.bounds
-
-            int_w = src_w if src_w > dst_w else dst_w
-            int_s = src_s if src_s > dst_s else dst_s
-            int_e = src_e if src_e < dst_e else dst_e
-            int_n = src_n if src_n < dst_n else dst_n
-
-            # 2. Compute the source window
-            src_window = windows.from_bounds(int_w, int_s, int_e, int_n, src.transform)
-
-            # 3. Compute the destination window
-            dst_window = windows.from_bounds(
-                int_w, int_s, int_e, int_n, output_transform
-            )
-
-            # 4. Read data in source window into temp
-            src_window_rnd_shp = src_window.round_lengths()
-            dst_window_rnd_shp = dst_window.round_lengths()
-            dst_window_rnd_off = dst_window_rnd_shp.round_offsets()
-
-            temp_height, temp_width = (
-                int(dst_window_rnd_off.height),
-                int(dst_window_rnd_off.width),
-            )
-            temp_shape = (src_count, temp_height, temp_width)
-
-            temp_src = src.read(
-                out_shape=temp_shape,
-                window=src_window_rnd_shp,
-                boundless=False,
-                masked=True,
-                indexes=indexes,
-                resampling=resampling,
-            )
-
-        # 5. Copy elements of temp into dest
-        roff, coff = (
-            max(0, int(dst_window_rnd_off.row_off)),
-            max(0, int(dst_window_rnd_off.col_off)),
+        output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
+            res[0], -res[1]
         )
-        region = dest[:, roff : roff + temp_height, coff : coff + temp_width]
 
-        if math.isnan(nodataval):
-            region_mask = np.isnan(region)
-        elif np.issubdtype(region.dtype, np.floating):
-            region_mask = np.isclose(region, nodataval)
+        if dtype is not None:
+            dt = dtype
+            logger.debug("Set dtype: %s", dt)
+
+        if nodata is not None:
+            nodataval = nodata
+            logger.debug("Set nodataval: %r", nodataval)
+
+        inrange = False
+        if nodataval is not None:
+            # Only fill if the nodataval is within dtype's range
+            if np.issubdtype(dt, np.integer):
+                info = np.iinfo(dt)
+                inrange = info.min <= nodataval <= info.max
+            elif np.issubdtype(dt, np.floating):
+                if math.isnan(nodataval):
+                    inrange = True
+                else:
+                    info = np.finfo(dt)
+                    inrange = info.min <= nodataval <= info.max
+            if not inrange:
+                warnings.warn(
+                    "The nodata value, %s, is beyond the valid "
+                    "range of the chosen data type, %s. Consider overriding it "
+                    "using the --nodata option for better results." % (nodataval, dt)
+                )
         else:
-            region_mask = region == nodataval
+            nodataval = 0
 
-        # Ensure common shape, resolving issue #2202.
-        temp = temp_src[:, : region.shape[1], : region.shape[2]]
-        temp_mask = np.ma.getmask(temp)
-        copyto(region, temp, region_mask, temp_mask, index=idx, roff=roff, coff=coff)
+        # When dataset output is selected, we might need to create one
+        # and will also provide the option of merging by chunks.
+        if dst_path is not None:
+            if isinstance(dst_path, DatasetWriter):
+                dst = dst_path
+            else:
+                out_profile = first_profile
+                out_profile.update(**(dst_kwds or {}))
+                out_profile["transform"] = output_transform
+                out_profile["height"] = output_height
+                out_profile["width"] = output_width
+                out_profile["count"] = output_count
+                out_profile["dtype"] = dt
+                if nodata is not None:
+                    out_profile["nodata"] = nodata
+                dst = rasterio.open(dst_path, "w", **out_profile)
+                exit_stack.enter_context(dst)
 
-    if dst_path is None:
-        return dest, output_transform
+            max_pixels = mem_limit * 1.0e6 / np.dtype(dt).itemsize * output_count
 
-    else:
-        with rasterio.open(dst_path, "w", **out_profile) as dst:
-            dst.write(dest)
+            if output_width * output_height < max_pixels:
+                chunks = [((0, 0), windows.Window(0, 0, output_width, output_height))]
+            else:
+                chunks = window_split(
+                    output_height, output_width, max_pixels=max_pixels
+                )
+        else:
+            chunks = [((0, 0), windows.Window(0, 0, output_width, output_height))]
+
+        logger.debug("Chunks=%r", chunks)
+
+        for _, chunk in chunks:
+            dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
+            dest = np.zeros((output_count, chunk.height, chunk.width), dtype=dt)
+            if inrange:
+                dest.fill(nodataval)
+
+            for idx, dataset in enumerate(sources):
+                with dataset_opener(dataset) as src:
+                    # 0. Precondition checks
+                    #    - Check that source is within destination bounds
+                    #    - Check that CRS is same
+
+                    if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
+                        logger.debug(
+                            "Skipping source: src=%r, bounds=%r",
+                            src,
+                            (dst_w, dst_s, dst_e, dst_n),
+                        )
+                        continue
+
+                    if first_crs != src.crs:
+                        raise RasterioError(f"CRS mismatch with source: {dataset}")
+
+                    # 1. Compute the source window
+                    src_window = windows.from_bounds(
+                        dst_w, dst_s, dst_e, dst_n, src.transform
+                    ).round(3)
+
+                    temp_shape = (src_count, chunk.height, chunk.width)
+
+                    temp_src = src.read(
+                        out_shape=temp_shape,
+                        window=src_window,
+                        boundless=True,
+                        masked=True,
+                        indexes=indexes,
+                        resampling=resampling,
+                    )
+
+                region = dest[:, :, :]
+
+                if math.isnan(nodataval):
+                    region_mask = np.isnan(region)
+                elif np.issubdtype(region.dtype, np.floating):
+                    region_mask = np.isclose(region, nodataval)
+                else:
+                    region_mask = region == nodataval
+
+                # Ensure common shape, resolving issue #2202.
+                temp = temp_src[:, : region.shape[1], : region.shape[2]]
+                temp_mask = np.ma.getmask(temp)
+                copyto(
+                    region,
+                    temp,
+                    region_mask,
+                    temp_mask,
+                    index=idx,
+                    roff=0,
+                    coff=0,
+                )
+
+            if dst:
+                dst_window = windows.from_bounds(
+                    dst_w, dst_s, dst_e, dst_n, output_transform
+                ).round(3)
+                dst.write(dest, window=dst_window)
+
+        if dst is None:
+            return dest, output_transform
+        else:
             if first_colormap:
                 dst.write_colormap(1, first_colormap)
+            dst.close()
