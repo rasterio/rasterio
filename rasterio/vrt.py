@@ -148,8 +148,7 @@ def _boundless_vrt_doc(
     str
         An XML text string.
     """
-
-    nodata = nodata or src_dataset.nodata
+    nodata = nodata if nodata is not None else src_dataset.nodata
     width = width or src_dataset.width
     height = height or src_dataset.height
     transform = transform or src_dataset.transform
@@ -208,9 +207,9 @@ def _boundless_vrt_doc(
         dstrect.attrib['xSize'] = str(src_dataset.width * src_dataset.transform.a / transform.a)
         dstrect.attrib['ySize'] = str(src_dataset.height * src_dataset.transform.e / transform.e)
 
-        if src_dataset.nodata is not None:
+        if nodata is not None:
             nodata_elem = ET.SubElement(complexsource, 'NODATA')
-            nodata_elem.text = str(src_dataset.nodata)
+            nodata_elem.text = str(nodata)
 
         if src_dataset.options is not None:
             openoptions = ET.SubElement(complexsource, 'OpenOptions')
