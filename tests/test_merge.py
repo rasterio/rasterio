@@ -11,6 +11,11 @@ import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import RasterioError
+from rasterio.warp import aligned_target
+from rasterio.windows import window_split
+
+from .conftest import gdal_version
+
 
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
@@ -121,3 +126,52 @@ def test_issue2202(dx, dy):
         from rasterio.plot import show
 
         show(aux_array)
+
+
+def test_merge_destination_1(tmp_path):
+    """Merge into an opened dataset."""
+    with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
+        profile = src.profile
+        data = src.read()
+
+        from rasterio import windows
+
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+                chunk_bounds = windows.bounds(chunk, dst.transform)
+                chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
+                dst.write(chunk_arr, window=dst_window)
+
+        with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+            result = dst.read()
+            assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
+
+
+@pytest.mark.skipif(
+    not gdal_version.at_least("3.4"), reason="Precise windowing requires 3.4"
+)
+def test_merge_destination_2(tmp_path):
+    """Merge into an opened, target-aligned dataset."""
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        profile = src.profile
+        dst_transform, dst_width, dst_height = aligned_target(
+            src.transform, src.width, src.height, src.res
+        )
+        profile.update(transform=dst_transform, width=dst_width, height=dst_height)
+
+        data = src.read()
+
+        from rasterio import windows
+
+        with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+                chunk_bounds = windows.bounds(chunk, dst.transform)
+                chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
+                dst.write(chunk_arr, window=dst_window)
+
+        with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+            result = dst.read()
+            assert result.shape == (3, 719, 792)
+            assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
