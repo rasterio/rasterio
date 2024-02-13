@@ -41,9 +41,8 @@ class FileOverwriteError(FileError):
         super().__init__('', hint=message)
 
 
-class RasterioIOError(OSError):
-    """Raised when a dataset cannot be opened using one of the
-    registered format drivers."""
+class RasterioIOError(RasterioError, OSError):
+    """Raised when a dataset cannot be opened or accessed."""
 
 
 class NodataShadowWarning(UserWarning):
@@ -61,6 +60,7 @@ class NotGeoreferencedWarning(UserWarning):
 
 class TransformWarning(UserWarning):
     """Warn that coordinate transformations may behave unexpectedly"""
+
 
 class RPCError(ValueError):
     """Raised when RPC transformation is invalid"""

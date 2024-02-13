@@ -15,7 +15,8 @@ def test_tiled(tmpdir, runner):
     )
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
-        assert not src.is_tiled
+        blockysize, blockxsize = src.block_shapes[0]
+        assert blockxsize == src.width
 
 
 def test_format(tmpdir, runner):

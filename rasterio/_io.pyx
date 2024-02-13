@@ -19,7 +19,7 @@ from rasterio._base cimport open_dataset
 from rasterio._env import catch_errors
 from rasterio._err import (
     GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
-    CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError)
+    CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -42,7 +42,7 @@ from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
 
 cimport numpy as np
 
@@ -96,6 +96,7 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     cdef int ysize = <int>height
     cdef int retval = 3
 
+    cdef StackChecker checker
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
     extras.eResampleAlg = <GDALRIOResampleAlg>resampling
@@ -107,12 +108,12 @@ cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
-    with nogil:
-        retval = GDALRasterIOEx(
-            band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
-            buftype, bufpixelspace, buflinespace, &extras)
-
-    return exc_wrap_int(retval)
+    with stack_errors() as checker:
+        with nogil:
+            retval = GDALRasterIOEx(
+                band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
+                buftype, bufpixelspace, buflinespace, &extras)
+        return checker.exc_wrap_int(retval)
 
 
 cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
@@ -131,6 +132,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     """
     validate_resampling(resampling)
 
+    cdef StackChecker checker
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
@@ -175,6 +177,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
         cdef GDALDriverH driver = NULL
         cdef const char* driver_name = NULL
         cdef GDALRasterBandH band = NULL
+
         if CPLGetConfigOption("GDAL_NUM_THREADS", NULL):
             interleave = GDALGetMetadataItem(hds, "INTERLEAVE", "IMAGE_STRUCTURE")
             if interleave and interleave == b"BAND":
@@ -187,31 +190,28 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
                                 band = GDALGetRasterBand(hds, bandmap[i])
                                 if band == NULL:
                                     raise ValueError("Null band")
-                                with nogil:
-                                    retval = GDALRasterIOEx(
-                                        band,
-                                        <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
-                                        <void *>(<char *>buf + i * bufbandspace),
-                                        bufxsize, bufysize, buftype,
-                                        bufpixelspace, buflinespace, &extras)
-
-                                if retval != CE_None:
-                                    return exc_wrap_int(retval)
-
-                            return exc_wrap_int(CE_None)
-
+                                with stack_errors() as checker:
+                                    with nogil:
+                                        retval = GDALRasterIOEx(
+                                            band,
+                                            <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
+                                            <void *>(<char *>buf + i * bufbandspace),
+                                            bufxsize, bufysize, buftype,
+                                            bufpixelspace, buflinespace, &extras)
+                                    checker.exc_wrap_int(retval)
+                            return 0
                         finally:
                             CPLFree(bandmap)
 
+    # Chain errors coming from GDAL.
     try:
-        with nogil:
-            retval = GDALDatasetRasterIOEx(
-                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
-                bufxsize, bufysize, buftype, count, bandmap,
-                bufpixelspace, buflinespace, bufbandspace, &extras)
-
-        return exc_wrap_int(retval)
-
+        with stack_errors() as checker:
+            with nogil:
+                retval = GDALDatasetRasterIOEx(
+                    hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
+                    bufxsize, bufysize, buftype, count, bandmap,
+                    bufpixelspace, buflinespace, bufbandspace, &extras)
+            return checker.exc_wrap_int(retval)
     finally:
         CPLFree(bandmap)
 
@@ -250,6 +250,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     cdef int xsize = <int>max(1, width)
     cdef int ysize = <int>max(1, height)
 
+    cdef StackChecker checker
     cdef GDALRasterIOExtraArg extras
     extras.nVersion = 1
     extras.eResampleAlg = <GDALRIOResampleAlg>resampling
@@ -275,15 +276,15 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
         buf = <void *>np.PyArray_DATA(data[i])
         if buf == NULL:
             raise ValueError("NULL data")
-        with nogil:
-            retval = GDALRasterIOEx(
-                hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
-                bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
 
-            if retval:
-                break
+        with stack_errors() as checker:
+            with nogil:
+                retval = GDALRasterIOEx(
+                    hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
+                    bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
+            retval = checker.exc_wrap_int(retval)
 
-    return exc_wrap_int(retval)
+    return retval
 
 
 cdef _delete_dataset_if_exists(path):
@@ -381,6 +382,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
         else:
             raise ValueError("Specified data must have 2 or 3 dimensions")
 
+    # TODO: don't handle, it's inconsistent with the other io_* functions.
     except CPLE_BaseError as cplerr:
         raise RasterioIOError(str(cplerr))
 
@@ -972,7 +974,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling.value)
 
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Read failed. See previous exception for details.") from cplerr
 
         return out
 
@@ -1462,8 +1464,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 # ignore if only one provided
                 kwargs.pop("blockxsize", None)
                 kwargs.pop("blockysize", None)
-            elif int(blockxsize) % 16 or int(blockysize) % 16:
-                raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
             kwargs["tiled"] = "TRUE"
 
         if mode in ('w', 'w+'):
@@ -1499,6 +1499,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     GDALCreate(drv, fname, width, height, count, gdal_dtype, options)
                 )
 
+            except CPLE_AppDefinedError as exc:
+                if "Bad value" in str(exc):
+                    raise RasterBlockError(
+                        "The height and width of TIFF dataset blocks must be multiples of 16"
+                    )
+                else:
+                    raise RasterioIOError(str(exc))
             except CPLE_BaseError as exc:
                 raise RasterioIOError(str(exc))
 
@@ -1793,7 +1800,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         try:
             io_multi_band(self._hds, 1, xoff, yoff, width, height, arr, indexes_arr)
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Write failed. See previous exception for details.") from cplerr
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
@@ -2006,7 +2013,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 io_band(mask, 1, xoff, yoff, width, height, mask_array)
 
         except CPLE_BaseError as cplerr:
-            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+            raise RasterioIOError("Write failed. See previous exception for details.") from cplerr
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all
