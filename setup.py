@@ -272,6 +272,7 @@ inst_reqs = [
     "cligj>=0.5",
     "numpy<2",
     "click-plugins",
+    "pyparsing",
     "setuptools",
 ]
 
