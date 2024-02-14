@@ -22,3 +22,13 @@ def test_boundless_msk_vrt(path_rgb_msk_byte_tif):
             assert msk.count == vrt.count
             assert msk.dtypes == vrt.dtypes
             assert msk.mask_flag_enums == vrt.mask_flag_enums
+
+
+def test_boundless_vrt_fill_value(path_rgb_msk_byte_tif):
+    with rasterio.open(path_rgb_msk_byte_tif) as rgb:
+        doc = rasterio.vrt._boundless_vrt_doc(rgb, nodata=0)
+        assert doc.startswith('<VRTDataset')
+        with rasterio.open(doc) as vrt:
+            assert vrt.nodata == 0
+            assert rgb.count == vrt.count
+            assert rgb.dtypes == vrt.dtypes
