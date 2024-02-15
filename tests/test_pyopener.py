@@ -116,3 +116,12 @@ def test_fp_fsspec_openfile_write(tmp_path):
         assert src.mask_flag_enums == ([MaskFlags.nodata],)
         arr = src.read()
         assert list(arr.flatten()) == [0, 0, 2]
+
+
+def test_opener_msk_sidecar():
+    """Access .msk sidecar file via opener."""
+    # This test fails before issue 3027 is resolved because
+    # RGB2.byte.tif.msk is not found.
+    with rasterio.open("tests/data/RGB2.byte.tif", opener=io.open) as src:
+        for val in src.mask_flag_enums:
+            assert val == [MaskFlags.per_dataset]
