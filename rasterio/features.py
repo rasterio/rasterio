@@ -326,6 +326,7 @@ def rasterize(
     if not dtype and valid_shapes:
         values_arr = np.array(shape_values)
         dtype = values_arr.dtype.name
+        log.debug("Asserting data type: dtype=%r, values_arr=%r", dtype, values_arr)
         assert dtype in ("int64", "float64")
 
         # GDAL 3.5 doesn't support int64 output. We'll try int32.
