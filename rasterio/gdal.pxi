@@ -59,16 +59,13 @@ cdef extern from "cpl_string.h" nogil:
     const char* CPLParseNameValue(const char *pszNameValue, char **ppszKey)
 
 
-cdef extern from "sys/stat.h" nogil:
-    struct stat:
-        pass
-
-
 cdef extern from "cpl_vsi.h" nogil:
 
     ctypedef unsigned long long vsi_l_offset
     ctypedef FILE VSILFILE
-    ctypedef stat VSIStatBufL
+    ctypedef struct VSIStatBufL:
+        long st_size
+        long st_mode
     ctypedef enum VSIRangeStatus:
         VSI_RANGE_STATUS_UNKNOWN,
         VSI_RANGE_STATUS_DATA,

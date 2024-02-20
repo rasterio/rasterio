@@ -10,6 +10,7 @@ include "gdal.pxi"
 import contextlib
 from contextvars import ContextVar
 import logging
+from pathlib import Path
 from uuid import uuid4
 
 from libc.string cimport memcpy
@@ -62,6 +63,8 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
         callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
         callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
+        # callbacks_struct.read_dir = <VSIFilesystemPluginReadDirCallback>pyopener_read_dir
+        callbacks_struct.stat = <VSIFilesystemPluginStatCallback>pyopener_stat
         callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
         retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
         VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
@@ -75,6 +78,30 @@ cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callback
         callbacks_struct.pUserData = NULL
         VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
     callbacks_struct = NULL
+
+
+cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) except -1 with gil:
+    urlpath = pszFilename.decode("utf-8")
+    try:
+        stat = Path(urlpath).stat()
+    except FileNotFoundError:
+        return 1
+    else:
+        pStatBuf.st_size = stat.st_size
+        pStatBuf.st_mode = stat.st_mode
+    return 0
+
+
+cdef char ** pyopener_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) except NULL with gil:
+    """Return directory listing."""
+    urlpath = pszDirname.decode("utf-8")
+    contents = ["RGB2.byte.tif", "RGB2.byte.tif.msk"]
+    log.debug("Looking for dir contents: urlpath=%r, contents=%r", urlpath, contents)
+    cdef char **name_list = NULL
+    for name in contents:
+        sib = name.encode("utf-8")
+        CSLAddString(name_list, <char *>sib)
+    return name_list
 
 
 cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *pszAccess) except NULL with gil:
@@ -92,15 +119,25 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     cdef dict registry = var.get()
     urlpath = pszFilename.decode("utf-8")
     mode = pszAccess.decode("utf-8")
+    # mode = access[0]
     log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
     # Note: the opener is added to the registry in rasterio.open().
 
-    try:
-        file_opener = registry[(urlpath, mode[0])]
-    except KeyError as err:
-        # GDAL is eager to discover auxiliary files and this error will
-        # occur often. The Python opener plugin does not support
-        # auxiliary files.
+    path_to_check = Path(urlpath)
+    file_opener = None
+
+    for suffix in (path_to_check.suffixes[::-1] + [None]):
+        name = path_to_check.as_posix()
+        key = (name, mode[0])
+        log.debug("Looping, suffix=%r, key=%r", suffix, key)
+
+        if key in registry:
+            file_opener = registry[key]
+            break
+
+        path_to_check = path_to_check.with_suffix("")
+
+    else:
         log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
         return NULL
 
@@ -133,6 +170,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
     exit_stacks[file_obj] = stack
     _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
+    log.debug("Returning: file_obj=%r", file_obj)
     return <void *>file_obj
 
 

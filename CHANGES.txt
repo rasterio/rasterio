@@ -43,6 +43,9 @@ New Features:
 
 Bug fixes:
 
+- A nodata value passed to _boundless_vrt_doc(), used for boundless reads, has
+  been ignored in favor of the source dataset's own nodata value. It is no
+  longer ignored (#3026).
 - Avoid squeezing narrow 2-D arrays to 1-D (#3008).
 - Operations on closed MemoryFile and ZipMemoryFile objects now raise
   ValueError as with other Python file objects (#2870, #).
