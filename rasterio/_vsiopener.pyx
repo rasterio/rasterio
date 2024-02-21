@@ -82,13 +82,25 @@ cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callback
 
 cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) except -1 with gil:
     urlpath = pszFilename.decode("utf-8")
+    # The code below is just a test that we can assemble an st_mode
+    # value for GDAL from Python filesystem is_file and is_dir methods.
+    # Eventually we're going to dispatch to methods of the opener that
+    # was registered for the filename.
+    import stat
     try:
-        stat = Path(urlpath).stat()
+        po = Path(urlpath)
+        size = po.stat().st_size
+        if po.is_file():
+            fmode = 0o170000 | stat.S_IFREG
+        elif po.is_dir():
+            fmode = 0o170000 | stat.S_IFDIR
+        else:
+            fmode = 0
     except FileNotFoundError:
-        return 1
+        return -1
     else:
-        pStatBuf.st_size = stat.st_size
-        pStatBuf.st_mode = stat.st_mode
+        pStatBuf.st_size = size
+        pStatBuf.st_mode = fmode
     return 0
 
 
@@ -123,21 +135,15 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
     # Note: the opener is added to the registry in rasterio.open().
 
-    path_to_check = Path(urlpath)
-    file_opener = None
+    from urllib.parse import urlparse
+    parsed_uri = urlparse(urlpath)
+    path_to_check = Path(parsed_uri.path)
+    parent = path_to_check.parent
+    key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
 
-    for suffix in (path_to_check.suffixes[::-1] + [None]):
-        name = path_to_check.as_posix()
-        key = (name, mode[0])
-        log.debug("Looping, suffix=%r, key=%r", suffix, key)
-
-        if key in registry:
-            file_opener = registry[key]
-            break
-
-        path_to_check = path_to_check.with_suffix("")
-
-    else:
+    try:
+        file_opener = registry[key]
+    except KeyError:
         log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
         return NULL
 
@@ -148,7 +154,14 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     except ValueError as err:
         # ZipFile.open doesn't accept binary modes like "rb" and will
         # raise ValueError if given one. We strip the mode in this case.
-        file_obj = file_opener(urlpath, mode.rstrip("b"))
+        try:
+            file_obj = file_opener(urlpath, mode.rstrip("b"))
+        except Exception as err:
+            errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+            errmsg_b = errmsg.encode("utf-8")
+            # 4 is CPLE_OpenFailedError.
+            CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+            return NULL
     except Exception as err:
         errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
@@ -164,14 +177,26 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
 
     try:
         file_obj = stack.enter_context(file_obj)
-    except (AttributeError, TypeError):
-        log.debug("File object is not a context manager: file_obj=%r", file_obj)
-
-    exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
-    exit_stacks[file_obj] = stack
-    _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
-    log.debug("Returning: file_obj=%r", file_obj)
-    return <void *>file_obj
+    except (AttributeError, TypeError) as err:
+        log.error("File object is not a context manager: file_obj=%r", file_obj)
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return NULL
+    except FileNotFoundError as err:
+        log.info("OpenFile doesn't resolve: file_obj=%r", file_obj)
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return NULL
+    else:
+        exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
+        exit_stacks[file_obj] = stack
+        _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
+        log.debug("Returning: file_obj=%r", file_obj)
+        return <void *>file_obj
 
 
 cdef vsi_l_offset pyopener_tell(void *pFile) except -1 with gil:
@@ -216,22 +241,28 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
 @contextlib.contextmanager
 def _opener_registration(urlpath, mode, opener):
     registry = _OPENER_REGISTRY.get()
-    if (urlpath, mode) in registry:
-        if registry[(urlpath, mode)] != opener:
+    from urllib.parse import urlparse
+    parsed_uri = urlparse(urlpath)
+    path_to_check = Path(parsed_uri.path)
+    parent = path_to_check.parent
+    key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
+
+    if key in registry:
+        if registry[key] != opener:
             raise OpenerRegistrationError(f"Opener already registered for urlpath and mode")
         else:
             try:
                 yield f"{PREFIX}{urlpath}"
             finally:
                 registry = _OPENER_REGISTRY.get()
-                _ = registry.pop((urlpath, mode), None)
+                _ = registry.pop(key, None)
                 _OPENER_REGISTRY.set(registry)
     else:
-        registry[(urlpath, mode)] = opener
+        registry[key] = opener
         _OPENER_REGISTRY.set(registry)
         try:
             yield f"{PREFIX}{urlpath}"
         finally:
             registry = _OPENER_REGISTRY.get()
-            _ = registry.pop((urlpath, mode), None)
+            _ = registry.pop(key, None)
             _OPENER_REGISTRY.set(registry)
