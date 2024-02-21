@@ -10,6 +10,7 @@ include "gdal.pxi"
 import contextlib
 from contextvars import ContextVar
 import logging
+import os
 from pathlib import Path
 from uuid import uuid4
 
@@ -63,7 +64,7 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
         callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
         callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
-        # callbacks_struct.read_dir = <VSIFilesystemPluginReadDirCallback>pyopener_read_dir
+        callbacks_struct.read_dir = <VSIFilesystemPluginReadDirCallback>pyopener_read_dir
         callbacks_struct.stat = <VSIFilesystemPluginStatCallback>pyopener_stat
         callbacks_struct.pUserData = <void*>_OPENER_REGISTRY
         retval = VSIInstallPluginHandler(PREFIX_BYTES, callbacks_struct)
@@ -81,6 +82,12 @@ cdef void uninstall_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callback
 
 
 cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags) except -1 with gil:
+    if pUserData is NULL:
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>"Python opener is not initialized.")
+        return -1
+
+    cdef object var = <object>pUserData
+    cdef dict registry = var.get()
     urlpath = pszFilename.decode("utf-8")
     # The code below is just a test that we can assemble an st_mode
     # value for GDAL from Python filesystem is_file and is_dir methods.
@@ -88,15 +95,38 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
     # was registered for the filename.
     import stat
     try:
-        po = Path(urlpath)
-        size = po.stat().st_size
-        if po.is_file():
+        from urllib.parse import urlparse
+        parsed_uri = urlparse(urlpath)
+        path_to_check = Path(parsed_uri.path)
+        parent = path_to_check.parent
+        # Note that "r" mode is used here under the assumption that GDAL
+        # doesn't read_dir when writing data. Could be wrong!
+        mode = "rb"
+        key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
+        log.debug("Looking up opener in stat: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+
+        try:
+            file_opener = registry[key]
+        except KeyError as err:
+            log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+            errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+            errmsg_b = errmsg.encode("utf-8")
+            # 4 is CPLE_OpenFailedError.
+            CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+            return -1
+
+        size = file_opener.size(urlpath)
+        if file_opener.is_file(urlpath):
             fmode = 0o170000 | stat.S_IFREG
-        elif po.is_dir():
+        elif file_opener.is_dir(urlpath):
             fmode = 0o170000 | stat.S_IFDIR
         else:
             fmode = 0
-    except FileNotFoundError:
+    except Exception as err:
+        errmsg = f"Opener failed to determine file info: {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return -1
     else:
         pStatBuf.st_size = size
@@ -106,10 +136,37 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
 
 cdef char ** pyopener_read_dir(void *pUserData, const char *pszDirname, int nMaxFiles) except NULL with gil:
     """Return directory listing."""
+    if pUserData is NULL:
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>"Python opener is not initialized.")
+        return NULL
+
+    cdef object var = <object>pUserData
+    cdef dict registry = var.get()
     urlpath = pszDirname.decode("utf-8")
-    contents = ["RGB2.byte.tif", "RGB2.byte.tif.msk"]
+    mode = "rb"
+    log.debug("Looking up opener in read_dir: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+
+    from urllib.parse import urlparse
+    parsed_uri = urlparse(urlpath)
+    # Note that "r" mode is used here under the assumption that GDAL
+    # doesn't read_dir when writing data. Could be wrong!
+    key = ((parsed_uri.scheme, parsed_uri.netloc, parsed_uri.path), mode[0])
+
+    try:
+        file_opener = registry[key]
+    except KeyError as err:
+        log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return NULL
+
+    # GDAL wants relative file names.
+    contents = [Path(item).name for item in file_opener.ls(urlpath)]
     log.debug("Looking for dir contents: urlpath=%r, contents=%r", urlpath, contents)
     cdef char **name_list = NULL
+
     for name in contents:
         sib = name.encode("utf-8")
         CSLAddString(name_list, <char *>sib)
@@ -131,8 +188,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
     cdef dict registry = var.get()
     urlpath = pszFilename.decode("utf-8")
     mode = pszAccess.decode("utf-8")
-    # mode = access[0]
-    log.debug("Looking up opener: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+    log.debug("Looking up opener in open: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
     # Note: the opener is added to the registry in rasterio.open().
 
     from urllib.parse import urlparse
@@ -143,19 +199,23 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
 
     try:
         file_opener = registry[key]
-    except KeyError:
+    except KeyError as err:
         log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
     cdef object file_obj
 
     try:
-        file_obj = file_opener(urlpath, mode)
+        file_obj = file_opener.open(urlpath, mode)
     except ValueError as err:
         # ZipFile.open doesn't accept binary modes like "rb" and will
         # raise ValueError if given one. We strip the mode in this case.
         try:
-            file_obj = file_opener(urlpath, mode.rstrip("b"))
+            file_obj = file_opener.open(urlpath, mode.rstrip("b"))
         except Exception as err:
             errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
             errmsg_b = errmsg.encode("utf-8")
@@ -239,17 +299,20 @@ cdef int pyopener_close(void *pFile) except -1 with gil:
 
 
 @contextlib.contextmanager
-def _opener_registration(urlpath, mode, opener):
+def _opener_registration(urlpath, mode, obj):
     registry = _OPENER_REGISTRY.get()
     from urllib.parse import urlparse
     parsed_uri = urlparse(urlpath)
     path_to_check = Path(parsed_uri.path)
     parent = path_to_check.parent
+
     key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
+    # Might raise.
+    opener = _create_opener(obj)
 
     if key in registry:
         if registry[key] != opener:
-            raise OpenerRegistrationError(f"Opener already registered for urlpath and mode")
+            raise OpenerRegistrationError(f"Opener already registered for urlpath and mode.")
         else:
             try:
                 yield f"{PREFIX}{urlpath}"
@@ -266,3 +329,57 @@ def _opener_registration(urlpath, mode, opener):
             registry = _OPENER_REGISTRY.get()
             _ = registry.pop(key, None)
             _OPENER_REGISTRY.set(registry)
+
+
+class _FileOpener:
+    """Adapts a Python file object to the opener interface."""
+    def __init__(self, obj):
+        self._obj = obj
+    def open(self, path, mode="r", **kwds):
+        return self._obj(path, mode=mode, **kwds)
+    def is_file(self, path):
+        return True
+    def is_dir(self, path):
+        return False
+    def ls(self, path):
+        return []
+    def size(self, path):
+        with self._obj(path) as f:
+            f.seek(0, os.SEEK_END)
+            return f.tell()
+
+
+class _FilesystemOpener:
+    """Adapts an fsspec filesystem object to the opener interface."""
+    def __init__(self, obj):
+        self._obj = obj
+    def open(self, path, mode="r", **kwds):
+        return self._obj.open(path, mode=mode, **kwds)
+    def is_file(self, path):
+        return self._obj.is_file(path)
+    def is_dir(self, path):
+        return self._obj.is_dir(path)
+    def ls(self, path):
+        return self._obj.ls(path)
+    def size(self, path):
+        return self.size(path)
+
+
+def _create_opener(obj):
+    """Adapt Python file and fsspec objects to the opener interface."""
+    if callable(obj):
+        opener = _FileOpener(obj)
+    else:
+        opener = _FilesystemOpener(obj)
+
+    # Before returning we do a quick check that the opener will
+    # plausibly function.
+    try:
+        _ = opener.size("test")
+    except (FileNotFoundError, KeyError):
+        # We expect the path to not resolve.
+        pass
+    except (AttributeError, TypeError, ValueError) as err:
+        raise OpenerRegistrationError(f"Opener is invalid.") from err
+
+    return opener
