@@ -9,7 +9,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.errors import RasterioIOError, OpenerRegistrationError
+from rasterio.errors import OpenerRegistrationError
 
 
 def test_registration_failure():
