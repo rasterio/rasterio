@@ -374,7 +374,7 @@ class _FilesystemOpener:
     def ls(self, path):
         return self._obj.ls(path)
     def size(self, path):
-        return self.size(path)
+        return self._obj.size(path)
 
 
 def _create_opener(obj):

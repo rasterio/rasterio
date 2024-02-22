@@ -48,10 +48,19 @@ def test_opener_fsspec_open(urlpath):
         assert profile["count"] == 3
 
 
+def test_opener_fsspec_fs_open():
+    """Use fsspec filesystem open() as opener."""
+    fs = fsspec.filesystem("file")
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs.open) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 3
+
+
 def test_opener_fsspec_fs():
     """Use fsspec filesystem as opener."""
     fs = fsspec.filesystem("file")
-    with rasterio.open("tests/data/RGB.byte.tif", opener=fs.open) as src:
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
@@ -66,8 +75,8 @@ def test_opener_zipfile_open():
             assert profile["count"] == 3
 
 
-def test_opener_fsspec_fs_write(tmp_path):
-    """Use fsspec filesystem as opener for writing."""
+def test_opener_fsspec_fs_open_write(tmp_path):
+    """Use fsspec filesystem open() as opener for writing."""
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
     fs = fsspec.filesystem("file")
     with rasterio.open(
@@ -80,6 +89,30 @@ def test_opener_fsspec_fs_write(tmp_path):
         dtype="uint8",
         nodata=0,
         opener=fs.open,
+    ) as dst:
+        dst.write(data, indexes=1)
+
+    # Expect the dataset's nodata value in the first two pixels.
+    with rasterio.open(tmp_path / "test.tif") as src:
+        assert src.mask_flag_enums == ([MaskFlags.nodata],)
+        arr = src.read()
+        assert list(arr.flatten()) == [0, 0, 2]
+
+
+def test_opener_fsspec_fs_write(tmp_path):
+    """Use fsspec filesystem open() as opener for writing."""
+    data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
+    fs = fsspec.filesystem("file")
+    with rasterio.open(
+        (tmp_path / "test.tif").as_posix(),
+        "w",
+        driver="GTiff",
+        count=1,
+        width=3,
+        height=1,
+        dtype="uint8",
+        nodata=0,
+        opener=fs,
     ) as dst:
         dst.write(data, indexes=1)
 
