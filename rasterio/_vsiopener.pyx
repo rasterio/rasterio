@@ -94,27 +94,28 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
     # Eventually we're going to dispatch to methods of the opener that
     # was registered for the filename.
     import stat
+    #try:
+    from urllib.parse import urlparse
+    parsed_uri = urlparse(urlpath)
+    path_to_check = Path(parsed_uri.path)
+    parent = path_to_check.parent
+    # Note that "r" mode is used here under the assumption that GDAL
+    # doesn't read_dir when writing data. Could be wrong!
+    mode = "rb"
+    key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
+    log.debug("Looking up opener in stat: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+
     try:
-        from urllib.parse import urlparse
-        parsed_uri = urlparse(urlpath)
-        path_to_check = Path(parsed_uri.path)
-        parent = path_to_check.parent
-        # Note that "r" mode is used here under the assumption that GDAL
-        # doesn't read_dir when writing data. Could be wrong!
-        mode = "rb"
-        key = ((parsed_uri.scheme, parsed_uri.netloc, parent.as_posix()), mode[0])
-        log.debug("Looking up opener in stat: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+        file_opener = registry[key]
+    except KeyError as err:
+        log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
+        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return -1
 
-        try:
-            file_opener = registry[key]
-        except KeyError as err:
-            log.debug("Opener not found in registry: registry=%r, urlpath=%r, mode=%r", registry, urlpath, mode)
-            errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
-            errmsg_b = errmsg.encode("utf-8")
-            # 4 is CPLE_OpenFailedError.
-            CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
-            return -1
-
+    try:
         size = file_opener.size(urlpath)
         if file_opener.is_file(urlpath):
             fmode = 0o170000 | stat.S_IFREG
@@ -122,6 +123,9 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
             fmode = 0o170000 | stat.S_IFDIR
         else:
             fmode = 0
+    except (FileNotFoundError, KeyError):
+        # No such file or directory.
+        return 1
     except Exception as err:
         errmsg = f"Opener failed to determine file info: {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
@@ -162,14 +166,26 @@ cdef char ** pyopener_read_dir(void *pUserData, const char *pszDirname, int nMax
         CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
-    # GDAL wants relative file names.
-    contents = [Path(item).name for item in file_opener.ls(urlpath)]
-    log.debug("Looking for dir contents: urlpath=%r, contents=%r", urlpath, contents)
+    try:
+        # GDAL wants relative file names.
+        contents = [Path(item).name for item in file_opener.ls(urlpath)]
+        log.debug("Looking for dir contents: urlpath=%r, contents=%r", urlpath, contents)
+    except (FileNotFoundError, KeyError):
+        # No such file or directory.
+        return NULL
+    except Exception as err:
+        errmsg = f"Opener failed to determine directory contents: {repr(err)}"
+        errmsg_b = errmsg.encode("utf-8")
+        # 4 is CPLE_OpenFailedError.
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        return NULL
+
     cdef char **name_list = NULL
 
     for name in contents:
-        sib = name.encode("utf-8")
-        CSLAddString(name_list, <char *>sib)
+        fname = name.encode("utf-8")
+        CSLAddString(name_list, <char *>fname)
+
     return name_list
 
 
@@ -204,7 +220,7 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
         # 4 is CPLE_OpenFailedError.
-        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        # CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
     cdef object file_obj
@@ -220,13 +236,13 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
             errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
             errmsg_b = errmsg.encode("utf-8")
             # 4 is CPLE_OpenFailedError.
-            CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+            # CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
             return NULL
     except Exception as err:
         errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
         errmsg_b = errmsg.encode("utf-8")
         # 4 is CPLE_OpenFailedError.
-        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
+        # CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
 
     log.debug("Opened file object: file_obj=%r, mode=%r", file_obj, mode)
@@ -246,10 +262,6 @@ cdef void* pyopener_open(void *pUserData, const char *pszFilename, const char *p
         return NULL
     except FileNotFoundError as err:
         log.info("OpenFile doesn't resolve: file_obj=%r", file_obj)
-        errmsg = f"Opener failed to open file with arguments ({repr(urlpath)}, {repr(mode)}): {repr(err)}"
-        errmsg_b = errmsg.encode("utf-8")
-        # 4 is CPLE_OpenFailedError.
-        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg_b)
         return NULL
     else:
         exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
