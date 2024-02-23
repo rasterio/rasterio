@@ -90,7 +90,7 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
     cdef dict registry = var.get()
     urlpath = pszFilename.decode("utf-8")
     # The code below is just a test that we can assemble an st_mode
-    # value for GDAL from Python filesystem is_file and is_dir methods.
+    # value for GDAL from Python filesystem isfile and isdir methods.
     # Eventually we're going to dispatch to methods of the opener that
     # was registered for the filename.
     import stat
@@ -117,9 +117,9 @@ cdef int pyopener_stat(void *pUserData, const char *pszFilename, VSIStatBufL *pS
 
     try:
         size = file_opener.size(urlpath)
-        if file_opener.is_file(urlpath):
+        if file_opener.isfile(urlpath):
             fmode = 0o170000 | stat.S_IFREG
-        elif file_opener.is_dir(urlpath):
+        elif file_opener.isdir(urlpath):
             fmode = 0o170000 | stat.S_IFDIR
         else:
             fmode = 0
@@ -349,9 +349,9 @@ class _FileOpener:
         self._obj = obj
     def open(self, path, mode="r", **kwds):
         return self._obj(path, mode=mode, **kwds)
-    def is_file(self, path):
+    def isfile(self, path):
         return True
-    def is_dir(self, path):
+    def isdir(self, path):
         return False
     def ls(self, path):
         return []
@@ -367,20 +367,32 @@ class _FilesystemOpener:
         self._obj = obj
     def open(self, path, mode="r", **kwds):
         return self._obj.open(path, mode=mode, **kwds)
-    def is_file(self, path):
-        return self._obj.is_file(path)
-    def is_dir(self, path):
-        return self._obj.is_dir(path)
+    def isfile(self, path):
+        return self._obj.isfile(path)
+    def isdir(self, path):
+        return self._obj.isdir(path)
     def ls(self, path):
         return self._obj.ls(path)
     def size(self, path):
         return self._obj.size(path)
 
 
+class _AltFilesystemOpener(_FilesystemOpener):
+    """Adapts a tiledb virtual filesystem object to the opener interface."""
+    def isfile(self, path):
+        return self._obj.is_file(path)
+    def isdir(self, path):
+        return self._obj.is_dir(path)
+    def size(self, path):
+        return self._obj.file_size(path)
+
+
 def _create_opener(obj):
     """Adapt Python file and fsspec objects to the opener interface."""
     if callable(obj):
         opener = _FileOpener(obj)
+    elif hasattr(obj, "file_size"):
+        opener = _AltFilesystemOpener(obj)
     else:
         opener = _FilesystemOpener(obj)
 
@@ -388,10 +400,10 @@ def _create_opener(obj):
     # plausibly function.
     try:
         _ = opener.size("test")
-    except (FileNotFoundError, KeyError):
-        # We expect the path to not resolve.
-        pass
     except (AttributeError, TypeError, ValueError) as err:
         raise OpenerRegistrationError(f"Opener is invalid.") from err
+    except Exception:
+        # We expect the path to not resolve.
+        pass
 
     return opener

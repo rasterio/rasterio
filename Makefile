@@ -32,11 +32,17 @@ doctest:
 dockertestimage:
 	docker build --build-arg GDAL=$(GDAL) --build-arg PYTHON_VERSION=$(PYTHON_VERSION) --target gdal -t rasterio:$(GDAL)-py$(PYTHON_VERSION) .
 
+dockertestimage_amd64:
+	docker build --platform linux/amd64 --build-arg GDAL=$(GDAL) --build-arg PYTHON_VERSION=$(PYTHON_VERSION) --target gdal -t rasterio-amd64:$(GDAL)-py$(PYTHON_VERSION) .
+
 dockertest: dockertestimage
-	docker run -it -v $(shell pwd):/app -v /tmp:/tmp --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
+	docker run --rm -it -v $(shell pwd):/app -v /tmp:/tmp --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
+
+dockertest_amd64: dockertestimage_amd64
+	docker run --platform linux/amd64 --rm -it -v $(shell pwd):/app -v /tmp:/tmp --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio-amd64:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /venv/bin/python -m pip install tiledb && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
 
 dockershell: dockertestimage
-	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /bin/bash'
+	docker run --platform linux/amd64 -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /bin/bash'
 
 dockersdist: dockertestimage
 	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py sdist'

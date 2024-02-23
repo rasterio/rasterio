@@ -66,6 +66,16 @@ def test_opener_fsspec_fs():
         assert profile["count"] == 3
 
 
+def test_opener_tiledb_vfs():
+    """Use tiledb virtual filesystem as opener."""
+    tiledb = pytest.importorskip("tiledb")
+    fs = tiledb.VFS()
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 3
+
+
 def test_opener_zipfile_open():
     """Use zipfile as opener."""
     with zipfile.ZipFile("tests/data/files.zip") as zf:
