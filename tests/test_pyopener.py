@@ -37,6 +37,15 @@ def test_opener_io_open():
         assert profile["count"] == 3
 
 
+def test_opener_zipfile_open():
+    """Use zipfile as opener."""
+    with zipfile.ZipFile("tests/data/files.zip") as zf:
+        with rasterio.open("RGB.byte.tif", opener=zf.open) as src:
+            profile = src.profile
+            assert profile["driver"] == "GTiff"
+            assert profile["count"] == 3
+
+
 @pytest.mark.parametrize(
     "urlpath", ["file://tests/data/RGB.byte.tif", "zip://*.tif::tests/data/files.zip"]
 )
@@ -66,23 +75,16 @@ def test_opener_fsspec_fs():
         assert profile["count"] == 3
 
 
-def test_opener_tiledb_vfs():
-    """Use tiledb virtual filesystem as opener."""
-    tiledb = pytest.importorskip("tiledb")
-    fs = tiledb.VFS()
-    with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+def test_opener_fsspec_http_fs():
+    """Use fsspec http filesystem as opener."""
+    fs = fsspec.filesystem("http")
+    with rasterio.open(
+        "https://raw.githubusercontent.com/rasterio/rasterio/main/tests/data/float32.tif",
+        opener=fs,
+    ) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
-        assert profile["count"] == 3
-
-
-def test_opener_zipfile_open():
-    """Use zipfile as opener."""
-    with zipfile.ZipFile("tests/data/files.zip") as zf:
-        with rasterio.open("RGB.byte.tif", opener=zf.open) as src:
-            profile = src.profile
-            assert profile["driver"] == "GTiff"
-            assert profile["count"] == 3
+        assert profile["count"] == 1
 
 
 def test_opener_fsspec_fs_open_write(tmp_path):
@@ -163,3 +165,32 @@ def test_opener_msk_sidecar():
     with rasterio.open("tests/data/RGB2.byte.tif", opener=io.open) as src:
         for val in src.mask_flag_enums:
             assert val == [MaskFlags.per_dataset]
+
+
+def test_fsspec_msk_sidecar():
+    """Access .msk sidecar file via fsspec."""
+    fs = fsspec.filesystem("file")
+    with rasterio.open("tests/data/RGB2.byte.tif", opener=fs) as src:
+        for val in src.mask_flag_enums:
+            assert val == [MaskFlags.per_dataset]
+
+
+def test_fsspec_http_msk_sidecar():
+    """Use fsspec http filesystem as opener."""
+    fs = fsspec.filesystem("http")
+    with rasterio.open(
+        "https://raw.githubusercontent.com/rasterio/rasterio/main/tests/data/RGB2.byte.tif",
+        opener=fs,
+    ) as src:
+        for val in src.mask_flag_enums:
+            assert val == [MaskFlags.per_dataset]
+
+
+def test_opener_tiledb_vfs():
+    """Use tiledb virtual filesystem as opener."""
+    tiledb = pytest.importorskip("tiledb")
+    fs = tiledb.VFS()
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 3

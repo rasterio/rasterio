@@ -343,7 +343,21 @@ def _opener_registration(urlpath, mode, obj):
             _OPENER_REGISTRY.set(registry)
 
 
-class _FileOpener:
+class _AbstractOpener:
+    """Adapts a Python object to the opener interface."""
+    def open(self, path, mode="r", **kwds):
+        raise NotImplementedError
+    def isfile(self, path):
+        raise NotImplementedError
+    def isdir(self, path):
+        raise NotImplementedError
+    def ls(self, path):
+        raise NotImplementedError
+    def size(self, path):
+        raise NotImplementedError
+
+
+class _FileOpener(_AbstractOpener):
     """Adapts a Python file object to the opener interface."""
     def __init__(self, obj):
         self._obj = obj
@@ -361,7 +375,7 @@ class _FileOpener:
             return f.tell()
 
 
-class _FilesystemOpener:
+class _FilesystemOpener(_AbstractOpener):
     """Adapts an fsspec filesystem object to the opener interface."""
     def __init__(self, obj):
         self._obj = obj
@@ -389,7 +403,9 @@ class _AltFilesystemOpener(_FilesystemOpener):
 
 def _create_opener(obj):
     """Adapt Python file and fsspec objects to the opener interface."""
-    if callable(obj):
+    if isinstance(obj, _AbstractOpener):
+        opener = obj
+    elif callable(obj):
         opener = _FileOpener(obj)
     elif hasattr(obj, "file_size"):
         opener = _AltFilesystemOpener(obj)
