@@ -102,7 +102,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-latest]
+        # macos-14 is osx-arm64
+        os: [macos-latest, macos-14]
         python-version: ['3.9', '3.10', '3.11']
         include:
           - os: ubuntu-latest
@@ -113,39 +114,43 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Conda Setup
-        uses: s-weigand/setup-conda@v1
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          conda-channels: conda-forge
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          use-mamba: true
+          auto-update-conda: true
+          use-only-tar-bz2: false
 
       - name: Install Env
-        shell: bash
+        shell: bash -l {0}
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
           conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=3 numpy
-          source activate test
+          conda activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment
-        shell: bash
+        shell: bash -l {0}
         run: |
-          source activate test
+          conda activate test
           python -V
           conda info
 
       - name: Test with Coverage (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        shell: bash
+        shell: bash -l {0}
         run: |
-          source activate test
+          conda activate test
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
-        if: matrix.os == 'macos-latest'
-        shell: bash
+        if: "${{matrix.os}} == 'macos-latest' || ${{matrix.os}} == 'macos-14'"
+        shell: bash -l {0}
         run: |
-          source activate test
+          conda activate test
           python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
 
       - uses: codecov/codecov-action@v3
