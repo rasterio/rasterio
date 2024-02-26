@@ -88,7 +88,7 @@ cdef int pyopener_stat(
     const char *pszFilename,
     VSIStatBufL *pStatBuf,
     int nFlags
-) except -1 with gil:
+) with gil:
     """Provides POSIX stat data to GDAL from a Python filesystem."""
     # Convert the given filename to a registry key.
     # Reminder: openers are registered by URI scheme, authority, and 
@@ -118,12 +118,12 @@ cdef int pyopener_stat(
             fmode = 0o170000 | stat.S_IFDIR
         else:
             # No such file or directory.
-            return 1
+            return -1
         size = file_opener.size(urlpath)
         mtime = file_opener.mtime(urlpath)
     except (FileNotFoundError, KeyError):
         # No such file or directory.
-        return 1
+        return -1
     except Exception as err:
         errmsg = f"Opener failed to determine file info: {repr(err)}".encode("utf-8")
         CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg)
@@ -139,7 +139,7 @@ cdef char ** pyopener_read_dir(
     void *pUserData,
     const char *pszDirname,
     int nMaxFiles
-) except NULL with gil:
+) with gil:
     """Provides a directory listing to GDAL from a Python filesystem."""
     urlpath = pszDirname.decode("utf-8")
     parsed_uri = urlparse(urlpath)
@@ -183,7 +183,7 @@ cdef void* pyopener_open(
     void *pUserData,
     const char *pszFilename,
     const char *pszAccess
-) except NULL with gil:
+) with gil:
     """Access files in the virtual filesystem.
 
     This function is mandatory in the GDAL Filesystem Plugin API.
@@ -234,7 +234,8 @@ cdef void* pyopener_open(
         CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg)
         return NULL
     except FileNotFoundError as err:
-        log.info("OpenFile doesn't resolve: file_obj=%r", file_obj)
+        errmsg = "OpenFile didn't resolve".encode("utf-8")
+        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg)
         return NULL
     else:
         exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
@@ -244,19 +245,19 @@ cdef void* pyopener_open(
         return <void *>file_obj
 
 
-cdef vsi_l_offset pyopener_tell(void *pFile) except -1 with gil:
+cdef vsi_l_offset pyopener_tell(void *pFile) with gil:
     cdef object file_obj = <object>pFile
     return <vsi_l_offset>file_obj.tell()
 
 
-cdef int pyopener_seek(void *pFile, vsi_l_offset nOffset, int nWhence) except -1 with gil:
+cdef int pyopener_seek(void *pFile, vsi_l_offset nOffset, int nWhence) with gil:
     cdef object file_obj = <object>pFile
     # TODO: Add "seekable" check?
     file_obj.seek(nOffset, nWhence)
     return 0
 
 
-cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) except -1 with gil:
+cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     cdef object file_obj = <object>pFile
     cdef bytes python_data = file_obj.read(nSize * nCount)
     cdef int num_bytes = len(python_data)
@@ -265,7 +266,7 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
     return <size_t>(num_bytes / nSize)
 
 
-cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCount) except -1 with gil:
+cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     cdef object file_obj = <object>pFile
     buffer_len = nSize * nCount
     cdef np.uint8_t [:] buff_view = <np.uint8_t[:buffer_len]>pBuffer
@@ -273,7 +274,7 @@ cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCou
     return <size_t>file_obj.write(buff_view)
 
 
-cdef int pyopener_close(void *pFile) except -1 with gil:
+cdef int pyopener_close(void *pFile) with gil:
     cdef object file_obj = <object>pFile
     log.debug("Closing: file_obj=%r", file_obj)
     exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
