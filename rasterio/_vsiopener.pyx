@@ -112,7 +112,6 @@ cdef int pyopener_stat(
         return -1
 
     try:
-        size = file_opener.size(urlpath)
         if file_opener.isfile(urlpath):
             fmode = 0o170000 | stat.S_IFREG
         elif file_opener.isdir(urlpath):
@@ -120,6 +119,8 @@ cdef int pyopener_stat(
         else:
             # No such file or directory.
             return 1
+        size = file_opener.size(urlpath)
+        mtime = file_opener.mtime(urlpath)
     except (FileNotFoundError, KeyError):
         # No such file or directory.
         return 1
@@ -130,6 +131,7 @@ cdef int pyopener_stat(
 
     pStatBuf.st_size = size
     pStatBuf.st_mode = fmode
+    pStatBuf.st_mtime = mtime
     return 0
 
 
@@ -315,14 +317,90 @@ def _opener_registration(urlpath, mode, obj):
 class _AbstractOpener:
     """Adapts a Python object to the opener interface."""
     def open(self, path, mode="r", **kwds):
+        """Get a Python file object for a resource.
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a resource within a filesystem.
+        mode : str
+            Opening mode.
+        kwds : dict
+            Opener specific options. Encoding, etc.
+
+        Returns
+        -------
+        obj
+            A Python 'file' object with methods read/write, seek, tell,
+            etc.
+        """
         raise NotImplementedError
     def isfile(self, path):
+        """Test if the resource is a 'file', a sequence of bytes.
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a resource within a filesystem.
+
+        Returns
+        -------
+        bool
+        """
         raise NotImplementedError
     def isdir(self, path):
+        """Test if the resource is a 'directory', a container.
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a resource within a filesystem.
+
+        Returns
+        -------
+        bool
+        """
         raise NotImplementedError
     def ls(self, path):
+        """Get a 'directory' listing.
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a directory within a filesystem.
+
+        Returns
+        -------
+        list of str
+            List of 'path' paths relative to the directory.
+        """
+        raise NotImplementedError
+    def mtime(self, path):
+        """Get the mtime of a resource..
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a directory within a filesystem.
+
+        Returns
+        -------
+        int
+            Modification timestamp in seconds.
+        """
         raise NotImplementedError
     def size(self, path):
+        """Get the size, in bytes, of a resource..
+
+        Parameters
+        ----------
+        path : str
+            The identifier/locator for a resource within a filesystem.
+
+        Returns
+        -------
+        int
+        """
         raise NotImplementedError
 
 
@@ -338,6 +416,8 @@ class _FileOpener(_AbstractOpener):
         return False
     def ls(self, path):
         return []
+    def mtime(self, path):
+        return 0
     def size(self, path):
         with self._obj(path) as f:
             f.seek(0, os.SEEK_END)
@@ -356,6 +436,13 @@ class _FilesystemOpener(_AbstractOpener):
         return self._obj.isdir(path)
     def ls(self, path):
         return self._obj.ls(path)
+    def mtime(self, path):
+        try:
+            mtime = int(self._obj.modified(path).timestamp())
+        except NotImplementedError:
+            mtime = 0
+        log.debug("Modification time: mtime=%r", mtime)
+        return mtime
     def size(self, path):
         return self._obj.size(path)
 
@@ -366,6 +453,8 @@ class _AltFilesystemOpener(_FilesystemOpener):
         return self._obj.is_file(path)
     def isdir(self, path):
         return self._obj.is_dir(path)
+    def mtime(self, path):
+        return 0
     def size(self, path):
         return self._obj.file_size(path)
 
