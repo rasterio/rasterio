@@ -174,7 +174,7 @@ cdef char ** pyopener_read_dir(
 
     for name in contents:
         fname = name.encode("utf-8")
-        CSLAddString(name_list, <char *>fname)
+        name_list = CSLAddString(name_list, <char *>fname)
 
     return name_list
 
