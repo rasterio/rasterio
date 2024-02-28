@@ -235,7 +235,6 @@ cdef void* pyopener_open(
         return NULL
     except FileNotFoundError as err:
         errmsg = "OpenFile didn't resolve".encode("utf-8")
-        CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg)
         return NULL
     else:
         exit_stacks = _OPEN_FILE_EXIT_STACKS.get()
