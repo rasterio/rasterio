@@ -1,4 +1,4 @@
-ARG GDAL=ubuntu-small-3.3.3
+ARG GDAL=ubuntu-small-3.6.4
 FROM ghcr.io/osgeo/gdal:${GDAL} AS gdal
 ARG PYTHON_VERSION=3.9
 ENV LANG="C.UTF-8" LC_ALL="C.UTF-8"

@@ -1,6 +1,7 @@
 -r requirements.txt
 
 # development specific requirements
+aiohttp
 cython>=3.0
 delocate
 fsspec
@@ -11,6 +12,7 @@ packaging
 pytest
 pytest-cov>=2.2.0
 pytest-randomly==3.10.1
+requests
 shapely
 sphinx
 sphinx-click
