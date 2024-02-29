@@ -4,6 +4,16 @@ Changes
 Next
 ----
 
+New features:
+
+- Python openers can now support discovery of auxiliary "sidecar" files like
+  .aux.xml, .msk, and .tfw files for GeoTIFFs (#3032). Additionally, filesystem
+  objects, such as those from fsspec, can be used as openers. This will become
+  the recommended usage, supplanting the use of single file openers.
+
+1.4a1 (2024-02-16)
+------------------
+
 Deprecations:
 
 - The is_tiled property of a dataset will be removed in a future version and
@@ -43,6 +53,9 @@ New Features:
 
 Bug fixes:
 
+- A nodata value passed to _boundless_vrt_doc(), used for boundless reads, has
+  been ignored in favor of the source dataset's own nodata value. It is no
+  longer ignored (#3026).
 - Avoid squeezing narrow 2-D arrays to 1-D (#3008).
 - Operations on closed MemoryFile and ZipMemoryFile objects now raise
   ValueError as with other Python file objects (#2870, #).

@@ -1,5 +1,5 @@
 PYTHON_VERSION ?= 3.9
-GDAL ?= ubuntu-small-3.3.3
+GDAL ?= ubuntu-small-3.6.4
 all: deps clean install test
 
 .PHONY: docs
@@ -33,7 +33,7 @@ dockertestimage:
 	docker build --build-arg GDAL=$(GDAL) --build-arg PYTHON_VERSION=$(PYTHON_VERSION) --target gdal -t rasterio:$(GDAL)-py$(PYTHON_VERSION) .
 
 dockertest: dockertestimage
-	docker run -it -v $(shell pwd):/app -v /tmp:/tmp --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
+	docker run --rm -it -v $(shell pwd):/app -v /tmp:/tmp --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /venv/bin/python -B -m pytest -m "not wheel" --cov rasterio --cov-report term-missing $(OPTS)'
 
 dockershell: dockertestimage
 	docker run -it -v $(shell pwd):/app --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --entrypoint=/bin/bash rasterio:$(GDAL)-py$(PYTHON_VERSION) -c '/venv/bin/python setup.py develop && /bin/bash'

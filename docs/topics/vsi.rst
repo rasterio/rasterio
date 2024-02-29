@@ -111,8 +111,8 @@ your code.
    and likely many more to fetch all the imagery from the TIFF. Consult the
    AWS S3 pricing guidelines before deciding if `aws.Session` is for you.
 
-Python file openers
--------------------
+Python file and filesystem openers
+----------------------------------
 
 Datasets stored in proprietary systems or addressable only through protocols
 not directly supported by GDAL can be accessed using the ``opener`` keyword
@@ -147,5 +147,25 @@ a time may be thus registered for a filename and access mode pair. Openers are
 unregistered when the dataset is closed or its context is exited. The other
 limitation is that auxiliary and sidecar files cannot be accessed and thus
 formats depending on them cannot be used in this way.
+
+To gain support for auxiliary "sidecar" files such as .aux.xml and .msk files
+that may accompany GeoTIFFs, an fsspec-like filesystem object may be used as
+the opener.
+
+.. code-block:: python
+
+    import rasterio
+    from fsspec
+
+    fs = fsspec.filesystem("s3", anon=True)
+
+    with rasterio.open(
+        "sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif",
+        opener=fs
+    ) as src:
+        print(src.profile)
+
+This kind of filesystem opener object must provide the following methods:
+``isdir()``, ``isfile()``, ``ls()``, ``mtime()``, ``open()``, and ``size()``.
 
 *New in version 1.4.0*
