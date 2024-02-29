@@ -61,6 +61,7 @@ cdef int install_pyopener_plugin(VSIFilesystemPluginCallbacksStruct *callbacks_s
         log.debug("Installing Python opener handler plugin...")
         callbacks_struct = VSIAllocFilesystemPluginCallbacksStruct()
         callbacks_struct.open = <VSIFilesystemPluginOpenCallback>pyopener_open
+        callbacks_struct.eof = <VSIFilesystemPluginEofCallback>pyopener_eof
         callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
         callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
         callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
@@ -242,6 +243,15 @@ cdef void* pyopener_open(
         _OPEN_FILE_EXIT_STACKS.set(exit_stacks)
         log.debug("Returning: file_obj=%r", file_obj)
         return <void *>file_obj
+
+
+cdef int pyopener_eof(void *pFile) with gil:
+    cdef object file_obj = <object>pFile
+    if file_obj.read(1):
+        file_obj.seek(-1, 1)
+        return 1
+    else:
+        return 0
 
 
 cdef vsi_l_offset pyopener_tell(void *pFile) with gil:
