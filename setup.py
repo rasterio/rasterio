@@ -272,6 +272,7 @@ inst_reqs = [
     "cligj>=0.5",
     "numpy<2",
     "click-plugins",
+    "pyparsing",
     "setuptools",
 ]
 
@@ -315,6 +316,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3",
         "Topic :: Multimedia :: Graphics :: Graphics Conversion",
         "Topic :: Scientific/Engineering :: GIS",
@@ -325,7 +327,7 @@ setup_args = dict(
     url="https://github.com/rasterio/rasterio",
     license="BSD",
     package_dir={"": "."},
-    packages=["rasterio", "rasterio.rio"],
+    packages=["rasterio", "rasterio._vendor", "rasterio.rio"],
     include_package_data=True,
     ext_modules=ext_modules,
     zip_safe=False,
