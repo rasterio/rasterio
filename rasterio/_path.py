@@ -5,6 +5,7 @@ only.
 
 """
 
+import os
 import pathlib
 import re
 import sys
@@ -65,7 +66,14 @@ class _ParsedPath(_Path):
     @classmethod
     def from_uri(cls, uri):
         parts = urlparse(uri)
-        path = pathlib.Path(parts.path).as_posix() if parts.path else parts.path
+        if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", parts.netloc):
+            parsed_path = f"{parts.netloc}{parts.path}"
+            parsed_netloc = None
+        else:
+            parsed_path = parts.path
+            parsed_netloc = parts.netloc
+
+        path = parsed_path
         scheme = parts.scheme or None
 
         if parts.query:
@@ -78,11 +86,11 @@ class _ParsedPath(_Path):
         else:
             archive = None
 
-        if parts.scheme and parts.netloc:
+        if scheme and parsed_netloc:
             if archive:
-                archive = parts.netloc + archive
+                archive = parsed_netloc + archive
             else:
-                path = parts.netloc + path
+                path = parsed_netloc + path
 
         return _ParsedPath(path, archive, scheme)
 
@@ -144,31 +152,21 @@ def _parse_path(path):
     """
     if isinstance(path, _Path):
         return path
-
-    elif pathlib and isinstance(path, pathlib.PurePath):
-        return _ParsedPath(path.as_posix(), None, None)
-
+    elif isinstance(path, pathlib.PurePath):
+        return _ParsedPath(os.fspath(path), None, None)
     elif isinstance(path, str):
-
         if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", path):
-            if pathlib:
-                return _ParsedPath(pathlib.Path(path).as_posix(), None, None)
-            else:
-                return _UnparsedPath(path)
-
+            return _ParsedPath(path, None, None)
         elif path.startswith('/vsi'):
             return _UnparsedPath(path)
-
         else:
             parts = urlparse(path)
-
     else:
         raise PathError("invalid path '{!r}'".format(path))
 
     # if the scheme is not one of Rasterio's supported schemes, we
     # return an UnparsedPath.
     if parts.scheme:
-
         if all(p in SCHEMES for p in parts.scheme.split('+')):
             return _ParsedPath.from_uri(path)
 
