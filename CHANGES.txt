@@ -1,8 +1,12 @@
 Changes
 =======
 
-Next
-----
+1.4a1 (2024-02-15)
+------------------
+
+Python support:
+
+- Rasterio 1.4 requires Python version 3.9 or newer.
 
 New features:
 
@@ -34,6 +38,10 @@ Deprecations:
 
 New Features:
 
+- The Window class has a new round() method (#3022). It has the same parameter
+  as Python's built in round() and applies it to the window's offsets and
+  lengths. It is used internally to avoid sub-pixel errors when reading from
+  and writing to datasets.
 - The merge tool and merge CLI command can create very large output datasets
   without using more memory than the user chooses (#3022). Merge output is
   processed in chunks that default to 64 MB.
