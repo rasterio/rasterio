@@ -11,6 +11,11 @@ New features:
   objects, such as those from fsspec, can be used as openers. This will become
   the recommended usage, supplanting the use of single file openers.
 
+Bug fixes:
+
+- gzip, tar, and zip archive URIs containing drive letters were not always
+  parsed properly on Windows, but are now.
+
 1.4a1 (2024-02-16)
 ------------------
 
