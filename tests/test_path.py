@@ -231,12 +231,24 @@ def test_parse_path_win():
     assert isinstance(_parse_path(pathlib.PureWindowsPath(r"C:\foo\bar.tif")), _ParsedPath)
 
 
-def test_parse_path_win_no_pathlib(monkeypatch):
-    monkeypatch.setattr(rasterio._path.sys, "platform", "win32")
-    monkeypatch.setattr(rasterio._path, "pathlib", None)
-    assert isinstance(_parse_path(r"C:\foo\bar.tif"), _UnparsedPath)
-
-
 def test_parse_gdal_vsi_alias():
     """Check that the alias function works"""
     assert _parse_path('/vsifoo/bar').path == '/vsifoo/bar'
+
+
+def test_parse_zip_windows(monkeypatch):
+    """Parse a zip+ Windows path."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    path = _parse_path("zip://D:\\a\\Fiona\\Fiona\\tests\\data\\coutwildrnp.zip!coutwildrnp.shp")
+    vsi_path = _vsi_path(path)
+    assert vsi_path.startswith("/vsizip/D")
+    assert vsi_path.endswith("coutwildrnp.zip/coutwildrnp.shp")
+
+
+def test_parse_zip_windows(monkeypatch):
+    """Parse a tar+ Windows path."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    path = _parse_path("tar://D:\\a\\Fiona\\Fiona\\tests\\data\\coutwildrnp.tar!testing/coutwildrnp.shp")
+    vsi_path = _vsi_path(path)
+    assert vsi_path.startswith("/vsitar/D")
+    assert vsi_path.endswith("coutwildrnp.tar/testing/coutwildrnp.shp")
