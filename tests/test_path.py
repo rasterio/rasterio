@@ -231,12 +231,6 @@ def test_parse_path_win():
     assert isinstance(_parse_path(pathlib.PureWindowsPath(r"C:\foo\bar.tif")), _ParsedPath)
 
 
-def test_parse_path_win_no_pathlib(monkeypatch):
-    monkeypatch.setattr(rasterio._path.sys, "platform", "win32")
-    monkeypatch.setattr(rasterio._path, "pathlib", None)
-    assert isinstance(_parse_path(r"C:\foo\bar.tif"), _UnparsedPath)
-
-
 def test_parse_gdal_vsi_alias():
     """Check that the alias function works"""
     assert _parse_path('/vsifoo/bar').path == '/vsifoo/bar'
