@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.4a2 (2024-03-01)
+1.4a2 (2024-03-02)
 ------------------
 
 Python support:
@@ -17,6 +17,7 @@ New features:
 
 Bug fixes:
 
+- The rio CLI output file options no longer resolve to absolute paths.
 - gzip, tar, and zip archive URIs containing drive letters were not always
   parsed properly on Windows, but are now.
 
