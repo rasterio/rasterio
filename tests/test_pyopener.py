@@ -21,7 +21,7 @@ def test_registration_failure():
         ) as a, rasterio.open("tests/data/RGB.byte.tif", opener=fsspec.open) as b:
             pass
 
-    assert exc_info.value.args[0] == "Opener already registered for urlpath and mode."
+    assert exc_info.value.args[0] == "Opener already registered for urlpath."
 
 
 def test_opener_failure():
