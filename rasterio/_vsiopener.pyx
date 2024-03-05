@@ -123,7 +123,7 @@ cdef char ** pyopener_read_dir(
 ) with gil:
     """Provides a directory listing to GDAL from a Python filesystem."""
     urlpath = pszDirname.decode("utf-8")
-    key = Path(urlpath).parent
+    key = Path(urlpath)
 
     registry = _OPENER_REGISTRY.get()
     log.debug("Looking up opener in pyopener_read_dir: registry=%r, key=%r", registry, key)
