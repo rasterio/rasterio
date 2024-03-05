@@ -581,7 +581,7 @@ def test_warp_resampling(runner, path_rgb_byte_tif, tmpdir, method):
 
 def test_unrotate(runner, tmp_path):
     """rio-warp unrotates imagery by default, like gdalwarp"""
-    outputname = tmp_path.joinpath("test.tif").as_posix()
+    outputname = os.fspath(tmp_path.joinpath("test.tif"))
     runner.invoke(main_group, ["warp", "tests/data/rotated.tif", outputname])
 
     # There is no skew in the output.
@@ -595,7 +595,7 @@ def test_unrotate(runner, tmp_path):
 )
 def test_coordinate_operation(runner, tmp_path, wotopt):
     """Verify that transformer coordinate operations are activated."""
-    outputname = tmp_path.joinpath("test.tif").as_posix()
+    outputname = os.fspath(tmp_path.joinpath("test.tif"))
     pipeline = "+proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
     result = runner.invoke(
         main_group,
