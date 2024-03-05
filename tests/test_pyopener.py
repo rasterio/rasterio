@@ -1,7 +1,8 @@
 """Tests of the Python opener VSI plugin."""
 
-import zipfile
 import io
+import os
+import zipfile
 
 import fsspec
 import numpy as np
@@ -20,7 +21,7 @@ def test_registration_failure():
         ) as a, rasterio.open("tests/data/RGB.byte.tif", opener=fsspec.open) as b:
             pass
 
-    assert exc_info.value.args[0] == "Opener already registered for urlpath and mode."
+    assert exc_info.value.args[0] == "Opener already registered for urlpath."
 
 
 def test_opener_failure():
@@ -92,7 +93,7 @@ def test_opener_fsspec_fs_open_write(tmp_path):
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
     fs = fsspec.filesystem("file")
     with rasterio.open(
-        (tmp_path / "test.tif").as_posix(),
+        os.fspath(tmp_path / "test.tif"),
         "w",
         driver="GTiff",
         count=1,
@@ -116,7 +117,7 @@ def test_opener_fsspec_fs_write(tmp_path):
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
     fs = fsspec.filesystem("file")
     with rasterio.open(
-        (tmp_path / "test.tif").as_posix(),
+        os.fspath(tmp_path / "test.tif"),
         "w",
         driver="GTiff",
         count=1,
@@ -138,7 +139,7 @@ def test_opener_fsspec_fs_write(tmp_path):
 def test_fp_fsspec_openfile_write(tmp_path):
     """Use an fsspec OpenFile for writing."""
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
-    of = fsspec.open((tmp_path / "test.tif").as_posix(), "wb")
+    of = fsspec.open(os.fspath(tmp_path / "test.tif"), "wb")
     with rasterio.open(
         of,
         "w",

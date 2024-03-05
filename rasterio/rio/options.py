@@ -222,9 +222,7 @@ def bounds_handler(ctx, param, value):
 file_in_arg = click.argument('INPUT', callback=file_in_handler)
 
 # Singular output file
-file_out_arg = click.argument(
-    'OUTPUT',
-    type=click.Path(resolve_path=True))
+file_out_arg = click.argument("OUTPUT", type=click.Path())
 
 # Multiple input files.
 files_in_arg = click.argument(
@@ -301,7 +299,7 @@ masked_opt = click.option(
 output_opt = click.option(
     '-o', '--output',
     default=None,
-    type=click.Path(resolve_path=True),
+    type=click.Path(),
     help="Path to output file (optional alternative to a positional arg).")
 
 resolution_opt = click.option(

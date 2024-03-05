@@ -351,7 +351,7 @@ def open(
             # virtual filesystem. This is generally better than the FilePath
             # approach introduced in version 1.3.
             if opener:
-                vsi_path_ctx = _opener_registration(raw_dataset_path, mode[0], opener)
+                vsi_path_ctx = _opener_registration(raw_dataset_path, opener)
                 registered_vsi_path = stack.enter_context(vsi_path_ctx)
                 path = _UnparsedPath(registered_vsi_path)
             else:

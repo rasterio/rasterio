@@ -2,6 +2,7 @@
 
 
 import math
+import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -22,7 +23,7 @@ def test_files(data):
     with open(aux, 'w'):
         pass
     with rasterio.open(tif) as src:
-        assert src.files == [tif.as_posix(), aux.as_posix()]
+        assert src.files == [os.fspath(tif), os.fspath(aux)]
 
 
 def test_handle_closed(path_rgb_byte_tif):
