@@ -48,7 +48,7 @@ def test_opener_zipfile_open():
 
 
 @pytest.mark.parametrize(
-    "urlpath", ["file://tests/data/RGB.byte.tif", "zip://*.tif::tests/data/files.zip"]
+    "urlpath", ["file://tests/data/RGB.byte.tif", "zip://RGB.byte.tif::tests/data/files.zip"]
 )
 def test_opener_fsspec_open(urlpath):
     """Use fsspec.open as opener."""
