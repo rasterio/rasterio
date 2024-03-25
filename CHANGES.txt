@@ -7,7 +7,7 @@ Next (TBD)
 Bug fixes:
 
 - Non-strings may once again be used as values of the dtype keyword argument of
-  rasterize(), fixing a bug introduced in 1.4a1 (#).
+  rasterize(), fixing a bug introduced in 1.4a1 (#3045).
 
 1.4a2 (2024-03-02)
 ------------------
