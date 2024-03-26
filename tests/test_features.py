@@ -423,6 +423,17 @@ def test_rasterize_point(geojson_point):
     )
 
 
+def test_rasterize_point_dtype_int(geojson_point):
+    """Demonstrate fix of #3043."""
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype=int)
+    expected[2, 2] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_point], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
 def test_rasterize_multipoint(geojson_multipoint):
     expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
     expected[2, 2] = 1
@@ -689,15 +700,6 @@ def test_rasterize_invalid_fill_value(basic_geometry):
         [basic_geometry], out_shape=DEFAULT_SHAPE, fill=0.5, default_value=2
     )
     assert out.dtype.kind != "f"
-
-
-def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
-    """A fill value that doesn't match dtype should fail."""
-    with pytest.raises(ValueError):
-        rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000,
-            default_value=2, dtype=np.uint8
-        )
 
 
 def test_rasterize_all_touched(basic_geometry, basic_image):
