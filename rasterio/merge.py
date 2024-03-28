@@ -4,7 +4,9 @@ from contextlib import ExitStack, contextmanager
 import logging
 import os
 import math
+import cmath
 import warnings
+import numbers
 
 import numpy as np
 
@@ -260,7 +262,7 @@ def merge(
         # Resolution/pixel size
         if not res:
             res = first_res
-        elif not np.iterable(res):
+        elif isinstance(res, numbers.Number):
             res = (res, res)
         elif len(res) == 1:
             res = (res[0], res[0])
@@ -294,19 +296,23 @@ def merge(
             if np.issubdtype(dt, np.integer):
                 info = np.iinfo(dt)
                 inrange = info.min <= nodataval <= info.max
-            elif np.issubdtype(dt, np.floating):
-                if math.isnan(nodataval):
-                    inrange = True
-                else:
+            else:
+                if cmath.isfinite(nodataval):
                     info = np.finfo(dt)
                     inrange = info.min <= nodataval <= info.max
+                    # check casting between float and complex
+                    inrange = inrange & np.can_cast(nodataval, dt)
+                else:
+                    inrange = True
+
             if not inrange:
                 warnings.warn(
-                    "The nodata value, %s, is beyond the valid "
-                    "range of the chosen data type, %s. Consider overriding it "
+                    "The nodata value, %s, cannot safely be represented "
+                    "in the chosen data type, %s. Consider overriding it "
                     "using the --nodata option for better results." % (nodataval, dt)
                 )
         else:
+            logger.debug("Set nodataval to 0")
             nodataval = 0
 
         # When dataset output is selected, we might need to create one
@@ -381,9 +387,9 @@ def merge(
 
                 region = dest[:, :, :]
 
-                if math.isnan(nodataval):
+                if cmath.isnan(nodataval):
                     region_mask = np.isnan(region)
-                elif np.issubdtype(region.dtype, np.floating):
+                elif not np.issubdtype(region.dtype, np.integer):
                     region_mask = np.isclose(region, nodataval)
                 else:
                     region_mask = region == nodataval
