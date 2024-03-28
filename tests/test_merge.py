@@ -5,6 +5,7 @@ from hypothesis import given, settings
 from hypothesis.strategies import floats
 import numpy
 import pytest
+import warnings
 
 import affine
 import rasterio
@@ -15,6 +16,23 @@ from rasterio.warp import aligned_target
 from rasterio.windows import window_split
 
 from .conftest import gdal_version
+
+
+@pytest.fixture(scope="function")
+def test_data_complex(tmp_path):
+    transform = affine.Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
+    t2 = transform * transform.translation(0, 3)
+
+    with rasterio.open(tmp_path.joinpath("r2.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
+                crs="EPSG:32611", transform=transform) as src:
+        src.write(numpy.ones((1, 2, 2)))
+
+
+    with rasterio.open(tmp_path.joinpath("r1.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
+                crs="EPSG:32611", transform=t2) as src:
+        src.write(numpy.ones((1, 2, 2))*2-1j)
+
+    return tmp_path
 
 
 # Non-coincident datasets test fixture.
@@ -175,3 +193,26 @@ def test_merge_destination_2(tmp_path):
             result = dst.read()
             assert result.shape == (3, 719, 792)
             assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
+
+
+def test_complex_merge(test_data_complex):
+    inputs = list(test_data_complex.iterdir())
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        result, _ = merge([inputs[0]])
+        assert result.dtype == numpy.complex64
+        assert numpy.all(result == 1)
+
+
+def test_complex_nodata(test_data_complex):
+    inputs = list(test_data_complex.iterdir())
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+
+        result, _ = merge(inputs, nodata=numpy.nan)
+        assert numpy.all(numpy.isnan(result[:, 2]))
+
+        result, _ = merge(inputs, nodata=0-1j)
+        assert numpy.all(result[:, 2] == 0-1j)
