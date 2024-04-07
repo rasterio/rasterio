@@ -75,6 +75,7 @@ jobs:
           python -m pip wheel -r requirements-dev.txt
           python -m pip install dist/*.whl
           python -m pip install boto3 hypothesis packaging pytest shapely
+          rm -rf rasterio
           python -m pytest -v -m "not wheel" -rxXs
 
   docker_tests:
