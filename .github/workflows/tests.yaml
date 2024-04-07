@@ -74,7 +74,8 @@ jobs:
           python -m pip install numpy==1.23.5
           python -m pip wheel -r requirements-dev.txt
           python -m pip install dist/*.whl
-          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+          python -m pip install pytest
+          python -m pytest -v -m "not wheel" -rxXs
 
   docker_tests:
     runs-on: ubuntu-latest
