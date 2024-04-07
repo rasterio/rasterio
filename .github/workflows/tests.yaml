@@ -74,7 +74,7 @@ jobs:
           python -m pip install numpy==1.23.5
           python -m pip wheel -r requirements-dev.txt
           python -m pip install dist/*.whl
-          python -m pip install pytest
+          python -m pip install boto3 hypothesis packaging pytest shapely
           python -m pytest -v -m "not wheel" -rxXs
 
   docker_tests:
