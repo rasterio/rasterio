@@ -4,8 +4,8 @@ Changes
 1.3.10 (TBD)
 ------------
 
-This version is compatible with recent versions of Numpy 1.x and Numpy 2.0.0rc1
-(#).
+This version is compatible with recent versions of Numpy 1.x and Numpy
+2.0.0rc1.
 
 Packaging:
 
@@ -16,8 +16,8 @@ Packaging:
 
 Bug fixes:
 
-- Eliminate usage of pytest.warns(None) (#).
-- All use of pkg_resouces has been eliminated (#).
+- Eliminate usage of pytest.warns(None) (#3054).
+- All use of pkg_resouces has been eliminated (#3054).
 - Adjust several tests to small differences in output between GDAL 3.7 and 3.8
   (#2959).
 
