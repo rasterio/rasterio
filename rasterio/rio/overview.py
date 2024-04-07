@@ -1,4 +1,3 @@
-# coding: utf-8
 """Manage overviews of a dataset."""
 
 from functools import reduce
@@ -25,7 +24,7 @@ def build_handler(ctx, param, value):
             else:
                 raise Exception
         except Exception:
-            raise click.BadParameter(u"must match 'n,n,n,…', 'n^n..n', or 'auto'.")
+            raise click.BadParameter("must match 'n,n,n,…', 'n^n..n', or 'auto'.")
     return value
 
 
@@ -60,7 +59,7 @@ def get_maximum_overview_level(width, height, minsize=256):
 
 @click.command('overview', short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
-@click.option('--build', callback=build_handler, metavar=u"f1,f2,…|b^min..max|auto",
+@click.option('--build', callback=build_handler, metavar="f1,f2,…|b^min..max|auto",
               help="A sequence of decimation factors specified as "
                    "comma-separated list of numbers or a base and range of "
                    "exponents, or 'auto' to automatically determine the maximum factor.")

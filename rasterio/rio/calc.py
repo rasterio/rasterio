@@ -3,7 +3,7 @@
 from collections import OrderedDict, UserDict
 from contextlib import ExitStack
 import math
-from typing import Mapping
+from collections.abc import Mapping
 
 import click
 import numpy
@@ -204,7 +204,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
                 res = snuggs.eval(command, **ctxkwds)
             except snuggs.ExpressionError as err:
                 click.echo("Expression Error:")
-                click.echo("  {}".format(err.text))
+                click.echo(f"  {err.text}")
                 click.echo(" {}^".format(" " * err.offset))
                 click.echo(err)
                 raise click.Abort()

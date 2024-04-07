@@ -1,5 +1,4 @@
 """Fetch and edit raster dataset metadata from the command line."""
-from __future__ import absolute_import
 
 import code
 import logging

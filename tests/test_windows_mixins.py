@@ -19,7 +19,7 @@ class FakeDataset(windows.WindowMethodsMixin):
         return BoundingBox(c, f + e * self.height, c + a * self.width, f)
 
     def __repr__(self):
-        return "<FakeDataset: transform={}, height={}, width={}>".format(self.transform, self.height, self.width)
+        return f"<FakeDataset: transform={self.transform}, height={self.height}, width={self.width}>"
 
 
 @composite

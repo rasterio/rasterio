@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 import logging
 import sys
 
@@ -38,13 +37,13 @@ def test_tags_update(tmpdir):
         # Assert that unicode tags work.
         # Russian text appropriated from pytest issue #319
         # https://bitbucket.org/hpk42/pytest/issue/319/utf-8-output-in-assertion-error-converted
-        dst.update_tags(ns='rasterio_testing', rus=u'другая строка')
-        assert dst.tags(ns='rasterio_testing') == {'rus': u'другая строка'}
+        dst.update_tags(ns='rasterio_testing', rus='другая строка')
+        assert dst.tags(ns='rasterio_testing') == {'rus': 'другая строка'}
 
     with rasterio.open(tiffname) as src:
         assert src.tags() == {'a': '1', 'b': '2'}
         assert src.tags(1) == {'c': '3'}
-        assert src.tags(ns='rasterio_testing') == {'rus': u'другая строка'}
+        assert src.tags(ns='rasterio_testing') == {'rus': 'другая строка'}
 
 
 def test_tags_update_twice(tmpdir):

@@ -81,7 +81,7 @@ def _cb_key_val(ctx, param, value):
         for pair in value:
             if '=' not in pair:
                 raise click.BadParameter(
-                    "Invalid syntax for KEY=VAL arg: {}".format(pair))
+                    f"Invalid syntax for KEY=VAL arg: {pair}")
             else:
                 k, v = pair.split('=', 1)
                 k = k.lower()
@@ -113,20 +113,20 @@ def file_in_handler(ctx, param, value):
         elif path.archive:
             if os.path.exists(path.archive) and rasterio.shutil.exists(value):
                 archive = abspath_forward_slashes(path.archive)
-                return "{}://{}!{}".format(path.scheme, archive, path.path)
+                return f"{path.scheme}://{archive}!{path.path}"
             else:
                 raise OSError(
-                    "Input archive {} does not exist".format(path.archive))
+                    f"Input archive {path.archive} does not exist")
 
         else:
             if os.path.exists(path.path) and rasterio.shutil.exists(value):
                 return abspath_forward_slashes(path.path)
             else:
                 raise OSError(
-                    "Input file {} does not exist".format(path.path))
+                    f"Input file {path.path} does not exist")
 
     except Exception:
-        raise click.BadParameter("{} is not a valid input file".format(value))
+        raise click.BadParameter(f"{value} is not a valid input file")
 
 
 def files_in_handler(ctx, param, value):
@@ -175,7 +175,7 @@ def nodata_handler(ctx, param, value):
             return float(value)
         except (TypeError, ValueError):
             raise click.BadParameter(
-                "{!r} is not a number".format(value), param=param, param_hint="nodata"
+                f"{value!r} is not a number", param=param, param_hint="nodata"
             )
 
 
@@ -212,7 +212,7 @@ def bounds_handler(ctx, param, value):
             return retval
         except Exception:
             raise click.BadParameter(
-                "{0!r} is not a valid bounding box representation".format(
+                "{!r} is not a valid bounding box representation".format(
                     value))
     else:  # pragma: no cover
         return retval

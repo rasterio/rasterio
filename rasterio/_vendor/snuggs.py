@@ -44,7 +44,7 @@ from collections import OrderedDict
 import functools
 import operator
 import re
-from typing import Mapping
+from collections.abc import Mapping
 
 from pyparsing import (  # type: ignore
     Keyword,
@@ -68,7 +68,7 @@ __all__ = ["eval"]
 __version__ = "1.4.7"
 
 
-class Context(object):
+class Context:
     def __init__(self):
         self._data = OrderedDict()
 
@@ -92,7 +92,7 @@ class Context(object):
 _ctx = Context()
 
 
-class ctx(object):
+class ctx:
     def __init__(self, kwd_dict=None, **kwds):
         self.kwds = kwd_dict or kwds
 
@@ -151,7 +151,7 @@ def resolve_var(source, loc, toks):
     try:
         return _ctx.get(toks[0])
     except KeyError:
-        err = ExpressionError("name '{}' is not defined".format(toks[0]))
+        err = ExpressionError(f"name '{toks[0]}' is not defined")
         err.text = source
         err.offset = loc + 1
         raise err
@@ -170,7 +170,7 @@ def resolve_func(source, loc, toks):
     try:
         return func_map[toks[0]]
     except (AttributeError, KeyError):
-        err = ExpressionError("'{}' is not a function or operator".format(toks[0]))
+        err = ExpressionError(f"'{toks[0]}' is not a function or operator")
         err.text = source
         err.offset = loc + 1
         raise err

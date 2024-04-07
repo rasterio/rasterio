@@ -78,7 +78,7 @@ class TransformMethodsMixin:
         if transform_method is TransformMethod.gcps:
             transform = transform[0]
         if not transform:
-            raise AttributeError("Dataset has no {}".format(transform_method))
+            raise AttributeError(f"Dataset has no {transform_method}")
         return xy(transform, row, col, zs=z, offset=offset, **rpc_options)
 
     def index(
@@ -130,7 +130,7 @@ class TransformMethodsMixin:
         if transform_method is TransformMethod.gcps:
             transform = transform[0]
         if not transform:
-            raise AttributeError("Dataset has no {}".format(transform_method))
+            raise AttributeError(f"Dataset has no {transform_method}")
         return rowcol(transform, x, y, zs=z, op=op, **rpc_options)
 
 

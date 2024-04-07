@@ -606,7 +606,7 @@ def test_coordinate_operation(runner, tmp_path, wotopt):
             "--resampling",
             "cubic",
             wotopt,
-            "coordinate_operation={}".format(pipeline),
+            f"coordinate_operation={pipeline}",
             "tests/data/byte.tif",
             outputname,
         ],

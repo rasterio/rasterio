@@ -52,7 +52,7 @@ def gdal_version_cb(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
 
-    click.echo("{0}".format(rasterio.__gdal_version__), color=ctx.color)
+    click.echo(f"{rasterio.__gdal_version__}", color=ctx.color)
     ctx.exit()
 
 def show_versions_cb(ctx, param, value):
