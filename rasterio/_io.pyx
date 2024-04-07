@@ -46,6 +46,8 @@ from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 
 cimport numpy as np
 
+np.import_array()
+
 log = logging.getLogger(__name__)
 
 gdal33_version_checked = False
