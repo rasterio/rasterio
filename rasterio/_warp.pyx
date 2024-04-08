@@ -479,6 +479,7 @@ def _reproject(
         imgProjOptions = CSLSetNameValue(
             imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
         )
+        bUseApproxTransformer = False
 
     # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
@@ -727,6 +728,7 @@ def _calculate_default_transform(
             imgProjOptions = CSLSetNameValue(
                 imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
             )
+            bUseApproxTransformer = False
 
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
@@ -1319,14 +1321,14 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None,
             "line_off", "samp_off", "height_off", "lat_off", "long_off",
             "line_scale", "samp_scale", "height_scale", "lat_scale", "long_scale",
             "err_bias", "err_rand",
-        ): 
+        ):
             item = ET.SubElement(metadata, "MDI")
             item.attrib["key"] = key.upper()
             item.text = str(getattr(rpcs, key))
         for key in ("line_num_coeff", "line_den_coeff", "samp_num_coeff", "samp_den_coeff"):
             item = ET.SubElement(metadata, "MDI")
             item.attrib["key"] = key.upper()
-            item.text = " ".join(["{:+e}".format(val) for val in getattr(rpcs, key)]) 
+            item.text = " ".join(["{:+e}".format(val) for val in getattr(rpcs, key)])
 
     return ET.tostring(vrtdataset)
 
