@@ -17,4 +17,4 @@ The exact list depends on the platform and the versions of package managers and 
 
 To report a vulnerability in rasterio or in one of the libraries that is included in a binary wheel on PyPI, please use the GitHub Security Advisory "Report a Vulnerability" tab. In the case of a vulnerability in a dependency, please provide a link to a published CVE or other description of the issue.
 
-The Rasterio team will send a response indicating the next steps in handling your report. After the initial reply to your report, the security team will keep you informed of the progress towards a fix and full announcement at https://github.com/Toblerity/Fiona/discussions, and may ask for additional information or guidance.
+The Rasterio team will send a response indicating the next steps in handling your report. After the initial reply to your report, the security team will keep you informed of the progress towards a fix and full announcement at https://github.com/rasterio/rasterio/discussions, and may ask for additional information or guidance.
