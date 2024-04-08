@@ -30,14 +30,18 @@ Please add yours to the registry
 so that other ``rio`` users may find it.
 """
 
-
+import itertools
 import logging
-from pkg_resources import iter_entry_points
 import sys
 
 from click_plugins import with_plugins
 import click
 import cligj
+
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 import rasterio
 from rasterio.session import AWSSession
@@ -65,9 +69,10 @@ def show_versions_cb(ctx, param, value):
 
 
 @with_plugins(
-    ep
-    for ep in list(iter_entry_points("rasterio.rio_commands"))
-    + list(iter_entry_points("rasterio.rio_plugins"))
+    itertools.chain(
+        entry_points(group="rasterio.rio_commands"),
+        entry_points(group="rasterio.rio_plugins"),
+    )
 )
 @click.group()
 @cligj.verbose_opt
