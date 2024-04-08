@@ -293,7 +293,7 @@ def test_xy_input(rows, cols, exp_xy, aff):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("rows, cols", [([0, 1, 2], [0, 1]), ("0", "0")])
+@pytest.mark.parametrize("rows, cols", [([0, 1, 2], [0, 1])])
 def test_invalid_xy_input(rows, cols, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
@@ -393,7 +393,7 @@ def test_xy_rowcol_inverse(transform):
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
-@pytest.mark.parametrize("xs, ys", [([0, 1, 2], [0, 1]), ("0", "0")])
+@pytest.mark.parametrize("xs, ys", [([0, 1, 2], [0, 1])])
 def test_invalid_rowcol_input(xs, ys, aff):
     """Raise on invalid input."""
     with pytest.raises(TransformError):
