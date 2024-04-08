@@ -2,9 +2,9 @@
 
 from contextlib import ExitStack
 from functools import partial
-import math
 import numpy as np
 import warnings
+from numbers import Number
 
 from affine import Affine
 
@@ -86,7 +86,7 @@ class TransformMethodsMixin:
         x,
         y,
         z=None,
-        op=math.floor,
+        op=np.floor,
         precision=None,
         transform_method=TransformMethod.affine,
         **rpc_options
@@ -251,7 +251,7 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
         return transformer.xy(rows, cols, zs=zs, offset=offset)
 
 
-def rowcol(transform, xs, ys, zs=None, op=math.floor, precision=None, **rpc_options):
+def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_options):
     """Get rows and cols of the pixels containing (x, y).
 
     Parameters
@@ -330,13 +330,23 @@ class TransformerBase:
         TransformError
             If input coordinates are not all of the same length
         """
+        xs = np.atleast_1d(xs)
+        ys = np.atleast_1d(ys)
+        if zs is not None:
+            zs = np.atleast_1d(zs)
+        else:
+            zs = np.zeros(1)
+
         try:
-            xs, ys, zs = np.broadcast_arrays(xs, ys, 0 if zs is None else zs)
+            broadcasted = np.broadcast(xs, ys, zs)
+            if broadcasted.ndim != 1:
+                raise TransformError(
+                    "Input coordinates must be broadcastable to a 1d array"
+                )
         except ValueError as error:
-            raise TransformError(
-                "Input coordinates must be broadcastable to a 1d array"
-            ) from error
-        return np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)
+            raise TransformError() from error
+
+        return xs, ys, zs
 
     def __enter__(self):
         return self
@@ -344,7 +354,7 @@ class TransformerBase:
     def __exit__(self, *args):
         pass
 
-    def rowcol(self, xs, ys, zs=None, op=math.floor, precision=None):
+    def rowcol(self, xs, ys, zs=None, op=np.floor, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
 
         Parameters
@@ -378,7 +388,7 @@ class TransformerBase:
                 RasterioDeprecationWarning,
             )
 
-        AS_ARR = True if hasattr(xs, "__iter__") else False
+        IS_SCALAR = isinstance(xs, Number) and isinstance(ys, Number)
         xs, ys, zs = self._ensure_arr_input(xs, ys, zs=zs)
 
         try:
@@ -386,10 +396,22 @@ class TransformerBase:
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
 
-            if len(new_rows) == 1 and not AS_ARR:
-                return (op(new_rows[0]), op(new_cols[0]))
+            is_op_ufunc = isinstance(op, np.ufunc)
+            if is_op_ufunc:
+                op(new_rows, out=new_rows)
+                op(new_cols, out=new_cols)
+            
+            new_rows = new_rows.tolist()
+            new_cols = new_cols.tolist()
+
+            if not is_op_ufunc:
+                new_rows = list(map(op, new_rows))
+                new_cols = list(map(op, new_cols))
+            
+            if IS_SCALAR:
+                return new_rows[0], new_cols[0]
             else:
-                return ([op(r) for r in new_rows], [op(c) for c in new_cols])
+                return new_rows, new_cols
         except TypeError:
             raise TransformError("Invalid inputs")
 
@@ -419,7 +441,7 @@ class TransformerBase:
         tuple of float or list of float
 
         """
-        AS_ARR = True if hasattr(rows, "__iter__") else False
+        IS_SCALAR = isinstance(rows, Number) and isinstance(cols, Number)
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
 
         if offset == 'center':
@@ -445,10 +467,11 @@ class TransformerBase:
             new_xs, new_ys = self._transform(
                 offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
             )
-            if len(new_xs) == 1 and not AS_ARR:
-                return (new_xs[0], new_ys[0])
+
+            if IS_SCALAR:
+                return new_xs[0], new_ys[0]
             else:
-                return (list(new_xs), list(new_ys))
+                return new_xs.tolist(), new_ys.tolist()
         except TypeError:
             raise TransformError("Invalid inputs")
 
@@ -480,22 +503,22 @@ class AffineTransformer(TransformerBase):
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
+        self._transform_arr = np.empty((3, 3), dtype='float64')
 
     def _transform(self, xs, ys, zs, transform_direction):
+        transform = self._transform_arr
         if transform_direction is TransformDirection.forward:
-            transform = self._transformer
+            transform.flat[:] = self._transformer
         elif transform_direction is TransformDirection.reverse:
-            transform = ~self._transformer
+            transform.flat[:] = ~self._transformer
 
-        is_arr = True if type(xs) in [list, tuple] else False
-        if is_arr:
-            a, b, c, d, e, f, _, _, _ = transform
-            transform_matrix = np.array([[a, b, c], [d, e, f]])
-            input_matrix = np.array([xs, ys, np.ones(len(xs))])
-            output_matrix = np.dot(transform_matrix, input_matrix)
-            return (list(output_matrix[0]), list(output_matrix[1]))
-        else:
-            return transform * (xs, ys)
+        bi = np.broadcast(xs, ys)
+        input_matrix = np.empty((3, bi.size))
+        input_matrix[0] = bi.iters[0]
+        input_matrix[1] = bi.iters[1]
+        input_matrix[2] = 1
+        transform.dot(input_matrix, out=input_matrix)
+        return input_matrix[0], input_matrix[1]
 
 
     def __repr__(self):
