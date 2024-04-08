@@ -1,6 +1,7 @@
 -r requirements.txt
 
 # development specific requirements
+build
 cython~=0.29
 delocate
 hypothesis
