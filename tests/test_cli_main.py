@@ -1,7 +1,7 @@
-from pkg_resources import iter_entry_points
+"""Tests CLI command version and entry points."""
 
 import rasterio
-from rasterio.rio.main import main_group
+from rasterio.rio.main import entry_points, main_group
 
 
 def test_version(runner):
@@ -14,5 +14,5 @@ def test_all_registered():
     # This test makes sure that all of the subcommands defined in the
     # rasterio.rio_commands entry-point are actually registered to the main
     # cli group.
-    for ep in iter_entry_points('rasterio.rio_commands'):
+    for ep in entry_points(group="rasterio.rio_commands"):
         assert ep.name in main_group.commands

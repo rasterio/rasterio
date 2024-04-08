@@ -1,11 +1,20 @@
 Changes
 =======
 
-Next (TBD)
-----------
+1.4a3 (2024-04-15)
+------------------
+
+This version is compatible with recent versions of Numpy 1.x and Numpy
+2.0.0rc1.
+
+Packaging:
+
+- Wheels will be built using Numpy 2.0.0rc1 or a newer version and will be
+  compatible with the oldest supported Numpy 1.x.
 
 Bug fixes:
 
+- All use of pkg_resouces has been eliminated (#).
 - Non-strings may once again be used as values of the dtype keyword argument of
   rasterize(), fixing a bug introduced in 1.4a1 (#3045).
 

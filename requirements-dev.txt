@@ -2,6 +2,7 @@
 
 # development specific requirements
 aiohttp
+build
 cython>=3.0
 delocate
 fsspec

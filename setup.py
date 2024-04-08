@@ -224,40 +224,26 @@ log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 ext_modules = None
 if "clean" not in sys.argv:
     extensions = [
+        Extension("rasterio._base", ["rasterio/_base.pyx"], **ext_options),
+        Extension("rasterio._io", ["rasterio/_io.pyx"], **ext_options),
+        Extension("rasterio._features", ["rasterio/_features.pyx"], **ext_options),
+        Extension("rasterio._env", ["rasterio/_env.pyx"], **ext_options),
+        Extension("rasterio._warp", ["rasterio/_warp.pyx"], **cpp_ext_options),
+        Extension("rasterio._fill", ["rasterio/_fill.pyx"], **cpp_ext_options),
+        Extension("rasterio._err", ["rasterio/_err.pyx"], **ext_options),
+        Extension("rasterio._example", ["rasterio/_example.pyx"], **ext_options),
+        Extension("rasterio._version", ["rasterio/_version.pyx"], **ext_options),
+        Extension("rasterio.crs", ["rasterio/crs.pyx"], **ext_options),
+        Extension("rasterio.shutil", ["rasterio/shutil.pyx"], **ext_options),
+        Extension("rasterio._transform", ["rasterio/_transform.pyx"], **ext_options),
+        Extension("rasterio._filepath", ["rasterio/_filepath.pyx"], **cpp_ext_options),
         Extension(
-            'rasterio._base', ['rasterio/_base.pyx'], **ext_options),
-        Extension(
-            'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
-        Extension(
-            'rasterio._features', ['rasterio/_features.pyx'], **ext_options),
-        Extension(
-            'rasterio._env', ['rasterio/_env.pyx'], **ext_options),
-        Extension(
-            'rasterio._warp', ['rasterio/_warp.pyx'], **cpp_ext_options),
-        Extension(
-            'rasterio._fill', ['rasterio/_fill.pyx'], **cpp_ext_options),
-        Extension(
-            'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
-        Extension(
-            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
-        Extension(
-            'rasterio._version', ['rasterio/_version.pyx'], **ext_options),
-        Extension(
-            'rasterio.crs', ['rasterio/crs.pyx'], **ext_options),
-        Extension(
-            'rasterio.shutil', ['rasterio/shutil.pyx'], **ext_options),
-        Extension(
-            'rasterio._transform', ['rasterio/_transform.pyx'], **ext_options)]
-    if gdal_major_version >= 3:
-        # VSI Plugins are only 3.0+
-        extensions.append(
-            Extension(
-                'rasterio._filepath', ['rasterio/_filepath.pyx'], **cpp_ext_options))
-        extensions.append(
-            Extension(
-                'rasterio._vsiopener', ['rasterio/_vsiopener.pyx'], **cpp_ext_options))
+            "rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **cpp_ext_options
+        ),
+    ]
     ext_modules = cythonize(
-        extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options)
+        extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options
+    )
 
 
 with open("README.rst", encoding="utf-8") as f:
@@ -270,7 +256,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
-    "numpy<2",
+    "numpy",
     "click-plugins",
     "pyparsing",
     "setuptools",

@@ -42,6 +42,8 @@ from rasterio._io cimport (
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 from rasterio.crs cimport CRS
 
+np.import_array()
+
 log = logging.getLogger(__name__)
 
 # Gauss (7) is not supported for warp
@@ -49,6 +51,7 @@ SUPPORTED_RESAMPLING = [r for r in Resampling if r.value != 7 and r.value <= 13]
 # rms supported since GDAL 3.3
 if GDALVersion.runtime().at_least('3.3'):
     SUPPORTED_RESAMPLING.append(Resampling.rms)
+
 
 def recursive_round(val, precision):
     """Recursively round coordinates."""
