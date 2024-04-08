@@ -14,7 +14,7 @@ Packaging:
 
 Bug fixes:
 
-- All use of pkg_resouces has been eliminated (#).
+- All use of pkg_resouces has been eliminated (#3061).
 - Non-strings may once again be used as values of the dtype keyword argument of
   rasterize(), fixing a bug introduced in 1.4a1 (#3045).
 
