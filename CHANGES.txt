@@ -14,6 +14,8 @@ Packaging:
 
 Bug fixes:
 
+- The use of approximate transformers is disable in the geolocation array
+  warping case, as they already are for RPCs (#3056).
 - All use of pkg_resouces has been eliminated (#3061).
 - Non-strings may once again be used as values of the dtype keyword argument of
   rasterize(), fixing a bug introduced in 1.4a1 (#3045).
