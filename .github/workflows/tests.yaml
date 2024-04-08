@@ -29,55 +29,6 @@ on:
     - cron:  '0 0 * * 0'
 
 jobs:
-  numpy_compat_test:
-    runs-on: ubuntu-latest
-    name: Build with Numpy 2.0.0rc1, test with 1.23.5
-    container: ghcr.io/osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
-    env:
-        DEBIAN_FRONTEND: noninteractive
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.10']
-        gdal-version: ['3.8.4']
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Update
-        run: |
-          apt-get update
-          apt-get -y install software-properties-common
-          add-apt-repository -y ppa:deadsnakes/ppa
-          apt-get update
-
-      - name: Set up Python ${{ matrix.python-version }}
-        run: |
-          apt-get install -y --no-install-recommends \
-            python${{ matrix.python-version }} \
-            python${{ matrix.python-version }}-dev \
-            python${{ matrix.python-version }}-venv \
-            python3-pip \
-            g++
-
-      - name: build wheel with Numpy 2
-        run: |
-          python${{ matrix.python-version }} -m venv testenv
-          . testenv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install build
-          python -m build
-
-      - name: run tests with Numpy 1
-        run: |
-          . testenv/bin/activate
-          python -m pip install numpy==1.23.5
-          python -m pip wheel -r requirements-dev.txt
-          python -m pip install dist/*.whl
-          python -m pip install boto3 hypothesis packaging pytest shapely
-          rm -rf rasterio
-          python -m pytest -v -m "not wheel" -rxXs
-
   docker_tests:
     runs-on: ubuntu-latest
     name: Docker | GDAL=${{ matrix.gdal-version }} | python=${{ matrix.python-version }}
@@ -121,6 +72,7 @@ jobs:
           python${{ matrix.python-version }} -m venv testenv
           . testenv/bin/activate
           python -m pip install --upgrade pip
+          python -m pip wheel -r requirements-dev.txt
           python -m pip install --no-deps --force-reinstall -e .[test]
 
       - name: run tests

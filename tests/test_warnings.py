@@ -36,5 +36,8 @@ def test_no_notgeoref_warning(transform, gcps, rpcs):
             if rpcs:
                 src.rpcs = rpcs
 
-        with mem.open() as dst:
-            pass
+        with pytest.warns(None) as record:
+            with mem.open() as dst:
+                pass
+        
+        assert len(record) == 0
