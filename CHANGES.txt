@@ -16,6 +16,9 @@ Packaging:
 
 Bug fixes:
 
+- Rasterio's merge function and CLI command cannot handle rotated rasters. This
+  is now noted in documentation and an error will be raised if any input is
+  non-rectilinear (#3066).
 - Eliminate usage of pytest.warns(None) (#3054).
 - All use of pkg_resouces has been eliminated (#3054).
 - Adjust several tests to small differences in output between GDAL 3.7 and 3.8
