@@ -693,7 +693,6 @@ cdef class DatasetReaderBase(DatasetBase):
                 transform=self.window_transform(window),
                 resampling=resampling
             )
-
             vrt_kwds = {'driver': 'VRT'}
 
             with DatasetReaderBase(_UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
@@ -704,6 +703,8 @@ cdef class DatasetReaderBase(DatasetBase):
                     # Below we use another VRT to compute the valid data mask
                     # in this special case where all source pixels are valid.
                     if all_valid:
+                        log.debug("Boundless read: self.transform=%r, self.window_transform(window)=%r", self.transform, self.window_transform(window))
+
                         mask_vrt_doc = _boundless_vrt_doc(
                             self, nodata=0,
                             width=max(self.width, window.width) + 1,
@@ -720,8 +721,10 @@ cdef class DatasetReaderBase(DatasetBase):
 
                     else:
                         mask = np.zeros(out.shape, 'uint8')
+                        window = Window(0, 0, window.width, window.height)
+                        log.debug("Boundless read: window=%r", window)
                         mask = ~vrt._read(
-                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                            indexes, mask, window, None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
 
@@ -734,6 +737,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         if nodatavals[0] is not None:
                             kwds['fill_value'] = nodatavals[0]
 
+                    log.debug("Boundless read: out=%r, mask=%r", out, mask)
                     out = np.ma.array(out, **kwds)
 
         if return2d:

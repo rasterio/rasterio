@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 # Prefix for all in-memory paths used by GDAL's VSI system
 # Except for errors and log messages this shouldn't really be seen by the user
-cdef str PREFIX = "/vsipyopener/"
+cdef str PREFIX = "/vsiriopener/"
 cdef bytes PREFIX_BYTES = PREFIX.encode("utf-8")
 
 # This is global state for the Python filesystem plugin. It currently only

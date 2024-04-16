@@ -195,6 +195,7 @@ def test_merge_destination_2(tmp_path):
             assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
 
 
+@pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
 def test_complex_merge(test_data_complex):
 
     with warnings.catch_warnings():

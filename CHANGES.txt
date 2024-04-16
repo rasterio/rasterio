@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.4a3 (2024-04-15)
+1.4a3 (2024-04-16)
 ------------------
 
 This version is compatible with recent versions of Numpy 1.x and Numpy
@@ -14,6 +14,10 @@ Packaging:
 
 Bug fixes:
 
+- Rasterio's python opener VSI plugin prefix has been changed to "vsiriopener"
+  to not conflict with Fiona.
+- Complex dtypes and nodata values can be used in merge() without errors or
+  warnings (#3046).
 - The use of approximate transformers is disable in the geolocation array
   warping case, as they already are for RPCs (#3056).
 - All use of pkg_resouces has been eliminated (#3061).
