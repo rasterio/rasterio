@@ -300,8 +300,7 @@ def merge(
                 if cmath.isfinite(nodataval):
                     info = np.finfo(dt)
                     inrange = info.min <= nodataval <= info.max
-                    # check casting between float and complex
-                    inrange = inrange & np.can_cast(nodataval, dt)
+                    inrange = inrange
                 else:
                     inrange = True
 
