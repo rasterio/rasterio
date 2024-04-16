@@ -256,6 +256,7 @@ inst_reqs = [
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
+    "importlib-metadata ; python_version < '3.10'",
     "numpy",
     "click-plugins",
     "pyparsing",
@@ -279,7 +280,7 @@ extra_reqs = {
         "packaging",
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
-        "shapely ; python_version < '3.12'",
+        "shapely",
     ],
 }
 
