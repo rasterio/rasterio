@@ -300,13 +300,14 @@ def merge(
                 if cmath.isfinite(nodataval):
                     info = np.finfo(dt)
                     inrange = info.min <= nodataval <= info.max
-                    inrange = inrange
+                    nodata_dt = np.min_scalar_type(nodataval)
+                    inrange = inrange & np.can_cast(nodata_dt, dt)
                 else:
                     inrange = True
 
             if not inrange:
                 warnings.warn(
-                    "The nodata value, %s, cannot safely be represented "
+                    "Ignoring nodata value. The nodata value, %s, cannot safely be represented "
                     "in the chosen data type, %s. Consider overriding it "
                     "using the --nodata option for better results." % (nodataval, dt)
                 )
