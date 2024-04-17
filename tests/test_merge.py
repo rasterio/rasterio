@@ -216,3 +216,9 @@ def test_complex_nodata(test_data_complex):
 
         result, _ = merge(inputs, nodata=0-1j)
         assert numpy.all(result[:, 2] == 0-1j)
+
+
+def test_complex_outrange_nodata_():
+    with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
+        with pytest.warns(UserWarning, match="Ignoring nodata value"):
+            res, _ = merge([src], nodata=1+1j, dtype='float64')
