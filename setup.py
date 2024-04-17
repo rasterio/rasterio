@@ -260,7 +260,6 @@ inst_reqs = [
     "numpy",
     "click-plugins",
     "pyparsing",
-    "setuptools",
 ]
 
 extra_reqs = {
