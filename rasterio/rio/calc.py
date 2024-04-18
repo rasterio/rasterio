@@ -58,7 +58,7 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
     -------
     sequence of Windows
     """
-    max_pixels = mem_limit * 1.0e+6 / itemsize * count
+    max_pixels = mem_limit * 1.0e+6 / (itemsize * count)
     chunk_size = int(math.floor(math.sqrt(max_pixels)))
     ncols = int(math.ceil(width / chunk_size))
     nrows = int(math.ceil(height / chunk_size))

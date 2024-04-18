@@ -1,6 +1,15 @@
 Changes
 =======
 
+Next (TBD)
+----------
+
+Bug fixes:
+
+- Missing parentheses in the denominators of the max_pixels calculation in
+  calc() and merge() have been added (#3073, #3076). This constrains memory
+  use as originally intended.
+
 1.4a3 (2024-04-16)
 ------------------
 
