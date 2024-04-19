@@ -14,7 +14,7 @@ from rasterio.features import sieve
 from rasterio.fill import fillnodata
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
-from rasterio.windows import Window
+from rasterio.windows import Window, subdivide
 
 
 def _get_bands(inputs, sources, d, i=None):
@@ -30,49 +30,6 @@ def _read_array(ix, subix=None, dtype=None):
     if dtype:
         arr = arr.astype(dtype)
     return arr
-
-
-def _chunk_output(width, height, count, itemsize, mem_limit=1):
-    """Divide the calculation output into chunks.
-
-    This function determines the chunk size such that an array of shape
-    (chunk_size, chunk_size, count) with itemsize bytes per element
-    requires no more than mem_limit megabytes of memory.
-
-    Output chunks are described by rasterio Windows.
-
-    Parameters
-    ----------
-    width : int
-        Output width
-    height : int
-        Output height
-    count : int
-        Number of output bands
-    itemsize : int
-        Number of bytes per pixel
-    mem_limit : int, default
-        The maximum size in memory of a chunk array
-
-    Returns
-    -------
-    sequence of Windows
-    """
-    max_pixels = mem_limit * 1.0e+6 / (itemsize * count)
-    chunk_size = int(math.floor(math.sqrt(max_pixels)))
-    ncols = int(math.ceil(width / chunk_size))
-    nrows = int(math.ceil(height / chunk_size))
-    chunk_windows = []
-
-    for col in range(ncols):
-        col_offset = col * chunk_size
-        w = min(chunk_size, width - col_offset)
-        for row in range(nrows):
-            row_offset = row * chunk_size
-            h = min(chunk_size, height - row_offset)
-            chunk_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
-
-    return chunk_windows
 
 
 def asarray(*args):
@@ -190,9 +147,9 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
         # The windows iterator is initialized with a single sample.
         # The actual work windows will be added in the second
         # iteration of the loop.
-        work_windows = [(None, Window(0, 0, 16, 16))]
+        work_windows = [Window(0, 0, 16, 16)]
 
-        for ij, window in work_windows:
+        for window in work_windows:
             ctxkwds = OrderedDict()
 
             for i, ((name, path), src) in enumerate(zip(inputs, sources)):
@@ -223,13 +180,13 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
             if dst is None:
                 kwargs["count"] = results.shape[0]
                 dst = stack.enter_context(rasterio.open(output, "w", **kwargs))
+                max_pixels = mem_limit * 1.0e+6 / (numpy.dtype(dst.dtypes[0]).itemsize * dst.count)
+                chunk_size = int(math.floor(math.sqrt(max_pixels)))
                 work_windows.extend(
-                    _chunk_output(
-                        dst.width,
-                        dst.height,
-                        dst.count,
-                        numpy.dtype(dst.dtypes[0]).itemsize,
-                        mem_limit=mem_limit,
+                    subdivide(
+                        Window(0, 0, dst.width, dst.height),
+                        chunk_size,
+                        chunk_size
                     )
                 )
 
