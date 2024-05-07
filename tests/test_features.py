@@ -1136,6 +1136,17 @@ def test_sieve_blank_mask(basic_image):
     )
 
 
+def test_sieve_all_masked(basic_image):
+    """A blank mask should have no effect."""
+    mask = np.full(basic_image.shape, False)
+    # mask[-1, -1] = True
+    sieved = sieve(basic_image, basic_image.sum(), mask=mask)
+    assert np.array_equal(
+        basic_image,
+        sieved
+    )
+
+
 def test_sieve_invalid_mask_shape(basic_image):
     """A mask that is the wrong shape should fail."""
     with pytest.raises(ValueError):

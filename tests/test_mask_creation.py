@@ -32,6 +32,7 @@ def test_create_internal_mask(data):
             assert MaskFlags.nodata not in flags
 
 
+@pytest.mark.xfail(gdal_version.at_least("3.9"), reason="Internal mask are the default since 3.9.0.")
 def test_create_sidecar_mask(data):
     """Write a .msk sidecar mask."""
     with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:

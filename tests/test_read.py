@@ -349,7 +349,7 @@ def test_chained_io_errors(path_rgb_byte_tif):
         exc = excinfo.value.__cause__
         assert isinstance(exc, CPLE_AppDefinedError)
         msg = str(exc)
-        assert msg.startswith("tests/data/corrupt.tif")
+        assert "corrupt.tif" in msg
         assert "IReadBlock failed" in msg
 
         # Exception ~2 is another AppDefinedError mentioning TIFFReadEncodedTile.

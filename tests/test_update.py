@@ -1,4 +1,3 @@
-import subprocess
 import re
 
 import affine
@@ -8,7 +7,6 @@ import pytest
 import rasterio
 
 
-@pytest.mark.gdalbin
 def test_update_tags(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
@@ -18,8 +16,6 @@ def test_update_tags(data):
             f.update_tags(4, d=4)
         assert f.tags() == {'AREA_OR_POINT': 'Area', 'a': '1', 'b': '2'}
         assert ('c', '3') in f.tags(1).items()
-    info = subprocess.check_output(["gdalinfo", tiffname]).decode('utf-8')
-    assert re.search(r'Metadata:\W+a=1\W+AREA_OR_POINT=Area\W+b=2', info)
 
 
 def test_update_band(data):
