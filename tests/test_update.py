@@ -1,4 +1,4 @@
-import re
+"""Tests of updating a dataset's tags etc."""
 
 import affine
 import numpy as np
