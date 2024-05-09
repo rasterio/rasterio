@@ -787,38 +787,48 @@ class Window:
         return intersection([self, other])
 
 
-def window_split(height, width, max_pixels=1048576):
-    """Divide the row-column domain of a dataset into smaller windows.
+def subdivide(window, height, width):
+    """Divide a window into smaller windows.
 
-    This function determines the window size such that windows have no
-    more than max_pixels number of pixels. Windows are roughly square,
-    except at the right and bottom edges of the domain, and have integer
-    offsets and lengths.
+    Windows have no overlap and will be at most the desired
+    height and width. Smaller windows will be generated where
+    the height and width do not evenly divide the window dimensions.
 
     Parameters
     ----------
+    window : Window
+        Source window to subdivide.
     height : int
-        Domain height.
+        Subwindow height.
     width : int
-        Domain width.
-    max_pixels : int, optional
-        The maximum number of pixels per window.
+        Subwindow width.
 
     Returns
     -------
     list of Windows
     """
-    length = min(int(math.floor(math.sqrt(max_pixels))), height, width)
-    ncols = int(math.ceil(width / length))
-    nrows = int(math.ceil(height / length))
-    chunk_windows = []
+    subwindows = []
 
-    for col in range(ncols):
-        col_offset = col * length
-        w = min(length, width - col_offset)
-        for row in range(nrows):
-            row_offset = row * length
-            h = min(length, height - row_offset)
-            chunk_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
+    irow = window.row_off + window.height
+    icol = window.col_off + window.width
 
-    return chunk_windows
+    row_off = window.row_off
+    col_off = window.col_off
+    while row_off < irow:
+        if row_off + height > irow:
+            _height = irow - row_off
+        else:
+            _height = height
+
+        while col_off < icol:
+            if col_off + width > icol:
+                _width = icol - col_off
+            else:
+                _width = width
+
+            subwindows.append(Window(col_off, row_off, _width, _height))
+            col_off += width
+
+        row_off += height
+        col_off = window.col_off
+    return subwindows

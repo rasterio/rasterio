@@ -17,7 +17,7 @@ from rasterio.errors import RasterioDeprecationWarning, RasterioError
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
-from rasterio.windows import window_split
+from rasterio.windows import subdivide
 
 logger = logging.getLogger(__name__)
 
@@ -317,6 +317,7 @@ def merge(
 
         # When dataset output is selected, we might need to create one
         # and will also provide the option of merging by chunks.
+        dout_window = windows.Window(0, 0, output_width, output_height)
         if dst_path is not None:
             if isinstance(dst_path, DatasetWriter):
                 dst = dst_path
@@ -336,17 +337,16 @@ def merge(
             max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count)
 
             if output_width * output_height < max_pixels:
-                chunks = [((0, 0), windows.Window(0, 0, output_width, output_height))]
+                chunks = [dout_window]
             else:
-                chunks = window_split(
-                    output_height, output_width, max_pixels=max_pixels
-                )
+                n = math.floor(math.sqrt(max_pixels))
+                chunks = subdivide(dout_window, n, n)
         else:
-            chunks = [((0, 0), windows.Window(0, 0, output_width, output_height))]
+            chunks = [dout_window]
 
         logger.debug("Chunks=%r", chunks)
 
-        for _, chunk in chunks:
+        for chunk in chunks:
             dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
             dest = np.zeros((output_count, chunk.height, chunk.width), dtype=dt)
             if inrange:

@@ -14,7 +14,7 @@ from rasterio.errors import WindowError
 from rasterio.windows import (
     crop, from_bounds, bounds, transform, evaluate, window_index, shape,
     Window, intersect, intersection, get_data_window, union,
-    round_window_to_full_blocks)
+    round_window_to_full_blocks, subdivide)
 
 EPS = 1.0e-8
 
@@ -690,3 +690,25 @@ def test_nonintersecting_window_index():
     selection = data[window_index(w, height=5, width=5)]
     assert selection.shape == (2, 0)
     assert selection.flatten().tolist() == []
+
+
+def test_subdivide_offsets():
+    src = Window(10, 12, 3, 5)
+    subs = subdivide(src, 3, 2)
+    
+    expected = {Window(col_off=10, row_off=12, width=2, height=3),
+                Window(col_off=12, row_off=12, width=1, height=3),
+                Window(col_off=10, row_off=15, width=2, height=2),
+                Window(col_off=12, row_off=15, width=1, height=2)}
+    assert set(subs) == expected
+
+
+def test_subdivide():
+    src = Window(0, 0, 4, 4)
+    subs = subdivide(src, 2, 2)
+
+    expected = {Window(col_off=0, row_off=0, width=2, height=2),
+                Window(col_off=2, row_off=0, width=2, height=2),
+                Window(col_off=0, row_off=2, width=2, height=2),
+                Window(col_off=2, row_off=2, width=2, height=2)}
+    assert set(subs) == expected

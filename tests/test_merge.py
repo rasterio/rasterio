@@ -13,7 +13,7 @@ from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import RasterioError
 from rasterio.warp import aligned_target
-from rasterio.windows import window_split
+from rasterio.windows import subdivide
 
 from .conftest import gdal_version
 
@@ -155,7 +155,7 @@ def test_merge_destination_1(tmp_path):
         from rasterio import windows
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+            for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
@@ -183,7 +183,7 @@ def test_merge_destination_2(tmp_path):
         from rasterio import windows
 
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for _, chunk in window_split(dst.height, dst.width, max_pixels=256 * 256):
+            for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
