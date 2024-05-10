@@ -24,7 +24,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin, TransformMethodsMixin):
         The warp source.
     src_crs : CRS or str, optional
         Overrides the coordinate reference system of `src_dataset`.
-    src_transfrom : Affine, optional
+    src_transform : Affine, optional
         Overrides the transform of `src_dataset`.
     src_nodata : float, optional
         Overrides the nodata value of `src_dataset`, which is the
