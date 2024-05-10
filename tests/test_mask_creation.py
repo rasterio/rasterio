@@ -10,6 +10,8 @@ from rasterio.enums import MaskFlags
 from rasterio.errors import RasterioIOError
 from rasterio.windows import Window
 
+from .conftest import gdal_version
+
 
 def test_create_internal_mask(data):
     """Write an internal mask to the fixture's RGB.byte.tif."""
@@ -32,6 +34,7 @@ def test_create_internal_mask(data):
             assert MaskFlags.nodata not in flags
 
 
+@pytest.mark.xfail(gdal_version.at_least("3.9"), reason="Internal mask are the default since 3.9.0.")
 def test_create_sidecar_mask(data):
     """Write a .msk sidecar mask."""
     with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
