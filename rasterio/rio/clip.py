@@ -192,7 +192,8 @@ def clip(
                 )
 
             with rasterio.open(output, "w", **out_kwargs) as out:
-                for sw in windows.subdivide(out_window, 512, 512):
+                dest_win = windows.Window(0, 0, width, height)
+                for dw, sw in zip(windows.subdivide(dest_win, 512, 512), windows.subdivide(out_window, 512, 512)):
                     out_shape = (src.count, sw.height, sw.width)
                     out.write(
                         src.read(
@@ -200,7 +201,8 @@ def clip(
                             out_shape=out_shape,
                             boundless=True,
                             masked=True,
-                        )
+                        ),
+                        window=dw
                     )
 
                     if MaskFlags.per_dataset in src.mask_flag_enums[0]:
@@ -209,7 +211,8 @@ def clip(
                                 window=sw,
                                 out_shape=out_shape,
                                 boundless=True,
-                            )[0]
+                            )[0],
+                            window=dw
                         )
 
                     # TODO: copy other properties (GCPs etc). Several other
