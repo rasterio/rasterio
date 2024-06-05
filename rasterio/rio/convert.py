@@ -83,7 +83,6 @@ def convert(
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
                 for chunk in subdivide(srcds, bxsize, bysize):
-                    print(chunk)
                     data = src.read(window=chunk)
 
                     if scale_ratio:
