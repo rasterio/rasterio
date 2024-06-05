@@ -7,6 +7,7 @@ import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
+from rasterio.windows import subdivide, Window
 
 
 @click.command(short_help="Copy and convert raster dataset.")
@@ -73,29 +74,36 @@ def convert(
 
             profile.update(**creation_options)
 
+            bxsize = bysize = 1024
+            if profile.get('tiled', False):
+                bxsize = profile.get('blockxsize', bxsize)
+                bysize = profile.get('blockysize', bysize)
+            srcds = Window(0, 0, src.width, src.height)
+
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
-                data = src.read()
+                for chunk in subdivide(srcds, bxsize, bysize):
+                    data = src.read(window=chunk)
 
-                if scale_ratio:
-                    # Cast to float64 before multiplying.
-                    data = data.astype('float64', casting='unsafe', copy=False)
-                    np.multiply(
-                        data, scale_ratio, out=data, casting='unsafe')
+                    if scale_ratio:
+                        # Cast to float64 before multiplying.
+                        data = data.astype('float64', casting='unsafe', copy=False)
+                        np.multiply(
+                            data, scale_ratio, out=data, casting='unsafe')
 
-                if scale_offset:
-                    # My understanding of copy=False is that this is a
-                    # no-op if the array was cast for multiplication.
-                    data = data.astype('float64', casting='unsafe', copy=False)
-                    np.add(
-                        data, scale_offset, out=data, casting='unsafe')
+                    if scale_offset:
+                        # My understanding of copy=False is that this is a
+                        # no-op if the array was cast for multiplication.
+                        data = data.astype('float64', casting='unsafe', copy=False)
+                        np.add(
+                            data, scale_offset, out=data, casting='unsafe')
 
-                # Cast to the output dtype and write.
-                result = data.astype(dst_dtype, casting='unsafe', copy=False)
-                dst.write(result)
+                    # Cast to the output dtype and write.
+                    result = data.astype(dst_dtype, casting='unsafe', copy=False)
+                    dst.write(result, window=chunk)
 
-                if MaskFlags.per_dataset in src.mask_flag_enums[0]:
-                    dst.write_mask(src.read_masks()[0])
+                    if MaskFlags.per_dataset in src.mask_flag_enums[0]:
+                        dst.write_mask(src.read_masks(window=chunk)[0], window=chunk)
 
-                # TODO: copy other properties (GCPs etc). Several other
-                # programs need the same utility.
+                    # TODO: copy other properties (GCPs etc). Several other
+                    # programs need the same utility.
