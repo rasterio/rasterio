@@ -387,9 +387,10 @@ def test_rowcol_gcps_rpcs(dataset, transform_attr, coords, expected):
 def test_xy_rowcol_inverse(transform):
     # TODO this is an ideal candiate for
     # property-based testing with hypothesis
-    rows_cols = ([0, 0, 10, 10],
-                 [0, 10, 0, 10])
-    assert rows_cols == rowcol(transform, *xy(transform, *rows_cols))
+    rows = [0, 0, 10, 10]
+    cols = [0, 10, 0, 10]
+    crows, ccols = rowcol(transform, *xy(transform, rows, cols))
+    assert numpy.allclose(rows, crows) and numpy.allclose(cols, ccols)
 
 
 @pytest.mark.parametrize("aff", [Affine.identity()])
@@ -436,7 +437,9 @@ def test_transformer_open_closed(transformer_cls, transform):
 )
 def test_ensure_arr_input(coords, expected):
     transformer = transform.AffineTransformer(Affine.identity())
-    assert transformer.xy(*coords, offset='ul') == expected
+    rows, cols = expected
+    crows, ccols = transformer.xy(*coords, offset='ul')
+    assert numpy.allclose(rows, crows) and numpy.allclose(cols, ccols)
 
 
 def test_ensure_arr_input_same_shape():

@@ -400,14 +400,10 @@ class TransformerBase:
             if is_op_ufunc:
                 op(new_rows, out=new_rows)
                 op(new_cols, out=new_cols)
-            
-            new_rows = new_rows.tolist()
-            new_cols = new_cols.tolist()
+            else:
+                new_rows = np.array(list(map(op, new_rows)))
+                new_cols = np.array(list(map(op, new_cols)))
 
-            if not is_op_ufunc:
-                new_rows = list(map(op, new_rows))
-                new_cols = list(map(op, new_cols))
-            
             if IS_SCALAR:
                 return new_rows[0], new_cols[0]
             else:
@@ -471,7 +467,7 @@ class TransformerBase:
             if IS_SCALAR:
                 return new_xs[0], new_ys[0]
             else:
-                return new_xs.tolist(), new_ys.tolist()
+                return new_xs, new_ys
         except TypeError:
             raise TransformError("Invalid inputs")
 
