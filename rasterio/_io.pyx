@@ -2137,10 +2137,13 @@ cdef class MemoryDataset(DatasetWriterBase):
         copy : bool, optional
             Create an internal copy of the array. If set to False,
             caller must make sure that arr is valid while this object
-            lives.
+            lives. Default is to copy only as needed.
 
         """
-        self._array = np.array(arr, copy=copy)
+        self._array = np.asanyarray(arr)
+        if copy and self._array is arr:
+            self._array = self._array.copy()
+
         dtype = self._array.dtype
 
         if self._array.ndim == 2:
