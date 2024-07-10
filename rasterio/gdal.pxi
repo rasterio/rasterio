@@ -13,6 +13,10 @@ cdef extern from "cpl_conv.h" nogil:
     const char *CPLFindFile(const char *pszClass, const char *pszBasename)
 
 
+cdef extern from "cpl_port.h":
+    ctypedef char **CSLConstList
+
+
 cdef extern from "cpl_error.h" nogil:
 
     ctypedef enum CPLErr:
@@ -142,8 +146,13 @@ cdef extern from "cpl_vsi.h" nogil:
     size_t VSIFWriteL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIStatL(const char *pszFilename, VSIStatBufL *psStatBuf)
 
-cdef extern from "ogr_srs_api.h" nogil:
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 9):
+    cdef extern from "cpl_vsi.h" nogil:
+        int VSIRemovePluginHandler(const char*)
+
+
+cdef extern from "ogr_srs_api.h" nogil:
     ctypedef int OGRErr
     ctypedef void * OGRCoordinateTransformationH
     ctypedef void * OGRSpatialReferenceH

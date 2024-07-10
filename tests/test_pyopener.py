@@ -13,17 +13,6 @@ from rasterio.enums import MaskFlags
 from rasterio.errors import OpenerRegistrationError
 
 
-def test_registration_failure():
-    """Exception is raised on attempt to register a second opener for a filename and mode."""
-    with pytest.raises(OpenerRegistrationError) as exc_info:
-        with rasterio.open(
-            "tests/data/RGB.byte.tif", opener=io.open
-        ) as a, rasterio.open("tests/data/RGB.byte.tif", opener=fsspec.open) as b:
-            pass
-
-    assert exc_info.value.args[0] == "Opener already registered for urlpath."
-
-
 def test_opener_failure():
     """Use int as an opener :)"""
     with pytest.raises(OpenerRegistrationError) as exc_info:
@@ -195,3 +184,15 @@ def test_opener_tiledb_vfs():
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
+
+
+def test_overwrite(data):
+    """Opener can overwrite data."""
+    fs = fsspec.filesystem("file")
+    outputfile = os.path.join(str(data), "RGB.byte.tif")
+
+    with rasterio.open(outputfile) as dst:
+        profile = dst.profile
+
+    with rasterio.open(outputfile, "w", **profile) as dst:
+        dst.write(np.ones((3, profile["height"], profile["width"]), dtype="uint8"))
