@@ -8,10 +8,10 @@ Bug fixes:
 
 - The Pyopener registry and VSI plugin have been rewritten to avoid filename
   conflicts and to be compatible with multithreading. Now, a new plugin handler
-  is registered for each instance of using an opener (#). Before GDAL 3.9.0
+  is registered for each instance of using an opener (#3113). Before GDAL 3.9.0
   plugin handlers cannot not be removed and so it may be observed that the size
   of the Pyopener registry grows during the execution of a program.
-- A CSLConstList ctypedef has been added and is used where appropriate (#).
+- A CSLConstList ctypedef has been added and is used where appropriate (#3113).
 - Missing parentheses in the denominators of the max_pixels calculation in
   calc() and merge() have been added (#3073, #3076). This constrains memory
   use as originally intended.
