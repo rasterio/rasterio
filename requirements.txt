@@ -8,7 +8,6 @@ click~=8.0
 click-plugins
 cligj>=0.5
 matplotlib
-# numpy>=1.21,<2
-numpy==2.0.0
+numpy>=2.0
 setuptools>=20.0
 pyparsing~=3.1
