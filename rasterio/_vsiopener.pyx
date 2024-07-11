@@ -380,10 +380,6 @@ def _opener_registration(urlpath, obj):
             retval = VSIInstallPluginHandler(prefix_bytes, callbacks_struct)
             VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
 
-        registered_prefixes = VSIGetFileSystemsPrefixes()
-        prefix_index = CSLFindString(<CSLConstList>registered_prefixes, prefix_bytes)
-        CSLDestroy(registered_prefixes)
-
         registry[key] = opener
         _OPENER_REGISTRY.set(registry)
 
