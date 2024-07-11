@@ -123,7 +123,7 @@ cdef int pyopener_unlink(
         # No such file or directory.
         return -1
     except Exception as err:
-        errmsg = f"Opener failed to determine file info: {repr(err)}".encode("utf-8")
+        errmsg = f"Opener failed to determine file info: {err!r}".encode("utf-8")
         CPLError(CE_Failure, <CPLErrorNum>4, <const char *>"%s", <const char *>errmsg)
         return -1
 
