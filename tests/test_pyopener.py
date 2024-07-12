@@ -2,6 +2,9 @@
 
 import io
 import os
+from pathlib import Path
+from threading import Thread
+
 import zipfile
 
 import fsspec
@@ -11,17 +14,6 @@ import pytest
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import OpenerRegistrationError
-
-
-def test_registration_failure():
-    """Exception is raised on attempt to register a second opener for a filename and mode."""
-    with pytest.raises(OpenerRegistrationError) as exc_info:
-        with rasterio.open(
-            "tests/data/RGB.byte.tif", opener=io.open
-        ) as a, rasterio.open("tests/data/RGB.byte.tif", opener=fsspec.open) as b:
-            pass
-
-    assert exc_info.value.args[0] == "Opener already registered for urlpath."
 
 
 def test_opener_failure():
@@ -195,3 +187,41 @@ def test_opener_tiledb_vfs():
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
+
+
+def test_delete_on_overwrite(data):
+    """Opener can delete dataset when overwriting."""
+    fs = fsspec.filesystem("file")
+    outputfile = os.path.join(str(data), "RGB.byte.tif")
+
+    with rasterio.open(outputfile, opener=fs) as dst:
+        profile = dst.profile
+
+    # No need to write any data, as open() will error if VSI unlinking
+    # isn't implemented.
+    with rasterio.open(outputfile, "w", opener=fs, **profile) as dst:
+        pass
+
+
+@pytest.mark.parametrize("opener", [io.open, fsspec.filesystem("file")])
+def test_opener_registration(opener):
+    """Opener is correctly registered."""
+    from rasterio._vsiopener import _OPENER_REGISTRY, _opener_registration
+    with _opener_registration("tests/data/RGB.byte.tif", opener) as registered_vsi_path:
+        assert registered_vsi_path.startswith("/vsiriopener_")
+        key = (Path("tests/data"), registered_vsi_path.split("/")[1].split("_")[1])
+        val = _OPENER_REGISTRY.get()[key]
+        assert val.isfile
+        assert val._obj == opener
+
+
+def test_threads_context():
+    """Threads have opener registries."""
+
+    def target():
+        with rasterio.open("tests/data/RGB.byte.tif", opener=io.open) as dst:
+            assert dst.count == 3
+
+    thread = Thread(target=target)
+    thread.start()
+    thread.join()

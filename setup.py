@@ -190,26 +190,24 @@ try:
 except Exception:
     pass
 
-# GDAL 2.3 and newer requires C++11
-if (gdal_major_version, gdal_minor_version) >= (2, 3):
-    cpp11_flag = '-std=c++11'
+cpp11_flag = '-std=c++11'
 
-    # 'extra_compile_args' may not be defined
-    eca = cpp_ext_options.get('extra_compile_args', [])
+# 'extra_compile_args' may not be defined
+eca = cpp_ext_options.get('extra_compile_args', [])
 
-    if platform.system() == 'Darwin':
+if platform.system() == 'Darwin':
 
-        if cpp11_flag not in eca:
-            eca.append(cpp11_flag)
-
-        eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
-
-    # TODO: Windows
-
-    elif cpp11_flag not in eca:
+    if cpp11_flag not in eca:
         eca.append(cpp11_flag)
 
-    cpp_ext_options['extra_compile_args'] = eca
+    eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
+
+# TODO: Windows
+
+elif cpp11_flag not in eca:
+    eca.append(cpp11_flag)
+
+cpp_ext_options['extra_compile_args'] = eca
 
 # Configure optional Cython coverage.
 cythonize_options = {"language_level": sys.version_info[0]}
@@ -238,7 +236,7 @@ if "clean" not in sys.argv:
         Extension("rasterio._transform", ["rasterio/_transform.pyx"], **ext_options),
         Extension("rasterio._filepath", ["rasterio/_filepath.pyx"], **cpp_ext_options),
         Extension(
-            "rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **cpp_ext_options
+            "rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **ext_options
         ),
     ]
     ext_modules = cythonize(

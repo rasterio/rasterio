@@ -20,7 +20,6 @@ import threading
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 from rasterio._filepath cimport install_filepath_plugin
-from rasterio._vsiopener cimport install_pyopener_plugin
 from rasterio._version import gdal_version
 
 from libc.stdio cimport stderr
@@ -378,7 +377,6 @@ cdef class GDALEnv(ConfigEnv):
                     GDALAllRegister()
                     OGRRegisterAll()
                     install_filepath_plugin(filepath_plugin)
-                    install_pyopener_plugin(pyopener_plugin)
 
                     if 'GDAL_DATA' in os.environ:
                         log.debug("GDAL_DATA found in environment.")
