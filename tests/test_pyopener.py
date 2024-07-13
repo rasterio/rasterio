@@ -256,7 +256,7 @@ def test_warp(tmp_path):
 def test_opener_fsspec_fs_tiff_threads():
     """Fsspec filesystem opener is compatible with multithreaded tiff decoding."""
     fs = fsspec.filesystem("file")
-    with rasterio.open("tests/data/RGB.byte.tif", opener=fs, num_threads=2) as src:
+    with rasterio.open("tests/data/rgb_lzw.tif", opener=fs, num_threads=2) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
@@ -267,7 +267,7 @@ def test_opener_fsspec_fs_tiff_threads_2():
     """Fsspec filesystem opener is compatible with multithreaded tiff decoding."""
     fs = fsspec.filesystem("file")
     with rasterio.Env(GDAL_NUM_THREADS=2):
-        with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+        with rasterio.open("tests/data/rgb_lzw.tif", opener=fs) as src:
             profile = src.profile
             assert profile["driver"] == "GTiff"
             assert profile["count"] == 3
