@@ -287,7 +287,8 @@ cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCou
         "Writing data: file_obj=%r, buff_view=%r, buffer_len=%r",
         file_obj,
         buff_view,
-        buffer_len)
+        buffer_len
+    )
     try:
         num = file_obj.write(buff_view)
     except TypeError:
@@ -300,6 +301,16 @@ cdef int pyopener_flush(void *pFile) with gil:
     log.debug("Flushing: file_obj=%r", file_obj)
     try:
         file_obj.flush()
+        return 0
+    except AttributeError:
+        return 1
+
+
+cdef int pyopener_truncate(void *pFile, vsi_l_offset size) with gil:
+    cdef object file_obj = <object>pFile
+    log.debug("Truncating: file_obj=%r, size=%r", file_obj, size)
+    try:
+        file_obj.truncate(size)
         return 0
     except AttributeError:
         return 1
@@ -372,6 +383,7 @@ def _opener_registration(urlpath, obj):
             callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
             callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
             callbacks_struct.flush = <VSIFilesystemPluginFlushCallback>pyopener_flush
+            callbacks_struct.truncate = <VSIFilesystemPluginTruncateCallback>pyopener_truncate
             callbacks_struct.close = <VSIFilesystemPluginCloseCallback>pyopener_close
             callbacks_struct.read_dir = <VSIFilesystemPluginReadDirCallback>pyopener_read_dir
             callbacks_struct.stat = <VSIFilesystemPluginStatCallback>pyopener_stat

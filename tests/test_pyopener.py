@@ -4,9 +4,9 @@ import io
 import os
 from pathlib import Path
 from threading import Thread
-
 import zipfile
 
+from affine import Affine
 import fsspec
 import numpy as np
 import pytest
@@ -14,6 +14,7 @@ import pytest
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import OpenerRegistrationError
+from rasterio.warp import reproject
 
 
 def test_opener_failure():
@@ -225,3 +226,49 @@ def test_threads_context():
     thread = Thread(target=target)
     thread.start()
     thread.join()
+
+
+def test_threads_overviews(data):
+    """."""
+    fs = fsspec.filesystem("file")
+    outputfile = os.path.join(str(data), "RGB.byte.tif")
+
+    with rasterio.Env(GDAL_NUM_THREADS=1):
+        with rasterio.open(outputfile, "r+", opener=fs) as dst:
+            dst.build_overviews([2])
+
+
+def test_warp(tmp_path):
+    """File to file."""
+    fs = fsspec.filesystem("file")
+    tiffname = str(tmp_path.joinpath("foo.tif"))
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+        kwargs = src.profile
+        kwargs.update(
+            transform=Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235),
+            crs="EPSG:3857",
+        )
+        with rasterio.open(tiffname, "w", opener=fs, **kwargs) as dst:
+            for i in (1, 2, 3):
+                reproject(rasterio.band(src, i), rasterio.band(dst, i), num_threads=2)
+
+
+def test_opener_fsspec_fs_tiff_threads():
+    """Fsspec filesystem opener is compatible with multithreaded tiff decoding."""
+    fs = fsspec.filesystem("file")
+    with rasterio.open("tests/data/RGB.byte.tif", opener=fs, num_threads=2) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 3
+        assert src.read().shape == (3, 718, 791)
+
+
+def test_opener_fsspec_fs_tiff_threads_2():
+    """Fsspec filesystem opener is compatible with multithreaded tiff decoding."""
+    fs = fsspec.filesystem("file")
+    with rasterio.Env(GDAL_NUM_THREADS=2):
+        with rasterio.open("tests/data/RGB.byte.tif", opener=fs) as src:
+            profile = src.profile
+            assert profile["driver"] == "GTiff"
+            assert profile["count"] == 3
+            assert src.read().shape == (3, 718, 791)

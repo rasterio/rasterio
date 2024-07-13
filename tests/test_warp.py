@@ -2246,6 +2246,7 @@ def test_geoloc_warp_dataset(data, tmp_path):
                 src_crs=src.crs,
                 src_geoloc_array=np.stack((xs, ys)),
                 resampling=Resampling.bilinear,
+                num_threads=2,
             )
 
     with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
