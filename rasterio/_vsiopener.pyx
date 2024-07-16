@@ -277,6 +277,25 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
     return <size_t>(num_bytes / nSize)
 
 
+cdef int pyopener_read_multi_range(void *pFile, int nRanges, void **ppData, vsi_l_offset *panOffsets, size_t *panSizes) except -1 with gil:
+    cdef object file_obj = <object>pFile
+
+    if not hasattr(file_obj, "read_multi_range"):
+        errmsg = "MultiRangeRead not implemented for Opener".encode("utf-8")
+        CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>errmsg)
+        return -1
+
+    # NOTE: Convert panOffsets and panSizes to Python lists
+    cdef list offsets = [int(panOffsets[i]) for i in range(nRanges)]
+    cdef list sizes = [int(panSizes[i]) for i in range(nRanges)]
+
+    # NOTE: Call the Python method with the converted arguments
+    cdef list python_data = file_obj.read_multi_range(nRanges, offsets, sizes)
+    for i in range(nRanges):
+        memcpy(ppData[i], <void*><char*>python_data[i], len(python_data[i]))
+
+    return 0
+
 cdef size_t pyopener_write(void *pFile, void *pBuffer, size_t nSize, size_t nCount) with gil:
     if pBuffer == NULL:
         return -1
@@ -381,6 +400,8 @@ def _opener_registration(urlpath, obj):
             callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
             callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
             callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
+            if hasattr(opener, "read_multi_range"):
+                callbacks_struct.read_multi_range = <VSIFilesystemPluginReadMultiRangeCallback>pyopener_read_multi_range
             callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
             callbacks_struct.flush = <VSIFilesystemPluginFlushCallback>pyopener_flush
             callbacks_struct.truncate = <VSIFilesystemPluginTruncateCallback>pyopener_truncate
