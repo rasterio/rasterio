@@ -352,7 +352,7 @@ def test_opener_multi_range_read_err():
         def read_multi_range(self):
             return True
 
-    with rasterio.open("tests/data/RGB.byte.tif", opener=VSIOpener) as src:
+    with rasterio.open("tests/data/RGB.byte.tif", opener=VSIOpener()) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
