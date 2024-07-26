@@ -3,8 +3,11 @@
 Based on _filepath.pyx.
 """
 
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 import contextlib
 from contextvars import ContextVar
+from functools import singledispatch
 import logging
 import os
 from pathlib import Path
@@ -280,7 +283,7 @@ cdef size_t pyopener_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 cdef int pyopener_read_multi_range(void *pFile, int nRanges, void **ppData, vsi_l_offset *panOffsets, size_t *panSizes) except -1 with gil:
     cdef object file_obj = <object>pFile
 
-    if not hasattr(file_obj, "read_multi_range"):
+    if not hasattr(file_obj, "get_byte_ranges"):
         errmsg = "MultiRangeRead not implemented for Opener".encode("utf-8")
         CPLError(CE_Failure, <CPLErrorNum>1, <const char *>"%s", <const char *>errmsg)
         return -1
@@ -290,7 +293,7 @@ cdef int pyopener_read_multi_range(void *pFile, int nRanges, void **ppData, vsi_
     cdef list sizes = [int(panSizes[i]) for i in range(nRanges)]
 
     # NOTE: Call the Python method with the converted arguments
-    cdef list python_data = file_obj.read_multi_range(nRanges, offsets, sizes)
+    cdef list python_data = file_obj.get_byte_ranges(offsets, sizes)
     for i in range(nRanges):
         memcpy(ppData[i], <void*><char*>python_data[i], len(python_data[i]))
 
@@ -370,8 +373,17 @@ def _opener_registration(urlpath, obj):
     namespace = f"{VSI_NS_ROOT}_{kid}"
     cdef bytes prefix_bytes = f"/{namespace}/".encode("utf-8")
 
-    # Might raise.
-    opener = _create_opener(obj)
+    opener = to_pyopener(obj)
+
+    # Before returning we do a quick check that the opener will
+    # plausibly function.
+    try:
+        _ = opener.size("test")
+    except (AttributeError, TypeError, ValueError) as err:
+        raise OpenerRegistrationError(f"Opener is invalid.") from err
+    except Exception:
+        # We expect the path to not resolve.
+        pass
 
     registry = _OPENER_REGISTRY.get({})
 
@@ -400,8 +412,6 @@ def _opener_registration(urlpath, obj):
             callbacks_struct.tell = <VSIFilesystemPluginTellCallback>pyopener_tell
             callbacks_struct.seek = <VSIFilesystemPluginSeekCallback>pyopener_seek
             callbacks_struct.read = <VSIFilesystemPluginReadCallback>pyopener_read
-            if hasattr(opener, "read_multi_range"):
-                callbacks_struct.read_multi_range = <VSIFilesystemPluginReadMultiRangeCallback>pyopener_read_multi_range
             callbacks_struct.write = <VSIFilesystemPluginWriteCallback>pyopener_write
             callbacks_struct.flush = <VSIFilesystemPluginFlushCallback>pyopener_flush
             callbacks_struct.truncate = <VSIFilesystemPluginTruncateCallback>pyopener_truncate
@@ -409,7 +419,12 @@ def _opener_registration(urlpath, obj):
             callbacks_struct.read_dir = <VSIFilesystemPluginReadDirCallback>pyopener_read_dir
             callbacks_struct.stat = <VSIFilesystemPluginStatCallback>pyopener_stat
             callbacks_struct.unlink = <VSIFilesystemPluginUnlinkCallback>pyopener_unlink
+
+            if isinstance(opener, MultiByteRangeResourceContainer):
+                callbacks_struct.read_multi_range = <VSIFilesystemPluginReadMultiRangeCallback>pyopener_read_multi_range
+
             callbacks_struct.pUserData = &fsdata
+
             retval = VSIInstallPluginHandler(prefix_bytes, callbacks_struct)
             VSIFreeFilesystemPluginCallbacksStruct(callbacks_struct)
 
@@ -427,9 +442,10 @@ def _opener_registration(urlpath, obj):
                 retval = VSIRemovePluginHandler(prefix_bytes)
 
 
-class _AbstractOpener:
-    """Adapts a Python object to the opener interface."""
-    def open(self, path, mode="r", **kwds):
+class FileContainer(ABC):
+    """An object that can report on and open Python files."""
+    @abstractmethod
+    def open(self, path: str, mode: str = "r", **kwds):
         """Get a Python file object for a resource.
 
         Parameters
@@ -447,8 +463,10 @@ class _AbstractOpener:
             A Python 'file' object with methods read/write, seek, tell,
             etc.
         """
-        raise NotImplementedError
-    def isfile(self, path):
+        pass
+
+    @abstractmethod
+    def isfile(self, path: str) -> bool:
         """Test if the resource is a 'file', a sequence of bytes.
 
         Parameters
@@ -460,8 +478,10 @@ class _AbstractOpener:
         -------
         bool
         """
-        raise NotImplementedError
-    def isdir(self, path):
+        pass
+
+    @abstractmethod
+    def isdir(self, path: str) -> bool:
         """Test if the resource is a 'directory', a container.
 
         Parameters
@@ -473,8 +493,10 @@ class _AbstractOpener:
         -------
         bool
         """
-        raise NotImplementedError
-    def ls(self, path):
+        pass
+
+    @abstractmethod
+    def ls(self, path: str) -> list[str]:
         """Get a 'directory' listing.
 
         Parameters
@@ -487,8 +509,10 @@ class _AbstractOpener:
         list of str
             List of 'path' paths relative to the directory.
         """
-        raise NotImplementedError
-    def mtime(self, path):
+        pass
+
+    @abstractmethod
+    def mtime(self, path: str) -> int:
         """Get the mtime of a resource..
 
         Parameters
@@ -501,8 +525,10 @@ class _AbstractOpener:
         int
             Modification timestamp in seconds.
         """
-        raise NotImplementedError
-    def rm(self, path):
+        pass
+
+    @abstractmethod
+    def rm(self, path: str) -> None:
         """Remove a resource.
 
         Parameters
@@ -514,8 +540,10 @@ class _AbstractOpener:
         -------
         None
         """
-        raise NotImplementedError
-    def size(self, path):
+        pass
+
+    @abstractmethod
+    def size(self, path: str) -> int:
         """Get the size, in bytes, of a resource..
 
         Parameters
@@ -527,10 +555,26 @@ class _AbstractOpener:
         -------
         int
         """
-        raise NotImplementedError
+        pass
 
 
-class _FileOpener(_AbstractOpener):
+class MultiByteRangeResource(ABC):
+    """An object that provides VSIFilesystemPluginReadMultiRangeCallback."""
+    @abstractmethod
+    def get_byte_ranges(self, offsets: list[int], sizes: list[int]) -> list[bytes]:
+        """Get a sequence of bytes specified by a sequence of ranges."""
+        pass
+
+
+class MultiByteRangeResourceContainer(FileContainer):
+    """An object that can open a MultiByteRangeResource."""
+    @abstractmethod
+    def open(self, path: str, **kwds) ->  MultiByteRangeResource:
+        """Open the resource at the given path."""
+        pass
+
+
+class _FileContainer(FileContainer):
     """Adapts a Python file object to the opener interface."""
     def __init__(self, obj):
         self._obj = obj
@@ -544,13 +588,15 @@ class _FileOpener(_AbstractOpener):
         return []
     def mtime(self, path):
         return 0
+    def rm(self, path):
+        pass
     def size(self, path):
         with self._obj(path) as f:
             f.seek(0, os.SEEK_END)
             return f.tell()
 
 
-class _FilesystemOpener(_AbstractOpener):
+class _FilesystemContainer(FileContainer):
     """Adapts an fsspec filesystem object to the opener interface."""
     def __init__(self, obj):
         self._obj = obj
@@ -575,7 +621,7 @@ class _FilesystemOpener(_AbstractOpener):
         return self._obj.size(path)
 
 
-class _AltFilesystemOpener(_FilesystemOpener):
+class _AltFilesystemContainer(_FilesystemContainer):
     """Adapts a tiledb virtual filesystem object to the opener interface."""
     def isfile(self, path):
         return self._obj.is_file(path)
@@ -589,25 +635,20 @@ class _AltFilesystemOpener(_FilesystemOpener):
         return self._obj.file_size(path)
 
 
-def _create_opener(obj):
-    """Adapt Python file and fsspec objects to the opener interface."""
-    if isinstance(obj, _AbstractOpener):
-        opener = obj
-    elif callable(obj):
-        opener = _FileOpener(obj)
-    elif hasattr(obj, "file_size"):
-        opener = _AltFilesystemOpener(obj)
+@singledispatch
+def to_pyopener(obj):
+    """Adapt an object to the Pyopener interface."""
+    if hasattr(obj, "file_size"):
+        return _AltFilesystemContainer(obj)
     else:
-        opener = _FilesystemOpener(obj)
+        return _FilesystemContainer(obj)
 
-    # Before returning we do a quick check that the opener will
-    # plausibly function.
-    try:
-        _ = opener.size("test")
-    except (AttributeError, TypeError, ValueError) as err:
-        raise OpenerRegistrationError(f"Opener is invalid.") from err
-    except Exception:
-        # We expect the path to not resolve.
-        pass
 
-    return opener
+@to_pyopener.register(FileContainer)
+def _(obj):
+    return obj
+
+
+@to_pyopener.register(Callable)
+def _(obj):
+    return _FileContainer(obj)

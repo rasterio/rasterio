@@ -16,7 +16,6 @@ import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import OpenerRegistrationError
 from rasterio.warp import reproject
-from rasterio._vsiopener import _AbstractOpener
 
 
 def test_opener_failure():
@@ -278,12 +277,13 @@ def test_opener_fsspec_fs_tiff_threads_2():
 
 def test_opener_multi_range_read():
     """Test with Opener with multi-range-read method."""
+    from rasterio.abc import MultiByteRangeResourceContainer
 
-    class Opener(io.FileIO):
+    class CustomResource(io.FileIO):
         """Custom FileIO FS with `read_multi_range` method."""
-        def read_multi_range(
+
+        def get_byte_ranges(
             self,
-            nranges,
             offsets,
             sizes,
         ):
@@ -296,12 +296,9 @@ def test_opener_multi_range_read():
             _ = self.seek(offset)
             return self.read(size)
 
-    class VSIOpener(_AbstractOpener):
-        """SubClass of _AbstractOpener with `read_multi_range` attribute."""
-        def __init__(self):
-            self._obj = Opener
+    class CustomResourceContainer:
         def open(self, path, mode="r", **kwds):
-            return self._obj(path, mode=mode, **kwds)
+            return CustomResource(path, mode=mode, **kwds)
         def isfile(self, path):
             return True
         def isdir(self, path):
@@ -311,49 +308,17 @@ def test_opener_multi_range_read():
         def mtime(self, path):
             return 0
         def size(self, path):
-            with self._obj(path) as f:
+            with CustomResource(path) as f:
                 return f.size()
-        def read_multi_range(self):
-            return True
 
+    MultiByteRangeResourceContainer.register(CustomResourceContainer)
 
-    with rasterio.open("tests/data/RGB.byte.tif", opener=VSIOpener()) as src:
+    with rasterio.open(
+        "tests/data/RGB.byte.tif", opener=CustomResourceContainer()
+    ) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 3
         # Should emit a multi-range read
         with pytest.warns(UserWarning, match="Using MultiRange Reads"):
             _ = src.read()
-
-
-def test_opener_multi_range_read_err():
-    """Test with Opener without multi-range-read method. """
-
-    class VSIOpener(_AbstractOpener):
-        """SubClass of _AbstractOpener with `read_multi_range` attribute.
-
-        The class will have the read_multi_range attr, but the file handler won't have it.
-        """
-        def __init__(self):
-            self._obj = io.FileIO
-        def open(self, path, mode="r", **kwds):
-            return self._obj(path, mode=mode, **kwds)
-        def isfile(self, path):
-            return True
-        def isdir(self, path):
-            return False
-        def ls(self, path):
-            return []
-        def mtime(self, path):
-            return 0
-        def size(self, path):
-            with self._obj(path) as f:
-                return f.size()
-        def read_multi_range(self):
-            return True
-
-    with rasterio.open("tests/data/RGB.byte.tif", opener=VSIOpener()) as src:
-        profile = src.profile
-        assert profile["driver"] == "GTiff"
-        assert profile["count"] == 3
-        arr = src.read()
