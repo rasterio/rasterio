@@ -2,6 +2,7 @@
 
 import io
 import os
+import warnings
 from pathlib import Path
 from threading import Thread
 import zipfile
@@ -272,3 +273,52 @@ def test_opener_fsspec_fs_tiff_threads_2():
             assert profile["driver"] == "GTiff"
             assert profile["count"] == 3
             assert src.read().shape == (3, 718, 791)
+
+
+def test_opener_multi_range_read():
+    """Test with Opener with multi-range-read method."""
+    from rasterio.abc import MultiByteRangeResourceContainer
+
+    class CustomResource(io.FileIO):
+        """Custom FileIO FS with `read_multi_range` method."""
+
+        def get_byte_ranges(
+            self,
+            offsets,
+            sizes,
+        ):
+            warnings.warn("Using MultiRange Reads", UserWarning, stacklevel=2)
+            return [
+                self._read_range(offset, size) for (offset, size) in zip(offsets, sizes)
+            ]
+
+        def _read_range(self, offset, size):
+            _ = self.seek(offset)
+            return self.read(size)
+
+    class CustomResourceContainer:
+        def open(self, path, mode="r", **kwds):
+            return CustomResource(path, mode=mode, **kwds)
+        def isfile(self, path):
+            return True
+        def isdir(self, path):
+            return False
+        def ls(self, path):
+            return []
+        def mtime(self, path):
+            return 0
+        def size(self, path):
+            with CustomResource(path) as f:
+                return f.size()
+
+    MultiByteRangeResourceContainer.register(CustomResourceContainer)
+
+    with rasterio.open(
+        "tests/data/RGB.byte.tif", opener=CustomResourceContainer()
+    ) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 3
+        # Should emit a multi-range read
+        with pytest.warns(UserWarning, match="Using MultiRange Reads"):
+            _ = src.read()
