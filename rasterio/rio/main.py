@@ -67,7 +67,6 @@ def show_versions_cb(ctx, param, value):
     ctx.exit()
 
 
-
 @with_plugins(
     itertools.chain(
         entry_points(group="rasterio.rio_commands"),

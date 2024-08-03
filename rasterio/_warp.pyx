@@ -43,7 +43,6 @@ from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 from rasterio.crs cimport CRS
 
 np.import_array()
-
 log = logging.getLogger(__name__)
 
 # Gauss (7) is not supported for warp
@@ -59,6 +58,7 @@ def recursive_round(val, precision):
         return round(val, precision)
     else:
         return [recursive_round(part, precision) for part in val]
+
 
 cdef object _transform_single_geom(
     object single_geom,
