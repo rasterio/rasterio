@@ -16,6 +16,10 @@ Bug fixes:
   calc() and merge() have been added (#3073, #3076). This constrains memory
   use as originally intended.
 
+Other changes:
+
+- Enable support for extra dtypes in features.shapes: int8, float64 (#3125).
+
 1.4a3 (2024-04-16)
 ------------------
 
