@@ -110,7 +110,7 @@ def merge(
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
-    coordinate reference system.
+    coordinate reference system. Rotated rasters cannot be merged.
 
     Input files are merged in their listed order using the reverse
     painter's algorithm (default) or another method. If the output file exists,
