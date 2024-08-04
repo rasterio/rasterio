@@ -23,8 +23,8 @@ def _shapes(image, mask, connectivity, transform):
     Parameters
     ----------
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
-        Data type must be one of rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, or rasterio.float32.
+        Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
+        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)

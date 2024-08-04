@@ -80,8 +80,8 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     Parameters
     ----------
     source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
-        Data type must be one of rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, or rasterio.float32.
+        Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
+        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object, optional
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
         of False or 0 will be excluded from feature generation.  Note
