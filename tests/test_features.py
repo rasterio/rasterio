@@ -13,7 +13,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface, gdal_version
+from .conftest import MockGeoInterface, gdal_version, requires_gdal37
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -1001,7 +1001,7 @@ def test_shapes_invalid_mask_dtype(basic_image):
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
-        ("int8", -127),
+        pytest.param("int8", -127, marks=requires_gdal37),
         ("int16", -32768),
         ("int32", -2147483648),
         ("uint8", 255),
