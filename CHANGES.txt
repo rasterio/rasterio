@@ -1,22 +1,11 @@
 Changes
 =======
 
-1.3.10 (2024-04-10)
--------------------
-
-This version is compatible with recent versions of Numpy 1.x and Numpy
-2.0.0rc1.
-
-Packaging:
-
-- Wheels for Python versions >= 3.9 will be built using Numpy 2.0.0rc1 or
-  a newer version and will be compatible with the oldest supported Numpy 1.x.
-- Wheels for Python version 3.8 will be built using the oldest supported
-  version of NumPy and will not be compatible with Numpy 2.
+Next (TBD)
+----------
 
 Bug fixes:
 
-<<<<<<< HEAD
 - The Pyopener registry and VSI plugin have been rewritten to avoid filename
   conflicts and to be compatible with multithreading. Now, a new plugin handler
   is registered for each instance of using an opener (#3113). Before GDAL 3.9.0
@@ -112,13 +101,6 @@ New Features:
   completely replace the FilePath class introduced in 1.3.0.
 - Deallocate list of warp extras in _reproject(), fixing a potential leak
   (#494).
-=======
-- Rasterio's merge function and CLI command cannot handle rotated rasters. This
-  is now noted in documentation and an error will be raised if any input is
-  non-rectilinear (#3066).
-- Usage of pytest.warns(None) has been eliminated (#3054).
-- All use of pkg_resouces has been eliminated (#3054).
->>>>>>> maint-1.3
 - Adjust several tests to small differences in output between GDAL 3.7 and 3.8
   (#2959).
 - The output file size limits of rio-warp were made redundant by changes to the
@@ -153,6 +135,27 @@ Other changes:
   a loop with a Numpy ufunc (#2936).
 - The crop and invert mutual exclusivity test in raster_geomtry_mask() has been
   removed (#2702).
+
+1.3.10 (2024-04-10)
+-------------------
+
+This version is compatible with recent versions of Numpy 1.x and Numpy
+2.0.0rc1.
+
+Packaging:
+
+- Wheels for Python versions >= 3.9 will be built using Numpy 2.0.0rc1 or
+  a newer version and will be compatible with the oldest supported Numpy 1.x.
+- Wheels for Python version 3.8 will be built using the oldest supported
+  version of NumPy and will not be compatible with Numpy 2.
+
+Bug fixes:
+
+- Rasterio's merge function and CLI command cannot handle rotated rasters. This
+  is now noted in documentation and an error will be raised if any input is
+  non-rectilinear (#3066).
+- Usage of pytest.warns(None) has been eliminated (#3054).
+- All use of pkg_resouces has been eliminated (#3054).
 
 1.3.9 (2023-10-18)
 ------------------
