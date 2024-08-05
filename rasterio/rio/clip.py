@@ -10,8 +10,7 @@ import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.crs import CRS
 from rasterio.enums import MaskFlags
-from rasterio.windows import Window
-from rasterio.windows import get_data_window
+from rasterio import windows
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +138,24 @@ def clip(
                 bounds_window = src.window(*bounds)
 
             elif to_data_window:
-                bounds_window = get_data_window(src.read(1, masked=True))
+                src_win = windows.Window(0, 0, width=src.width, height=src.height)
+                data_wins = []
+                for sw in windows.subdivide(src_win, 512, 512):
+                    dw = windows.get_data_window(src.read(1, masked=True, window=sw))
+                    if dw.width * dw.height > 0:
+                        # Adjust offsets
+                        dw = windows.Window(col_off=dw.col_off + sw.col_off,
+                                            row_off=dw.row_off + sw.row_off,
+                                            width=dw.width, height=dw.height)
+                        data_wins.append(dw)
+                bounds_window = windows.union(data_wins)
 
             else:
                 raise click.UsageError("--bounds, --like, or --to-data-window required")
 
             if not with_complement:
                 bounds_window = bounds_window.intersection(
-                    Window(0, 0, src.width, src.height)
+                    windows.Window(0, 0, src.width, src.height)
                 )
 
             # Align window, as in gdal_translate.
@@ -183,23 +192,28 @@ def clip(
                 )
 
             with rasterio.open(output, "w", **out_kwargs) as out:
-                out.write(
-                    src.read(
-                        window=out_window,
-                        out_shape=(src.count, height, width),
-                        boundless=True,
-                        masked=True,
-                    )
-                )
-
-                if MaskFlags.per_dataset in src.mask_flag_enums[0]:
-                    out.write_mask(
-                        src.read_masks(
-                            window=out_window,
-                            out_shape=(src.count, height, width),
+                dest_win = windows.Window(0, 0, width, height)
+                for dw, sw in zip(windows.subdivide(dest_win, 512, 512), windows.subdivide(out_window, 512, 512)):
+                    out_shape = (src.count, sw.height, sw.width)
+                    out.write(
+                        src.read(
+                            window=sw,
+                            out_shape=out_shape,
                             boundless=True,
-                        )[0]
+                            masked=True,
+                        ),
+                        window=dw
                     )
 
-                # TODO: copy other properties (GCPs etc). Several other
-                # programs need the same utility.
+                    if MaskFlags.per_dataset in src.mask_flag_enums[0]:
+                        out.write_mask(
+                            src.read_masks(
+                                window=sw,
+                                out_shape=out_shape,
+                                boundless=True,
+                            )[0],
+                            window=dw
+                        )
+
+                    # TODO: copy other properties (GCPs etc). Several other
+                    # programs need the same utility.
