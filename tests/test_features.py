@@ -13,7 +13,9 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface, gdal_version, requires_gdal37
+from .conftest import (
+    MockGeoInterface, gdal_version, requires_gdal_lt_37, requires_gdal37
+)
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -1018,7 +1020,12 @@ def test_shapes_supported_dtypes(basic_image, dtype, test_value):
 
 @pytest.mark.parametrize(
     "dtype, test_value",
-    [("uint32", 4294967295), ("int64", 20439845334323), ("float16", -9343.232)],
+    [
+        pytest.param("int8", -127, marks=requires_gdal_lt_37),
+        ("uint32", 4294967295),
+        ("int64", 20439845334323),
+        ("float16", -9343.232),
+    ],
 )
 def test_shapes_unsupported_dtypes(basic_image, dtype, test_value):
     """Unsupported data types should raise exceptions."""
