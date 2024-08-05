@@ -11,7 +11,7 @@ import affine
 import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
-from rasterio.errors import RasterioError
+from rasterio.errors import MergeError, RasterioError
 from rasterio.warp import aligned_target
 from rasterio.windows import subdivide
 
@@ -222,3 +222,19 @@ def test_complex_outrange_nodata_():
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
         with pytest.warns(UserWarning, match="Ignoring nodata value"):
             res, _ = merge([src], nodata=1+1j, dtype='float64')
+
+
+@pytest.mark.parametrize(
+    "matrix",
+    [
+        affine.Affine.scale(-1, 1),
+        affine.Affine.scale(1, -1),
+        affine.Affine.rotation(45.0),
+    ],
+)
+def test_failure_source_transforms(data, matrix):
+    """Rotated, flipped, and upside down rasters cannot be merged."""
+    with rasterio.open(str(data.join("RGB.byte.tif")), "r+") as src:
+        src.transform = matrix * src.transform
+        with pytest.raises(MergeError):
+            merge([src])

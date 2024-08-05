@@ -13,7 +13,7 @@ import numpy as np
 import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import RasterioDeprecationWarning, RasterioError
+from rasterio.errors import MergeError, RasterioDeprecationWarning, RasterioError
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -110,41 +110,43 @@ def merge(
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
-    coordinate reference system. Rotated rasters cannot be merged.
+    coordinate reference system. Rotated, flipped, or upside-down
+    rasters cannot be merged.
 
     Input files are merged in their listed order using the reverse
-    painter's algorithm (default) or another method. If the output file exists,
-    its values will be overwritten by input values.
+    painter's algorithm (default) or another method. If the output file
+    exists, its values will be overwritten by input values.
 
-    Geospatial bounds and resolution of a new output file in the
-    units of the input file coordinate reference system may be provided
-    and are otherwise taken from the first input file.
+    Geospatial bounds and resolution of a new output file in the units
+    of the input file coordinate reference system may be provided and
+    are otherwise taken from the first input file.
 
     Parameters
     ----------
-    sources : list of dataset objects opened in 'r' mode, filenames or PathLike objects
-        source sources to be merged.
+    sources : list
+        A sequence of dataset objects opened in 'r' mode or Path-like
+        objects.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input rasters.
     res: tuple, optional
-        Output resolution in units of coordinate reference system. If not set,
-        the resolution of the first raster is used. If a single value is passed,
-        output pixels will be square.
+        Output resolution in units of coordinate reference system. If
+        not set, the resolution of the first raster is used. If a single
+        value is passed, output pixels will be square.
     nodata: float, optional
-        nodata value to use in output file. If not set, uses the nodata value
-        in the first input raster.
+        nodata value to use in output file. If not set, uses the nodata
+        value in the first input raster.
     dtype: numpy.dtype or string
-        dtype to use in outputfile. If not set, uses the dtype value in the
-        first input raster.
+        dtype to use in outputfile. If not set, uses the dtype value in
+        the first input raster.
     precision: int, optional
         This parameters is unused, deprecated in rasterio 1.3.0, and
         will be removed in version 2.0.0.
     indexes : list of ints or a single int, optional
         bands to read and merge
     output_count: int, optional
-        If using callable it may be useful to have additional bands in the output
-        in addition to the indexes specified for read
+        If using callable it may be useful to have additional bands in
+        the output in addition to the indexes specified for read
     resampling : Resampling, optional
         Resampling algorithm used when reading input files.
         Default: `Resampling.nearest`.
@@ -164,7 +166,8 @@ def merge(
                 boolean masks where merged/new data pixels are invalid
                 same shape as merged_data
             index: int
-                index of the current dataset within the merged dataset collection
+                index of the current dataset within the merged dataset
+                collection
             roff: int
                 row offset in base array
             coff: int
@@ -189,8 +192,14 @@ def merge(
             dest: numpy.ndarray
                 Contents of all input rasters in single array
             out_transform: affine.Affine()
-                Information for mapping pixel coordinates in `dest` to another
-                coordinate system
+                Information for mapping pixel coordinates in `dest` to
+                another coordinate system
+
+    Raises
+    ------
+    MergeError
+        When sources cannot be merged due to incompatibility between
+        them or limitations of the tool.
     """
     if precision is not None:
         warnings.warn(
@@ -252,11 +261,31 @@ def merge(
             # scan input files
             xs = []
             ys = []
+
             for dataset in sources:
                 with dataset_opener(dataset) as src:
+                    src_transform = src.transform
+
+                    # The merge tool requires non-rotated rasters with origins at their
+                    # upper left corner. This limitation may be lifted in the future.
+                    if not src_transform.is_rectilinear:
+                        raise MergeError(
+                            "Rotated, non-rectilinear rasters cannot be merged."
+                        )
+                    if src_transform.a < 0:
+                        raise MergeError(
+                            'Rasters with negative pixel width ("flipped" rasters) cannot be merged.'
+                        )
+                    if src_transform.e > 0:
+                        raise MergeError(
+                            'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
+                        )
+
                     left, bottom, right, top = src.bounds
+
                 xs.extend([left, right])
                 ys.extend([bottom, top])
+
             dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
         # Resolution/pixel size
