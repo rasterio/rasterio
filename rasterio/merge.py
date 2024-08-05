@@ -110,7 +110,8 @@ def merge(
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
-    coordinate reference system. Rotated rasters cannot be merged.
+    coordinate reference system. Rotated, flipped, or upside-down
+    rasters cannot be merged.
 
     Input files are merged in their listed order using the reverse
     painter's algorithm (default) or another method. If the output file exists,
@@ -252,11 +253,31 @@ def merge(
             # scan input files
             xs = []
             ys = []
+
             for dataset in sources:
                 with dataset_opener(dataset) as src:
+                    src_transform = src.transform
+
+                    # The merge tool requires non-rotated rasters with origins at their
+                    # upper left corner. This limitation may be lifted in the future.
+                    if not src_transform.is_rectilinear:
+                        raise MergeError(
+                            "Rotated, non-rectilinear rasters cannot be merged."
+                        )
+                    if src_transform.a < 0:
+                        raise MergeError(
+                            'Rasters with negative pixel width ("flipped" rasters) cannot be merged.'
+                        )
+                    if src_transform.e > 0:
+                        raise MergeError(
+                            'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
+                        )
+
                     left, bottom, right, top = src.bounds
+
                 xs.extend([left, right])
                 ys.extend([bottom, top])
+
             dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
         # Resolution/pixel size
