@@ -22,6 +22,10 @@ from rasterio.windows import subdivide
 logger = logging.getLogger(__name__)
 
 
+class MergeError(RasterioError):
+    """Raised when rasters cannot be merged."""
+
+
 def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the first available pixel."""
     mask = np.empty_like(merged_mask, dtype="bool")

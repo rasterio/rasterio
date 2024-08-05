@@ -166,7 +166,3 @@ class StatisticsError(RasterioError):
 
 class OpenerRegistrationError(RasterioError):
     """Raised when a Python file opener can not be registered."""
-
-
-class MergeError(RasterioError):
-    """Raised when rasters cannot be merged."""
