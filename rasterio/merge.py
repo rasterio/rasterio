@@ -104,6 +104,7 @@ def merge(
     method="first",
     target_aligned_pixels=False,
     mem_limit=64,
+    use_highest_res=False,
     dst_path=None,
     dst_kwds=None,
 ):
@@ -131,8 +132,11 @@ def merge(
         If not set, bounds are determined from bounds of input rasters.
     res: tuple, optional
         Output resolution in units of coordinate reference system. If
-        not set, the resolution of the first raster is used. If a single
-        value is passed, output pixels will be square.
+        not set, a source resolution will be used. If a single value is
+        passed, output pixels will be square.
+    use_highest_res: bool, optional. Default: False.
+        If True, the highest resolution of all sources will be used. If
+        False, the first source's resolution will be used.
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata
         value in the first input raster.
@@ -262,9 +266,12 @@ def merge(
             xs = []
             ys = []
 
-            for dataset in sources:
+            source_resolutions = [None for i in range(len(sources))]
+
+            for i, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
                     src_transform = src.transform
+                    source_resolutions[i] = src.res
 
                     # The merge tool requires non-rotated rasters with origins at their
                     # upper left corner. This limitation may be lifted in the future.
@@ -290,7 +297,15 @@ def merge(
 
         # Resolution/pixel size
         if not res:
-            res = first_res
+            if use_highest_res:
+                res = min(
+                    source_resolutions,
+                    key=lambda x: x
+                    if isinstance(x, numbers.Number)
+                    else math.sqrt(x[0] ** 2 + x[1] ** 2),
+                )
+            else:
+                res = first_res
         elif isinstance(res, numbers.Number):
             res = (res, res)
         elif len(res) == 1:

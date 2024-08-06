@@ -488,19 +488,40 @@ def test_merge_out_of_range_nodata(tiffs):
         rv, transform = merge(datasets, nodata=9999)
     assert not (rv == (9999 % 256)).any()
 
-def test_merge_rgb(tmpdir, runner):
+
+@pytest.mark.parametrize("res_option", [[], ["--use-first-res"], ["--use-highest-res"]])
+def test_merge_rgb(tmpdir, runner, res_option):
     """Get back original image"""
     outputname = str(tmpdir.join('merged.tif'))
     inputs = [
-        'tests/data/rgb1.tif',
-        'tests/data/rgb2.tif',
-        'tests/data/rgb3.tif',
-        'tests/data/rgb4.tif']
-    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
+        "tests/data/rgb1.tif",
+        "tests/data/rgb2.tif",
+        "tests/data/rgb3.tif",
+        "tests/data/rgb4.tif",
+    ]
+    result = runner.invoke(main_group, ["merge"] + res_option + inputs + [outputname])
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
         assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
+
+
+@pytest.mark.parametrize("res_option", [["--use-highest-res"]])
+def test_merge_highest_res(tmpdir, runner, res_option):
+    """Ignore the resolution of the first source."""
+    outputname = str(tmpdir.join('merged.tif'))
+    inputs = [
+        "tests/data/rgb-byte-tenth.tif",
+        "tests/data/rgb1.tif",
+        "tests/data/rgb2.tif",
+        "tests/data/rgb3.tif",
+        "tests/data/rgb4.tif",
+    ]
+    result = runner.invoke(main_group, ["merge"] + res_option + inputs + [outputname])
+    assert result.exit_code == 0
+
+    with rasterio.open(outputname) as src:
+        assert tuple(round(x) for x in src.res) == (300.0, 300.0)
 
 
 def test_merge_tiny_intres(tiffs):

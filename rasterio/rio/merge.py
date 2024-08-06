@@ -56,6 +56,11 @@ def deprecated_precision(ctx, param, value):
     default=64,
     help="Limit on memory used to perform calculations, in MB.",
 )
+@click.option(
+    "--use-highest-res/--use-first-res",
+    default=False,
+    help="Use the highest resolution of sources or the resolution of the first source argument.",
+)
 @options.creation_options
 @click.pass_context
 def merge(
@@ -74,6 +79,7 @@ def merge(
     precision,
     target_aligned_pixels,
     mem_limit,
+    use_highest_res,
     creation_options,
 ):
     """Copy valid pixels from input files to an output file.
@@ -117,6 +123,7 @@ def merge(
             method=method,
             target_aligned_pixels=target_aligned_pixels,
             mem_limit=mem_limit,
+            use_highest_res=use_highest_res,
             dst_path=output,
             dst_kwds=creation_options,
         )
