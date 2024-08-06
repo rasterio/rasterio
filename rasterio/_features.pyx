@@ -10,6 +10,7 @@ from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, MemoryDataset, io_auto
+from rasterio.env import GDALVersion
 
 
 log = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ def _shapes(image, mask, connectivity, transform):
     Parameters
     ----------
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
-        Data type must be one of rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, or rasterio.float32.
+        Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
+        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -62,7 +63,9 @@ def _shapes(image, mask, connectivity, transform):
     is_float = _getnpdtype(image.dtype).kind == "f"
     fieldtp = 2 if is_float else 0
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
+    valid_dtypes = ("int16", "int32", "uint8", "uint16", "float32", "float64")
+    if GDALVersion.runtime().at_least("3.7"):
+        valid_dtypes += ("int8",)
 
     if _getnpdtype(image.dtype).name not in valid_dtypes:
         raise ValueError("image dtype must be one of: {0}".format(

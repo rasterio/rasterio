@@ -13,7 +13,9 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface, gdal_version
+from .conftest import (
+    MockGeoInterface, gdal_version, requires_gdal_lt_37, requires_gdal37
+)
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -998,34 +1000,37 @@ def test_shapes_invalid_mask_dtype(basic_image):
             ))
 
 
-def test_shapes_supported_dtypes(basic_image):
+@pytest.mark.parametrize(
+    "dtype, test_value",
+    [
+        pytest.param("int8", -127, marks=requires_gdal37),
+        ("int16", -32768),
+        ("int32", -2147483648),
+        ("uint8", 255),
+        ("uint16", 65535),
+        ("float32", 1.434532),
+        ("float64", 1.434532),
+    ],
+)
+def test_shapes_supported_dtypes(basic_image, dtype, test_value):
     """Supported data types should return valid results."""
-    supported_types = (
-        ('int16', -32768),
-        ('int32', -2147483648),
-        ('uint8', 255),
-        ('uint16', 65535),
-        ('float32', 1.434532)
-    )
-
-    for dtype, test_value in supported_types:
-        shape, value = next(shapes(basic_image.astype(dtype) * test_value))
-        assert np.allclose(value, test_value)
+    shape, value = next(shapes(basic_image.astype(dtype) * test_value))
+    assert np.allclose(value, test_value)
 
 
-def test_shapes_unsupported_dtypes(basic_image):
+@pytest.mark.parametrize(
+    "dtype, test_value",
+    [
+        pytest.param("int8", -127, marks=requires_gdal_lt_37),
+        ("uint32", 4294967295),
+        ("int64", 20439845334323),
+        ("float16", -9343.232),
+    ],
+)
+def test_shapes_unsupported_dtypes(basic_image, dtype, test_value):
     """Unsupported data types should raise exceptions."""
-    unsupported_types = (
-        ('int8', -127),
-        ('uint32', 4294967295),
-        ('int64', 20439845334323),
-        ('float16', -9343.232),
-        ('float64', -98332.133422114)
-    )
-
-    for dtype, test_value in unsupported_types:
-        with pytest.raises(ValueError):
-            next(shapes(basic_image.astype(dtype) * test_value))
+    with pytest.raises(ValueError):
+        next(shapes(basic_image.astype(dtype) * test_value))
 
 
 def test_shapes_internal_driver_manager(basic_image):
