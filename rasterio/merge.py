@@ -239,7 +239,7 @@ def merge(
         with dataset_opener(sources[0]) as first:
             first_profile = first.profile
             first_crs = first.crs
-            first_res = first.res
+            best_res = first.res
             nodataval = first.nodatavals[0]
             dt = first.dtypes[0]
 
@@ -266,12 +266,18 @@ def merge(
             xs = []
             ys = []
 
-            source_resolutions = [None for i in range(len(sources))]
-
             for i, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
                     src_transform = src.transform
-                    source_resolutions[i] = src.res
+
+                    if use_highest_res:
+                        best_res = min(
+                            best_res,
+                            src.res,
+                            key=lambda x: x
+                            if isinstance(x, numbers.Number)
+                            else math.sqrt(x[0] ** 2 + x[1] ** 2),
+                        )
 
                     # The merge tool requires non-rotated rasters with origins at their
                     # upper left corner. This limitation may be lifted in the future.
@@ -297,15 +303,7 @@ def merge(
 
         # Resolution/pixel size
         if not res:
-            if use_highest_res:
-                res = min(
-                    source_resolutions,
-                    key=lambda x: x
-                    if isinstance(x, numbers.Number)
-                    else math.sqrt(x[0] ** 2 + x[1] ** 2),
-                )
-            else:
-                res = first_res
+            res = best_res
         elif isinstance(res, numbers.Number):
             res = (res, res)
         elif len(res) == 1:
