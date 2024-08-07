@@ -4,6 +4,13 @@ Changes
 Next (TBD)
 ----------
 
+New features:
+
+- The new stack tool and the existing CLI command now have the same bounds and
+  resolution behavior of merge() and rio-merge (#3130).
+- The merge tool and CLI command can now produce output with a resolution
+  equal to the highest source resolution. Defaults remain the same (#3130.
+
 Bug fixes:
 
 - The Pyopener registry and VSI plugin have been rewritten to avoid filename

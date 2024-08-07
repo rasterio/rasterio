@@ -70,10 +70,10 @@ def stack(
         dtype to use in outputfile. If not set, uses the dtype value in
         the first input raster.
     indexes : list of ints or a single int, optional
-        bands to read and merge
+        bands to read and stack.
     output_count: int, optional
         If using callable it may be useful to have additional bands in
-        the output in addition to the indexes specified for read
+        the output in addition to the indexes specified for read.
     resampling : Resampling, optional
         Resampling algorithm used when reading input files.
         Default: `Resampling.nearest`.
@@ -82,9 +82,9 @@ def stack(
         are integer multiples of pixel size, matching the ``-tap``
         options of GDAL utilities.  Default: False.
     mem_limit : int, optional
-        Process merge output in chunks of mem_limit MB in size.
+        Process stack output in chunks of mem_limit MB in size.
     dst_path : str or PathLike, optional
-        Path of output dataset
+        Path of output dataset.
     dst_kwds : dict, optional
         Dictionary of creation options and other paramters that will be
         overlaid on the profile of the output dataset.
@@ -102,7 +102,7 @@ def stack(
     Raises
     ------
     StackError
-        When sources cannot be merged due to incompatibility between
+        When sources cannot be stacked due to incompatibility between
         them or limitations of the tool.
     """
     # Create a dataset_opener object to use in several places in this function.
@@ -162,7 +162,7 @@ def stack(
                         else math.sqrt(x[0] ** 2 + x[1] ** 2),
                     )
 
-                # The merge tool requires non-rotated rasters with origins at their
+                # The stack tool requires non-rotated rasters with origins at their
                 # upper left corner. This limitation may be lifted in the future.
                 if not src_transform.is_rectilinear:
                     raise StackError(
