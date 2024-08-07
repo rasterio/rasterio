@@ -23,10 +23,34 @@ def test_stack_2(tmpdir, runner):
         assert out.count == 6
         assert out.read(1).max() > 0
 
-        from rasterio.plot import show
-        import matplotlib.pyplot as plt
-        show(out.read(indexes=[4,5,6]))
-        plt.savefig("/app/test_stack_2.png")
+        # from rasterio.plot import show
+        # import matplotlib.pyplot as plt
+        # show(out.read(indexes=[4,5,6]))
+        # plt.savefig("/app/test_stack_2.png")
+
+
+def test_stack_disjoint(tmpdir, runner):
+    outputname = str(tmpdir.join("stacked.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "stack",
+            "tests/data/rgb1.tif",
+            "tests/data/rgb2.tif",
+            "tests/data/rgb3.tif",
+            "tests/data/rgb4.tif",
+            outputname,
+        ],
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as out:
+        assert out.count == 12
+        assert out.shape == (718, 791)
+
+        # from rasterio.plot import show
+        # import matplotlib.pyplot as plt
+        # show(out.read(indexes=[4,5,6]))
+        # plt.savefig("/app/test_stack_disjoint.png")
 
 
 def test_stack_list(tmpdir, runner):
