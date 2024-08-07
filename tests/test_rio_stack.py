@@ -12,6 +12,23 @@ def test_stack(tmpdir, runner):
         assert out.read(1).max() > 0
 
 
+def test_stack_2(tmpdir, runner):
+    outputname = str(tmpdir.join("stacked.tif"))
+    result = runner.invoke(
+        main_group,
+        ["stack", "tests/data/RGB.byte.tif", "tests/data/RGB.byte.tif", outputname],
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as out:
+        assert out.count == 6
+        assert out.read(1).max() > 0
+
+        from rasterio.plot import show
+        import matplotlib.pyplot as plt
+        show(out.read(indexes=[4,5,6]))
+        plt.savefig("/app/test_stack_2.png")
+
+
 def test_stack_list(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
     result = runner.invoke(
