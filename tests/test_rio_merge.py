@@ -485,8 +485,9 @@ def test_merge_out_of_range_nodata(tiffs):
     assert datasets[1].dtypes[0] == 'uint8'
 
     with pytest.warns(UserWarning):
-        rv, transform = merge(datasets, nodata=9999)
-    assert not (rv == (9999 % 256)).any()
+        rv, transform = merge(datasets, nodata=9999, masked=True)
+
+    assert rv.fill_value == 0.0
 
 
 @pytest.mark.parametrize("res_option", [[], ["--use-first-res"], ["--use-highest-res"]])

@@ -105,6 +105,7 @@ def merge(
     target_aligned_pixels=False,
     mem_limit=64,
     use_highest_res=False,
+    masked=False,
     dst_path=None,
     dst_kwds=None,
 ):
@@ -140,6 +141,9 @@ def merge(
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata
         value in the first input raster.
+    masked: bool, optional. Default: False.
+        If True, return a masked array. Note: nodata is always set in
+        the case of file output.
     dtype: numpy.dtype or string
         dtype to use in outputfile. If not set, uses the dtype value in
         the first input raster.
@@ -240,7 +244,8 @@ def merge(
             first_profile = first.profile
             first_crs = first.crs
             best_res = first.res
-            nodataval = first.nodatavals[0]
+            first_nodataval = first.nodatavals[0]
+            nodataval = first_nodataval
             dt = first.dtypes[0]
 
             if indexes is None:
@@ -349,10 +354,12 @@ def merge(
 
             if not inrange:
                 warnings.warn(
-                    "Ignoring nodata value. The nodata value, %s, cannot safely be represented "
-                    "in the chosen data type, %s. Consider overriding it "
-                    "using the --nodata option for better results." % (nodataval, dt)
+                    f"Ignoring nodata value. The nodata value, {nodataval}, cannot safely be represented "
+                    f"in the chosen data type, {dt}. Consider overriding it "
+                    "using the --nodata option for better results. "
+                    "Falling back to first source's nodata value."
                 )
+                nodataval = first_nodataval
         else:
             logger.debug("Set nodataval to 0")
             nodataval = 0
@@ -456,6 +463,8 @@ def merge(
                 dst.write(dest, window=dst_window)
 
         if dst is None:
+            if masked:
+                dest = np.ma.masked_equal(dest, nodataval, copy=False)
             return dest, output_transform
         else:
             if first_colormap:

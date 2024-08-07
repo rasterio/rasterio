@@ -6,6 +6,8 @@ Next (TBD)
 
 New features:
 
+- An option to get a masked array from merge() and stack() has been added
+  (#3130).
 - The new stack tool and the existing CLI command now have the same bounds and
   resolution behavior of merge() and rio-merge (#3130).
 - The merge tool and CLI command can now produce output with a resolution

@@ -35,6 +35,7 @@ def stack(
     target_aligned_pixels=False,
     mem_limit=64,
     use_highest_res=False,
+    masked=False,
     dst_path=None,
     dst_kwds=None,
 ):
@@ -63,6 +64,9 @@ def stack(
     use_highest_res: bool, optional. Default: False.
         If True, the highest resolution of all sources will be used. If
         False, the first source's resolution will be used.
+    masked: bool, optional. Default: False.
+        If True, return a masked array. Note: nodata is always set in
+        the case of file output.
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata
         value in the first input raster.
@@ -126,11 +130,12 @@ def stack(
             first_profile = first.profile
             first_crs = first.crs
             best_res = first.res
-            nodataval = first.nodatavals[0]
+            first_nodataval = first.nodatavals[0]
+            nodataval = first_nodataval
             dt = first.dtypes[0]
 
             if indexes is None:
-                indexes = [None for i in len(sources)]
+                indexes = [None for s in sources]
 
             try:
                 first_colormap = first.colormap(1)
@@ -148,7 +153,7 @@ def stack(
 
                 if src_indexes is None:
                     output_count += src.count
-                if isinstance(src_indexes, int):
+                elif isinstance(src_indexes, int):
                     output_count += 1
                 else:
                     output_count += len(src_indexes)
@@ -236,10 +241,12 @@ def stack(
 
             if not inrange:
                 warnings.warn(
-                    "Ignoring nodata value. The nodata value, %s, cannot safely be represented "
-                    "in the chosen data type, %s. Consider overriding it "
-                    "using the --nodata option for better results." % (nodataval, dt)
+                    f"Ignoring nodata value. The nodata value, {nodataval}, cannot safely be represented "
+                    f"in the chosen data type, {dt}. Consider overriding it "
+                    "using the --nodata option for better results. "
+                    "Falling back to first source's nodata value."
                 )
+                nodataval = first_nodataval
         else:
             logger.debug("Set nodataval to 0")
             nodataval = 0
@@ -346,6 +353,8 @@ def stack(
                 dst.write(dest, window=dst_window)
 
         if dst is None:
+            if masked:
+                dest = np.ma.masked_equal(dest, nodataval, copy=False)
             return dest, output_transform
         else:
             if first_colormap:
