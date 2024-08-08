@@ -4,6 +4,11 @@ Changes
 Next (TBD)
 ----------
 
+New features:
+
+- Rasterize() can now capture output in a new or previously opened dataset and
+  can optionally return masked arrays (# ).
+
 Bug fixes:
 
 - The Pyopener registry and VSI plugin have been rewritten to avoid filename
