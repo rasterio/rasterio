@@ -103,6 +103,16 @@ def test_issue2163():
         assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
 
 
+def test_masked_output():
+    """Get a masked array."""
+    with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
+        data = src.read()
+        result, transform = merge([src], masked=True)
+        assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
+        assert result.mask.any()
+        assert result.fill_value == src.nodatavals[0]
+
+
 def test_unsafe_casting():
     """Demonstrate fix for issue 2179"""
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:

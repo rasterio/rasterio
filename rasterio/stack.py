@@ -1,5 +1,6 @@
-"""Copy valid pixels from input files to an output file."""
+"""Raster stacking tool."""
 
+from collections.abc import Iterable
 from contextlib import ExitStack, contextmanager
 import logging
 import os
@@ -13,7 +14,7 @@ import numpy as np
 import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import MergeError, RasterioDeprecationWarning, RasterioError
+from rasterio.errors import RasterioError, StackError
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -22,86 +23,15 @@ from rasterio.windows import subdivide
 logger = logging.getLogger(__name__)
 
 
-def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the first available pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_not(new_mask, out=mask)
-    np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
-
-
-def copy_last(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the last available pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_not(new_mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
-
-
-def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the minimum value pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_or(merged_mask, new_mask, out=mask)
-    np.logical_not(mask, out=mask)
-    np.minimum(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
-    np.logical_not(new_mask, out=mask)
-    np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
-
-
-def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the maximum value pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_or(merged_mask, new_mask, out=mask)
-    np.logical_not(mask, out=mask)
-    np.maximum(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
-    np.logical_not(new_mask, out=mask)
-    np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
-
-
-def copy_sum(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the sum of all pixel values."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_or(merged_mask, new_mask, out=mask)
-    np.logical_not(mask, out=mask)
-    np.add(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
-    np.logical_not(new_mask, out=mask)
-    np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, new_data, where=mask, casting="unsafe")
-
-
-def copy_count(merged_data, new_data, merged_mask, new_mask, **kwargs):
-    """Returns the count of valid pixels."""
-    mask = np.empty_like(merged_mask, dtype="bool")
-    np.logical_or(merged_mask, new_mask, out=mask)
-    np.logical_not(mask, out=mask)
-    np.add(merged_data, mask, out=merged_data, where=mask, casting="unsafe")
-    np.logical_not(new_mask, out=mask)
-    np.logical_and(merged_mask, mask, out=mask)
-    np.copyto(merged_data, mask, where=mask, casting="unsafe")
-
-
-MERGE_METHODS = {
-    "first": copy_first,
-    "last": copy_last,
-    "min": copy_min,
-    "max": copy_max,
-    "sum": copy_sum,
-    "count": copy_count,
-}
-
-
-def merge(
+def stack(
     sources,
     bounds=None,
     res=None,
     nodata=None,
     dtype=None,
-    precision=None,
     indexes=None,
     output_count=None,
     resampling=Resampling.nearest,
-    method="first",
     target_aligned_pixels=False,
     mem_limit=64,
     use_highest_res=False,
@@ -111,17 +41,13 @@ def merge(
 ):
     """Copy valid pixels from input files to an output file.
 
-    All files must have the same number of bands, data type, and
+    All files must have the same data type, and
     coordinate reference system. Rotated, flipped, or upside-down
-    rasters cannot be merged.
-
-    Input files are merged in their listed order using the reverse
-    painter's algorithm (default) or another method. If the output file
-    exists, its values will be overwritten by input values.
+    rasters cannot be stacked.
 
     Geospatial bounds and resolution of a new output file in the units
     of the input file coordinate reference system may be provided and
-    are otherwise taken from the first input file.
+    are otherwise taken from the source datasets.
 
     Parameters
     ----------
@@ -138,57 +64,31 @@ def merge(
     use_highest_res: bool, optional. Default: False.
         If True, the highest resolution of all sources will be used. If
         False, the first source's resolution will be used.
-    nodata: float, optional
-        nodata value to use in output file. If not set, uses the nodata
-        value in the first input raster.
     masked: bool, optional. Default: False.
         If True, return a masked array. Note: nodata is always set in
         the case of file output.
+    nodata: float, optional
+        nodata value to use in output file. If not set, uses the nodata
+        value in the first input raster.
     dtype: numpy.dtype or string
         dtype to use in outputfile. If not set, uses the dtype value in
         the first input raster.
-    precision: int, optional
-        This parameters is unused, deprecated in rasterio 1.3.0, and
-        will be removed in version 2.0.0.
     indexes : list of ints or a single int, optional
-        bands to read and merge
+        bands to read and stack.
     output_count: int, optional
         If using callable it may be useful to have additional bands in
-        the output in addition to the indexes specified for read
+        the output in addition to the indexes specified for read.
     resampling : Resampling, optional
         Resampling algorithm used when reading input files.
         Default: `Resampling.nearest`.
-    method : str or callable
-        pre-defined method:
-            first: reverse painting
-            last: paint valid new on top of existing
-            min: pixel-wise min of existing and new
-            max: pixel-wise max of existing and new
-        or custom callable with signature:
-            merged_data : array_like
-                array to update with new_data
-            new_data : array_like
-                data to merge
-                same shape as merged_data
-            merged_mask, new_mask : array_like
-                boolean masks where merged/new data pixels are invalid
-                same shape as merged_data
-            index: int
-                index of the current dataset within the merged dataset
-                collection
-            roff: int
-                row offset in base array
-            coff: int
-                column offset in base array
-
     target_aligned_pixels : bool, optional
         Whether to adjust output image bounds so that pixel coordinates
         are integer multiples of pixel size, matching the ``-tap``
         options of GDAL utilities.  Default: False.
     mem_limit : int, optional
-        Process merge output in chunks of mem_limit MB in size.
+        Process stack output in chunks of mem_limit MB in size.
     dst_path : str or PathLike, optional
-        Path of output dataset
+        Path of output dataset.
     dst_kwds : dict, optional
         Dictionary of creation options and other paramters that will be
         overlaid on the profile of the output dataset.
@@ -205,24 +105,10 @@ def merge(
 
     Raises
     ------
-    MergeError
-        When sources cannot be merged due to incompatibility between
+    StackError
+        When sources cannot be stacked due to incompatibility between
         them or limitations of the tool.
     """
-    if precision is not None:
-        warnings.warn(
-            "The precision parameter is unused, deprecated, and will be removed in 2.0.0.",
-            RasterioDeprecationWarning,
-        )
-
-    if method in MERGE_METHODS:
-        copyto = MERGE_METHODS[method]
-    elif callable(method):
-        copyto = method
-    else:
-        raise ValueError('Unknown method {0}, must be one of {1} or callable'
-                         .format(method, list(MERGE_METHODS.keys())))
-
     # Create a dataset_opener object to use in several places in this function.
     if isinstance(sources[0], (str, os.PathLike)):
         dataset_opener = rasterio.open
@@ -249,61 +135,62 @@ def merge(
             dt = first.dtypes[0]
 
             if indexes is None:
-                src_count = first.count
-            elif isinstance(indexes, int):
-                src_count = indexes
-            else:
-                src_count = len(indexes)
+                indexes = [None for s in sources]
 
             try:
                 first_colormap = first.colormap(1)
             except ValueError:
                 first_colormap = None
 
-        if not output_count:
-            output_count = src_count
+        # scan input files
+        xs = []
+        ys = []
+        output_count = 0
+
+        for i, (dataset, src_indexes) in enumerate(zip(sources, indexes)):
+            with dataset_opener(dataset) as src:
+                src_transform = src.transform
+
+                if src_indexes is None:
+                    output_count += src.count
+                elif isinstance(src_indexes, int):
+                    output_count += 1
+                else:
+                    output_count += len(src_indexes)
+
+                if use_highest_res:
+                    best_res = min(
+                        best_res,
+                        src.res,
+                        key=lambda x: x
+                        if isinstance(x, numbers.Number)
+                        else math.sqrt(x[0] ** 2 + x[1] ** 2),
+                    )
+
+                # The stack tool requires non-rotated rasters with origins at their
+                # upper left corner. This limitation may be lifted in the future.
+                if not src_transform.is_rectilinear:
+                    raise StackError(
+                        "Rotated, non-rectilinear rasters cannot be stacked."
+                    )
+                if src_transform.a < 0:
+                    raise StackError(
+                        'Rasters with negative pixel width ("flipped" rasters) cannot be stacked.'
+                    )
+                if src_transform.e > 0:
+                    raise StackError(
+                        'Rasters with negative pixel height ("upside down" rasters) cannot be stacked.'
+                    )
+
+                left, bottom, right, top = src.bounds
+
+            xs.extend([left, right])
+            ys.extend([bottom, top])
 
         # Extent from option or extent of all inputs
         if bounds:
             dst_w, dst_s, dst_e, dst_n = bounds
         else:
-            # scan input files
-            xs = []
-            ys = []
-
-            for i, dataset in enumerate(sources):
-                with dataset_opener(dataset) as src:
-                    src_transform = src.transform
-
-                    if use_highest_res:
-                        best_res = min(
-                            best_res,
-                            src.res,
-                            key=lambda x: x
-                            if isinstance(x, numbers.Number)
-                            else math.sqrt(x[0] ** 2 + x[1] ** 2),
-                        )
-
-                    # The merge tool requires non-rotated rasters with origins at their
-                    # upper left corner. This limitation may be lifted in the future.
-                    if not src_transform.is_rectilinear:
-                        raise MergeError(
-                            "Rotated, non-rectilinear rasters cannot be merged."
-                        )
-                    if src_transform.a < 0:
-                        raise MergeError(
-                            'Rasters with negative pixel width ("flipped" rasters) cannot be merged.'
-                        )
-                    if src_transform.e > 0:
-                        raise MergeError(
-                            'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
-                        )
-
-                    left, bottom, right, top = src.bounds
-
-                xs.extend([left, right])
-                ys.extend([bottom, top])
-
             dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
         # Resolution/pixel size
@@ -401,12 +288,9 @@ def merge(
             if inrange:
                 dest.fill(nodataval)
 
-            for idx, dataset in enumerate(sources):
+            dst_idx = 0
+            for idx, (dataset, src_indexes) in enumerate(zip(sources, indexes)):
                 with dataset_opener(dataset) as src:
-                    # 0. Precondition checks
-                    #    - Check that source is within destination bounds
-                    #    - Check that CRS is same
-
                     if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
                         logger.debug(
                             "Skipping source: src=%r, bounds=%r",
@@ -418,23 +302,32 @@ def merge(
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")
 
-                    # 1. Compute the source window
                     src_window = windows.from_bounds(
                         dst_w, dst_s, dst_e, dst_n, src.transform
                     ).round(3)
 
-                    temp_shape = (src_count, chunk.height, chunk.width)
+                    if src_indexes is None:
+                        src_indexes = src.indexes
+                    elif isinstance(src_indexes, int):
+                        src_indexes = [src_indexes]
+
+                    temp_shape = (len(src_indexes), chunk.height, chunk.width)
 
                     temp_src = src.read(
                         out_shape=temp_shape,
                         window=src_window,
                         boundless=True,
                         masked=True,
-                        indexes=indexes,
+                        indexes=src_indexes,
                         resampling=resampling,
                     )
 
-                region = dest[:, :, :]
+                if isinstance(src_indexes, int):
+                    region = dest[dst_idx, :, :]
+                    dst_idx += 1
+                elif isinstance(src_indexes, Iterable):
+                    region = dest[dst_idx : dst_idx + len(src_indexes), :, :]
+                    dst_idx += len(src_indexes)
 
                 if cmath.isnan(nodataval):
                     region_mask = np.isnan(region)
@@ -446,14 +339,11 @@ def merge(
                 # Ensure common shape, resolving issue #2202.
                 temp = temp_src[:, : region.shape[1], : region.shape[2]]
                 temp_mask = np.ma.getmask(temp)
-                copyto(
+
+                np.copyto(
                     region,
                     temp,
-                    region_mask,
-                    temp_mask,
-                    index=idx,
-                    roff=0,
-                    coff=0,
+                    casting="unsafe",
                 )
 
             if dst:
