@@ -12,6 +12,37 @@ def test_stack(tmpdir, runner):
         assert out.read(1).max() > 0
 
 
+def test_stack_2(tmpdir, runner):
+    outputname = str(tmpdir.join("stacked.tif"))
+    result = runner.invoke(
+        main_group,
+        ["stack", "tests/data/RGB.byte.tif", "tests/data/RGB.byte.tif", outputname],
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as out:
+        assert out.count == 6
+        assert out.read(1).max() > 0
+
+
+def test_stack_disjoint(tmpdir, runner):
+    outputname = str(tmpdir.join("stacked.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "stack",
+            "tests/data/rgb1.tif",
+            "tests/data/rgb2.tif",
+            "tests/data/rgb3.tif",
+            "tests/data/rgb4.tif",
+            outputname,
+        ],
+    )
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as out:
+        assert out.count == 12
+        assert out.shape == (718, 791)
+
+
 def test_stack_list(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
     result = runner.invoke(

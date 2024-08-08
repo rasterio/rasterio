@@ -170,3 +170,7 @@ class OpenerRegistrationError(RasterioError):
 
 class MergeError(RasterioError):
     """Raised when rasters cannot be merged."""
+
+
+class StackError(RasterioError):
+    """Raised when rasters cannot be stacked."""
