@@ -425,6 +425,53 @@ def test_rasterize_point(geojson_point):
     )
 
 
+def test_rasterize_to_dataset(tmp_path, geojson_point):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
+    expected[2, 2] = 1
+
+    with rasterio.open(
+        tmp_path / "test.tif",
+        "w",
+        driver="GTiff",
+        count=1,
+        width=10,
+        height=10,
+        dtype="uint8",
+        crs="EPSG:4326",
+        transform=Affine.translation(0.0, 0.0) * Affine.scale(1.0, 1.0),
+    ) as dst:
+        rasterize([geojson_point], dst_path=dst)
+
+    with rasterio.open(tmp_path / "test.tif") as dst:
+        result = dst.read(indexes=1)
+
+    assert np.array_equal(result, expected)
+
+
+def test_rasterize_to_file(tmp_path, geojson_point):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
+    expected[2, 2] = 1
+    expected = np.ma.masked_equal(expected, 0)
+
+    dst_kwds = dict(
+        driver="GTiff",
+        count=1,
+        width=10,
+        height=10,
+        dtype="uint8",
+        crs="EPSG:4326",
+        transform=Affine.translation(0.0, 0.0) * Affine.scale(1.0, 1.0),
+    )
+    rasterize(
+        [geojson_point], nodata=0.0, dst_path=(tmp_path / "test.tif"), dst_kwds=dst_kwds
+    )
+
+    with rasterio.open(tmp_path / "test.tif") as dst:
+        result = dst.read(indexes=1, masked=True)
+
+    assert np.array_equal(result, expected)
+
+
 def test_rasterize_point_dtype_int(geojson_point):
     """Demonstrate fix of #3043."""
     expected = np.zeros(shape=DEFAULT_SHAPE, dtype=int)
@@ -442,8 +489,18 @@ def test_rasterize_multipoint(geojson_multipoint):
     expected[4, 4] = 1
 
     assert np.array_equal(
-        rasterize([geojson_multipoint], out_shape=DEFAULT_SHAPE),
-        expected
+        rasterize([geojson_multipoint], out_shape=DEFAULT_SHAPE), expected
+    )
+
+
+def test_rasterize_multipoint_masked(geojson_multipoint):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
+    expected[2, 2] = 1
+    expected[4, 4] = 1
+    expected = np.ma.masked_equal(expected, 0)
+
+    assert np.array_equal(
+        rasterize([geojson_multipoint], out_shape=DEFAULT_SHAPE, masked=True), expected
     )
 
 

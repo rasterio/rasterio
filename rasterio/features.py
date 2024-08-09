@@ -1,5 +1,6 @@
 """Functions for working with features in a raster dataset."""
 
+from contextlib import ExitStack
 import logging
 import math
 import os
@@ -14,6 +15,7 @@ from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import ShapeSkipWarning
+from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
@@ -123,8 +125,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         source = source.data
 
     transform = guard_transform(transform)
-    for s, v in _shapes(source, mask, connectivity, transform):
-        yield s, v
+    yield from _shapes(source, mask, connectivity, transform)
 
 
 @ensure_env
@@ -183,6 +184,8 @@ def rasterize(
     shapes,
     out_shape=None,
     fill=0,
+    nodata=None,
+    masked=False,
     out=None,
     transform=IDENTITY,
     all_touched=False,
@@ -190,6 +193,8 @@ def rasterize(
     default_value=1,
     dtype=None,
     skip_invalid=True,
+    dst_path=None,
+    dst_kwds=None,
 ):
     """Return an image array with input geometries burned in.
 
@@ -209,6 +214,11 @@ def rasterize(
     fill : int or float, optional
         Used as fill value for all areas not covered by input
         geometries.
+    nodata: float, optional
+        nodata value to use in output file or masked array.
+    masked: bool, optional. Default: False.
+        If True, return a masked array. Note: nodata is always set in
+        the case of file output.
     out : numpy.ndarray, optional
         Array in which to store results. If not provided, out_shape
         and dtype are required.
@@ -233,6 +243,11 @@ def rasterize(
     skip_invalid : bool, optional
         If True (default), invalid shapes will be skipped. If False,
         ValueError will be raised.
+    dst_path : str or PathLike, optional
+        Path of output dataset
+    dst_kwds : dict, optional
+        Dictionary of creation options and other paramters that will be
+        overlaid on the profile of the output dataset.
 
     Returns
     -------
@@ -345,27 +360,43 @@ def rasterize(
             else:
                 raise ValueError("GDAL versions < 3.6 cannot rasterize int64 values.")
 
-    if out is not None:
-        pass
+    with ExitStack() as exit_stack:
+        if dst_path is not None:
+            if isinstance(dst_path, DatasetWriter):
+                out = dst_path
+            else:
+                out_profile = dict(**dst_kwds)
+                if nodata is not None:
+                    out_profile["nodata"] = nodata
+                if dtype is not None:
+                    out_profile["dtype"] = dtype
+                out = rasterio.open(dst_path, "w", **out_profile)
+                exit_stack.enter_context(out)
 
-    elif out_shape is not None:
-        if len(out_shape) != 2:
-            raise ValueError('Invalid out_shape, must be 2D')
-        out = np.empty(out_shape, dtype=dtype)
-        out.fill(fill)
+        elif out is not None:
+            pass
 
-    else:
-        raise ValueError('Either an out_shape or image must be provided')
+        elif out_shape is not None:
+            if len(out_shape) != 2:
+                raise ValueError('Invalid out_shape, must be 2D')
+            out = np.empty(out_shape, dtype=dtype)
+            out.fill(fill)
 
-    if min(out.shape) == 0:
-        raise ValueError("width and height must be > 0")
+        else:
+            raise ValueError('Either an out_shape or image must be provided')
 
-    transform = guard_transform(transform)
+        if min(out.shape) == 0:
+            raise ValueError("width and height must be > 0")
 
-    if valid_shapes:
-        _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+        transform = guard_transform(transform)
 
-    return out
+        if valid_shapes:
+            _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+
+        if isinstance(out, np.ndarray):
+            if masked and not hasattr(out, "mask"):
+                out = np.ma.masked_equal(out, nodata, copy=False)
+            return out
 
 
 def bounds(geometry, north_up=True, transform=None):
@@ -694,7 +725,7 @@ def dataset_features(
         xs, ys = zip(*coords(g))
         yield {
             'type': 'Feature',
-            'id': "{0}:{1}".format(src_basename, i),
+            'id': f"{src_basename}:{i}",
             'properties': {
                 'val': val,
                 'filename': src_basename

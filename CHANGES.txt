@@ -6,6 +6,8 @@ Next (TBD)
 
 New features:
 
+- Rasterize() can now capture output in a new or previously opened dataset and
+  can optionally return masked arrays (#3131).
 - An option to get a masked array from merge() and stack() has been added
   (#3130).
 - The new stack tool and the existing CLI command now have the same bounds and

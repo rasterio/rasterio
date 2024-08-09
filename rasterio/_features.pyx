@@ -9,7 +9,7 @@ from rasterio.dtypes import _getnpdtype
 from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._io cimport DatasetReaderBase, MemoryDataset, io_auto
+from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
 from rasterio.env import GDALVersion
 
 
@@ -278,8 +278,7 @@ def _sieve(image, size, out, mask, connectivity):
 
 
 def _rasterize(shapes, image, transform, all_touched, merge_alg):
-    """
-    Burns input geometries into `image`.
+    """Burns input geometries into `image`.
 
     The `image` array is modified in place.
 
@@ -287,7 +286,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     ----------
     shapes : iterable of (geometry, value) pairs
         `geometry` is a GeoJSON-like object.
-    image : numpy.ndarray
+    image : numpy.ndarray or open dataset object
         Array in which to store results.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `image` to the
@@ -372,15 +371,24 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                     geometry, i, value, error
                 )
 
-        # TODO: is a vsimem file more memory efficient?
-        with MemoryDataset(image, transform=transform) as mem:
-            band_ids = <int *>CPLMalloc(<int>mem.count*sizeof(int))
-            for i in range(<int>mem.count):
+        if isinstance(image, DatasetWriterBase):
+            band_ids = <int *>CPLMalloc(<int>image.count*sizeof(int))
+            for i in range(<int>image.count):
                 band_ids[i] = i + 1
             exc_wrap_int(
                 GDALRasterizeGeometries(
-                    mem.handle(), 1, band_ids, num_geoms, geoms, NULL,
+                    <GDALDatasetH>((<DatasetWriterBase>image)._hds), 1, band_ids, num_geoms, geoms, NULL,
                     NULL, pixel_values, options, NULL, NULL))
+        else:
+            # TODO: is a vsimem file more memory efficient?
+            with MemoryDataset(image, transform=transform) as mem:
+                band_ids = <int *>CPLMalloc(<int>mem.count*sizeof(int))
+                for i in range(<int>mem.count):
+                    band_ids[i] = i + 1
+                exc_wrap_int(
+                    GDALRasterizeGeometries(
+                        mem.handle(), 1, band_ids, num_geoms, geoms, NULL,
+                        NULL, pixel_values, options, NULL, NULL))
 
     finally:
         if geoms != NULL:
