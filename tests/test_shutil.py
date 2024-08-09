@@ -24,7 +24,7 @@ def test_delete(driver, extension, path_rgb_byte_tif, tmpdir):
     driver.
     """
 
-    path = str(tmpdir.join(f'test_delete.{extension}'))
+    path = str(tmpdir.join(f"test_delete.{extension}"))
     rasterio.shutil.copy(path_rgb_byte_tif, path)
     assert os.path.exists(path)
     rasterio.shutil.delete(path, driver=driver)

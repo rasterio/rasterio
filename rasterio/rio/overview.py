@@ -59,17 +59,27 @@ def get_maximum_overview_level(width, height, minsize=256):
 
 @click.command('overview', short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
-@click.option('--build', callback=build_handler, metavar="f1,f2,…|b^min..max|auto",
-              help="A sequence of decimation factors specified as "
-                   "comma-separated list of numbers or a base and range of "
-                   "exponents, or 'auto' to automatically determine the maximum factor.")
-@click.option('--ls', help="Print the overviews for each band.",
-              is_flag=True, default=False)
-@click.option('--rebuild', help="Reconstruct existing overviews.",
-              is_flag=True, default=False)
-@click.option('--resampling', help="Resampling algorithm.",
-              type=click.Choice([it.name for it in OverviewResampling]),
-              default='nearest', show_default=True)
+@click.option(
+    "--build",
+    callback=build_handler,
+    metavar="f1,f2,…|b^min..max|auto",
+    help="A sequence of decimation factors specified as "
+    "comma-separated list of numbers or a base and range of "
+    "exponents, or 'auto' to automatically determine the maximum factor.",
+)
+@click.option(
+    "--ls", help="Print the overviews for each band.", is_flag=True, default=False
+)
+@click.option(
+    "--rebuild", help="Reconstruct existing overviews.", is_flag=True, default=False
+)
+@click.option(
+    "--resampling",
+    help="Resampling algorithm.",
+    type=click.Choice([it.name for it in OverviewResampling]),
+    default="nearest",
+    show_default=True,
+)
 @click.pass_context
 def overview(ctx, input, build, ls, rebuild, resampling):
     """Construct overviews in an existing dataset.

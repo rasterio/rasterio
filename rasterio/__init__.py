@@ -269,7 +269,8 @@ def open(
     if driver and is_blacklisted(driver, mode):
         raise RasterioIOError(
             "Blacklisted: file cannot be opened by "
-            "driver '{}' in '{}' mode".format(driver, mode))
+            "driver '{}' in '{}' mode".format(driver, mode)
+        )
 
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to

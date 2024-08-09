@@ -268,7 +268,7 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        zippath = _UnparsedPath('/vsizip{}/{}'.format(self.name, path.lstrip('/')))
+        zippath = _UnparsedPath("/vsizip{}/{}".format(self.name, path.lstrip("/")))
 
         if self.closed:
             raise ValueError("I/O operation on closed file.")

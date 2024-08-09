@@ -38,8 +38,8 @@ def write_features(
             xs, ys = zip(*coords(feat))
             bbox = (min(xs), min(ys), max(xs), max(ys))
             if use_rs:
-                fobj.write('\u001e')
-            if geojson_type == 'bbox':
+                fobj.write("\u001e")
+            if geojson_type == "bbox":
                 fobj.write(json.dumps(bbox, **dump_kwds))
             else:
                 fobj.write(json.dumps(feat, **dump_kwds))

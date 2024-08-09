@@ -38,9 +38,13 @@ class GroundControlPoint:
         self.z = z
 
     def __repr__(self):
-        args = ', '.join([f'{att}={repr(getattr(self, att))}'
-                         for att in ('row', 'col', 'x', 'y', 'z', 'id', 'info')
-                         if getattr(self, att) is not None])
+        args = ", ".join(
+            [
+                f"{att}={repr(getattr(self, att))}"
+                for att in ("row", "col", "x", "y", "z", "id", "info")
+                if getattr(self, att) is not None
+            ]
+        )
         return f"GroundControlPoint({args})"
 
     def asdict(self):

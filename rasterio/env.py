@@ -597,8 +597,8 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
     version = GDALVersion.parse(version)
     runtime = GDALVersion.runtime()
-    inequality = '>=' if runtime < version else '<='
-    reason = f'\n{reason}' if reason else reason
+    inequality = ">=" if runtime < version else "<="
+    reason = f"\n{reason}" if reason else reason
 
     def decorator(f):
         @wraps(f)
@@ -630,14 +630,18 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
                                 full_kwds[param] != defaults[param]):
                             raise GDALVersionError(
                                 'usage of parameter "{}" requires '
-                                'GDAL {} {}{}'.format(param, inequality,
-                                                         version, reason))
+                                "GDAL {} {}{}".format(
+                                    param, inequality, version, reason
+                                )
+                            )
 
                     elif full_kwds[param] in values:
                         raise GDALVersionError(
                             'parameter "{}={}" requires '
-                            'GDAL {} {}{}'.format(
-                                param, full_kwds[param], inequality, version, reason))
+                            "GDAL {} {}{}".format(
+                                param, full_kwds[param], inequality, version, reason
+                            )
+                        )
 
             return f(*args, **kwds)
 

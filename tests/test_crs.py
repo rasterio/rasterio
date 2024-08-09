@@ -188,7 +188,9 @@ def test_equality_from_epsg(epsg_code):
 
 @pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
 def test_equality_from_dict(epsg_code):
-    assert CRS.from_dict(init=f'epsg:{epsg_code}') == CRS.from_dict(init=f'epsg:{epsg_code}')
+    assert CRS.from_dict(init=f"epsg:{epsg_code}") == CRS.from_dict(
+        init=f"epsg:{epsg_code}"
+    )
 
 
 def test_is_same_crs():

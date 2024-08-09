@@ -32,10 +32,21 @@ SCHEMES = {
 }
 
 ARCHIVESCHEMES = set
-CURLSCHEMES = {k for k, v in SCHEMES.items() if v == 'curl'}
+CURLSCHEMES = {k for k, v in SCHEMES.items() if v == "curl"}
 
 # TODO: extend for other cloud plaforms.
-REMOTESCHEMES = {k for k, v in SCHEMES.items() if v in ('curl', 's3', 'oss', 'gs', 'az',)}
+REMOTESCHEMES = {
+    k
+    for k, v in SCHEMES.items()
+    if v
+    in (
+        "curl",
+        "s3",
+        "oss",
+        "gs",
+        "az",
+    )
+}
 
 
 class _Path:
@@ -200,13 +211,15 @@ def _vsi_path(path):
             else:
                 suffix = ''
 
-            prefix = '/'.join(f'vsi{SCHEMES[p]}' for p in path.scheme.split('+') if p != 'file')
+            prefix = "/".join(
+                f"vsi{SCHEMES[p]}" for p in path.scheme.split("+") if p != "file"
+            )
 
             if prefix:
                 if path.archive:
                     result = '/{}/{}{}/{}'.format(prefix, suffix, path.archive, path.path.lstrip('/'))
                 else:
-                    result = f'/{prefix}/{suffix}{path.path}'
+                    result = f"/{prefix}/{suffix}{path.path}"
             else:
                 result = path.path
             return result

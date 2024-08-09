@@ -79,9 +79,8 @@ def _cb_key_val(ctx, param, value):
     else:
         out = {}
         for pair in value:
-            if '=' not in pair:
-                raise click.BadParameter(
-                    f"Invalid syntax for KEY=VAL arg: {pair}")
+            if "=" not in pair:
+                raise click.BadParameter(f"Invalid syntax for KEY=VAL arg: {pair}")
             else:
                 k, v = pair.split('=', 1)
                 k = k.lower()
@@ -115,15 +114,13 @@ def file_in_handler(ctx, param, value):
                 archive = abspath_forward_slashes(path.archive)
                 return f"{path.scheme}://{archive}!{path.path}"
             else:
-                raise OSError(
-                    f"Input archive {path.archive} does not exist")
+                raise OSError(f"Input archive {path.archive} does not exist")
 
         else:
             if os.path.exists(path.path) and rasterio.shutil.exists(value):
                 return abspath_forward_slashes(path.path)
             else:
-                raise OSError(
-                    f"Input file {path.path} does not exist")
+                raise OSError(f"Input file {path.path} does not exist")
 
     except Exception:
         raise click.BadParameter(f"{value} is not a valid input file")
@@ -212,8 +209,8 @@ def bounds_handler(ctx, param, value):
             return retval
         except Exception:
             raise click.BadParameter(
-                "{!r} is not a valid bounding box representation".format(
-                    value))
+                "{!r} is not a valid bounding box representation".format(value)
+            )
     else:  # pragma: no cover
         return retval
 

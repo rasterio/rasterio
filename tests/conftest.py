@@ -633,7 +633,7 @@ def path_alpha_tif(data_dir):
 def path_zip_file(data_dir):
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
-    path = f'{data_dir}/white-gemini-iv.zip'
+    path = f"{data_dir}/white-gemini-iv.zip"
     if not os.path.exists(path):
         with zipfile.ZipFile(path, 'w') as zip:
             for filename in ['white-gemini-iv.vrt',

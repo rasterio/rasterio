@@ -722,7 +722,7 @@ def test_require_gdal_version_too_low():
     with pytest.raises(GDALVersionError) as exc_info:
         b()
 
-    message = f'GDAL version must be >= {version}'
+    message = f"GDAL version must be >= {version}"
     assert message in exc_info.value.args[0]
 
 

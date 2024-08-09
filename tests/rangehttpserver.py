@@ -97,10 +97,11 @@ class RangeRequestHandler(SimpleHTTPRequestHandler):
             last = file_len - 1
         response_length = last - first + 1
 
-        self.send_header('Content-Range',
-                         'bytes {}-{}/{}'.format(first, last, file_len))
-        self.send_header('Content-Length', str(response_length))
-        self.send_header('Last-Modified', self.date_time_string(fs.st_mtime))
+        self.send_header(
+            "Content-Range", "bytes {}-{}/{}".format(first, last, file_len)
+        )
+        self.send_header("Content-Length", str(response_length))
+        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
         return f
 

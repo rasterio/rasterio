@@ -40,7 +40,7 @@ def test_initial_empty():
 def test_initial_not_file_str():
     """Creating from not file-like fails."""
     with pytest.raises(TypeError):
-        FilePath('lolwut')
+        FilePath("lolwut")
 
 
 def test_initial_not_file_bytes():
@@ -145,8 +145,11 @@ def test_vrt_vsifile(data_dir, path_white_gemini_iv_vrt):
     """Successfully read an in-memory VRT"""
     with open(path_white_gemini_iv_vrt) as vrtfile:
         source = vrtfile.read()
-        source = source.replace('<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>', f'<SourceFilename relativeToVRT="0">{data_dir}/389225main_sw_1965_1024.jpg</SourceFilename>')
-        source = BytesIO(source.encode('utf-8'))
+        source = source.replace(
+            '<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>',
+            f'<SourceFilename relativeToVRT="0">{data_dir}/389225main_sw_1965_1024.jpg</SourceFilename>',
+        )
+        source = BytesIO(source.encode("utf-8"))
 
     with FilePath(source) as vsifile:
         with vsifile.open() as src:
@@ -164,7 +167,9 @@ def test_vsifile_copyfiles(path_rgb_msk_byte_tif):
         with FilePath(dirname="foo", filename=src_basename) as vsifile:
             copyfiles(src.name, vsifile.name)
             with vsifile.open() as rgb2:
-                assert sorted(rgb2.files) == sorted([f'/vsimem/foo/{src_basename}', f'/vsimem/foo/{src_basename}.msk'])
+                assert sorted(rgb2.files) == sorted(
+                    [f"/vsimem/foo/{src_basename}", f"/vsimem/foo/{src_basename}.msk"]
+                )
 
 
 @pytest.mark.xfail(reason="FilePath does not implement '.files' property properly.")
