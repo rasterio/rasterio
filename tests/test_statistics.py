@@ -13,8 +13,8 @@ def test_statistics(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as dataset:
         with pytest.warns(RasterioDeprecationWarning):
             stats = dataset.statistics(1)
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44.4344786)
         assert_almost_equal(stats.std, 58.4900559)
 
@@ -34,8 +34,8 @@ def test_stats_one_band(path_rgb_byte_tif):
     """Get basic statistics for one band."""
     with rasterio.open(path_rgb_byte_tif) as dataset:
         stats, *rem = dataset.stats(indexes=1)
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44.4344786)
         assert_almost_equal(stats.std, 58.4900559)
 
@@ -44,8 +44,8 @@ def test_stats_one_band_approx(path_rgb_byte_tif):
     """Get approximate statistics for one band."""
     with rasterio.open(path_rgb_byte_tif) as dataset:
         stats, *rem = dataset.stats(indexes=1, approx=True)
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44, decimal=0)
         assert_almost_equal(stats.std, 58, decimal=0)
 
@@ -54,8 +54,8 @@ def test_stats_two_band(path_rgb_byte_tif):
     """Get basic statistics for two bands."""
     with rasterio.open(path_rgb_byte_tif) as dataset:
         *rem, stats = dataset.stats(indexes=[1, 1])
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44.4344786)
         assert_almost_equal(stats.std, 58.4900559)
 
@@ -65,8 +65,8 @@ def test_stats_all_bands(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as dataset:
         stats, *rem = dataset.stats()
         assert len(rem) == 2
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44.4344786)
         assert_almost_equal(stats.std, 58.4900559)
 
@@ -83,7 +83,7 @@ def test_update_clear(data):
         dataset.clear_stats()
         # The next call triggers recomputation of stats.
         stats, *rem = dataset.stats(indexes=1, approx=True)
-        assert stats.min == 1
-        assert stats.max == 255
+        assert stats.min == 1.0
+        assert stats.max == 255.0
         assert_almost_equal(stats.mean, 44, decimal=0)
         assert_almost_equal(stats.std, 56, decimal=0)
