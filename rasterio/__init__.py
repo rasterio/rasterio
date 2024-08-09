@@ -23,7 +23,7 @@ if platform.system() == "Windows":
                 if p and glob.glob(os.path.join(p, "gdal*.dll")):
                     os.add_dll_directory(os.path.abspath(p))
 
-
+from rasterio._io import Statistics
 from rasterio._vsiopener import _opener_registration
 from rasterio._show_versions import show_versions
 from rasterio._version import gdal_version, get_geos_version, get_proj_version
