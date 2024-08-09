@@ -125,8 +125,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         source = source.data
 
     transform = guard_transform(transform)
-    for s, v in _shapes(source, mask, connectivity, transform):
-        yield s, v
+    yield from _shapes(source, mask, connectivity, transform)
 
 
 @ensure_env
@@ -726,7 +725,7 @@ def dataset_features(
         xs, ys = zip(*coords(g))
         yield {
             'type': 'Feature',
-            'id': "{0}:{1}".format(src_basename, i),
+            'id': f"{src_basename}:{i}",
             'properties': {
                 'val': val,
                 'filename': src_basename
