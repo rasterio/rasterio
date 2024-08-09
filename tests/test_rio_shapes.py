@@ -61,7 +61,7 @@ def test_shapes_sequence_rs(runner, pixelated_image_file):
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 0
     assert result.output.count('"Feature"') == 4
-    assert result.output.count(u'\u001e') == 4
+    assert result.output.count('\u001e') == 4
 
 
 def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):

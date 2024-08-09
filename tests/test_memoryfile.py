@@ -220,7 +220,7 @@ def test_file_object_read_memfile(monkeypatch, request, capfd, rgb_file_object):
         # exited and the temporary in-memory file is deleted.
         env._dump_open_datasets()
         captured = capfd.readouterr()
-        assert "/vsimem/{}".format(request.node.name) not in captured.err
+        assert f"/vsimem/{request.node.name}" not in captured.err
 
 
 def test_issue2360_no_with(monkeypatch, request, capfd, rgb_file_object):
@@ -235,14 +235,14 @@ def test_issue2360_no_with(monkeypatch, request, capfd, rgb_file_object):
 
         env._dump_open_datasets()
         captured = capfd.readouterr()
-        assert "/vsimem/{}".format(request.node.name) in captured.err
+        assert f"/vsimem/{request.node.name}" in captured.err
 
         # Closing src causes the attached MemoryFile context to be
         # exited and the temporary in-memory file is deleted.
         src.close()
         env._dump_open_datasets()
         captured = capfd.readouterr()
-        assert "/vsimem/{}".format(request.node.name) not in captured.err
+        assert f"/vsimem/{request.node.name}" not in captured.err
 
 
 def test_file_object_read_variant(rgb_file_bytes):
@@ -371,8 +371,8 @@ def test_memfile_copyfiles(path_rgb_msk_byte_tif):
             with memfile.open() as rgb2:
                 assert sorted(rgb2.files) == sorted(
                     [
-                        "/vsimem/foo/{}".format(src_basename),
-                        "/vsimem/foo/{}.msk".format(src_basename),
+                        f"/vsimem/foo/{src_basename}",
+                        f"/vsimem/foo/{src_basename}.msk",
                     ]
                 )
 

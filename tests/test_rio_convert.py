@@ -47,7 +47,7 @@ def test_format_short(tmpdir, runner):
     ('jpeg', 'JPEG'),
 ])
 def test_autodetect_format(tmpdir, runner, extension, driver):
-    outputname = str(tmpdir.join("test.{}".format(extension)))
+    outputname = str(tmpdir.join(f"test.{extension}"))
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname])

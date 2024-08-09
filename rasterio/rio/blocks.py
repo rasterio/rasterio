@@ -64,7 +64,7 @@ class _Collection:
             xmin, ymin, xmax, ymax = bounds
             yield {
                 'type': 'Feature',
-                'id': '{0}:{1}'.format(os.path.basename(self._src.name), idx),
+                'id': f'{os.path.basename(self._src.name)}:{idx}',
                 'properties': {
                     'block': json.dumps(block),
                     'window': window.todict(),

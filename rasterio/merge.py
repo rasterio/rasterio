@@ -220,7 +220,7 @@ def merge(
     elif callable(method):
         copyto = method
     else:
-        raise ValueError('Unknown method {0}, must be one of {1} or callable'
+        raise ValueError('Unknown method {}, must be one of {} or callable'
                          .format(method, list(MERGE_METHODS.keys())))
 
     # Create a dataset_opener object to use in several places in this function.

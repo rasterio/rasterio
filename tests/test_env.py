@@ -722,7 +722,7 @@ def test_require_gdal_version_too_low():
     with pytest.raises(GDALVersionError) as exc_info:
         b()
 
-    message = 'GDAL version must be >= {0}'.format(version)
+    message = f'GDAL version must be >= {version}'
     assert message in exc_info.value.args[0]
 
 
@@ -795,7 +795,7 @@ def test_require_gdal_version_param_version_too_low():
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')  # parameter passed as a keyword argument and not default
 
-    message = 'usage of parameter "foo" requires GDAL >= {0}'.format(version)
+    message = f'usage of parameter "foo" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
 
 
@@ -818,7 +818,7 @@ def test_require_gdal_version_param_version_too_high():
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')
 
-    message = 'usage of parameter "foo" requires GDAL <= {0}'.format(version)
+    message = f'usage of parameter "foo" requires GDAL <= {version}'
     assert message in exc_info.value.args[0]
 
 
@@ -865,7 +865,7 @@ def test_require_gdal_version_param_values_version_too_low():
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')
 
-    message = 'parameter "foo=bar" requires GDAL >= {0}'.format(version)
+    message = f'parameter "foo=bar" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
 
 
@@ -886,7 +886,7 @@ def test_require_gdal_version_param_values_version_too_high():
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')
 
-    message = 'parameter "foo=bar" requires GDAL <= {0}'.format(version)
+    message = f'parameter "foo=bar" requires GDAL <= {version}'
     assert message in exc_info.value.args[0]
 
 
@@ -905,14 +905,14 @@ def test_require_gdal_version_chaining():
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar', something='else')
 
-    message = 'parameter "foo=bar" requires GDAL >= {0}'.format(version)
+    message = f'parameter "foo=bar" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
 
     # second decorator causes this to fail
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='ok', something='else')
 
-    message = 'parameter "something=else" requires GDAL >= {0}'.format(version)
+    message = f'parameter "something=else" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
 
 

@@ -14,7 +14,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 @pytest.fixture(scope='function')
 def tempfile():
     """A temporary filename in the GDAL '/vsimem' filesystem"""
-    return '/vsimem/{}'.format(uuid.uuid4())
+    return f'/vsimem/{uuid.uuid4()}'
 
 
 def image(height, width, dtype):

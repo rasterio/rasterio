@@ -1,6 +1,5 @@
 """Tests for :py:class:`rasterio.warp.WarpedVRT`."""
 
-from __future__ import division
 import logging
 import shutil
 

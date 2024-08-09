@@ -24,8 +24,7 @@ def coords(obj):
             yield tuple(coordinates)
             break
         else:
-            for f in coords(e):
-                yield f
+            yield from coords(e)
 
 
 def write_features(
@@ -39,7 +38,7 @@ def write_features(
             xs, ys = zip(*coords(feat))
             bbox = (min(xs), min(ys), max(xs), max(ys))
             if use_rs:
-                fobj.write(u'\u001e')
+                fobj.write('\u001e')
             if geojson_type == 'bbox':
                 fobj.write(json.dumps(bbox, **dump_kwds))
             else:

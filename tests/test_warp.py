@@ -48,8 +48,7 @@ def flatten_coords(coordinates):
             yield elem
 
         else:
-            for x in flatten_coords(elem):
-                yield x
+            yield from flatten_coords(elem)
 
 
 if gdal_version.at_least("3.6"):
@@ -142,7 +141,7 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
         ctype = self.guess_type(path)
         try:
             f = open(path, "rb")
-        except IOError:
+        except OSError:
             self.send_error(404, "File not found")
             return None
 
@@ -161,7 +160,7 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
         response_length = last - first + 1
 
         self.send_header(
-            "Content-Range", "bytes %s-%s/%s" % (first, last, file_len)
+            "Content-Range", "bytes {}-{}/{}".format(first, last, file_len)
         )
         self.send_header("Content-Length", str(response_length))
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))

@@ -298,8 +298,8 @@ def reproject(
         Resampling(resampling)
     except ValueError:
         raise ValueError(
-            "resampling must be one of: {0}".format(", ".join(
-                ['Resampling.{0}'.format(r.name) for r in
+            "resampling must be one of: {}".format(", ".join(
+                [f'Resampling.{r.name}' for r in
                  SUPPORTED_RESAMPLING])))
 
     if destination is None and dst_transform is not None:
