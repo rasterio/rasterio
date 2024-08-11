@@ -724,12 +724,9 @@ def dataset_features(
                 antimeridian_cutting=True, precision=precision)
         xs, ys = zip(*coords(g))
         yield {
-            'type': 'Feature',
-            'id': f"{src_basename}:{i}",
-            'properties': {
-                'val': val,
-                'filename': src_basename
-            },
-            'bbox': [min(xs), min(ys), max(xs), max(ys)],
-            'geometry': g
+            "type": "Feature",
+            "id": f"{src_basename}:{i}",
+            "properties": {"val": val, "filename": src_basename},
+            "bbox": [min(xs), min(ys), max(xs), max(ys)],
+            "geometry": g,
         }

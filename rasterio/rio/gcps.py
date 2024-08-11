@@ -96,11 +96,10 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent, compac
 
         else:
             for p in gcps:
-
                 if use_rs:
-                    click.echo(u'\x1e', nl=False)
+                    click.echo("\x1e", nl=False)
 
-                if projection == 'geographic' or precision >= 0:
+                if projection == "geographic" or precision >= 0:
                     feat = transform(update_props(p.__geo_interface__, crs=proj))
                 else:
                     feat = update_props(p.__geo_interface__, crs=proj)

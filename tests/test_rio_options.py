@@ -69,7 +69,7 @@ def test_file_in_handler_no_vfs_nonexistent():
     """file does not exist"""
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
-        file_in_handler(ctx, 'INPUT', 'file://{0}.tif'.format(uuid.uuid4()))
+        file_in_handler(ctx, "INPUT", f"file://{uuid.uuid4()}.tif")
 
 
 def test_file_in_handler_no_vfs():
@@ -85,8 +85,8 @@ def test_file_in_handler_with_vfs_nonexistent():
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
         file_in_handler(
-            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(
-                uuid.uuid4()))
+            ctx, "INPUT", "zip://{}/files.zip!/inputs/RGB.byte.tif".format(uuid.uuid4())
+        )
 
 
 def test_file_in_handler_with_vfs_error():

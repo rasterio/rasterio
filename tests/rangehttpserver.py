@@ -49,7 +49,7 @@ def parse_byte_range(byte_range):
     if not m:
         raise ValueError('Invalid byte range %s' % byte_range)
 
-    first, last = [x and int(x) for x in m.groups()]
+    first, last = (x and int(x) for x in m.groups())
     if last and last < first:
         raise ValueError('Invalid byte range %s' % byte_range)
     return first, last
@@ -79,7 +79,7 @@ class RangeRequestHandler(SimpleHTTPRequestHandler):
         ctype = self.guess_type(path)
         try:
             f = open(path, 'rb')
-        except IOError:
+        except OSError:
             self.send_error(404, 'File not found')
             return None
 
@@ -97,10 +97,11 @@ class RangeRequestHandler(SimpleHTTPRequestHandler):
             last = file_len - 1
         response_length = last - first + 1
 
-        self.send_header('Content-Range',
-                         'bytes %s-%s/%s' % (first, last, file_len))
-        self.send_header('Content-Length', str(response_length))
-        self.send_header('Last-Modified', self.date_time_string(fs.st_mtime))
+        self.send_header(
+            "Content-Range", "bytes {}-{}/{}".format(first, last, file_len)
+        )
+        self.send_header("Content-Length", str(response_length))
+        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
         return f
 

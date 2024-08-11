@@ -38,10 +38,14 @@ class GroundControlPoint:
         self.z = z
 
     def __repr__(self):
-        args = ', '.join(['{}={}'.format(att, repr(getattr(self, att)))
-                         for att in ('row', 'col', 'x', 'y', 'z', 'id', 'info')
-                         if getattr(self, att) is not None])
-        return "GroundControlPoint({})".format(args)
+        args = ", ".join(
+            [
+                f"{att}={repr(getattr(self, att))}"
+                for att in ("row", "col", "x", "y", "z", "id", "info")
+                if getattr(self, att) is not None
+            ]
+        )
+        return f"GroundControlPoint({args})"
 
     def asdict(self):
         """A dict representation of the GCP"""

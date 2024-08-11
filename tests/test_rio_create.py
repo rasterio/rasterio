@@ -107,7 +107,6 @@ def test_create_bounds(tmp_path, runner):
             "EPSG:32618",
             "--bounds",
             ",".join(
-                (
                     str(x)
                     for x in [
                         101985.0,
@@ -115,7 +114,6 @@ def test_create_bounds(tmp_path, runner):
                         101985.0 + 256 * 300.0,
                         2826915.0,
                     ]
-                )
             ),
             outfile,
         ],
@@ -196,7 +194,6 @@ def test_create_bounds(tmp_path, runner):
             "EPSG:32618",
             "--bounds",
             ",".join(
-                (
                     str(x)
                     for x in [
                         101985.0,
@@ -204,7 +201,6 @@ def test_create_bounds(tmp_path, runner):
                         101985.0 + 256 * 300.0,
                         2826915.0,
                     ]
-                )
             ),
             outfile,
         ],
@@ -320,7 +316,7 @@ def test_create_creation_opts(tmp_path, runner):
         assert dataset.count == 3
         assert dataset.dtypes == ("uint8", "uint8", "uint8")
         assert dataset.driver == "GTiff"
-        assert all(((256, 128) == hw for hw in dataset.block_shapes))
+        assert all((256, 128) == hw for hw in dataset.block_shapes)
 
 
 def test_create_no_overwrite(tmp_path, runner):

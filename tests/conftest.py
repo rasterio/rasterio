@@ -25,8 +25,7 @@ from affine import Affine
 DEFAULT_SHAPE = (10, 10)
 
 
-if sys.version_info > (3,):
-    reduce = functools.reduce
+reduce = functools.reduce
 
 try:
     have_credentials = boto3.Session().get_credentials()
@@ -634,7 +633,7 @@ def path_alpha_tif(data_dir):
 def path_zip_file(data_dir):
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
-    path = '{}/white-gemini-iv.zip'.format(data_dir)
+    path = f"{data_dir}/white-gemini-iv.zip"
     if not os.path.exists(path):
         with zipfile.ZipFile(path, 'w') as zip:
             for filename in ['white-gemini-iv.vrt',
@@ -646,7 +645,7 @@ def path_zip_file(data_dir):
 @pytest.fixture(autouse=True)
 def set_mem_name(request, monkeypatch):
     def youyoueyedeefour():
-        return "{}-{}".format(request.node.name, uuid.uuid4())
+        return f"{request.node.name}-{uuid.uuid4()}"
     monkeypatch.setattr(rasterio._io, "uuid4", youyoueyedeefour)
 
 

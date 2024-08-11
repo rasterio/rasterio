@@ -48,7 +48,7 @@ if _GDAL_AT_LEAST_37:
 if _GDAL_AT_LEAST_37:
     dtype_fwd[14] = sbyte # GDT_Int8
 
-dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
+dtype_rev = {v: k for k, v in dtype_fwd.items()}
 
 dtype_rev["uint8"] = 1
 dtype_rev["complex"] = 11
@@ -91,7 +91,7 @@ if _GDAL_AT_LEAST_37:
 if _GDAL_AT_LEAST_37:
     typename_fwd[14] = 'Int8'
 
-typename_rev = dict((v, k) for k, v in typename_fwd.items())
+typename_rev = {v: k for k, v in typename_fwd.items()}
 
 f32i = numpy.finfo("float32")
 f64i = numpy.finfo("float64")
