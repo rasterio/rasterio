@@ -48,7 +48,7 @@ import os
 def test_write_multilayer_geopackage(tmp_path, data_dir, tiffs):
     """ Validate if you can create multilayer."""
     gpkg = tmp_path.joinpath("test.gpkg")
-    tables = ["{}({})".format(tiff, idx) for idx, tiff in enumerate(tiffs, 1)]
+    tables = [f"{tiff}({idx})" for idx, tiff in enumerate(tiffs, 1)]
 
     for tiff, table in zip(tiffs, tables):
 

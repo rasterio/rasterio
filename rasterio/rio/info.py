@@ -73,7 +73,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         if src.crs:
             epsg = src.crs.to_epsg()
             if epsg:
-                info['crs'] = 'EPSG:{}'.format(epsg)
+                info["crs"] = f"EPSG:{epsg}"
             else:
                 info['crs'] = src.crs.to_string()
         else:
@@ -97,7 +97,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             if gcps_crs:
                 epsg = gcps_crs.to_epsg()
                 if epsg:
-                    info['gcps']['crs'] = 'EPSG:{}'.format(epsg)
+                    info["gcps"]["crs"] = f"EPSG:{epsg}"
                 else:
                     info['gcps']['crs'] = src.crs.to_string()
             else:

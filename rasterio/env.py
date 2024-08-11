@@ -483,10 +483,10 @@ class GDALVersion:
         return (self.major, self.minor) < tuple(other.major, other.minor)
 
     def __repr__(self):
-        return "GDALVersion(major={0}, minor={1})".format(self.major, self.minor)
+        return f"GDALVersion(major={self.major}, minor={self.minor})"
 
     def __str__(self):
-        return "{0}.{1}".format(self.major, self.minor)
+        return f"{self.major}.{self.minor}"
 
     @classmethod
     def parse(cls, input):
@@ -597,8 +597,8 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
     version = GDALVersion.parse(version)
     runtime = GDALVersion.runtime()
-    inequality = '>=' if runtime < version else '<='
-    reason = '\n{0}'.format(reason) if reason else reason
+    inequality = ">=" if runtime < version else "<="
+    reason = f"\n{reason}" if reason else reason
 
     def decorator(f):
         @wraps(f)
@@ -608,7 +608,7 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
                 if param is None:
                     raise GDALVersionError(
-                        "GDAL version must be {0} {1}{2}".format(
+                        "GDAL version must be {} {}{}".format(
                             inequality, str(version), reason))
 
                 # normalize args and kwds to dict
@@ -629,15 +629,19 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
                         if param not in defaults or (
                                 full_kwds[param] != defaults[param]):
                             raise GDALVersionError(
-                                'usage of parameter "{0}" requires '
-                                'GDAL {1} {2}{3}'.format(param, inequality,
-                                                         version, reason))
+                                'usage of parameter "{}" requires '
+                                "GDAL {} {}{}".format(
+                                    param, inequality, version, reason
+                                )
+                            )
 
                     elif full_kwds[param] in values:
                         raise GDALVersionError(
-                            'parameter "{0}={1}" requires '
-                            'GDAL {2} {3}{4}'.format(
-                                param, full_kwds[param], inequality, version, reason))
+                            'parameter "{}={}" requires '
+                            "GDAL {} {}{}".format(
+                                param, full_kwds[param], inequality, version, reason
+                            )
+                        )
 
             return f(*args, **kwds)
 

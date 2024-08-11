@@ -379,7 +379,7 @@ def warp(
                 if crs:
                     epsg = src.crs.to_epsg()
                     if epsg:
-                        out_kwargs['crs'] = 'EPSG:{}'.format(epsg)
+                        out_kwargs["crs"] = f"EPSG:{epsg}"
                     else:
                         out_kwargs['crs'] = src.crs.to_string()
 

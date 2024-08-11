@@ -253,13 +253,13 @@ def open(
             or hasattr(fp, "write")
             or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
         ):
-            raise TypeError("invalid path or file: {0!r}".format(fp))
+            raise TypeError(f"invalid path or file: {fp!r}")
     if mode and not isinstance(mode, str):
-        raise TypeError("invalid mode: {0!r}".format(mode))
+        raise TypeError(f"invalid mode: {mode!r}")
     if driver and not isinstance(driver, str):
-        raise TypeError("invalid driver: {0!r}".format(driver))
+        raise TypeError(f"invalid driver: {driver!r}")
     if dtype and not check_dtype(dtype):
-        raise TypeError("invalid dtype: {0!r}".format(dtype))
+        raise TypeError(f"invalid dtype: {dtype!r}")
     if nodata is not None:
         nodata = float(nodata)
     if transform:
@@ -269,7 +269,8 @@ def open(
     if driver and is_blacklisted(driver, mode):
         raise RasterioIOError(
             "Blacklisted: file cannot be opened by "
-            "driver '{0}' in '{1}' mode".format(driver, mode))
+            "driver '{}' in '{}' mode".format(driver, mode)
+        )
 
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to

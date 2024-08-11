@@ -136,7 +136,7 @@ class MemoryFile(MemoryFileBase):
         if self.closed:
             raise ValueError("I/O operation on closed file.")
         if len(self) > 0:
-            log.debug("VSI path: {}".format(mempath.path))
+            log.debug(f"VSI path: {mempath.path}")
             rd = DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
@@ -222,10 +222,10 @@ class _FilePath(FilePathBase):
         mempath = _UnparsedPath(self.name)
 
         if self.closed:
-            raise IOError("I/O operation on closed file.")
+            raise OSError("I/O operation on closed file.")
 
         # Assume we were given a non-empty file-like object
-        log.debug("VSI path: {}".format(mempath.path))
+        log.debug(f"VSI path: {mempath.path}")
 
         return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
 
@@ -268,7 +268,7 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        zippath = _UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
+        zippath = _UnparsedPath("/vsizip{}/{}".format(self.name, path.lstrip("/")))
 
         if self.closed:
             raise ValueError("I/O operation on closed file.")

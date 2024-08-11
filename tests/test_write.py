@@ -408,7 +408,7 @@ def test_too_big_for_tiff(tmpdir):
     ('jpeg', 'JPEG'),
 ])
 def test_write__autodetect_driver(tmpdir, extension, driver):
-    name = str(tmpdir.join("test.{}".format(extension)))
+    name = str(tmpdir.join(f"test.{extension}"))
     with rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8') as rds:
         assert rds.driver == driver
 

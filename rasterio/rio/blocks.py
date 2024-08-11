@@ -63,11 +63,11 @@ class _Collection:
             bounds = self._normalize_bounds(self._src.window_bounds(window))
             xmin, ymin, xmax, ymax = bounds
             yield {
-                'type': 'Feature',
-                'id': '{0}:{1}'.format(os.path.basename(self._src.name), idx),
-                'properties': {
-                    'block': json.dumps(block),
-                    'window': window.todict(),
+                "type": "Feature",
+                "id": f"{os.path.basename(self._src.name)}:{idx}",
+                "properties": {
+                    "block": json.dumps(block),
+                    "window": window.todict(),
                 },
                 'geometry': {
                     'type': 'Polygon',

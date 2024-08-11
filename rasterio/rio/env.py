@@ -52,4 +52,4 @@ def env(ctx, key):
             )
         else:
             for k, v in sorted(env.drivers().items()):
-                click.echo("{0}: {1}".format(k, v))
+                click.echo(f"{k}: {v}")
