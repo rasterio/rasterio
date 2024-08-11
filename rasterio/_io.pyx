@@ -27,7 +27,7 @@ from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
-    StatisticsError
+    StatisticsError, RasterioDeprecationWarning
 )
 from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
 from rasterio.sample import sample_gen
@@ -1108,6 +1108,41 @@ cdef class DatasetReaderBase(DatasetBase):
         # generator implemented in sample.py.
         return sample_gen(self, xy, indexes=indexes, masked=masked)
 
+    def stats(self, *, indexes=None, approx=False):
+        """Update stored statistics for all dataset bands.
+
+        If no stats are provided, statistics will be computed for all
+        bands of the dataset.
+
+        Parameters
+        ----------
+        indexes : sequence of ints, optional
+            A sequence of band indexes, 1-indexed. If not provided,
+            defaults to the indexes of all dataset bands.
+        approx : bool, optional. Default: False
+            Set to True if approximate, faster computation of statistics
+            based on overviews or a subset of tiles is acceptable.
+
+        Returns
+        -------
+        List of Statistics objects.
+        """
+        cdef double min, max, mean, std
+        cdef GDALRasterBandH band = NULL
+
+        if isinstance(indexes, int):
+            indexes = [indexes]
+
+        band_indexes = indexes or self.indexes
+        results = [None for i in band_indexes]
+
+        for i, bidx in enumerate(band_indexes):
+            band = self.band(bidx)
+            GDALGetRasterStatistics(band, int(approx), 1, &min, &max, &mean, &std)
+            results[i] = Statistics(min, max, mean, std)
+
+        return results
+
     def statistics(self, bidx, approx=False, clear_cache=False):
         """Get min, max, mean, and standard deviation of a raster band.
 
@@ -1138,6 +1173,8 @@ cdef class DatasetReaderBase(DatasetBase):
         """
         cdef double min, max, mean, std
         cdef GDALRasterBandH band = NULL
+
+        warnings.warn("statistics() will be removed in 2.0.0. Please switch to stats().", RasterioDeprecationWarning)
 
         band = self.band(bidx)
 
@@ -1820,6 +1857,56 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         specifying a raster subset to write into.
         """
         self.write(src, bidx, window=window)
+
+    def clear_stats(self):
+        """Clear stored statistics for all dataset bands.
+
+        Returns
+        -------
+        None
+        """
+        GDALDatasetClearStatistics(self._hds)
+
+    def update_stats(self, *, stats=None, indexes=None, approx=False):
+        """Update stored statistics for all dataset bands.
+
+        If no stats are provided, statistics will be computed for all
+        bands of the dataset.
+
+        Parameters
+        ----------
+        stats : sequence of Statistics, optional
+            A sequence of band statistics objects. Will be zipped
+            together with the indexes sequence.
+        indexes : sequence of ints, optional
+            A sequence of band indexes, 1-indexed. If not provided,
+            defaults to src.indexes.
+        approx : bool, optional. Default: False
+            Set to True if approximate, faster computation of statistics
+            based on overviews or a subset of tiles is acceptable.
+
+        Returns
+        -------
+        None
+        """
+        cdef double min, max, mean, std
+        cdef GDALRasterBandH band = NULL
+
+        if isinstance(indexes, int):
+            indexes = [indexes]
+
+        if isinstance(stats, Statistics):
+            stats = [stats]
+
+        if not stats and not indexes:
+            for bidx in self.indexes:
+                band = self.band(bidx)
+                # Following call sets statistics as a side-effect.
+                GDALComputeRasterStatistics(band, int(approx), NULL, NULL, NULL, NULL, NULL, NULL)
+        else:
+            for stat, bidx in zip(stats, indexes):
+                band = self.band(bidx)
+                GDALSetRasterStatistics(band, stat.min, stat.max, stat.mean, stat.std)
 
     def update_tags(self, bidx=0, ns=None, **kwargs):
         """Updates the tags of a dataset or one of its bands.

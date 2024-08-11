@@ -4,8 +4,15 @@ Changes
 Next (TBD)
 ----------
 
+Deprecations:
+
+- The statistics() method of a dataset is faulty and will be removed in version
+  2.0 (#3134).
+
 New features:
 
+- New dataset stats(), clear_stats(), and update_stats() methods have been
+  added to replace the deprecated statistics() method (#3134).
 - Rasterize() can now capture output in a new or previously opened dataset and
   can optionally return masked arrays (#3131).
 - An option to get a masked array from merge() and stack() has been added

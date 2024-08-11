@@ -106,7 +106,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             info['gcps']['transform'] = from_gcps(gcps)
 
         if verbose:
-            stats = [asdict(src.statistics(bidx)) for bidx in src.indexes]
+            stats = [asdict(so) for so in src.stats()]
             info['stats'] = stats
             info['checksum'] = [src.checksum(i) for i in src.indexes]
 
