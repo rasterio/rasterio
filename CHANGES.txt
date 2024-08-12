@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next (TBD)
+----------
+
+Bug fixes:
+
+- Color interpretation is correctly set to "palette" after a colormap is
+  written (#3133).
+
 1.4b1 (2024-08-10)
 ------------------
 
