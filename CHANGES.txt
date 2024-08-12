@@ -1,6 +1,11 @@
 Changes
 =======
 
+Bug fixes:
+
+- Color interpretation is correctly set to "palette" after a colormap is
+  written (# ).
+
 Next (TBD)
 ----------
 
