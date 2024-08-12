@@ -4,7 +4,7 @@ Changes
 Bug fixes:
 
 - Color interpretation is correctly set to "palette" after a colormap is
-  written (# ).
+  written (#3133).
 
 Next (TBD)
 ----------

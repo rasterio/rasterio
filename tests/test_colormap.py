@@ -1,7 +1,5 @@
 """Colormap tests."""
 
-import pytest
-
 import rasterio
 from rasterio.enums import ColorInterp
 
