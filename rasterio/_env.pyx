@@ -460,20 +460,19 @@ cdef class GDALEnv(ConfigEnv):
 
 
 def set_proj_data_search_path(path):
-    """Set PROJ data search path"""
-    cdef char **paths = NULL
-    cdef const char *path_c = NULL
+    """Set PROJ data search path."""
     path_b = path.encode("utf-8")
-    path_c = path_b
-    paths = CSLAddString(paths, path_c)
-    OSRSetPROJSearchPaths(<const char *const *>paths)
+    cdef const char *path_c = path_b
+    cdef char **paths = CSLAddString(NULL, path_c)
+    try:
+        OSRSetPROJSearchPaths(<const char *const *>paths)
+    finally:
+        CSLDestroy(paths)
 
 
 def get_proj_data_search_paths():
     """
-    Get the PROJ DATA search paths
-
-    Requires GDAL 3.0.3+
+    Get the PROJ DATA search paths.
 
     Returns
     -------
@@ -485,12 +484,14 @@ def get_proj_data_search_paths():
     while paths[iii] != NULL:
         path_list.append(paths[iii])
         iii += 1
-    return path_list
-
+    try:
+        return path_list
+    finally:
+        CSLDestroy(paths)
 
 def get_gdal_data():
     """
-    Get the GDAL DATA path
+    Get the GDAL DATA path.
 
     Returns
     -------

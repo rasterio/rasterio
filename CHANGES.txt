@@ -18,6 +18,8 @@ Wheels on PyPI include recent versions of GDAL, PROJ, Curl, and libjpeg:
 
 Bug fixes:
 
+- Leaks of CSL string lists in get/set_proj_data_search_path() have been fixed
+  (#).
 - Color interpretation is correctly set to "palette" after a colormap is
   written.
 
