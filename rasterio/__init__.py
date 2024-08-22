@@ -272,6 +272,29 @@ def open(
             "driver '{}' in '{}' mode".format(driver, mode)
         )
 
+    # This check should come first, since MemoryFile has read/write methods
+    # TODO: test for a shared base class or abstract type.
+    elif isinstance(fp, (FilePath, MemoryFile)):
+        if mode.startswith("r"):
+            dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
+
+        # Note: FilePath does not support writing and an exception will
+        # result from this.
+        elif mode.startswith("w"):
+            dataset = fp.open(
+                driver=driver,
+                width=width,
+                height=height,
+                count=count,
+                crs=crs,
+                transform=transform,
+                dtype=dtype,
+                nodata=nodata,
+                sharing=sharing,
+                **kwargs
+            )
+        return dataset
+
     # If the fp argument is a file-like object and can be adapted by
     # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
     # hold fp's contents and store that in an ExitStack attached to the
@@ -309,28 +332,6 @@ def open(
             fp.write(memfile.read())
 
         dataset._env.callback(func)
-        return dataset
-
-    # TODO: test for a shared base class or abstract type.
-    elif isinstance(fp, (FilePath, MemoryFile)):
-        if mode.startswith("r"):
-            dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
-
-        # Note: FilePath does not support writing and an exception will
-        # result from this.
-        elif mode.startswith("w"):
-            dataset = fp.open(
-                driver=driver,
-                width=width,
-                height=height,
-                count=count,
-                crs=crs,
-                transform=transform,
-                dtype=dtype,
-                nodata=nodata,
-                sharing=sharing,
-                **kwargs
-            )
         return dataset
 
     # At this point, the fp argument is a string or path-like object

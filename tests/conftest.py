@@ -527,6 +527,12 @@ def path_rgb_byte_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
+def path_srtm_hgt(data_dir):
+    """Sample SRTM HGT file"""
+    return os.path.join(data_dir, 'N10W110.hgt.zip')
+
+
+@pytest.fixture(scope='session')
 def path_rgb_lzw_byte_tif(data_dir):
     """The original RGB test fixture with LZW compression."""
     return os.path.join(data_dir, 'rgb_lzw.tif')
