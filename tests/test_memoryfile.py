@@ -263,6 +263,17 @@ def test_file_object_read_variant2(rgb_file_bytes):
         assert src.read().shape == (3, 718, 791)
 
 
+def teste_srtm_hgt_object_read(path_srtm_hgt):
+    """An example of reading from a MemoryFile object with a driver which requires a filename"""
+    with rasterio.open(
+        MemoryFile(open(path_srtm_hgt, "rb").read(), filename=path_srtm_hgt)
+    ) as src:
+        assert src.driver == "SRTMHGT"
+        assert src.count == 1
+        assert src.dtypes == ("int16",)
+        assert src.read().shape == (1, 1201, 1201)
+
+
 def test_test_file_object_write(tmpdir, rgb_data_and_profile):
     """An example of writing to a file object"""
     data, profile = rgb_data_and_profile
