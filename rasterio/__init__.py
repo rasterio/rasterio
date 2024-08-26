@@ -254,8 +254,10 @@ def open(
             or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
         ):
             raise TypeError(f"invalid path or file: {fp!r}")
-    if mode and not isinstance(mode, str):
+    if not isinstance(mode, str):
         raise TypeError(f"invalid mode: {mode!r}")
+    elif mode[0] not in ("r", "w"):
+        raise ValueError(f"invalid mode: {mode!r}")
     if driver and not isinstance(driver, str):
         raise TypeError(f"invalid driver: {driver!r}")
     if dtype and not check_dtype(dtype):
@@ -280,7 +282,7 @@ def open(
 
         # Note: FilePath does not support writing and an exception will
         # result from this.
-        elif mode.startswith("w"):
+        else:
             dataset = fp.open(
                 driver=driver,
                 width=width,
@@ -293,6 +295,7 @@ def open(
                 sharing=sharing,
                 **kwargs
             )
+
         return dataset
 
     # If the fp argument is a file-like object and can be adapted by
