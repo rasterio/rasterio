@@ -43,7 +43,7 @@ The shapes of the foreground features can be extracted like this:
     #   'type': 'Polygon'},
     # 253)
 
-The shapes iterator yields ``geometry, value`` pairs. The second item is the
+The shapes iterator yields ``(geometry, value)`` pairs. The second item is the
 value of the raster feature corresponding to the shape and the first is its
 geometry.  The coordinates of the geometries in this case are in pixel units
 with origin at the upper left of the image. If the source dataset was
@@ -52,6 +52,14 @@ georeferenced, you would get similarly georeferenced geometries like this:
 .. code-block:: python
 
     shapes = features.shapes(blue, mask=mask, transform=src.transform)
+
+For larger rasters, use the following shortcut with :py:func:`rasterio.band()` instead
+of reading the raster into an array.
+
+.. code-block:: python
+
+    with rasterio.open('13547682814_f2e459f7a5_o_d.png') as src:
+        shapes = features.shapes(rasterio.band(src, 3), mask=mask, transform=src.transform)
 
 Burning shapes into a raster
 ----------------------------

@@ -401,7 +401,7 @@ def open(
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 Band.__doc__ = """
-Band of a Dataset.
+Band(s) of a Dataset.
 
 Parameters
 ----------
