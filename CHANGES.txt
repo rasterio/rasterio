@@ -14,7 +14,7 @@ Bug fixes:
 
 Other changes:
 
-- _OverviewResampling enum renamed to OverviewResampling (#).
+- _OverviewResampling enum renamed to OverviewResampling (#3151).
 
 1.4b1 (2024-08-10)
 ------------------
