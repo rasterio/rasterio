@@ -115,7 +115,7 @@ class Resampling(IntEnum):
     rms = 14
 
 
-class _OverviewResampling(IntEnum):
+class OverviewResampling(IntEnum):
     """Available Overview resampling algorithms.
 
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
