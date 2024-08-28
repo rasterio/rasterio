@@ -7,7 +7,7 @@ import click
 
 from . import options
 import rasterio
-from rasterio.enums import _OverviewResampling as OverviewResampling
+from rasterio.enums import OverviewResampling
 
 
 def build_handler(ctx, param, value):
