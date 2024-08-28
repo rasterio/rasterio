@@ -4,6 +4,7 @@
 
 from collections import defaultdict
 from contextlib import ExitStack
+from decimal import Decimal
 import logging
 import math
 import os
@@ -940,7 +941,11 @@ cdef class DatasetBase:
         width = self.width
         height = self.height
         if b == d == 0:
-            return BoundingBox(c, f + e * height, c + a * width, f)
+            # Use Decimal objects to calculate exact bounds
+            minx = c
+            miny = float(Decimal(str(f)) + Decimal(str(e)) * height)
+            maxx = float(Decimal(str(c)) + Decimal(str(a)) * width)
+            maxy = f
         else:
             c0x, c0y = c, f
             c1x, c1y = self.transform * (0, height)
@@ -948,7 +953,11 @@ cdef class DatasetBase:
             c3x, c3y = self.transform * (width, 0)
             xs = (c0x, c1x, c2x, c3x)
             ys = (c0y, c1y, c2y, c3y)
-            return BoundingBox(min(xs), min(ys), max(xs), max(ys))
+            minx = min(xs)
+            miny = min(ys)
+            maxx = max(xs)
+            maxy = max(ys)
+        return BoundingBox(minx, miny, maxx, maxy)
 
     @property
     def res(self):
