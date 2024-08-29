@@ -15,11 +15,11 @@ import logging
 import os
 import platform
 import pprint
+import re
 import shutil
 from subprocess import check_output
 import sys
 
-from pkg_resources import parse_version
 from setuptools import setup
 from setuptools.extension import Extension
 
@@ -129,12 +129,9 @@ if "clean" not in sys.argv:
                  "to gdal-config using a GDAL_CONFIG environment variable "
                  "or use a GDAL_VERSION environment variable.")
 
-    gdal_major_version, gdal_minor_version, gdal_patch_version = parse_version(
-        gdalversion
-    ).base_version.split(".", maxsplit=3)
-    gdal_major_version = int(gdal_major_version)
-    gdal_minor_version = int(gdal_minor_version)
-    gdal_patch_version = int(gdal_patch_version)
+    gdal_major_version, gdal_minor_version, gdal_patch_version = map(
+        int, re.findall("[0-9]+", gdalversion)[:3]
+    )
 
     if (gdal_major_version, gdal_minor_version) < (3, 3):
         raise SystemExit("ERROR: GDAL >= 3.3 is required for rasterio. "
