@@ -42,3 +42,5 @@ ctypedef np.float64_t DTYPE_FLOAT64_t
 cdef bint in_dtype_range(value, dtype)
 
 cdef int io_auto(image, GDALRasterBandH band, bint write, int resampling=*) except -1
+cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0, double width, double height, object data, int resampling=*) except -1
+cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0, double width, double height, object data, Py_ssize_t[:] indexes, int resampling=*) except -1

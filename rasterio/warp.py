@@ -172,6 +172,7 @@ def reproject(
     dst_resolution=None,
     src_alpha=0,
     dst_alpha=0,
+    masked=False,
     resampling=Resampling.nearest,
     num_threads=1,
     init_dest_nodata=True,
@@ -250,6 +251,8 @@ def reproject(
         Index of a band to use as the alpha band when warping.
     dst_alpha : int, optional
         Index of a band to use as the alpha band when warping.
+    masked: bool, optional
+        If True and destination is None, return a masked array.
     resampling: int, rasterio.enums.Resampling
         Resampling method to use.
         Default is :attr:`rasterio.enums.Resampling.nearest`.
@@ -378,8 +381,10 @@ def reproject(
             destination = np.empty(
                 (int(dst_count), int(dst_height), int(dst_width)), dtype=source.dtype
             )
+            if masked:
+                destination = np.ma.masked_array(destination).filled(dst_nodata)
 
-    _reproject(
+    dest = _reproject(
         source,
         destination,
         src_transform=src_transform,
@@ -400,7 +405,7 @@ def reproject(
         **kwargs
     )
 
-    return destination, dst_transform
+    return dest, dst_transform
 
 
 def aligned_target(transform, width, height, resolution):

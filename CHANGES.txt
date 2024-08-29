@@ -6,6 +6,9 @@ Next (TBD)
 
 Bug fixes:
 
+- When reprojecting a masked array, we now use the mask (reduced) as an alpha
+  band. There is now also an option to create an alpha band in the output, and
+  turn that into a mask when returning a mask array (#).
 - Allow rasterio.open() to receive instances of MemoryFile (#3145).
 - Leaks of CSL string lists in get/set_proj_data_search_path() have been fixed
   (#3140).

@@ -1333,7 +1333,7 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
 
 
-@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1312959), (False, 438113)])
 def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         if test3d:
@@ -1352,6 +1352,27 @@ def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
     )
     assert np.ma.is_masked(source)
     assert np.count_nonzero(out[out != 99]) == count_nonzero
+    assert not np.ma.is_masked(out)
+
+
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1312959), (False, 438113)])
+def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            inp = src.read(masked=True)
+        else:
+            inp = src.read(1, masked=True)
+    out = np.ma.masked_array(np.empty(inp.shape, dtype=np.uint8))
+    out, _ = reproject(
+        inp,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
 
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)

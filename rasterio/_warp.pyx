@@ -38,7 +38,7 @@ from libc.math cimport HUGE_VAL
 from rasterio._base cimport get_driver_name
 from rasterio._err cimport exc_wrap, exc_wrap_pointer, exc_wrap_int, StackChecker
 from rasterio._io cimport (
-    DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto)
+    DatasetReaderBase, MemoryDataset, in_dtype_range, io_auto, io_band, io_multi_band)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
 from rasterio.crs cimport CRS
 
@@ -282,9 +282,9 @@ def _reproject(
         nodata value of the destination image (if set), the value of
         src_nodata, or 0 (gdal default).
     src_alpha : int, optional
-        Index of a band to use as the alpha band when warping.
+        Index of a band to use as the source alpha band when warping.
     dst_alpha : int, optional
-        Index of a band to use as the alpha band when warping.
+        Index of a band to use as the destination alpha band when warping.
     resampling : int
         Resampling method to use.  One of the following:
             Resampling.nearest,
@@ -360,35 +360,58 @@ def _reproject(
     cdef MemoryDataset src_mem = None
 
     try:
-
         # If the source is an ndarray, we copy to a MEM dataset.
         # We need a src_transform and src_dst in this case. These will
         # be copied to the MEM dataset.
         if dtypes.is_ndarray(source):
             if not src_crs:
                 raise CRSError("Missing src_crs.")
+
             if src_nodata is None and hasattr(source, 'fill_value'):
                 # source is a masked array
                 src_nodata = source.fill_value
+
             # ensure data converted to numpy array
-            source = np.asanyarray(source)
+            if hasattr(source, "mask"):
+                source = np.ma.asanyarray(source)
+            else:
+                source = np.asanyarray(source)
+
             # Convert 2D single-band arrays to 3D multi-band.
             if len(source.shape) == 2:
                 source = source.reshape(1, *source.shape)
+
             src_count = source.shape[0]
             src_bidx = range(1, src_count + 1)
-            src_mem = MemoryDataset(source,
-                                         transform=format_transform(src_transform),
-                                         gcps=gcps,
-                                         rpcs=rpcs,
-                                         crs=src_crs,
-                                         copy=True)
+
+            if hasattr(source, "mask"):
+                mask = ~np.logical_or.reduce(source.mask) * 255
+                source_arr = np.concatenate((source.data, [mask]))
+                src_alpha = src_alpha or source_arr.shape[0]
+            else:
+                source_arr = source
+
+            src_mem = MemoryDataset(
+                source_arr,
+                transform=format_transform(src_transform),
+                gcps=gcps,
+                rpcs=rpcs,
+                crs=src_crs,
+                copy=True,
+            )
             src_dataset = src_mem.handle()
+
+            if src_alpha:
+                for i in range(source_arr.shape[0]):
+                    GDALDeleteRasterNoDataValue(GDALGetRasterBand(src_dataset, i+1))
+                GDALSetRasterColorInterpretation(
+                    GDALGetRasterBand(src_dataset, src_alpha),
+                    <GDALColorInterp>6,
+                )
 
         # If the source is a rasterio MultiBand, no copy necessary.
         # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d))
         elif isinstance(source, tuple):
-
             rdr, src_bidx, dtype, shape = source
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
@@ -408,12 +431,22 @@ def _reproject(
 
     # Next, do the same for the destination raster.
     try:
-
         if dtypes.is_ndarray(destination):
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
-            # ensure data converted to numpy array
-            destination = np.asanyarray(destination)
+
+            if dst_nodata is None:
+                if hasattr(destination, "fill_value"):
+                    # destination is a masked array
+                    dst_nodata = destination.fill_value
+                elif src_nodata is not None:
+                    dst_nodata = src_nodata
+
+            if hasattr(destination, "mask"):
+                destination = np.ma.asanyarray(destination)
+            else:
+                destination = np.asanyarray(destination)
+
             if len(destination.shape) == 2:
                 destination = destination.reshape(1, *destination.shape)
 
@@ -426,26 +459,32 @@ def _reproject(
                     raise ValueError("Invalid destination shape")
                 dst_bidx = src_bidx
 
-            mem_raster = MemoryDataset(destination, transform=format_transform(dst_transform), crs=dst_crs)
+            if hasattr(destination, "mask"):
+                count, height, width = destination.shape
+                msk = np.logical_or.reduce(destination.mask)
+                if msk == np.ma.nomask:
+                    msk = np.zeros((height, width), dtype="bool")
+                msk = ~msk * 255
+                dest_arr = np.concatenate((destination.data, [msk]))
+                dst_alpha = dst_alpha or dest_arr.shape[0]
+            else:
+                dest_arr = destination
+
+            mem_raster = MemoryDataset(dest_arr, transform=format_transform(dst_transform), crs=dst_crs)
             dst_dataset = mem_raster.handle()
 
             if dst_alpha:
-                for i in range(destination.shape[0]):
+                for i in range(dest_arr.shape[0]):
                     GDALDeleteRasterNoDataValue(GDALGetRasterBand(dst_dataset, i+1))
-
-                GDALSetRasterColorInterpretation(GDALGetRasterBand(dst_dataset, dst_alpha), <GDALColorInterp>6)
+                GDALSetRasterColorInterpretation(
+                    GDALGetRasterBand(dst_dataset, dst_alpha),
+                    <GDALColorInterp>6,
+                )
 
             GDALSetDescription(
                 dst_dataset, "Temporary destination dataset for _reproject()")
 
             log.debug("Created temp destination dataset.")
-
-            if dst_nodata is None:
-                if hasattr(destination, "fill_value"):
-                    # destination is a masked array
-                    dst_nodata = destination.fill_value
-                elif src_nodata is not None:
-                    dst_nodata = src_nodata
 
         elif isinstance(destination, tuple):
             udr, dst_bidx, _, _ = destination
@@ -609,8 +648,27 @@ def _reproject(
         except CPLE_BaseError as base:
             raise WarpOperationError("Chunk and warp failed") from base
 
-        if dtypes.is_ndarray(destination):
-            exc_wrap_int(io_auto(destination, dst_dataset, 0))
+        if mem_raster is not None:
+            count, height, width = dest_arr.shape
+            if hasattr(destination, "mask"):
+                # Pick off the alpha band and make a mask of it.
+                # TODO: do this efficiently, not copying unless necessary.
+                indexes = np.arange(1, count, dtype='intp')
+                io_multi_band(dst_dataset, 0, 0.0, 0.0, width, height, destination, indexes)
+                alpha_arr = np.empty((height, width), dtype=dest_arr.dtype)
+                io_band(mem_raster.band(count), 0, 0.0, 0.0, width, height, alpha_arr)
+                destination = np.ma.masked_array(
+                    destination.data, 
+                    mask=np.repeat(
+                        ~(alpha_arr.astype("bool"))[np.newaxis, :, :],
+                        count - 1,
+                        axis=0,
+                    )
+                )
+            else:
+                exc_wrap_int(io_auto(destination, dst_dataset, 0))
+
+            return destination
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
@@ -628,7 +686,6 @@ def _reproject(
 
         if src_mem is not None:
             src_mem.close()
-
 
 def _calculate_default_transform(
     src_crs,
@@ -1024,11 +1081,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # raise an exception instead.
 
         if add_alpha:
-
             if src_alpha_band:
                 raise WarpOptionsError(
                     "The VRT already has an alpha band, adding a new one is not supported")
-
             else:
                 dst_alpha_band = src_dataset.count + 1
                 self.dst_nodata = None
