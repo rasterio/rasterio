@@ -1333,7 +1333,39 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
 
 
-@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1312959), (False, 438113)])
+@pytest.mark.parametrize(
+    "test3d,count_nonzero",
+    [
+        pytest.param(
+            True,
+            1312959,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            False,
+            438113,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            True,
+            1308604,
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            False,
+            437686,
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+    ],
+)
 def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         if test3d:
@@ -1355,7 +1387,39 @@ def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
     assert not np.ma.is_masked(out)
 
 
-@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1312959), (False, 438113)])
+@pytest.mark.parametrize(
+    "test3d,count_nonzero",
+    [
+        pytest.param(
+            True,
+            1312959,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            False,
+            438113,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            True,
+            1308604,
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            False,
+            437686,
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+    ],
+)
 def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         if test3d:
