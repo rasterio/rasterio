@@ -1338,30 +1338,16 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     [
         pytest.param(
             True,
-            1312959,
+            1308064,
             marks=pytest.mark.skipif(
                 not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-            ),
-        ),
-        pytest.param(
-            False,
-            438113,
-            marks=pytest.mark.skipif(
-                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-            ),
-        ),
-        pytest.param(
-            True,
-            1308604,
-            marks=pytest.mark.skipif(
-                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
             ),
         ),
         pytest.param(
             False,
             437686,
             marks=pytest.mark.skipif(
-                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
             ),
         ),
     ],
@@ -1404,21 +1390,7 @@ def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
                 not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
             ),
         ),
-        pytest.param(
-            True,
-            1308604,
-            marks=pytest.mark.skipif(
-                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-            ),
-        ),
-        pytest.param(
-            False,
-            437686,
-            marks=pytest.mark.skipif(
-                gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-            ),
-        ),
-    ],
+    ]
 )
 def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -1434,7 +1406,6 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
         dst_crs="EPSG:3857",
-        dst_nodata=99,
     )
     assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
