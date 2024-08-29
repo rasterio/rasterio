@@ -367,10 +367,6 @@ def _reproject(
             if not src_crs:
                 raise CRSError("Missing src_crs.")
 
-            if src_nodata is None and hasattr(source, 'fill_value'):
-                # source is a masked array
-                src_nodata = source.fill_value
-
             # ensure data converted to numpy array
             if hasattr(source, "mask"):
                 source = np.ma.asanyarray(source)
@@ -435,12 +431,7 @@ def _reproject(
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
 
-            if dst_nodata is None:
-                if hasattr(destination, "fill_value"):
-                    # destination is a masked array
-                    dst_nodata = destination.fill_value
-                elif src_nodata is not None:
-                    dst_nodata = src_nodata
+            dst_nodata = dst_nodata or src_nodata
 
             if hasattr(destination, "mask"):
                 destination = np.ma.asanyarray(destination)
