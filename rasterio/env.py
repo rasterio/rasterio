@@ -661,7 +661,7 @@ if 'GDAL_DATA' not in os.environ:
         set_gdal_config("GDAL_DATA", path)
 
     # See https://github.com/rasterio/rasterio/issues/1631.
-    elif GDALDataFinder().find_file("header.dxf"):
+    elif GDALDataFinder().find_file("gdalvrt.xsd"):
         log.debug("GDAL data files are available at built-in paths.")
 
     else:
