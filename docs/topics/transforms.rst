@@ -69,17 +69,21 @@ a value of 0 is assumed.
             transformer.xy(0, 0)
     (-123.47959047080701, 49.52794990575094)
 
-A first order correction would be to use a mean elevation value for the image
+A constant height offset can be specified using the ``rpc_height`` keyword argument. This is useful 
+for datasets with little elevation change. In this case, ``rpc_height`` is assumed to be an average
+height above sea level for ground in the target scene, while ``zs`` is the height above ground.
 
 .. code-block:: python
 
     >>> with rasterio.open('RGB.byte.rpc.vrt') as src:
-            transformer = rasterio.trasform.RPCTransformer(src.rpcs)
-            transformer.xy(0, 0, zs=src.rpcs.height_off)
-    (-123.48096552376548, 49.528097381526386)
+            # 100 meters above sea level    
+            transformer = rasterio.trasform.RPCTransformer(src.rpcs, rpc_height=100)
+            transformer.xy(0, 0, zs=0)
+    (-123.4811362101663, 49.52811584352445)
 
-Better yet is to sample height values from a digital elevation model (DEM). 
-:class:`.RPCTransformer` allows for options to be passed to :cpp:func:`GDALCreateRPCTransformerV2`
+When a constant height offset is not sufficient, sample height values from a digital elevation model (DEM).
+using the ``rpc_dem`` keyword argument. :class:`.RPCTransformer` allows for options to be passed to 
+:cpp:func:`GDALCreateRPCTransformerV2`
 
 .. code-block:: python
 
