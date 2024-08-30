@@ -133,10 +133,6 @@ if "clean" not in sys.argv:
         int, re.findall("[0-9]+", gdalversion)[:3]
     )
 
-    if (gdal_major_version, gdal_minor_version) < (3, 3):
-        raise SystemExit("ERROR: GDAL >= 3.3 is required for rasterio. "
-                 "Please upgrade GDAL.")
-
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
 if os.environ.get('PACKAGE_DATA'):
@@ -298,6 +294,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3",
         "Topic :: Multimedia :: Graphics :: Graphics Conversion",
         "Topic :: Scientific/Engineering :: GIS",
