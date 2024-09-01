@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-            python-version: 3.9
+            python-version: "3.12"
       - name: Code Linting
         shell: bash
         run: |
@@ -44,15 +44,15 @@ jobs:
 
   numpy_compat_test:
     runs-on: ubuntu-latest
-    name: Build with Numpy 2.0.0, test with 1.23.5
+    name: Build and test with Numpy
     container: ghcr.io/osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
     env:
         DEBIAN_FRONTEND: noninteractive
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10']
-        gdal-version: ['3.8.4']
+        python-version: ['3.12']
+        gdal-version: ['3.9.2']
 
     steps:
       - uses: actions/checkout@v4
@@ -70,19 +70,15 @@ jobs:
             python${{ matrix.python-version }}-venv \
             python3-pip \
             g++
-      - name: build wheel with Numpy 2
+      - name: build wheel with Numpy
         run: |
           python${{ matrix.python-version }} -m venv testenv
           . testenv/bin/activate
           python -m pip install --upgrade pip
           python -m pip install build
           python -m build
-      - name: run tests with Numpy 1
+      - name: run tests with Numpy
         run: |
-          . testenv/bin/activate
-          python -m pip install numpy==1.23.5
-          python -m pip wheel -r requirements-dev.txt
-          python -m pip install dist/*.whl
           python -m pip install aiohttp boto3 fsspec hypothesis packaging pytest shapely
           rm -rf rasterio
           python -m pytest -v -m "not wheel" -rxXs
@@ -97,7 +93,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.10', '3.10', '3.11', '3.12']
         gdal-version: ['3.6.4', '3.7.0']
         include:
           - python-version: '3.9'
@@ -149,12 +145,14 @@ jobs:
         # macos-13 is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         include:
           - os: ubuntu-latest
             python-version: '3.10'
           - os: ubuntu-latest
             python-version: '3.11'
+          - os: ubuntu-latest
+            python-version: '3.12'
     steps:
       - uses: actions/checkout@v4
 
@@ -172,7 +170,7 @@ jobs:
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
-          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=3 numpy
+          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.12 cython=3 numpy
           conda activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt
