@@ -19,7 +19,7 @@ def mock_wheel(tmpdir):
     moduledir = tmpdir.mkdir("rasterio")
     moduledir.ensure("__init__.py")
     moduledir.ensure("_env.py")
-    moduledir.ensure("gdal_data/header.dxf")
+    moduledir.ensure("gdal_data/gdalvrt.xsd")
     moduledir.ensure("proj_data/epsg")
     return moduledir
 
@@ -27,7 +27,7 @@ def mock_wheel(tmpdir):
 @pytest.fixture
 def mock_fhs(tmpdir):
     """A fake FHS system"""
-    tmpdir.ensure("share/gdal/header.dxf")
+    tmpdir.ensure("share/gdal/gdalvrt.xsd")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 
@@ -35,13 +35,13 @@ def mock_fhs(tmpdir):
 @pytest.fixture
 def mock_debian(tmpdir):
     """A fake Debian multi-install system"""
-    tmpdir.ensure("share/gdal/3.1/header.dxf")
-    tmpdir.ensure("share/gdal/3.2/header.dxf")
-    tmpdir.ensure("share/gdal/3.3/header.dxf")
-    tmpdir.ensure("share/gdal/3.4/header.dxf")
-    tmpdir.ensure("share/gdal/3.5/header.dxf")
-    tmpdir.ensure("share/gdal/3.6/header.dxf")
-    tmpdir.ensure(f"share/gdal/{gdal_version.major}.{gdal_version.minor}/header.dxf")
+    tmpdir.ensure("share/gdal/3.1/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.2/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.3/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.4/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.5/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.6/gdalvrt.xsd")
+    tmpdir.ensure(f"share/gdal/{gdal_version.major}.{gdal_version.minor}/gdalvrt.xsd")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 

@@ -225,7 +225,7 @@ class GDALDataFinder:
         Parameters
         ----------
         basename : str
-            Basename of a data file such as "header.dxf"
+            Basename of a data file such as "gdalvrt.xsd"
 
         Returns
         -------
@@ -263,18 +263,18 @@ class GDALDataFinder:
         if prefix is None:
             prefix = __file__
         datadir = os.path.abspath(os.path.join(os.path.dirname(prefix), "gdal_data"))
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
     def search_prefix(self, prefix=sys.prefix):
         """Check sys.prefix location"""
         datadir = os.path.join(prefix, 'share', 'gdal')
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
     def search_debian(self, prefix=sys.prefix):
         """Check Debian locations"""
         gdal_release_name = gdal_version()
         datadir = os.path.join(prefix, 'share', 'gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
 
 @contextmanager
@@ -377,7 +377,7 @@ cdef class GDALEnv(ConfigEnv):
                             self.update_config_options(GDAL_DATA=path)
 
                         # See https://github.com/rasterio/rasterio/issues/1631.
-                        elif GDALDataFinder().find_file("header.dxf"):
+                        elif GDALDataFinder().find_file("gdalvrt.xsd"):
                             log.debug("GDAL data files are available at built-in paths.")
 
                         else:
