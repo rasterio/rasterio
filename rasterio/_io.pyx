@@ -53,7 +53,7 @@ log = logging.getLogger(__name__)
 
 def validate_resampling(resampling):
     """Validate that the resampling method is compatible of reads/writes."""
-    if resampling > 7:
+    if resampling != Resampling.rms and resampling > 7:
         raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
 
 

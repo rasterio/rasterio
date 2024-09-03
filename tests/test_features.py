@@ -649,9 +649,9 @@ def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     assert np.array_equal(basic_image_2x2, out)
 
 
-def test_rasterize_int64_out_dtype(basic_geometry):
+def test_rasterize_unsupported_dtype(basic_geometry):
     """A non-supported data type for out should raise an exception."""
-    out = np.zeros(DEFAULT_SHAPE, dtype=np.int64)
+    out = np.zeros(DEFAULT_SHAPE, dtype=np.float16)
     with pytest.raises(ValueError):
         rasterize([basic_geometry], out=out)
 
@@ -794,8 +794,6 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     "dtype",
     [
         "float16",
-        "int64",
-        "uint64",
         pytest.param(
             "int8",
             marks=pytest.mark.skipif(

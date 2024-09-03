@@ -175,9 +175,6 @@ def test_rpcs_write_read_rpcs(tmpdir):
         assert isinstance(rpcs, RPC)
         expected = TEST_RPCS_FROM_GDAL.copy()
 
-        rpcs.err_bias = None
-        rpcs.err_rand = None
-
         assert sorted(rpcs.to_gdal().keys()) == sorted(expected.keys())
 
         rpcs.lat_off = 48
