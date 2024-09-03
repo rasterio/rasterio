@@ -71,13 +71,13 @@ a value of 0 is assumed.
 
 A constant height offset can be specified using the ``rpc_height`` keyword argument. This is useful 
 for datasets with little elevation change. In this case, ``rpc_height`` is assumed to be an average
-height above sea level for ground in the target scene, while ``zs`` is the height above ground.
+height above sea level for ground in the target scene, while ``zs`` is the height above ground of coordinates.
 
 .. code-block:: python
 
     >>> with rasterio.open('RGB.byte.rpc.vrt') as src:
             # 100 meters above sea level    
-            transformer = rasterio.trasform.RPCTransformer(src.rpcs, rpc_height=100)
+            transformer = rasterio.transform.RPCTransformer(src.rpcs, rpc_height=100)
             transformer.xy(0, 0, zs=0)
     (-123.4811362101663, 49.52811584352445)
 
