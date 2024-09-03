@@ -1,6 +1,19 @@
 Changes
 =======
 
+1.3.10.post1 (2024-09-03)
+-------------------------
+
+This release allows any Numpy version >=2.0,<3 to be used to build the package.
+That is the only source change.
+
+Wheels on PyPI include recent versions of GDAL, PROJ, Curl, and libjpeg:
+
+* GDAL 3.9.2 (3.9.1 on Windows)
+* PROJ 9.4.1
+* Curl 8.8.0
+* libjpeg 9f
+
 1.3.10 (2024-04-10)
 -------------------
 
