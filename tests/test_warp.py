@@ -322,10 +322,7 @@ def test_transform_bounds_no_change():
 
 
 def test_transform_bounds_densify_out_of_bounds():
-    error = ValueError
-    if gdal_version.at_least('3.4'):
-        error = CPLE_AppDefinedError
-    with pytest.raises(error):
+    with pytest.raises(CPLE_AppDefinedError):
         transform_bounds(
             CRS.from_epsg(4326),
             CRS.from_epsg(32610),
@@ -358,10 +355,6 @@ def test_calculate_default_transform():
         assert height == 696
 
 
-@pytest.mark.skipif(
-    not gdal_version.at_least("3.5"),
-    reason="Older GDAL versions require geotransform or GCPs",
-)
 def test_calculate_default_transform_geoloc_array():
     target_transform = Affine(
         0.0028535715391804096,
@@ -2252,18 +2245,6 @@ def test_coordinate_pipeline(tmp_path):
             # This is the same value as in GDAL's test_gdalwarp_lib_ct.
             assert dst.checksum(1) == 4705
 
-
-
-@pytest.mark.skipif(
-    not gdal_version.at_least('3.4') or gdal_version.at_least("3.5"),
-    reason="Requires GDAL 3.4.x")
-def test_issue2353bis(caplog):
-    """Errors left by a successful transformation are cleaned up."""
-    caplog.set_level(logging.INFO)
-    bounds = [458872.4197335826, -2998046.478919534, 584059.8115540259, -2883810.102037343]
-    with rasterio.Env():
-        transform_bounds("EPSG:6931", "EPSG:4326", *bounds)
-        assert "Point outside of" in caplog.text
 
 
 @pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")

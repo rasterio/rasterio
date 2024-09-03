@@ -176,9 +176,6 @@ def test_merge_destination_1(tmp_path):
             assert numpy.allclose(data, result[:, : data.shape[1], : data.shape[2]])
 
 
-@pytest.mark.skipif(
-    not gdal_version.at_least("3.4"), reason="Precise windowing requires 3.4"
-)
 def test_merge_destination_2(tmp_path):
     """Merge into an opened, target-aligned dataset."""
     with rasterio.open("tests/data/RGB.byte.tif") as src:

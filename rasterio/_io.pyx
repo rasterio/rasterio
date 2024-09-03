@@ -50,21 +50,10 @@ np.import_array()
 
 log = logging.getLogger(__name__)
 
-gdal33_version_checked = False
-gdal33_version_met = False
-
 
 def validate_resampling(resampling):
     """Validate that the resampling method is compatible of reads/writes."""
-    if resampling == Resampling.rms:
-        global gdal33_version_checked
-        global gdal33_version_met
-        if not gdal33_version_checked:
-            gdal33_version_checked = True
-            gdal33_version_met = GDALVersion.runtime().at_least('3.3')
-        if not gdal33_version_met:
-            raise ResamplingAlgorithmError("{!r} requires GDAL 3.3".format(Resampling(resampling)))
-    elif resampling > 7:
+    if resampling > 7:
         raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
 
 

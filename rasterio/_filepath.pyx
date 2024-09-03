@@ -47,9 +47,6 @@ from libc.string cimport memcpy
 
 log = logging.getLogger(__name__)
 
-gdal33_version_checked = False
-gdal33_version_met = False
-
 
 # NOTE: This has to be defined outside of gdal.pxi or other C extensions will
 # try to compile C++ only code included in this header.

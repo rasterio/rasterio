@@ -4,7 +4,6 @@ import numpy
 
 from rasterio.env import GDALVersion
 
-_GDAL_AT_LEAST_35 = GDALVersion.runtime().at_least("3.5")
 _GDAL_AT_LEAST_37 = GDALVersion.runtime().at_least("3.7")
 
 bool_ = 'bool'
@@ -36,11 +35,9 @@ dtype_fwd = {
     9: complex64,  # GDT_CInt32
     10: complex64,  # GDT_CFloat32
     11: complex128,  # GDT_CFloat64
+    12: uint64,  # GDT_UInt64
+    13: int64, # GDT_Int64
 }
-
-if _GDAL_AT_LEAST_35:
-    dtype_fwd[13] = int64 # GDT_Int64
-    dtype_fwd[12] = uint64 # GDT_UInt64
 
 if _GDAL_AT_LEAST_37:
     dtype_fwd[14] = sbyte  # GDT_Int8
@@ -79,11 +76,11 @@ typename_fwd = {
     8: 'CInt16',
     9: 'CInt32',
     10: 'CFloat32',
-    11: 'CFloat64'}
+    11: 'CFloat64',
+    12: 'UInt64',
+    13: 'Int64',
+}
 
-if _GDAL_AT_LEAST_35:
-    typename_fwd[13] = 'Int64'
-    typename_fwd[12] = 'UInt64'
 
 if _GDAL_AT_LEAST_37:
     typename_fwd[14] = "Int8"
@@ -105,11 +102,9 @@ dtype_ranges = {
     "int32": (-2147483648, 2147483647),
     "float32": (float(f32i.min), float(f32i.max)),
     "float64": (float(f64i.min), float(f64i.max)),
+    "int64": (-9223372036854775808, 9223372036854775807),
+    "uint64": (0, 18446744073709551615),
 }
-
-if _GDAL_AT_LEAST_35:
-    dtype_ranges['int64'] = (-9223372036854775808, 9223372036854775807)
-    dtype_ranges['uint64'] = (0, 18446744073709551615)
 
 dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
 
@@ -171,8 +166,6 @@ def get_minimum_dtype(values):
                 return uint16
             elif max_value <= 4294967295:
                 return uint32
-            if not _GDAL_AT_LEAST_35:
-                raise ValueError("Values out of range for supported dtypes")
             return uint64
         elif min_value >= -128 and max_value <= 127:
             return int8
@@ -180,8 +173,6 @@ def get_minimum_dtype(values):
             return int16
         elif min_value >= -2147483648 and max_value <= 2147483647:
             return int32
-        if not _GDAL_AT_LEAST_35:
-            raise ValueError("Values out of range for supported dtypes")
         return int64
     else:
         if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
