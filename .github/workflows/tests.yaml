@@ -149,7 +149,7 @@ jobs:
         # macos-13 is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         include:
           - os: ubuntu-latest
             python-version: '3.10'
@@ -158,42 +158,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Conda Setup
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Conda
+        uses: mamba-org/setup-micromamba@v1
         with:
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
-          use-mamba: true
-          auto-update-conda: true
-          use-only-tar-bz2: false
+          init-shell: bash
+          environment-name: test
+          create-args: >-
+            python=${{ matrix.python-version }}
+            libgdal
+            geos=3.11
+            cython=3
+            numpy
 
       - name: Install Env
         shell: bash -l {0}
         run: |
-          conda config --prepend channels conda-forge
-          conda config --set channel_priority strict
-          conda create -n test python=${{ matrix.python-version }} libgdal geos=3.11 cython=3 numpy
-          conda activate test
-          python -m pip install -e . --no-use-pep517 || python -m pip install -e .
-          python -m pip install -r requirements-dev.txt
+          micromamba run -n test python -m pip install -e . --no-use-pep517 || micromamba run -n test python -m pip install -e .
+          micromamba run -n test python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment
         shell: bash -l {0}
         run: |
-          conda activate test
-          python -V
-          conda info
+          micromamba run -n test python -V
+          micromamba info
 
       - name: Test with Coverage (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         shell: bash -l {0}
         run: |
-          conda activate test
-          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
+          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
         if: "${{matrix.os}} == 'macos-13' || ${{matrix.os}} == 'macos-14'"
         shell: bash -l {0}
         run: |
-          conda activate test
-          python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
+           micromamba run python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
