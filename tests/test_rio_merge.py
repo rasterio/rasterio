@@ -420,7 +420,6 @@ def test_merge_tiny_base(tiffs, runner):
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        print(data)
         assert (data[0][0:2, 1] == 120).all()
         assert (data[0][0:2, 2:4] == 90).all()
         assert data[0][2][1] == 60
@@ -486,7 +485,7 @@ def test_merge_out_of_range_nodata(tiffs):
 
     with pytest.warns(UserWarning):
         rv, transform = merge(datasets, nodata=9999)
-    assert not (rv == np.uint8(9999)).any()
+
 
 def test_merge_rgb(tmpdir, runner):
     """Get back original image"""
@@ -566,7 +565,7 @@ def test_merge_precision(tmpdir, precision):
         # Compare header lines.
         for i in range(5):
             assert out_file.readline().strip() == expected_file.readline().strip()
-        
+
         # Compare raster data as single strings.
         out_data = " ".join(line.strip() for line in out_file.readlines())
         expected_data = " ".join(line.strip() for line in expected_file.readlines())

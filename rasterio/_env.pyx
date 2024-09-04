@@ -225,7 +225,7 @@ class GDALDataFinder:
         Parameters
         ----------
         basename : str
-            Basename of a data file such as "header.dxf"
+            Basename of a data file such as "gdalvrt.xsd"
 
         Returns
         -------
@@ -263,18 +263,18 @@ class GDALDataFinder:
         if prefix is None:
             prefix = __file__
         datadir = os.path.abspath(os.path.join(os.path.dirname(prefix), "gdal_data"))
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
     def search_prefix(self, prefix=sys.prefix):
         """Check sys.prefix location"""
         datadir = os.path.join(prefix, 'share', 'gdal')
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
     def search_debian(self, prefix=sys.prefix):
         """Check Debian locations"""
         gdal_release_name = gdal_version()
         datadir = os.path.join(prefix, 'share', 'gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
-        return datadir if os.path.exists(os.path.join(datadir, 'header.dxf')) else None
+        return datadir if os.path.exists(os.path.join(datadir, 'gdalvrt.xsd')) else None
 
 
 @contextmanager
@@ -377,7 +377,7 @@ cdef class GDALEnv(ConfigEnv):
                             self.update_config_options(GDAL_DATA=path)
 
                         # See https://github.com/rasterio/rasterio/issues/1631.
-                        elif GDALDataFinder().find_file("header.dxf"):
+                        elif GDALDataFinder().find_file("gdalvrt.xsd"):
                             log.debug("GDAL data files are available at built-in paths.")
 
                         else:
@@ -460,20 +460,19 @@ cdef class GDALEnv(ConfigEnv):
 
 
 def set_proj_data_search_path(path):
-    """Set PROJ data search path"""
-    cdef char **paths = NULL
-    cdef const char *path_c = NULL
+    """Set PROJ data search path."""
     path_b = path.encode("utf-8")
-    path_c = path_b
-    paths = CSLAddString(paths, path_c)
-    OSRSetPROJSearchPaths(<const char *const *>paths)
+    cdef const char *path_c = path_b
+    cdef char **paths = CSLAddString(NULL, path_c)
+    try:
+        OSRSetPROJSearchPaths(<const char *const *>paths)
+    finally:
+        CSLDestroy(paths)
 
 
 def get_proj_data_search_paths():
     """
-    Get the PROJ DATA search paths
-
-    Requires GDAL 3.0.3+
+    Get the PROJ DATA search paths.
 
     Returns
     -------
@@ -485,12 +484,14 @@ def get_proj_data_search_paths():
     while paths[iii] != NULL:
         path_list.append(paths[iii])
         iii += 1
-    return path_list
-
+    try:
+        return path_list
+    finally:
+        CSLDestroy(paths)
 
 def get_gdal_data():
     """
-    Get the GDAL DATA path
+    Get the GDAL DATA path.
 
     Returns
     -------

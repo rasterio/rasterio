@@ -1,5 +1,6 @@
 """Copy valid pixels from input files to an output file."""
 
+import cmath
 from contextlib import contextmanager
 import logging
 import os
@@ -221,6 +222,7 @@ def merge(
     with dataset_opener(datasets[0]) as first:
         first_profile = first.profile
         first_res = first.res
+        first_nodataval = first.nodatavals[0]
         nodataval = first.nodatavals[0]
         dt = first.dtypes[0]
 
@@ -298,27 +300,33 @@ def merge(
         nodataval = nodata
         logger.debug("Set nodataval: %r", nodataval)
 
+    inrange = False
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range
-        inrange = False
         if np.issubdtype(dt, np.integer):
             info = np.iinfo(dt)
-            inrange = (info.min <= nodataval <= info.max)
-        elif np.issubdtype(dt, np.floating):
-            if math.isnan(nodataval):
-                inrange = True
-            else:
+            inrange = info.min <= nodataval <= info.max
+        else:
+            if cmath.isfinite(nodataval):
                 info = np.finfo(dt)
-                inrange = (info.min <= nodataval <= info.max)
+                inrange = info.min <= nodataval <= info.max
+                nodata_dt = np.min_scalar_type(nodataval)
+                inrange = inrange & np.can_cast(nodata_dt, dt)
+            else:
+                inrange = True
+
         if inrange:
             dest.fill(nodataval)
         else:
             warnings.warn(
-                "The nodata value, %s, is beyond the valid "
-                "range of the chosen data type, %s. Consider overriding it "
-                "using the --nodata option for better results." % (
-                    nodataval, dt))
+                f"Ignoring nodata value. The nodata value, {nodataval}, cannot safely be represented "
+                f"in the chosen data type, {dt}. Consider overriding it "
+                "using the --nodata option for better results. "
+                "Falling back to first source's nodata value."
+            )
+            nodataval = first_nodataval
     else:
+        logger.debug("Set nodataval to 0")
         nodataval = 0
 
     for idx, dataset in enumerate(datasets):

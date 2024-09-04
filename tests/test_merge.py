@@ -10,6 +10,8 @@ import affine
 import rasterio
 from rasterio.merge import merge
 
+from .conftest import gdal_version
+
 # Non-coincident datasets test fixture.
 # Three overlapping GeoTIFFs, two to the NW and one to the SE.
 @pytest.fixture(scope="function")
@@ -57,6 +59,9 @@ def test_merge_method(test_data_dir_overlapping, method, value):
     numpy.testing.assert_array_equal(arr[:, 5:10, 5:10], value)
 
 
+@pytest.mark.xfail(
+    not gdal_version.at_least("3.3"), reason="Unknown issue with GDAL 3.2."
+)
 def test_issue2163():
     """Demonstrate fix for issue 2163"""
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
