@@ -218,7 +218,7 @@ def reproject(
         be raised if this parameter is defined together with src_transform
         or gcps.
     src_geoloc_array : array-like, optional
-        A pair of 2D arrays holding x and y coordinates, like a like
+        A pair of 2D arrays holding x and y coordinates, like
         a dense array of ground control points that may be used in place
         of src_transform.
     src_crs: CRS or dict, optional
