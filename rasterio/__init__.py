@@ -7,7 +7,6 @@ import logging
 from logging import NullHandler
 import os
 import platform
-import warnings
 
 # On Windows we must explicitly register the directories that contain
 # the GDAL and supporting DLLs starting with Python 3.8. Presently, we
@@ -82,7 +81,7 @@ except ImportError:
     have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
-__version__ = "1.4b2.dev"
+__version__ = "1.4.0dev"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
@@ -94,16 +93,6 @@ __geos_version__ = ".".join([str(version) for version in get_geos_version()])
 # See rasterio/rio/main.py for an example.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
-
-
-# Remove this in 1.4.0 (see comment on gh-2423).
-def parse_path(path):
-    warnings.warn(
-        "rasterio.parse_path will be removed in version 1.4.",
-        RasterioDeprecationWarning,
-        stacklevel=2,
-    )
-    return _parse_path(path)
 
 
 @ensure_env_with_credentials
