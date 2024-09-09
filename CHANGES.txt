@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.4.0rc1 (2024-09-09)
+---------------------
+
+This is the first 1.4.0 release candidate. There have been no changes since
+1.4b2.
+
+1.4.0 requires Python >= 3.9 and GDAL >= 3.5.
+
 1.4b2 (2024-08-30)
 ------------------
 
