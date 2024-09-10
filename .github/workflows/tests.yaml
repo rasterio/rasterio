@@ -151,7 +151,7 @@ jobs:
         # macos-13 is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         include:
           - os: ubuntu-latest
             python-version: '*'
