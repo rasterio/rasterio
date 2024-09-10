@@ -97,16 +97,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         gdal-version: ['3.9.2']
         include:
-          - python-version: '3.10'
+          - python-version: '3.9'
             gdal-version: '3.8.5'
-          - python-version: '3.10'
+          - python-version: '3.9'
             gdal-version: '3.7.3'
-          - python-version: '3.10'
+          - python-version: '3.9'
             gdal-version: '3.6.4'
-          - python-version: '3.10'
+          - python-version: '3.9'
             gdal-version: '3.5.3'
 
     steps:
