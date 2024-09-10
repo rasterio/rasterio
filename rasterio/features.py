@@ -274,10 +274,8 @@ def rasterize(
     GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
     """
     valid_dtypes = (
-        'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
+        'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64'
     )
-    if GDALVersion.runtime().at_least("3.5"):
-        valid_dtypes += ("int64", "uint64")
     if GDALVersion.runtime().at_least("3.7"):
         valid_dtypes += ("int8",)
 

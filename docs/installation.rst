@@ -27,7 +27,7 @@ optional format drivers.
 Many users find Anaconda and conda-forge a good way to install Rasterio and get
 access to more optional format drivers (like TileDB and others).
 
-Rasterio 1.4 requires Python 3.9 or higher and GDAL 3.3 or higher.
+Rasterio 1.4 requires Python 3.9 or higher and GDAL 3.5 or higher.
 
 Advanced installation
 =====================

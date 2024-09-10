@@ -6,9 +6,6 @@ import pytest
 import rasterio
 from rasterio._err import CPLE_BaseError
 from rasterio.errors import RasterioIOError
-from rasterio.env import GDALVersion
-
-from .conftest import gdal_version
 
 
 def test_io_error(tmpdir):
@@ -52,18 +49,4 @@ def test_issue2353(caplog, path_rgb_byte_tif):
                 5434894.885056,
                 5434894.885056,
             )
-            _ = src.colorinterp
-
-
-@pytest.mark.xfail(gdal_version < GDALVersion(3, 3), reason="GDAL <3.3 will not warn")
-@pytest.mark.xfail(gdal_version > GDALVersion(3, 3), reason="GDAL > 3.3 will not warn")
-def test_issue2353bis(caplog, path_rgb_byte_tif):
-    """Ensure VRT doesn't leave errors behind."""
-    from rasterio.vrt import WarpedVRT
-
-    with caplog.at_level(logging.INFO):
-        with rasterio.open('tests/data/goes.tif') as src:
-            with WarpedVRT(src, dst_crs="EPSG:3857") as vrt:
-                pass
-            assert "Ignoring error" in caplog.text
             _ = src.colorinterp

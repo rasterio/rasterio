@@ -3,8 +3,6 @@
 import numpy as np
 import pytest
 
-from .conftest import requires_gdal33
-
 import rasterio
 from rasterio.enums import OverviewResampling
 from rasterio.enums import Resampling
@@ -103,7 +101,6 @@ def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
 
 
 @pytest.mark.parametrize("ovr_levels", [[2], [3], [2, 4, 8]])
-@requires_gdal33
 def test_ignore_overviews(data, ovr_levels):
     """open dataset with OVERVIEW_LEVEL=NONE, overviews should be ignored"""
     inputfile = str(data.join('RGB.byte.tif'))
@@ -118,7 +115,6 @@ def test_ignore_overviews(data, ovr_levels):
         assert src.overviews(3) == []
 
 
-@requires_gdal33
 def test_decimated_no_use_overview(red_green):
     """Force ignore existing overviews when performing decimated read"""
     # Corrupt overview of red file by replacing red.tif.ovr with
@@ -141,9 +137,8 @@ def test_decimated_no_use_overview(red_green):
         assert not np.array_equal(ovr_data, decimated_data)
 
 
-@requires_gdal33
 def test_build_overviews_rms(data):
-    """Make sure RMS resampling works with gdal3.3."""
+    """Make sure RMS resampling works"""
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]

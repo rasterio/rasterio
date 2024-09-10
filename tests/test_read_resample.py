@@ -11,9 +11,6 @@ from rasterio.enums import Resampling
 from rasterio.errors import ResamplingAlgorithmError
 from rasterio.windows import Window
 
-from .conftest import requires_gdal33
-
-
 # Rasterio's test dataset is 718 rows by 791 columns.
 
 def test_read_out_shape_resample_down():
@@ -94,7 +91,6 @@ def test_resampling_alg_error():
             src.read(1, out_shape=(1, 10, 10), resampling=Resampling.max)
 
 
-@requires_gdal33
 def test_resampling_rms():
     """Test Resampling.rms method"""
     with rasterio.open('tests/data/float.tif') as s:

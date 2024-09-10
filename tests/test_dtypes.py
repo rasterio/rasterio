@@ -1,8 +1,6 @@
 import numpy as np
 import pytest
 
-from .conftest import gdal_version
-
 import rasterio
 from rasterio import (
     ubyte,
@@ -88,19 +86,10 @@ def test_get_minimum_dtype():
 
 
 def test_get_minimum_dtype__int64():
-    if gdal_version.at_least("3.5"):
-        assert get_minimum_dtype([-1, 0, 2147483648]) == int64
-    else:
-        with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
-            get_minimum_dtype([-1, 0, 2147483648])
-
+    assert get_minimum_dtype([-1, 0, 2147483648]) == int64
 
 def test_get_minimum_dtype__uint64():
-    if gdal_version.at_least("3.5"):
-        assert get_minimum_dtype([0, 4294967296]) == uint64
-    else:
-        with pytest.raises(ValueError, match="Values out of range for supported dtypes"):
-            get_minimum_dtype([0, 4294967296])
+    assert get_minimum_dtype([0, 4294967296]) == uint64
 
 
 def test_can_cast_dtype():
@@ -158,8 +147,4 @@ def test_get_npdtype():
 
 
 def test__get_gdal_dtype__int64():
-    if gdal_version.at_least("3.5"):
-        assert _get_gdal_dtype("int64") == 13
-    else:
-        with pytest.raises(TypeError, match="Unsupported data type"):
-            _get_gdal_dtype("int64")
+    assert _get_gdal_dtype("int64") == 13

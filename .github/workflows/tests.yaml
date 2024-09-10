@@ -44,7 +44,7 @@ jobs:
 
   numpy_compat_test:
     runs-on: ubuntu-latest
-    name: Build with Numpy 2.0.0, test with 1.23.5
+    name: Build with Numpy 2.0.0, test with 1.24
     container: ghcr.io/osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
     env:
         DEBIAN_FRONTEND: noninteractive
@@ -80,7 +80,7 @@ jobs:
       - name: run tests with Numpy 1
         run: |
           . testenv/bin/activate
-          python -m pip install numpy==1.23.5
+          python -m pip install numpy==1.24
           python -m pip wheel -r requirements-dev.txt
           python -m pip install dist/*.whl
           python -m pip install aiohttp boto3 fsspec hypothesis packaging pytest shapely
@@ -97,15 +97,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
-        gdal-version: ['3.6.4', '3.7.0']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        gdal-version: ['3.9.2']
         include:
           - python-version: '3.9'
+            gdal-version: '3.8.5'
+          - python-version: '3.9'
+            gdal-version: '3.7.3'
+          - python-version: '3.9'
+            gdal-version: '3.6.4'
+          - python-version: '3.9'
             gdal-version: '3.5.3'
-          - python-version: '3.9'
-            gdal-version: '3.4.3'
-          - python-version: '3.9'
-            gdal-version: '3.3.3'
 
     steps:
       - uses: actions/checkout@v4
@@ -152,9 +154,8 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
         include:
           - os: ubuntu-latest
-            python-version: '3.10'
-          - os: ubuntu-latest
-            python-version: '3.11'
+            python-version: '*'
+
     steps:
       - uses: actions/checkout@v4
 
