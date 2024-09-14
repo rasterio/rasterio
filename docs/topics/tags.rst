@@ -23,8 +23,6 @@ namespace, call :meth:`~.DatasetReader.tags` with no arguments.
 
 .. code-block:: pycon
 
-    >>> import rasterio
-    >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> src.tags()
     {'AREA_OR_POINT': 'Area'}
 
