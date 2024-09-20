@@ -24,7 +24,8 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
-    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp,
+    RATFieldType, RATFieldUsage)
 from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
@@ -1351,18 +1352,18 @@ cdef class DatasetBase:
 
             values = []
             for r in range(row_count):
-                if col_type == <GDALRATFieldType>GFT_Integer:
+                if col_type == GFT_Integer:
                     values.append(GDALRATGetValueAsInt(rat, r, c))
-                elif col_type == <GDALRATFieldType>GFT_Real:
+                elif col_type == GFT_Real:
                     values.append(GDALRATGetValueAsDouble(rat, r, c))
-                elif col_type == <GDALRATFieldType>GFT_String:
+                elif col_type == GFT_String:
                     values.append(GDALRATGetValueAsString(rat, r, c))
                 else:
                     raise ValueError(f'Unknown column type {col_type}')
 
             retval[col_name] = {
-                'field_type': <GDALRATFieldType>col_type,
-                'field_usage': <GDALRATFieldUsage>col_use,
+                'field_type': RATFieldType(col_type),
+                'field_usage': RATFieldUsage(col_use),
                 'values': values
             }
 
