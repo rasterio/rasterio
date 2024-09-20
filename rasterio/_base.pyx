@@ -2,7 +2,8 @@
 
 """Numpy-free base classes."""
 
-from collections import defaultdict
+from collections import (
+    defaultdict, OrderedDict)
 from contextlib import ExitStack
 import logging
 import math
@@ -1341,8 +1342,7 @@ cdef class DatasetBase:
         row_count = GDALRATGetRowCount(rat)
         col_count = GDALRATGetColumnCount(rat)
 
-        # TODO: Make ordered dict
-        retval = {}
+        retval = OrderedDict()
 
         for c in range(col_count):
             col_name = GDALRATGetNameOfCol(rat, c)
