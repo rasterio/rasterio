@@ -1361,8 +1361,8 @@ cdef class DatasetBase:
                     raise ValueError(f'Unknown column type {col_type}')
 
             retval[col_name] = {
-                'column_type': <GDALRATFieldType>col_type,
-                'column_use': <GDALRATFieldUsage>col_use,
+                'field_type': <GDALRATFieldType>col_type,
+                'field_usage': <GDALRATFieldUsage>col_use,
                 'values': values
             }
 
