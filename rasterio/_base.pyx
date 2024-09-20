@@ -1327,6 +1327,47 @@ cdef class DatasetBase:
 
         return retval
 
+    def rat(self, bidx):
+
+        cdef GDALRasterBandH band = NULL
+        cdef GDALRasterAttributeTableH rat = NULL
+
+        band = self.band(bidx)
+        rat = GDALGetDefaultRAT(band)
+
+        if rat == NULL:
+            raise ValueError("NULL raster attribute table")
+        
+        row_count = GDALRATGetRowCount(rat)
+        col_count = GDALRATGetColumnCount(rat)
+
+        # TODO: Make ordered dict
+        retval = {}
+
+        for c in range(col_count):
+            col_name = GDALRATGetNameOfCol(rat, c)
+            col_type = GDALRATGetTypeOfCol(rat, c)
+            col_use  = GDALRATGetUsageOfCol(rat, c)
+
+            values = []
+            for r in range(row_count):
+                if col_type == <GDALRATFieldType>GFT_Integer:
+                    values.append(GDALRATGetValueAsInt(rat, r, c))
+                elif col_type == <GDALRATFieldType>GFT_Real:
+                    values.append(GDALRATGetValueAsDouble(rat, r, c))
+                elif col_type == <GDALRATFieldType>GFT_String:
+                    values.append(GDALRATGetValueAsString(rat, r, c))
+                else:
+                    raise ValueError(f'Unknown column type {col_type}')
+
+            retval[col_name] = {
+                'column_type': <GDALRATFieldType>col_type,
+                'column_use': <GDALRATFieldUsage>col_use,
+                'values': values
+            }
+
+        return retval
+
     def overviews(self, bidx):
         cdef GDALRasterBandH ovrband = NULL
         cdef GDALRasterBandH band = NULL
