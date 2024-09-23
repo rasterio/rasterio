@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.4.0rc2 (2024-09-10)
+---------------------
+
+Version 1.4.0 will require GDAL >= 3.5. Conditional checks for older GDAL
+versions at compile and run time have been removed across the entirety of the
+project (#3166).
+
 1.4.0rc1 (2024-09-09)
 ---------------------
 
