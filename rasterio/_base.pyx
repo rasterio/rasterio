@@ -902,8 +902,6 @@ cdef class DatasetBase:
         ------
         block, window
         """
-        cdef int i, j
-
         block_shapes = self.block_shapes
         if bidx < 1:
             if len(set(block_shapes)) > 1:
@@ -912,21 +910,13 @@ cdef class DatasetBase:
                     "are inhomogeneous")
             bidx = 1
         h, w = block_shapes[bidx-1]
-        d, m = divmod(self.height, h)
-        nrows = d + int(m>0)
+
         d, m = divmod(self.width, w)
         ncols = d + int(m>0)
 
-        # We could call self.block_window() inside the loops but this
-        # is faster and doesn't duplicate much code.
-        for j in range(nrows):
-            row = j * h
-            height = min(h, self.height - row)
-            for i in range(ncols):
-                col = i * w
-                width = min(w, self.width - col)
-                yield (j, i), windows.Window(
-                    col_off=col, row_off=row, width=width, height=height)
+        dataset_window = windows.Window(0, 0, width=self.width, height=self.height)
+        for idx, window in enumerate(windows.subdivide(dataset_window, h, w)):
+            yield divmod(idx, ncols), window
 
     @property
     def bounds(self):
