@@ -9,7 +9,7 @@ from .conftest import credentials
 
 
 with rasterio.Env() as env:
-    HAVE_NETCDF = 'NetCDF' in env.drivers().keys()
+    HAVE_NETCDF = "netCDF" in env.drivers().keys()
 
 
 def test_env(runner):
