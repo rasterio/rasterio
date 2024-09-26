@@ -3,7 +3,7 @@ import pytest
 import rasterio
 
 with rasterio.Env() as env:
-    HAVE_NETCDF = "NetCDF" in env.drivers().keys()
+    HAVE_NETCDF = "netCDF" in env.drivers().keys()
     HAVE_HDF5 = "HDF5" in env.drivers().keys()
 
 
