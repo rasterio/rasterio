@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.4.0 (2024-09-23)
+1.4.0 (2024-09-25)
 ------------------
 
 This is the final 1.4.0 release. The package version, credits, and citation
