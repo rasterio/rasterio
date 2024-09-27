@@ -131,7 +131,7 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError(f"Dataset has no {transform_method}")
-        return rowcol(transform, x, y, zs=z, op=op, **rpc_options)
+        return tuple(int(val) for val in rowcol(transform, x, y, zs=z, op=op, **rpc_options))
 
 
 def get_transformer(transform, **rpc_options):
