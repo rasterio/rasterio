@@ -270,6 +270,7 @@ extra_reqs = {
     "s3": ["boto3>=1.2.4"],
     "test": [
         "boto3>=1.2.4",
+        "fsspec",
         "hypothesis",
         "packaging",
         "pytest-cov>=2.2.0",
