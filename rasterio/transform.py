@@ -339,10 +339,6 @@ class TransformerBase:
 
         try:
             broadcasted = np.broadcast(xs, ys, zs)
-            if broadcasted.ndim != 1:
-                raise TransformError(
-                    "Input coordinates must be broadcastable to a 1d array"
-                )
         except ValueError as error:
             raise TransformError() from error
 
