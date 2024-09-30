@@ -265,22 +265,70 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
-    ctypedef enum GDALColorInterp:
-        GCI_Undefined
-        GCI_GrayIndex
-        GCI_PaletteIndex
-        GCI_RedBand
-        GCI_GreenBand
-        GCI_BlueBand
-        GCI_AlphaBand
-        GCI_HueBand
-        GCI_SaturationBand
-        GCI_LightnessBand
-        GCI_CyanBand
-        GCI_YCbCr_YBand
-        GCI_YCbCr_CbBand
-        GCI_YCbCr_CrBand
-        GCI_Max
+
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
+    cdef extern from "gdal.h" nogil:
+
+        ctypedef enum GDALColorInterp:
+            GCI_Undefined
+            GCI_GrayIndex
+            GCI_PaletteIndex
+            GCI_RedBand
+            GCI_GreenBand
+            GCI_BlueBand
+            GCI_AlphaBand
+            GCI_HueBand
+            GCI_SaturationBand
+            GCI_LightnessBand
+            GCI_CyanBand
+            GCI_YCbCr_YBand
+            GCI_YCbCr_CbBand
+            GCI_YCbCr_CrBand
+            GCI_PanBand
+            GCI_CoastalBand
+            GCI_RedEdgeBand
+            GCI_NIRBand
+            GCI_SWIRBand
+            GCI_MWIRBand
+            GCI_LWIRBand
+            GCI_TIRBand
+            GCI_OtherIRBand
+            GCI_IR_Reserved_1
+            GCI_IR_Reserved_2
+            GCI_IR_Reserved_3
+            GCI_IR_Reserved_4
+            GCI_SAR_Ka_Band
+            GCI_SAR_K_Band
+            GCI_SAR_Ku_Band
+            GCI_SAR_X_Band
+            GCI_SAR_C_Band
+            GCI_SAR_S_Band
+            GCI_SAR_L_Band
+            GCI_SAR_P_Band
+            GCI_SAR_Reserved_1
+            GCI_SAR_Reserved_2
+            GCI_Max
+ELSE:
+    cdef extern from "gdal.h" nogil:
+
+        ctypedef enum GDALColorInterp:
+            GCI_Undefined
+            GCI_GrayIndex
+            GCI_PaletteIndex
+            GCI_RedBand
+            GCI_GreenBand
+            GCI_BlueBand
+            GCI_AlphaBand
+            GCI_HueBand
+            GCI_SaturationBand
+            GCI_LightnessBand
+            GCI_CyanBand
+            GCI_YCbCr_YBand
+            GCI_YCbCr_CbBand
+            GCI_YCbCr_CrBand
+
+
+cdef extern from "gdal.h" nogil:
 
     ctypedef struct GDALColorEntry:
         short c1
