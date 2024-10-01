@@ -20,6 +20,7 @@ Other changes:
 - New color interpretation constants of GDAL 3.10 have been added to the
   ColorInterp enum (#3194).
 
+
 1.4.0 (2024-09-23)
 ------------------
 
