@@ -1,6 +1,25 @@
 Changes
 =======
 
+1.4.1 (2024-09-30)
+------------------
+
+Version 1.4.1 fixes two regressions, improves compatibility with GDAL 3.10, and
+specifies a testing dependency that was previously undeclared..
+
+Bug fixes:
+
+- The xy() transform method once again accepts grid coordinates as input
+  (#3198).
+- A dataset's index() method again returns a tuple of ints, not floats (#3195).
+
+Other changes:
+
+- GDAL 3.10 will disable opening "MEM::" datasets by default. Rasterio's
+  internal usage of these datasets is wrapped in special configuration.
+- New color interpretation constants of GDAL 3.10 have been added to the
+  ColorInterp enum (#3194).
+
 1.4.0 (2024-09-23)
 ------------------
 

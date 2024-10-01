@@ -510,6 +510,7 @@ def test_2421_rpc_height_ignored():
         assert abs(x2 - x1) > 0
         assert abs(y2 - y1) > 0
 
+
 def test_gcp_transformer_tps_option():
     """Use thin plate spline transformation when requested."""
     # TPS ensures that GCPs are (to within some precision) solutions of the transformation.
@@ -522,3 +523,10 @@ def test_gcp_transformer_tps_option():
             row_, col_ = transformer.rowcol(gcp.x, gcp.y, op=lambda arg: arg)
             assert gcp.row == pytest.approx(row_)
             assert gcp.col == pytest.approx(col_)
+
+
+def test_transform_grid():
+    """Accept a grid, see gh-3191."""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        cols, rows = numpy.mgrid[0:3, 0:3]
+        xs, ys = src.xy(cols, rows)
