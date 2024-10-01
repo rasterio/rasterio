@@ -39,7 +39,7 @@ from rasterio.windows import Window, intersection
 from libc.stdio cimport FILE
 
 from rasterio.enums import Resampling
-from rasterio.env import GDALVersion
+from rasterio.env import Env, GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
@@ -2253,7 +2253,8 @@ cdef class MemoryDataset(DatasetWriterBase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            super().__init__(_parse_path(datasetname), "r+")
+            with Env(GDAL_MEM_ENABLE_OPEN=True):
+                super().__init__(_parse_path(datasetname), "r+")
             if crs is not None:
                 self.crs = crs
             if transform is not None:
