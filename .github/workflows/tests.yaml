@@ -160,7 +160,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Conda
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           init-shell: bash
           environment-name: test
