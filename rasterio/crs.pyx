@@ -473,6 +473,8 @@ cdef class CRS:
             return "OGC", matches["OGC"][0]
         elif "ESRI" in matches:
             return "ESRI", matches["ESRI"][0]
+        elif "IAU" in matches:
+            return "IAU", matches["IAU"][0]
         else:
             return None
 
