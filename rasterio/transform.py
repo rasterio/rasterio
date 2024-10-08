@@ -116,7 +116,7 @@ class TransformMethodsMixin:
 
         Returns
         -------
-        tuple
+        tuple: float, float
             (row index, col index)
 
         """
@@ -277,10 +277,8 @@ def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_option
 
     Returns
     -------
-    rows : list of ints
-        list of row indices
-    cols : list of ints
-        list of column indices
+    rows : array of floats
+    cols : array of floats
 
     """
     if precision is not None:
@@ -361,7 +359,7 @@ class TransformerBase:
             Height associated with coordinates. Primarily used for RPC based
             coordinate transformations. Ignored for affine based
             transformations. Default: 0.
-        op : function, optional (default: math.floor)
+        op : function, optional (default: numpy.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
         precision : int, optional (default: None)
@@ -370,12 +368,14 @@ class TransformerBase:
 
         Raises
         ------
+        TypeError
+            If coordinate transformation fails.
         ValueError
-            If input coordinates are not all equal length
+            If input coordinates are not all equal length.
 
         Returns
         -------
-        tuple of float or list of float.
+        tuple of floats or array of floats.
 
         """
         if precision is not None:
@@ -392,8 +392,7 @@ class TransformerBase:
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
 
-            is_op_ufunc = isinstance(op, np.ufunc)
-            if is_op_ufunc:
+            if isinstance(op, np.ufunc):
                 op(new_rows, out=new_rows)
                 op(new_cols, out=new_cols)
             else:
@@ -404,6 +403,7 @@ class TransformerBase:
                 return new_rows[0], new_cols[0]
             else:
                 return new_rows, new_cols
+
         except TypeError:
             raise TransformError("Invalid inputs")
 
