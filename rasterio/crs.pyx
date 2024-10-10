@@ -924,27 +924,19 @@ cdef class CRS:
         cdef OGRSpatialReferenceH osr_s = NULL
         cdef OGRSpatialReferenceH osr_o = NULL
         cdef CRS crs_o
-
+        cdef const char* options[2]
+        options[0] = b"IGNORE_DATA_AXIS_TO_SRS_AXIS_MAPPING=YES"
+        options[1] = NULL
         try:
             crs_o = CRS.from_user_input(other)
+            osr_s = exc_wrap_pointer(OSRClone(self._osr))
+            osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
+            return bool(OSRIsSameEx(osr_s, osr_o, options) == 1)
         except CRSError:
             return False
-
-        epsg_s = self.to_epsg()
-        epsg_o = crs_o.to_epsg()
-
-        if epsg_s is not None and epsg_o is not None and epsg_s == epsg_o:
-            return True
-
-        else:
-            try:
-                osr_s = exc_wrap_pointer(OSRClone(self._osr))
-                osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-                return bool(OSRIsSame(osr_s, osr_o) == 1)
-
-            finally:
-                _safe_osr_release(osr_s)
-                _safe_osr_release(osr_o)
+        finally:
+            _safe_osr_release(osr_s)
+            _safe_osr_release(osr_o)
 
 
     def _projjson(self):
