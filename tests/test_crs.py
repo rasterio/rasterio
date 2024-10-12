@@ -287,6 +287,10 @@ def test_epsg__no_code_available():
                               '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert lcc_crs.to_epsg() is None
 
+def test_crs_4326_is_equivalent_crs84():
+    crs1 = CRS.from_epsg(4326)
+    crs2 = CRS.from_string("OGC:CRS84")
+    assert crs1 == crs2
 
 def test_crs_OSR_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')

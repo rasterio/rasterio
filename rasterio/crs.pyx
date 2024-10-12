@@ -921,22 +921,15 @@ cdef class CRS:
             return "CRS.from_wkt('{}')".format(self.wkt)
 
     def __eq__(self, other):
-        cdef OGRSpatialReferenceH osr_s = NULL
-        cdef OGRSpatialReferenceH osr_o = NULL
         cdef CRS crs_o
         cdef const char* options[2]
         options[0] = b"IGNORE_DATA_AXIS_TO_SRS_AXIS_MAPPING=YES"
         options[1] = NULL
         try:
             crs_o = CRS.from_user_input(other)
-            osr_s = exc_wrap_pointer(OSRClone(self._osr))
-            osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-            return bool(OSRIsSameEx(osr_s, osr_o, options) == 1)
+            return bool(OSRIsSameEx(self._osr, crs_o._osr, options) == 1)
         except CRSError:
             return False
-        finally:
-            _safe_osr_release(osr_s)
-            _safe_osr_release(osr_o)
 
 
     def _projjson(self):
