@@ -192,6 +192,15 @@ def test_equality_from_dict(epsg_code):
         init=f"epsg:{epsg_code}"
     )
 
+def test_crs_equals():
+    crs1 = CRS({'init': 'epsg:4326'})
+    assert CRS({'init': 'epsg:4326'}).equals(crs1)
+
+
+def test_crs_equals__ignore_axis_order():
+    crs1 = CRS({'init': 'epsg:4326'})
+    assert CRS({'init': 'epsg:4326'}).equals(crs1, ignore_axis_order=True)
+
 
 def test_is_same_crs():
     crs1 = CRS({'init': 'epsg:4326'})
@@ -201,7 +210,7 @@ def test_is_same_crs():
     assert crs1 != crs2
 
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert crs1 == wgs84_crs
+    assert crs1 != wgs84_crs
 
     # Make sure that same projection with different parameter are not equal
     lcc_crs1 = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
@@ -287,13 +296,19 @@ def test_epsg__no_code_available():
                               '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert lcc_crs.to_epsg() is None
 
+def test_crs_4326_if_equivalent_crs84():
+    crs1 = CRS.from_epsg(4326)
+    crs2 = CRS.from_string("OGC:CRS84")
+    assert not crs1.equals(crs2, ignore_axis_order=False)
+    assert crs1.equals(crs2, ignore_axis_order=True)
+    assert not crs1 == crs2
 
 def test_crs_OSR_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     crs2 = CRS.from_string('+proj=latlong +datum=WGS84 +no_defs')
     crs3 = CRS({'init': 'epsg:4326'})
     assert crs1 == crs2
-    assert crs1 == crs3
+    assert crs1 != crs3
 
 
 def test_crs_OSR_no_equivalence():
