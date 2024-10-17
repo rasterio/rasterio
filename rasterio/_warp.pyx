@@ -22,7 +22,7 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.env import GDALVersion
+from rasterio.env import Env, GDALVersion
 from rasterio.crs import CRS
 from rasterio.errors import (
     GDALOptionNotImplementedError,
@@ -531,9 +531,10 @@ def _reproject(
         log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
     try:
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer2(
-                src_dataset, dst_dataset, imgProjOptions))
+        with Env(GDAL_MEM_ENABLE_OPEN=True):
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateGenImgProjTransformer2(
+                    src_dataset, dst_dataset, imgProjOptions))
         if bUseApproxTransformer:
             hTransformArg = exc_wrap_pointer(
                 GDALCreateApproxTransformer(
@@ -623,7 +624,7 @@ def _reproject(
             0, 0, cols, rows)
 
         try:
-            with stack_errors() as checker:
+            with stack_errors() as checker, Env(GDAL_MEM_ENABLE_OPEN=True):
                 if num_threads > 1:
                     with nogil:
                         err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
@@ -778,9 +779,10 @@ def _calculate_default_transform(
             )
             bUseApproxTransformer = False
 
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
-        )
+        with Env(GDAL_MEM_ENABLE_OPEN=True):
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
+            )
 
         pfnTransformer = GDALGenImgProjTransform
         log.debug("Created exact transformer")
