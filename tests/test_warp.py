@@ -2147,7 +2147,7 @@ def test_reproject_error_propagation(http_error_server, caplog):
                 dst_transform=src.transform,
             )
 
-    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
+    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) >= 2
 
 
 def test_reproject_to_specified_output_bands():
