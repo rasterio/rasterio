@@ -31,7 +31,7 @@ def get_plt():
         raise ImportError(msg)
 
 
-def show(source, with_bounds=True, contour=False, contour_label_kws=None,
+def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None, 
          ax=None, title=None, transform=None, strech=True, clip_percent=None, **kwargs):
     """Display a raster or raster band using matplotlib.
 
@@ -50,17 +50,19 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     contour_label_kws : dictionary (opt)
         Keyword arguments for labeling the contours,
         empty dictionary for no labels.
+    indexes: list or tupel, optional, defines the color composite of bands.
     ax : matplotlib.axes.Axes, optional
         Axes to plot on, otherwise uses current axes.
     title : str, optional
         Title for the figure.
     transform : Affine, optional
         Defines the affine transform if source is an array
-    adjust : bool
-        If the plotted data is an RGB image, adjust the values of
-        each band so that they fall between 0 and 1 before plotting. If
-        True, values will be adjusted by the min / max of each band. If
-        False, no adjustment will be applied.
+    strech: bool (opt)
+        Whether to histogram streching for the image visualization.
+    clip_percent: int, optional
+        the minimum values (cumulative percentage) of the histogram for histogram streching, 
+        and the maximum value (cumulative percentage) is set to 100 - clip_percent 
+        default clip_percent is set to 2.
     **kwargs : key, value pairings optional
         These will be passed to the :func:`matplotlib.pyplot.imshow` or
         :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
@@ -72,13 +74,11 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
     """
     plt = get_plt()
-
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
-
+        print(1111)
         if len(arr.shape) >= 3:
             arr = reshape_as_image(arr)
-
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
 
@@ -105,12 +105,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
                 # will have the colors in the order expected by
                 # matplotlib (RGB)
                 arr = source.read(rgb_indexes, masked=True)
-
             except KeyError:
-                arr = source.read((3,2,1), masked=True)
+                if indexes == None: indexes = (0,1,2)
+                indexes = tuple(i+1 for i in indexes)
+                arr = source.read(indexes, masked=True)
 
             arr = reshape_as_image(arr)
-
     else:
         # The source is a numpy array reshape it to image if it has 3+ bands
         if source.ndim >= 3:
@@ -118,7 +118,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
         if source.ndim >= 3:
             arr = reshape_as_image(source)
-            if arr.shape[-1]>3: arr = arr[:,:,[2,1,0]]
+            if indexes == None: indexes = (0,1,2)
+            if arr.shape[-1]>3: arr = arr[:, :, indexes]
 
         else:
             arr = source
