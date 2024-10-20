@@ -78,7 +78,6 @@ cdef class CRS:
     The from_string method takes a variety of input.
 
     >>> crs = CRS.from_string("EPSG:3005")
-
     """
     def __init__(self, initialdata=None, **kwargs):
         """Make a CRS from a PROJ dict or mapping.
@@ -140,7 +139,7 @@ cdef class CRS:
 
         """
         try:
-            return bool(self.to_epsg())
+            return bool(self._epsg)
         except CRSError:
             return False
 
@@ -300,10 +299,6 @@ cdef class CRS:
             text = self._projjson()
             return json.loads(text) if text else {}
 
-        epsg_code = self.to_epsg()
-
-        if epsg_code:
-            return {'init': 'epsg:{}'.format(epsg_code)}
         else:
             try:
                 osr = exc_wrap_pointer(OSRClone(self._osr))
@@ -927,37 +922,22 @@ cdef class CRS:
         return self.to_string()
 
     def __repr__(self):
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return "CRS.from_epsg({})".format(epsg_code)
+        if self._epsg:
+            return "CRS.from_epsg({})".format(self._epsg)
         else:
             return "CRS.from_wkt('{}')".format(self.wkt)
 
     def __eq__(self, other):
-        cdef OGRSpatialReferenceH osr_s = NULL
-        cdef OGRSpatialReferenceH osr_o = NULL
         cdef CRS crs_o
+        cdef const char* options[2]
+        options[0] = b"IGNORE_DATA_AXIS_TO_SRS_AXIS_MAPPING=YES"
+        options[1] = NULL
 
         try:
             crs_o = CRS.from_user_input(other)
+            return bool(OSRIsSameEx(self._osr, crs_o._osr, options) == 1)
         except CRSError:
             return False
-
-        epsg_s = self.to_epsg()
-        epsg_o = crs_o.to_epsg()
-
-        if epsg_s is not None and epsg_o is not None and epsg_s == epsg_o:
-            return True
-
-        else:
-            try:
-                osr_s = exc_wrap_pointer(OSRClone(self._osr))
-                osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-                return bool(OSRIsSame(osr_s, osr_o) == 1)
-
-            finally:
-                _safe_osr_release(osr_s)
-                _safe_osr_release(osr_o)
 
 
     def _projjson(self):

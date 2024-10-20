@@ -45,21 +45,19 @@ class CustomCRS:
 def test_crs_constructor_dict():
     """Can create a CRS from a dict"""
     crs = CRS({'init': 'epsg:3857'})
-    assert crs['init'] == 'epsg:3857'
     assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_keywords():
     """Can create a CRS from keyword args, ignoring unknowns"""
+    # Note: `init="epsg:dddd"` is no longer recommended usage.
     crs = CRS(init='epsg:3857', foo='bar')
-    assert crs['init'] == 'epsg:3857'
     assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_crs_obj():
     """Can create a CRS from a CRS obj"""
-    crs = CRS(CRS(init='epsg:3857'))
-    assert crs['init'] == 'epsg:3857'
+    crs = CRS(CRS.from_epsg(3857))
     assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
@@ -123,21 +121,21 @@ def test_from_proj4_json():
 
 
 def test_from_epsg():
-    crs_dict = CRS.from_epsg(4326)
-    assert crs_dict['init'].lower() == 'epsg:4326'
+    assert CRS.from_epsg(4326)._epsg == 4326
 
-    # Test with invalid EPSG code
+
+def test_from_epsg_fail():
     with pytest.raises(ValueError):
-        assert CRS.from_epsg(0)
+        CRS.from_epsg(0)
 
 
 def test_from_epsg_string():
-    crs_dict = CRS.from_string('epsg:4326')
-    assert crs_dict['init'].lower() == 'epsg:4326'
+    assert CRS.from_string("epsg:4326")._epsg == 4326
 
-    # Test with invalid EPSG code
+
+def test_from_epsg_string_fail():
     with pytest.raises(ValueError):
-        assert CRS.from_string('epsg:xyz')
+        CRS.from_string("epsg:xyz")
 
 
 def test_from_epsg_overflow():
@@ -147,12 +145,20 @@ def test_from_epsg_overflow():
 
 
 def test_from_string():
-    wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert wgs84_crs.to_dict() == {'init': 'epsg:4326'}
+    wgs84_crs = CRS.from_string("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+    assert wgs84_crs.to_dict() == {"proj": "longlat", "datum": "WGS84", "no_defs": True}
 
+
+def test_from_string_2():
     # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
-    epsg_init_crs = CRS.from_string('+init=epsg:26911')
-    assert epsg_init_crs.to_dict() == {'init': 'epsg:26911'}
+    epsg_init_crs = CRS.from_string("+init=epsg:26911")
+    assert epsg_init_crs.to_dict() == {
+        "proj": "utm",
+        "zone": 11,
+        "datum": "NAD83",
+        "units": "m",
+        "no_defs": True,
+    }
 
 
 @pytest.mark.parametrize('proj,expected', [({'init': 'epsg:4326'}, True), ({'init': 'epsg:3857'}, False)])
@@ -328,7 +334,7 @@ def test_from_wkt_invalid():
 
 
 def test_from_user_input_epsg():
-    assert 'init' in CRS.from_user_input('epsg:4326')
+    assert CRS.from_user_input("epsg:4326")._epsg == 4326
 
 
 @pytest.mark.parametrize("version", ["WKT2_2019", WktVersion.WKT2_2019])
