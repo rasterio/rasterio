@@ -659,15 +659,14 @@ cdef class CRS:
         CRSError
 
         """
+        cdef const char *text_c = NULL
+        cdef CRS obj
+
         if initialdata is not None:
             data = dict(initialdata.items())
         else:
             data = {}
         data.update(**kwargs)
-
-        if not ("init" in data or "proj" in data):
-            # We've been given a PROJ JSON-encoded text.
-            return CRS.from_user_input(json.dumps(data))
 
         # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
         # extract the epsg code and dispatch to from_epsg.
@@ -675,29 +674,44 @@ cdef class CRS:
             epsg_code = int(data['init'].split(':')[1])
             return CRS.from_epsg(epsg_code)
 
-        # Continue with the general case.
-        pjargs = []
-        for key in data.keys() & all_proj_keys:
-            val = data[key]
-            if val is None or val is True:
-                pjargs.append('+{}'.format(key))
-            elif val is False:
-                pass
+        elif not ("init" in data or "proj" in data):
+            # We've been given a PROJ JSON-encoded text.
+            text_b = json.dumps(data).encode('utf-8')
+            text_c = text_b
+            obj = CRS.__new__(CRS)
+            try:
+                errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
+            except CPLE_BaseError as exc:
+                raise CRSError("The WKT could not be parsed. {}".format(exc))
             else:
-                pjargs.append('+{}={}'.format(key, val))
+                osr_set_traditional_axis_mapping_strategy(obj._osr)
+                obj._data = data
+                return obj
 
-        proj = ' '.join(pjargs)
-        b_proj = proj.encode('utf-8')
-
-        cdef CRS obj = CRS.__new__(CRS)
-
-        try:
-            exc_wrap_ogrerr(OSRImportFromProj4(obj._osr, <const char *>b_proj))
-        except CPLE_BaseError as exc:
-            raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
         else:
-            osr_set_traditional_axis_mapping_strategy(obj._osr)
-            return obj
+            # Continue with the general case.
+            pjargs = []
+            for key in data.keys() & all_proj_keys:
+                val = data[key]
+                if val is None or val is True:
+                    pjargs.append('+{}'.format(key))
+                elif val is False:
+                    pass
+                else:
+                    pjargs.append('+{}={}'.format(key, val))
+
+            proj = ' '.join(pjargs)
+            b_proj = proj.encode('utf-8')
+            obj = CRS.__new__(CRS)
+
+            try:
+                exc_wrap_ogrerr(OSRImportFromProj4(obj._osr, <const char *>b_proj))
+            except CPLE_BaseError as exc:
+                raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
+            else:
+                osr_set_traditional_axis_mapping_strategy(obj._osr)
+                obj._data = data
+                return obj
 
     @staticmethod
     def from_wkt(wkt, morph_from_esri_dialect=False):
@@ -769,20 +783,9 @@ cdef class CRS:
         elif isinstance(value, int):
             return CRS.from_epsg(value)
         elif isinstance(value, dict):
-            return CRS(**value)
-
+            return CRS.from_dict(value)
         elif isinstance(value, str):
-            text_b = value.encode('utf-8')
-            text_c = text_b
-            obj = CRS.__new__(CRS)
-            try:
-                errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
-            except CPLE_BaseError as exc:
-                raise CRSError("The WKT could not be parsed. {}".format(exc))
-            else:
-                osr_set_traditional_axis_mapping_strategy(obj._osr)
-                return obj
-
+            return CRS.from_string(value)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
 
@@ -795,7 +798,6 @@ cdef class CRS:
         Parameters
         ----------
         auth_name: str
-            The name of the authority.
         code : int or str
             The code used by the authority.
 
@@ -829,8 +831,10 @@ cdef class CRS:
         Raises
         ------
         CRSError
-
         """
+        cdef const char *text_c = NULL
+        cdef CRS obj
+
         try:
             value = value.strip()
         except AttributeError:
@@ -862,7 +866,16 @@ cdef class CRS:
         elif "=" in value:
             return CRS.from_proj4(value)
         else:
-            return CRS.from_user_input(value, morph_from_esri_dialect=morph_from_esri_dialect)
+            text_b = value.encode('utf-8')
+            text_c = text_b
+            obj = CRS.__new__(CRS)
+            try:
+                errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
+            except CPLE_BaseError as exc:
+                raise CRSError("The WKT could not be parsed. {}".format(exc))
+            else:
+                osr_set_traditional_axis_mapping_strategy(obj._osr)
+                return obj
 
     def __cinit__(self):
         self._osr = OSRNewSpatialReference(NULL)
