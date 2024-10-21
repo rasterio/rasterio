@@ -930,7 +930,7 @@ cdef class CRS:
     def __eq__(self, other):
         cdef CRS crs_o
         cdef const char* options[2]
-        options[0] = b"IGNORE_DATA_AXIS_TO_SRS_AXIS_MAPPING=YES"
+        options[0] = b"IGNORE_DATA_AXIS_TO_SRS_AXIS_MAPPING=NO"
         options[1] = NULL
 
         try:
