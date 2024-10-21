@@ -653,3 +653,9 @@ def test_crs_proj_json__from_string():
 
 def test_crs_compound_epsg():
     assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPD")
+
+
+@pytest.mark.parametrize("crs", [CRS.from_epsg(4326), CRS.from_string("EPSG:4326")])
+def test_epsg_4326_ogc_crs84(crs):
+    """EPSG:4326 not equivalent to OGC:CRS84."""
+    assert CRS.from_string("OGC:CRS84") != crs
