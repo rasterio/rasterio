@@ -8,10 +8,15 @@ import numpy
 import pytest
 
 import rasterio
+from rasterio import CRS
 from rasterio.enums import ColorInterp
 from rasterio.rio.edit_info import (
-    all_handler, crs_handler, tags_handler, transform_handler,
-    colorinterp_handler)
+    all_handler,
+    crs_handler,
+    tags_handler,
+    transform_handler,
+    colorinterp_handler,
+)
 from rasterio.rio.main import main_group
 import rasterio.shutil
 
@@ -97,7 +102,7 @@ def test_edit_crs_epsg(data, runner):
         main_group, ['edit-info', inputfile, '--crs', 'EPSG:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs == CRS.from_epsg(32618)
 
 
 def test_edit_crs_proj4(data, runner):
@@ -106,7 +111,7 @@ def test_edit_crs_proj4(data, runner):
         main_group, ['edit-info', inputfile, '--crs', '+init=epsg:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs == CRS.from_epsg(32618)
 
 
 def test_edit_crs_obj(data, runner):
@@ -116,7 +121,13 @@ def test_edit_crs_obj(data, runner):
         ['edit-info', inputfile, '--crs', '{"init": "epsg:32618"}'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs.to_dict() == {'init': 'epsg:32618'}
+        assert src.crs.to_dict() == {
+            "datum": "WGS84",
+            "no_defs": True,
+            "proj": "utm",
+            "units": "m",
+            "zone": 18,
+        }
 
 
 def test_edit_transform_err_not_json(data, runner):
@@ -192,12 +203,12 @@ def test_edit_crs_like(data, runner):
     # Set up the file to be edited.
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
-        dst.crs = {'init': 'epsg:32617'}
+        dst.crs = "EPSG:32617"
         dst.nodata = 1.0
 
     # Double check.
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32617'}
+        assert src.crs == CRS.from_epsg(32617)
         assert src.nodata == 1.0
 
     # The test.
@@ -215,12 +226,12 @@ def test_edit_nodata_like(data, runner):
     # Set up the file to be edited.
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
-        dst.crs = {'init': 'epsg:32617'}
+        dst.crs = "EPSG:32617"
         dst.nodata = 1.0
 
     # Double check.
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32617'}
+        assert src.crs == CRS.from_epsg(32617)
         assert src.nodata == 1.0
 
     # The test.
@@ -230,19 +241,19 @@ def test_edit_nodata_like(data, runner):
         ['edit-info', inputfile, '--like', templatefile, '--nodata', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32617'}
+        assert src.crs == CRS.from_epsg(32617)
         assert src.nodata == 0.0
 
 
 def test_edit_all_like(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
-        dst.crs = {'init': 'epsg:32617'}
+        dst.crs = "EPSG:32617"
         dst.nodata = 1.0
 
     # Double check.
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32617'}
+        assert src.crs == CRS.from_epsg(32617)
         assert src.nodata == 1.0
 
     templatefile = 'tests/data/RGB.byte.tif'
