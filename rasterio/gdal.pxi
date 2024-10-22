@@ -176,6 +176,7 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSRIsGeographic(OGRSpatialReferenceH srs)
     int OSRIsProjected(OGRSpatialReferenceH srs)
     int OSRIsSame(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2)
+    int OSRIsSameEx(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2, const char* const* papszOptions)
     OGRSpatialReferenceH OSRNewSpatialReference(const char *wkt)
     void OSRRelease(OGRSpatialReferenceH srs)
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
