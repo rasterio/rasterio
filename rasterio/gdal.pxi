@@ -166,6 +166,7 @@ cdef extern from "ogr_srs_api.h" nogil:
                      double *y, double *z)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
+    OGRSpatialReferenceH OSRCloneGeogCS(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
     int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
     const char *OSRGetAuthorityName(OGRSpatialReferenceH srs, const char *key)

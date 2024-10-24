@@ -673,3 +673,19 @@ def test_crs_proj_json__from_string():
 
 def test_crs_compound_epsg():
     assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPD")
+
+
+@pytest.mark.parametrize(
+    'crs_obj,geod_crs',
+    [
+        (CRS.from_epsg(4087), CRS.from_epsg(4326)),
+        (CRS.from_epsg(3995), CRS.from_epsg(4326)),
+        (CRS.from_epsg(3031), CRS.from_epsg(4326)),
+        (CRS.from_user_input("ESRI:102004"), CRS.from_user_input("EPSG:4269")),
+        (CRS.from_user_input("IAU_2015:49910"), CRS.from_user_input("IAU_2015:49900")),
+        (CRS.from_user_input("IAU_2015:49911"), CRS.from_user_input("IAU_2015:49901")),
+    ]
+)
+def test_construct_geodetic_crs(crs_obj, geod_crs):
+    """Test if CRS should be treated as latlon."""
+    assert crs_obj.to_geodetic() == geod_crs
