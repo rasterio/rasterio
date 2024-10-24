@@ -273,6 +273,24 @@ cdef class CRS:
             units_b = units_c
             return (units_b.decode('utf-8'), factor)
 
+    def to_geodetic(self):
+        """
+        Returns the geographic CRS but 
+        with traditional long/lat,easting/northing ordering
+
+        """
+        cdef CRS obj = CRS.__new__(CRS)
+        try:
+            # TODO can GeogCS be null/empty?
+            obj._osr = exc_wrap_pointer(OSRCloneGeogCS(self._osr))
+        except CPLE_BaseError as exc:
+            raise CRSError("The Geodetic CRS for this CRS could not be found: {}".format(exc))
+        finally:
+            # TODO do we actually want this? Wouldn't we want OAMS_AUTHORITY_COMPLIANT?
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
+            return obj
+        
+
     def to_dict(self, projjson=False):
         """Convert CRS to a PROJ dict.
 
