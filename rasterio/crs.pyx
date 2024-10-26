@@ -285,7 +285,7 @@ cdef class CRS:
             obj._osr = exc_wrap_pointer(OSRCloneGeogCS(self._osr))
         except CPLE_BaseError as exc:
             raise CRSError("The Geodetic CRS for this CRS could not be found: {}".format(exc))
-        finally:
+        else:
             # TODO do we actually want this? Wouldn't we want OAMS_AUTHORITY_COMPLIANT?
             osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
