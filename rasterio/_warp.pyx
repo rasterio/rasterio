@@ -423,6 +423,8 @@ def _reproject(
         raise
 
     # Next, do the same for the destination raster.
+    dest_2d = False
+
     try:
         if dtypes.is_ndarray(destination):
             if not dst_crs:
@@ -436,6 +438,7 @@ def _reproject(
                 destination = np.asanyarray(destination)
 
             if len(destination.shape) == 2:
+                dest_2d = True
                 destination = destination.reshape(1, *destination.shape)
 
             if destination.shape[0] == src_count:
@@ -647,7 +650,7 @@ def _reproject(
                 alpha_arr = np.empty((height, width), dtype=dest_arr.dtype)
                 io_band(mem_raster.band(count), 0, 0.0, 0.0, width, height, alpha_arr)
                 destination = np.ma.masked_array(
-                    destination.data, 
+                    destination.data,
                     mask=np.repeat(
                         ~(alpha_arr.astype("bool"))[np.newaxis, :, :],
                         count - 1,
@@ -656,6 +659,9 @@ def _reproject(
                 )
             else:
                 exc_wrap_int(io_auto(destination, dst_dataset, 0))
+
+            if dest_2d:
+                destination = destination[0]
 
             return destination
 
