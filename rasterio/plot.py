@@ -32,7 +32,7 @@ def get_plt():
 
 
 def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None, 
-         ax=None, title=None, transform=None, strech=True, clip_percent=None, **kwargs):
+         ax=None, title=None, transform=None, clip_percent=None, adjust=True, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -57,15 +57,18 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         Title for the figure.
     transform : Affine, optional
         Defines the affine transform if source is an array
-    strech: bool (opt)
-        Whether to histogram streching for the image visualization.
     clip_percent: int, optional
         the minimum values (cumulative percentage) of the histogram for histogram streching, 
         and the maximum value (cumulative percentage) is set to 100 - clip_percent 
         default clip_percent is set to 2.
+    adjust : bool
+        If the plotted data is an RGB image, adjust the values of
+        each band so that they fall between 0 and 1 before plotting. If
+        True, values will be adjusted by the min / max of each band. If
+        False, no adjustment will be applied.
     **kwargs : key, value pairings optional
-        These will be passed to the :func:`matplotlib.pyplot.imshow` or
-        :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
+    These will be passed to the :func:`matplotlib.pyplot.imshow` or
+    :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
 
     Returns
     -------
@@ -76,7 +79,6 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     plt = get_plt()
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
-        print(1111)
         if len(arr.shape) >= 3:
             arr = reshape_as_image(arr)
         if with_bounds:
@@ -106,8 +108,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
                 # matplotlib (RGB)
                 arr = source.read(rgb_indexes, masked=True)
             except KeyError:
-                if indexes == None: indexes = (0,1,2)
-                indexes = tuple(i+1 for i in indexes)
+                indexes = indexes or (1, 2, 3)
                 arr = source.read(indexes, masked=True)
 
             arr = reshape_as_image(arr)
@@ -117,9 +118,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
             source = np.ma.squeeze(source)
 
         if source.ndim >= 3:
-            arr = reshape_as_image(source)
-            if indexes == None: indexes = (0,1,2)
-            if arr.shape[-1]>3: arr = arr[:, :, indexes]
+            indexes = indexes or (0, 1, 2)
+            arr = reshape_as_image(source[indexes, :, :])  ## channel last
 
         else:
             arr = source
@@ -127,12 +127,18 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         if transform and with_bounds:
             kwargs['extent'] = plotting_extent(arr, transform)
 
-    if strech:
-        if clip_percent: 
-            clip_percent=clip_percent
-        else:
-            clip_percent=2
-        arr = hist_strech(arr, clip_percent)
+    if adjust:
+        if clip_percent:
+            arr = hist_strech(arr, clip_percent)
+        else: 
+            if arr.ndim == 2: 
+                arr = adjust_band(arr)
+            elif arr.ndim >= 3:
+                # Adjust each band by the min/max so it will plot as RGB.
+                arr = reshape_as_raster(arr).astype("float64")
+                for ii, band in enumerate(arr):
+                    arr[ii] = adjust_band(band)
+                arr = reshape_as_image(arr)
 
     show = False
 
@@ -345,3 +351,24 @@ def hist_strech(arr, clip_percent):
     arr = (arr - arr_hist[0])/(arr_hist[1]-arr_hist[0])  
     arr = np.clip(arr, 0, 1)
     return arr 
+
+
+def adjust_band(band, kind=None):
+    """Adjust a band to be between 0 and 1.
+    Parameters
+    ----------
+    band : array, shape (height, width)
+        A band of a raster object.
+    kind : str
+        An unused option. For now, there is only one option ('linear').
+
+    Returns
+    -------
+    band_normed : array, shape (height, width)
+        An adjusted version of the input band.
+
+    """
+    imin = np.float64(np.nanmin(band))
+    imax = np.float64(np.nanmax(band))
+    return (band - imin) / (imax - imin)
+
