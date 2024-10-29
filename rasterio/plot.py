@@ -67,8 +67,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         True, values will be adjusted by the min / max of each band. If
         False, no adjustment will be applied.
     **kwargs : key, value pairings optional
-    These will be passed to the :func:`matplotlib.pyplot.imshow` or
-    :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
+        These will be passed to the :func:`matplotlib.pyplot.imshow` or
+        :func:`matplotlib.pyplot.contour` contour method depending on contour argument.
 
     Returns
     -------
@@ -77,6 +77,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
 
     """
     plt = get_plt()
+
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         if len(arr.shape) >= 3:
@@ -87,7 +88,6 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     elif isinstance(source, DatasetReader):
         if with_bounds:
             kwargs['extent'] = plotting_extent(source)
-
         if source.count <= 2:
             arr = source.read(1, masked=True)
         else:
