@@ -31,8 +31,8 @@ def get_plt():
         raise ImportError(msg)
 
 
-def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None, 
-         ax=None, title=None, transform=None, clip_percent=None, adjust=True, **kwargs):
+def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None,
+         ax=None, title=None, transform=None, clip_percent=None, adjust=False, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -58,8 +58,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     transform : Affine, optional
         Defines the affine transform if source is an array
     clip_percent: int, optional
-        the minimum values (cumulative percentage) of the histogram for histogram streching, 
-        and the maximum value (cumulative percentage) is set to 100 - clip_percent 
+        the minimum values (cumulative percentage) of the histogram for histogram streching,
+        and the maximum value (cumulative percentage) is set to 100 - clip_percent
         default clip_percent is set to 2.
     adjust : bool
         If the plotted data is an RGB image, adjust the values of
@@ -88,30 +88,28 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     elif isinstance(source, DatasetReader):
         if with_bounds:
             kwargs['extent'] = plotting_extent(source)
-        if source.count <= 2:
-            arr = source.read(1, masked=True)
-        else:
-            try:
-                # Lookup table for the color space in the source file.
-                # This will allow us to re-order it to RGB if needed
-                source_colorinterp = OrderedDict(zip(source.colorinterp, source.indexes))
-                colorinterp = rasterio.enums.ColorInterp
 
-                # Gather the indexes of the RGB channels in that order
-                rgb_indexes = [
-                    source_colorinterp[ci]
-                    for ci in (colorinterp.red, colorinterp.green, colorinterp.blue)
-                ]
+        if not indexes:
+            if source.count <= 2:
+                indexes = (1,)
+            else:
+                try:
+                    # Lookup table for the color space in the source file.
+                    # This will allow us to re-order it to RGB if needed
+                    source_colorinterp = OrderedDict(zip(source.colorinterp, source.indexes))
+                    colorinterp = rasterio.enums.ColorInterp
 
-                # Read the image in the proper order so the numpy array
-                # will have the colors in the order expected by
-                # matplotlib (RGB)
-                arr = source.read(rgb_indexes, masked=True)
-            except KeyError:
-                indexes = indexes or (1, 2, 3)
-                arr = source.read(indexes, masked=True)
+                    # Gather the indexes of the RGB channels in that order
+                    indexes = [
+                        source_colorinterp[ci]
+                        for ci in (colorinterp.red, colorinterp.green, colorinterp.blue)
+                    ]
+                except KeyError:
+                    indexes = (1, 2, 3)
 
-            arr = reshape_as_image(arr)
+        arr = source.read(indexes, masked=True)
+        arr = reshape_as_image(arr)
+
     else:
         # The source is a numpy array reshape it to image if it has 3+ bands
         if source.ndim >= 3:
@@ -130,8 +128,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     if adjust:
         if clip_percent:
             arr = hist_strech(arr, clip_percent)
-        else: 
-            if arr.ndim == 2: 
+        else:
+            if arr.ndim == 2:
                 arr = adjust_band(arr)
             elif arr.ndim >= 3:
                 # Adjust each band by the min/max so it will plot as RGB.
@@ -342,15 +340,15 @@ def hist_strech(arr, clip_percent):
    Parameters
     ----------
     arr : array-like in the image form of (rows, columns, bands)
-        image to reshape      
-    clip_percent: the minimum values (cumulative percentage) of the histogram, 
-                  and the maximum value (cumulative percentage) is set to 100% - clip_percent 
+        image to reshape
+    clip_percent: the minimum values (cumulative percentage) of the histogram,
+                  and the maximum value (cumulative percentage) is set to 100% - clip_percent
                   default clip_percent is 2.
-    """    
-    arr_hist = np.nanpercentile(np.array(arr), (clip_percent, 100-clip_percent))
-    arr = (arr - arr_hist[0])/(arr_hist[1]-arr_hist[0])  
+    """
+    arr_hist = np.nanpercentile(np.array(arr), (clip_percent, 100 - clip_percent))
+    arr = (arr - arr_hist[0]) / (arr_hist[1] - arr_hist[0])
     arr = np.clip(arr, 0, 1)
-    return arr 
+    return arr
 
 
 def adjust_band(band, kind=None):
