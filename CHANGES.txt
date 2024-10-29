@@ -9,8 +9,14 @@ GDAL 3.10.
 
 Bug fixes:
 
+- The reproject() function now always returns a 2-D array, masked or
+  non-masked, when requested (#3223).
 - The various rowcol() methods once again return integers by default as
   they did in 1.3.11 (#3219).
+- Internal usage of CRS.to_epsg(), which is slow, has been reduced, and
+  CRS.__eq__() has been made much faster (#3216).
+- The warper's use of a MEM:: dataset has been made fully compatible with
+  changes coming in GDAL 3.10 (#3212).
 
 1.4.1 (2024-09-30)
 ------------------
