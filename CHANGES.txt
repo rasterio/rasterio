@@ -1,10 +1,10 @@
 Changes
 =======
 
-1.4.2 (TBD)
------------
+1.4.2 (2024-10-30)
+------------------
 
-Version 1.4.2 fixes a regression and further improves compatibility with
+Version 1.4.2 fixes two regressions and further improves compatibility with
 GDAL 3.10.
 
 Bug fixes:
