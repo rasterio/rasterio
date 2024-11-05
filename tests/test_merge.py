@@ -202,7 +202,9 @@ def test_merge_destination_2(tmp_path):
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
             assert result.shape == (3, 719, 792)
-            assert numpy.allclose(data.mean(), result[:, 1:, 1:-1].mean(), rtol=1e-3)
+            assert numpy.allclose(
+                data[data != 0].mean(), result[result != 0].mean(), rtol=1e-3
+            )
 
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
