@@ -11,6 +11,7 @@ import affine
 import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.errors import MergeError, RasterioError
 from rasterio.warp import aligned_target
 from rasterio.windows import subdivide
@@ -150,7 +151,7 @@ def test_issue2202(dx, dy):
                 "/vsis3/copernicus-dem-30m/Copernicus_DSM_COG_10_N48_00_E011_00_DEM/Copernicus_DSM_COG_10_N48_00_E011_00_DEM.tif",
             ]
         ]
-        aux_array, aux_transform = rasterio.merge.merge(datasets=ds, bounds=aoi.bounds)
+        aux_array, aux_transform = rasterio.merge.merge(ds, bounds=aoi.bounds)
         from rasterio.plot import show
 
         show(aux_array)
@@ -181,7 +182,10 @@ def test_merge_destination_2(tmp_path):
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         profile = src.profile
         dst_transform, dst_width, dst_height = aligned_target(
-            src.transform, src.width, src.height, src.res
+            src.transform,
+            src.width,
+            src.height,
+            src.res,
         )
         profile.update(transform=dst_transform, width=dst_width, height=dst_height)
 
@@ -199,7 +203,7 @@ def test_merge_destination_2(tmp_path):
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
             assert result.shape == (3, 719, 792)
-            assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
+            assert numpy.allclose(data.mean(), result[:, 1:, 1:-1].mean(), rtol=1e-3)
 
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")

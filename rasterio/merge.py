@@ -11,9 +11,13 @@ import numbers
 import numpy as np
 
 import rasterio
-from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import MergeError, RasterioDeprecationWarning, RasterioError
+from rasterio.errors import (
+    MergeError,
+    RasterioDeprecationWarning,
+    RasterioError,
+    WindowError,
+)
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -396,7 +400,40 @@ def merge(
         else:
             chunks = [dout_window]
 
-        logger.debug("Chunks=%r", chunks)
+        def _window_frombounds(bounds, transform):
+            """Based on gdal_merge.py."""
+            minx, miny, maxx, maxy = bounds
+            xoff = int((minx - transform.c) / transform.a + 0.1)
+            yoff = int((maxy - transform.f) / transform.e + 0.1)
+            width = round((maxx - transform.c) / transform.a) - xoff
+            height = round((miny - transform.f) / transform.e) - yoff
+
+            if width < 1 or height < 1:
+                raise WindowError
+
+            return windows.Window(xoff, yoff, width, height)
+
+        def _intersect_bounds(bounds1, bounds2, transform):
+            """Based on gdal_merge.py."""
+            int_w = max(bounds1[0], bounds2[0])
+            int_e = min(bounds1[2], bounds2[2])
+
+            if int_w >= int_e:
+                raise ValueError
+
+            if transform.e < 0:
+                # north up
+                int_s = max(bounds1[1], bounds2[1])
+                int_n = min(bounds1[3], bounds2[3])
+                if int_s >= int_n:
+                    raise ValueError
+            else:
+                int_s = min(bounds1[1], bounds2[1])
+                int_n = max(bounds1[3], bounds2[3])
+                if int_n >= int_s:
+                    raise ValueError
+
+            return int_w, int_s, int_e, int_n
 
         for chunk in chunks:
             dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
@@ -404,65 +441,61 @@ def merge(
             if inrange:
                 dest.fill(nodataval)
 
+            # From gh-2221
+            chunk_bounds = windows.bounds(chunk, output_transform)
+            chunk_transform = windows.transform(chunk, output_transform)
+
             for idx, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
-                    # 0. Precondition checks
-                    #    - Check that source is within destination bounds
-                    #    - Check that CRS is same
 
-                    if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                        logger.debug(
-                            "Skipping source: src=%r, bounds=%r",
-                            src,
-                            (dst_w, dst_s, dst_e, dst_n),
-                        )
-                        continue
-
+                    # Intersect source bounds and tile bounds
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")
 
-                    # 1. Compute the source window
-                    src_window = windows.from_bounds(
-                        dst_w, dst_s, dst_e, dst_n, src.transform
-                    ).round(3)
+                    try:
+                        ibounds = _intersect_bounds(
+                            src.bounds, chunk_bounds, chunk_transform
+                        )
+                        sw = _window_frombounds(ibounds, src.transform)
+                        dw = _window_frombounds(ibounds, chunk_transform)
+                    except (ValueError, WindowError):
+                        logger.info(
+                            "Skipping source: src=%r, bounds=%r", src, src.bounds
+                        )
+                        continue
 
-                    temp_shape = (src_count, chunk.height, chunk.width)
+                    rows, cols = dw.toslices()
+                    region = dest[:, rows, cols]
 
-                    temp_src = src.read(
-                        out_shape=temp_shape,
-                        window=src_window,
-                        boundless=True,
-                        masked=True,
+                    if cmath.isnan(nodataval):
+                        region_mask = np.isnan(region)
+                    elif not np.issubdtype(region.dtype, np.integer):
+                        region_mask = np.isclose(region, nodataval)
+                    else:
+                        region_mask = region == nodataval
+
+                    data = src.read(
+                        out_shape=(src_count, *windows.shape(dw)),
                         indexes=indexes,
+                        masked=True,
+                        window=sw,
                         resampling=resampling,
                     )
 
-                region = dest[:, :, :]
-
-                if cmath.isnan(nodataval):
-                    region_mask = np.isnan(region)
-                elif not np.issubdtype(region.dtype, np.integer):
-                    region_mask = np.isclose(region, nodataval)
-                else:
-                    region_mask = region == nodataval
-
-                # Ensure common shape, resolving issue #2202.
-                temp = temp_src[:, : region.shape[1], : region.shape[2]]
-                temp_mask = np.ma.getmask(temp)
-                copyto(
-                    region,
-                    temp,
-                    region_mask,
-                    temp_mask,
-                    index=idx,
-                    roff=0,
-                    coff=0,
-                )
+                    copyto(
+                        region,
+                        data,
+                        region_mask,
+                        data.mask,
+                        index=idx,
+                        roff=dw.row_off,
+                        coff=dw.col_off,
+                    )
 
             if dst:
-                dst_window = windows.from_bounds(
-                    dst_w, dst_s, dst_e, dst_n, output_transform
-                ).round(3)
+                dst_window = windows.from_bounds(*chunk_bounds, output_transform).round(
+                    3
+                )
                 dst.write(dest, window=dst_window)
 
         if dst is None:
