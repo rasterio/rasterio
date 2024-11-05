@@ -2,7 +2,6 @@
 
 from io import StringIO
 import os
-import sys
 import textwrap
 from pathlib import Path
 

@@ -11,7 +11,6 @@ import affine
 import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
 from rasterio.errors import MergeError, RasterioError
 from rasterio.warp import aligned_target
 from rasterio.windows import subdivide
