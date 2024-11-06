@@ -400,19 +400,6 @@ def merge(
         else:
             chunks = [dout_window]
 
-        def _window_frombounds(bounds, transform):
-            """Based on gdal_merge.py."""
-            minx, miny, maxx, maxy = bounds
-            xoff = int((minx - transform.c) / transform.a + 0.1)
-            yoff = int((maxy - transform.f) / transform.e + 0.1)
-            width = round((maxx - transform.c) / transform.a) - xoff
-            height = round((miny - transform.f) / transform.e) - yoff
-
-            if width < 1 or height < 1:
-                raise WindowError
-
-            return windows.Window(xoff, yoff, width, height)
-
         def _intersect_bounds(bounds1, bounds2, transform):
             """Based on gdal_merge.py."""
             int_w = max(bounds1[0], bounds2[0])
@@ -456,15 +443,16 @@ def merge(
                         ibounds = _intersect_bounds(
                             src.bounds, chunk_bounds, chunk_transform
                         )
-                        sw = _window_frombounds(ibounds, src.transform)
-                        dw = _window_frombounds(ibounds, chunk_transform)
+                        sw = windows.from_bounds(*ibounds, src.transform)
+                        cw = windows.from_bounds(*ibounds, chunk_transform)
                     except (ValueError, WindowError):
                         logger.info(
                             "Skipping source: src=%r, bounds=%r", src, src.bounds
                         )
                         continue
 
-                    rows, cols = dw.toslices()
+                    cw = cw.align()
+                    rows, cols = cw.toslices()
                     region = dest[:, rows, cols]
 
                     if cmath.isnan(nodataval):
@@ -475,7 +463,7 @@ def merge(
                         region_mask = region == nodataval
 
                     data = src.read(
-                        out_shape=(src_count, *windows.shape(dw)),
+                        out_shape=(src_count, cw.height, cw.width),
                         indexes=indexes,
                         masked=True,
                         window=sw,
@@ -488,15 +476,14 @@ def merge(
                         region_mask,
                         data.mask,
                         index=idx,
-                        roff=dw.row_off,
-                        coff=dw.col_off,
+                        roff=cw.row_off,
+                        coff=cw.col_off,
                     )
 
             if dst:
-                dst_window = windows.from_bounds(*chunk_bounds, output_transform).round(
-                    3
-                )
-                dst.write(dest, window=dst_window)
+                dw = windows.from_bounds(*chunk_bounds, output_transform)
+                dw = dw.align()
+                dst.write(dest, window=dw)
 
         if dst is None:
             if masked:

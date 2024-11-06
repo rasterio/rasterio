@@ -1,5 +1,7 @@
 """Tests of rasterio.merge"""
 
+import math
+
 import boto3
 from hypothesis import given, settings
 from hypothesis.strategies import floats
@@ -168,8 +170,10 @@ def test_merge_destination_1(tmp_path):
             for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
-                dst.write(chunk_arr, window=dst_window)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = dw.align()
+                dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
@@ -196,14 +200,16 @@ def test_merge_destination_2(tmp_path):
             for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
-                dst.write(chunk_arr, window=dst_window)
+                dw = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = dw.align()
+                dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
             assert result.shape == (3, 719, 792)
             assert numpy.allclose(
-                data[data != 0].mean(), result[result != 0].mean(), rtol=1e-3
+                data[data != 0].mean(),
+                result[result != 0].mean(),
             )
 
 

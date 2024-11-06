@@ -560,6 +560,19 @@ class Window:
             "width={self.width}, height={self.height})").format(
                 self=self)
 
+    def align(self):
+        """Equivalent to rounding offsets and lengths.
+
+        Returns
+        -------
+        Window
+        """
+        d_y = math.floor(self.row_off + 0.1)
+        d_x = math.floor(self.col_off + 0.1)
+        d_h = math.floor(self.height + 0.5)
+        d_w = math.floor(self.width + 0.5)
+        return Window(d_x, d_y, d_w, d_h)
+
     def flatten(self):
         """A flattened form of the window.
 
