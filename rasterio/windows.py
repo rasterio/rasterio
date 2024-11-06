@@ -560,19 +560,6 @@ class Window:
             "width={self.width}, height={self.height})").format(
                 self=self)
 
-    def align(self):
-        """Equivalent to rounding offsets and lengths.
-
-        Returns
-        -------
-        Window
-        """
-        d_y = math.floor(self.row_off + 0.1)
-        d_x = math.floor(self.col_off + 0.1)
-        d_h = math.floor(self.height + 0.5)
-        d_w = math.floor(self.width + 0.5)
-        return Window(d_x, d_y, d_w, d_h)
-
     def flatten(self):
         """A flattened form of the window.
 
@@ -734,9 +721,8 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.5))
-        width = operator(self.width)
-        height = operator(self.height)
+        width = math.floor(self.width + 0.5)
+        height = math.floor(self.height + 0.5)
         return Window(self.col_off, self.row_off, width, height)
 
     def round_shape(self, **kwds):
@@ -762,10 +748,27 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.001))
-        row_off = operator(self.row_off)
-        col_off = operator(self.col_off)
+        row_off = math.floor(self.row_off + 0.1)
+        col_off = math.floor(self.col_off + 0.1)
         return Window(col_off, row_off, self.width, self.height)
+
+    def align(self):
+        """Equivalent to rounding both offsets and lengths.
+
+        This method computes offsets, width, and height that are useful
+        for compositing arrays into larger arrays and datasets without
+        seams. It is used by Rasterio's merge tool and is based on the
+        logic in gdal_merge.py.
+
+        Returns
+        -------
+        Window
+        """
+        row_off = math.floor(self.row_off + 0.1)
+        col_off = math.floor(self.col_off + 0.1)
+        height = math.floor(self.height + 0.5)
+        width = math.floor(self.width + 0.5)
+        return Window(col_off, row_off, width, height)
 
     def round(self, ndigits=None):
         """Round a window's offsets and lengths
