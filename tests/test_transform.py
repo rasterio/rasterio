@@ -525,8 +525,16 @@ def test_gcp_transformer_tps_option():
             assert gcp.col == pytest.approx(col_)
 
 
-def test_transform_grid():
+def test_transform_xy_grid():
     """Accept a grid, see gh-3191."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         cols, rows = numpy.mgrid[0:3, 0:3]
         xs, ys = src.xy(cols, rows)
+
+
+def test_transform_rowcol_grid():
+    """Accept a grid, see gh-3191."""
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        left, bottom, right, top = src.bounds
+        xs, ys = numpy.mgrid[left:right:3j, bottom:top:3j]
+        rows, cols = AffineTransformer(src.transform).rowcol(xs, ys)
