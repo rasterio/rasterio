@@ -23,14 +23,31 @@ def test_data_complex(tmp_path):
     transform = affine.Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
     t2 = transform * transform.translation(0, 3)
 
-    with rasterio.open(tmp_path.joinpath("r2.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
-                crs="EPSG:32611", transform=transform) as src:
+    with rasterio.open(
+        tmp_path.joinpath("r2.tif"),
+        "w",
+        nodata=0,
+        dtype=numpy.complex64,
+        height=2,
+        width=2,
+        count=1,
+        crs="EPSG:32611",
+        transform=transform,
+    ) as src:
         src.write(numpy.ones((1, 2, 2)))
 
-
-    with rasterio.open(tmp_path.joinpath("r1.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
-                crs="EPSG:32611", transform=t2) as src:
-        src.write(numpy.ones((1, 2, 2))*2-1j)
+    with rasterio.open(
+        tmp_path.joinpath("r1.tif"),
+        "w",
+        nodata=0,
+        dtype=numpy.complex64,
+        height=2,
+        width=2,
+        count=1,
+        crs="EPSG:32611",
+        transform=t2,
+    ) as src:
+        src.write(numpy.ones((1, 2, 2)) * 2 - 1j)
 
     return tmp_path
 
@@ -76,6 +93,7 @@ def test_different_crs(test_data_dir_overlapping):
         kwds['crs'] = CRS.from_epsg(3499)
         with rasterio.open(test_data_dir_overlapping.joinpath("new.tif"), 'w', **kwds) as ds_out:
             ds_out.write(ds_src.read())
+
     with pytest.raises(RasterioError):
         result = merge(list(test_data_dir_overlapping.iterdir()))
 
@@ -170,7 +188,7 @@ def test_merge_destination_1(tmp_path):
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dst_window = windows.from_bounds(*chunk_bounds, dst.transform)
                 dw = windows.from_bounds(*chunk_bounds, dst.transform)
-                dw = dw.align()
+                dw = dw.round_offsets().round_lengths()
                 dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
@@ -199,7 +217,7 @@ def test_merge_destination_2(tmp_path):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dw = windows.from_bounds(*chunk_bounds, dst.transform)
-                dw = dw.align()
+                dw = dw.round_offsets().round_lengths()
                 dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:

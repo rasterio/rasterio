@@ -752,24 +752,6 @@ class Window:
         col_off = math.floor(self.col_off + 0.1)
         return Window(col_off, row_off, self.width, self.height)
 
-    def align(self):
-        """Equivalent to rounding both offsets and lengths.
-
-        This method computes offsets, width, and height that are useful
-        for compositing arrays into larger arrays and datasets without
-        seams. It is used by Rasterio's merge tool and is based on the
-        logic in gdal_merge.py.
-
-        Returns
-        -------
-        Window
-        """
-        row_off = math.floor(self.row_off + 0.1)
-        col_off = math.floor(self.col_off + 0.1)
-        height = math.floor(self.height + 0.5)
-        width = math.floor(self.width + 0.5)
-        return Window(col_off, row_off, width, height)
-
     def round(self, ndigits=None):
         """Round a window's offsets and lengths
 
