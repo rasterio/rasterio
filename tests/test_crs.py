@@ -688,4 +688,4 @@ def test_crs_compound_epsg():
 )
 def test_construct_geodetic_crs(crs_obj, geod_crs):
     """Test if CRS geodetic CRS matches expectations."""
-    assert crs_obj.to_geodetic() == geod_crs
+    assert crs_obj.geodetic_crs == geod_crs

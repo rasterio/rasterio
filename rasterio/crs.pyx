@@ -99,6 +99,7 @@ cdef class CRS:
         self._data = {}
         self._epsg = None
         self._wkt = None
+        self._geodetic_crs = None
 
         if initialdata or kwargs:
             tmp = CRS.from_dict(initialdata=initialdata, **kwargs)
@@ -106,6 +107,7 @@ cdef class CRS:
             self._wkt = tmp._wkt
             self._data = tmp.data
             self._epsg = tmp._epsg
+            self._geodetic_crs = tmp._geodetic_crs
 
     @property
     def data(self):
@@ -273,7 +275,8 @@ cdef class CRS:
             units_b = units_c
             return (units_b.decode('utf-8'), factor)
 
-    def to_geodetic(self):
+    @property
+    def geodetic_crs(self):
         """Get the Geographic CRS from the CRS.
 
         Returns
@@ -285,14 +288,18 @@ cdef class CRS:
         CRSError
 
         """
+        if self._geodetic_crs is not None:
+            return self._geodetic_crs if self._geodetic_crs is not False else None
         cdef CRS obj = CRS.__new__(CRS)
         try:
             obj._osr = exc_wrap_pointer(OSRCloneGeogCS(self._osr))
         except CPLE_BaseError as exc:
-            raise CRSError("The Geodetic CRS for this CRS could not be found: {}".format(exc))
+            self._geodetic_crs = False
+            return None
         else:
             osr_set_traditional_axis_mapping_strategy(obj._osr)
-            return obj
+            self._geodetic_crs = obj
+        return self._geodetic_crs 
         
 
     def to_dict(self, projjson=False):
@@ -956,6 +963,7 @@ cdef class CRS:
         self._wkt = tmp._wkt
         self._data = tmp.data
         self._epsg = tmp._epsg
+        self._geodetic_crs = tmp._geodetic_crs
 
     def __copy__(self):
         return pickle.loads(pickle.dumps(self))

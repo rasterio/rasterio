@@ -7,3 +7,4 @@ cdef class CRS:
     cdef object _data
     cdef object _epsg
     cdef object _wkt
+    cdef object _geodetic_crs
