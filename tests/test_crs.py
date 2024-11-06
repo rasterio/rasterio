@@ -586,10 +586,10 @@ def test_esri_auth__to_authority():
     assert CRS.from_user_input('ESRI:54009').to_authority() == ('ESRI', '54009')
 
 def test_iau_auth__to_authority():
-    assert CRS.from_user_input('IAU_2015:49900').to_authority() == ('IAU', '49900')
+    assert CRS.from_user_input('IAU_2015:49900').to_authority() == ('IAU_2015', '49900')
 
 def test_iau_from_authority__to_authority():
-    assert CRS.from_authority("IAU", 49900).to_authority() == ("IAU", "49900")
+    assert CRS.from_authority('IAU_2015', 49900).to_authority() == ('IAU_2015', '49900')
 
 def test_from_authority__to_authority():
     assert CRS.from_authority("EPSG", 4326).to_authority() == ("EPSG", "4326")
