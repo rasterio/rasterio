@@ -23,14 +23,31 @@ def test_data_complex(tmp_path):
     transform = affine.Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
     t2 = transform * transform.translation(0, 3)
 
-    with rasterio.open(tmp_path.joinpath("r2.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
-                crs="EPSG:32611", transform=transform) as src:
+    with rasterio.open(
+        tmp_path.joinpath("r2.tif"),
+        "w",
+        nodata=0,
+        dtype=numpy.complex64,
+        height=2,
+        width=2,
+        count=1,
+        crs="EPSG:32611",
+        transform=transform,
+    ) as src:
         src.write(numpy.ones((1, 2, 2)))
 
-
-    with rasterio.open(tmp_path.joinpath("r1.tif"), 'w', nodata=0, dtype=numpy.complex64, height=2, width=2, count=1,
-                crs="EPSG:32611", transform=t2) as src:
-        src.write(numpy.ones((1, 2, 2))*2-1j)
+    with rasterio.open(
+        tmp_path.joinpath("r1.tif"),
+        "w",
+        nodata=0,
+        dtype=numpy.complex64,
+        height=2,
+        width=2,
+        count=1,
+        crs="EPSG:32611",
+        transform=t2,
+    ) as src:
+        src.write(numpy.ones((1, 2, 2)) * 2 - 1j)
 
     return tmp_path
 
@@ -76,6 +93,7 @@ def test_different_crs(test_data_dir_overlapping):
         kwds['crs'] = CRS.from_epsg(3499)
         with rasterio.open(test_data_dir_overlapping.joinpath("new.tif"), 'w', **kwds) as ds_out:
             ds_out.write(ds_src.read())
+
     with pytest.raises(RasterioError):
         result = merge(list(test_data_dir_overlapping.iterdir()))
 
@@ -150,7 +168,7 @@ def test_issue2202(dx, dy):
                 "/vsis3/copernicus-dem-30m/Copernicus_DSM_COG_10_N48_00_E011_00_DEM/Copernicus_DSM_COG_10_N48_00_E011_00_DEM.tif",
             ]
         ]
-        aux_array, aux_transform = rasterio.merge.merge(datasets=ds, bounds=aoi.bounds)
+        aux_array, aux_transform = rasterio.merge.merge(ds, bounds=aoi.bounds)
         from rasterio.plot import show
 
         show(aux_array)
@@ -168,8 +186,10 @@ def test_merge_destination_1(tmp_path):
             for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
-                dst.write(chunk_arr, window=dst_window)
+                dst_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = dw.round_offsets().round_lengths()
+                dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
@@ -181,7 +201,10 @@ def test_merge_destination_2(tmp_path):
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         profile = src.profile
         dst_transform, dst_width, dst_height = aligned_target(
-            src.transform, src.width, src.height, src.res
+            src.transform,
+            src.width,
+            src.height,
+            src.res,
         )
         profile.update(transform=dst_transform, width=dst_width, height=dst_height)
 
@@ -193,13 +216,17 @@ def test_merge_destination_2(tmp_path):
             for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
-                dst_window = windows.from_bounds(*chunk_bounds, dst.transform).round(3)
-                dst.write(chunk_arr, window=dst_window)
+                dw = windows.from_bounds(*chunk_bounds, dst.transform)
+                dw = dw.round_offsets().round_lengths()
+                dst.write(chunk_arr, window=dw)
 
         with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
             result = dst.read()
             assert result.shape == (3, 719, 792)
-            assert numpy.allclose(data.mean(), result[:, :-1, :-1].mean())
+            assert numpy.allclose(
+                data[data != 0].mean(),
+                result[result != 0].mean(),
+            )
 
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")

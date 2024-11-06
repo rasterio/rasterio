@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.4.3 (TBD)
+-----------
+
+Bug fixes:
+
+- A major performance regression in Rasterio's merge tool has been corrected
+  (#3234).
+
 1.4.2 (2024-10-30)
 ------------------
 
