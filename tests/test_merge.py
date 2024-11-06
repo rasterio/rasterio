@@ -1,7 +1,5 @@
 """Tests of rasterio.merge"""
 
-import math
-
 import boto3
 from hypothesis import given, settings
 from hypothesis.strategies import floats
