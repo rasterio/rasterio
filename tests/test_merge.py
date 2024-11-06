@@ -12,8 +12,9 @@ import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import MergeError, RasterioError
+from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
-from rasterio.windows import subdivide
+from rasterio import windows
 
 from .conftest import gdal_version
 
@@ -180,10 +181,10 @@ def test_merge_destination_1(tmp_path):
         profile = src.profile
         data = src.read()
 
-        from rasterio import windows
-
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
+            for chunk in windows.subdivide(
+                windows.Window(0, 0, dst.width, dst.height), 256, 256
+            ):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dst_window = windows.from_bounds(*chunk_bounds, dst.transform)
@@ -207,13 +208,12 @@ def test_merge_destination_2(tmp_path):
             src.res,
         )
         profile.update(transform=dst_transform, width=dst_width, height=dst_height)
-
         data = src.read()
 
-        from rasterio import windows
-
         with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
-            for chunk in subdivide(windows.Window(0, 0, dst.width, dst.height), 256, 256):
+            for chunk in windows.subdivide(
+                windows.Window(0, 0, dst.width, dst.height), 256, 256
+            ):
                 chunk_bounds = windows.bounds(chunk, dst.transform)
                 chunk_arr, chunk_transform = merge([src], bounds=chunk_bounds)
                 dw = windows.from_bounds(*chunk_bounds, dst.transform)
@@ -272,3 +272,27 @@ def test_failure_source_transforms(data, matrix):
         src.transform = matrix * src.transform
         with pytest.raises(MergeError):
             merge([src])
+
+
+def test_merge_warpedvrt(tmp_path):
+    """Merge a WarpedVRT into an opened dataset."""
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        with WarpedVRT(src, crs="EPSG:3857") as vrt:
+            profile = vrt.profile
+            data = vrt.read()
+            profile["driver"] = "GTiff"
+
+            with rasterio.open(tmp_path.joinpath("test.tif"), "w", **profile) as dst:
+                for chunk in windows.subdivide(
+                    windows.Window(0, 0, dst.width, dst.height), 256, 256
+                ):
+                    chunk_bounds = windows.bounds(chunk, dst.transform)
+                    chunk_arr, chunk_transform = merge([vrt], bounds=chunk_bounds)
+                    dst_window = windows.from_bounds(*chunk_bounds, dst.transform)
+                    dw = windows.from_bounds(*chunk_bounds, dst.transform)
+                    dw = dw.round_offsets().round_lengths()
+                    dst.write(chunk_arr, window=dw)
+
+    with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
+        result = dst.read()
+        assert numpy.allclose(data.mean(), result.mean(), rtol=1e-4)
