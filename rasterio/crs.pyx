@@ -435,7 +435,7 @@ cdef class CRS:
             else:
                 return None
 
-    def to_authority(self, confidence_threshold=70):
+    def to_authority(self, int confidence_threshold=70):
         """Convert to the best match authority name and code.
 
         For a CRS created using an EPSG code, that same value is
@@ -458,17 +458,23 @@ cdef class CRS:
         or None
 
         """
-        matches = self._matches(confidence_threshold=confidence_threshold)
+        cdef:
+            str auth_name
+            dict matches = self._matches(confidence_threshold=confidence_threshold)
+            tuple preferred_authorities = ("EPSG", "OGC", "ESRI")
         # Note: before version 1.2.7 this function only paid attention
         # to EPSG as an authority, which is why it takes priority over
         # others even if they were a better match.
-        if "EPSG" in matches:
-            return "EPSG", matches["EPSG"][0]
-        elif "OGC" in matches:
-            return "OGC", matches["OGC"][0]
-        elif "ESRI" in matches:
-            return "ESRI", matches["ESRI"][0]
-        else:
+        for auth_name in preferred_authorities:
+            try:
+                return auth_name, matches[auth_name][0]
+            except (KeyError, IndexError):
+                pass
+        cdef list codes
+        try:
+            auth_name, codes = next(iter(matches.items()))
+            return auth_name, codes[0]
+        except (StopIteration, IndexError):
             return None
 
     def _matches(self, confidence_threshold=70):
@@ -512,7 +518,7 @@ cdef class CRS:
                     code = c_code.decode('utf-8')
                     name = c_name.decode('utf-8')
                     results[name].append(code)
-            return results
+            return dict(results)
 
         finally:
             _safe_osr_release(osr)

@@ -592,6 +592,9 @@ def test_to_authority__no_code_available():
                               '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert lcc_crs.to_authority() is None
 
+def test_iau_from_authority__to_authority():
+    assert CRS.from_authority('IAU_2015', 49900).to_authority() == ('IAU_2015', '49900')
+
 
 @pytest.mark.parametrize(
     'crs_obj,result',
