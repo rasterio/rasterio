@@ -272,3 +272,29 @@ def test_failure_source_transforms(data, matrix):
         src.transform = matrix * src.transform
         with pytest.raises(MergeError):
             merge([src])
+
+
+def test_warped_vrt(test_data_dir_overlapping):
+    from rasterio.vrt import WarpedVRT
+
+    crs = CRS.from_epsg(3857)
+
+    ds = []
+    warped_vrts = []
+    for i in test_data_dir_overlapping.iterdir():
+        D = rasterio.open(i)
+        ds.append(D)
+        WV = WarpedVRT(D, crs=crs)
+        warped_vrts.append(WV)
+
+    merged, transform = merge(warped_vrts)
+    for f, w in zip(ds, warped_vrts):
+        w.close()
+        f.close()
+
+    expected = numpy.zeros((1, 17, 12), dtype='uint8')
+    expected[:, :12, :8] = 1
+    expected[:, 5:16, 8:] = 2
+    expected[:, 12:16, 4:8] = 2
+
+    assert numpy.array_equal(expected, merged)
