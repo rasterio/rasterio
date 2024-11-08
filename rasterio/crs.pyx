@@ -495,6 +495,8 @@ cdef class CRS:
             return "OGC", matches["OGC"][0]
         elif "ESRI" in matches:
             return "ESRI", matches["ESRI"][0]
+        elif "IAU_2015" in matches:
+            return "IAU_2015", matches["IAU_2015"][0]
         else:
             return None
 
