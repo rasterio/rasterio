@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- IAU 2015 has been added to the list of known CRS authorities (#3243).
 - A major performance regression in Rasterio's merge tool has been corrected
   (#3234).
 
