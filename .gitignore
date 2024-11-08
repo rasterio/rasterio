@@ -73,6 +73,7 @@ VERSION.txt
 rasterio/*.cpp
 rasterio/*.c
 tests/data/white-gemini-iv.zip
+tests/data/all-nodata.tif.aux.xml
 .hypothesis/
 
 # vim

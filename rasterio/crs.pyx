@@ -287,14 +287,13 @@ cdef class CRS:
         CRSError
 
         """
-        if self._geodetic_crs is not None:
-            return self._geodetic_crs if self._geodetic_crs is not False else None
+        if self._geodetic_crs:
+            return self._geodetic_crs
         cdef CRS obj = CRS.__new__(CRS)
         try:
             obj._osr = exc_wrap_pointer(OSRCloneGeogCS(self._osr))
         except CPLE_BaseError as exc:
-            self._geodetic_crs = False
-            return None
+            raise CRSError("Cannot determine Geodetic CRS. {}".format(exc))
         else:
             osr_set_traditional_axis_mapping_strategy(obj._osr)
             self._geodetic_crs = obj
