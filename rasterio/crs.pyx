@@ -969,7 +969,6 @@ cdef class CRS:
         self._wkt = tmp._wkt
         self._data = tmp.data
         self._epsg = tmp._epsg
-        self._geodetic_crs = tmp._geodetic_crs
 
     def __copy__(self):
         return pickle.loads(pickle.dumps(self))
