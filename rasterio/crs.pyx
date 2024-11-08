@@ -98,6 +98,7 @@ cdef class CRS:
         self._data = {}
         self._epsg = None
         self._wkt = None
+        self._geodetic_crs = None
 
         if initialdata or kwargs:
             tmp = CRS.from_dict(initialdata=initialdata, **kwargs)
@@ -271,6 +272,32 @@ cdef class CRS:
         else:
             units_b = units_c
             return (units_b.decode('utf-8'), factor)
+
+    @property
+    def geodetic_crs(self):
+        """Get the Geographic CRS from the CRS.
+
+        Returns
+        -------
+        CRS
+
+        Raises
+        ------
+        CRSError
+
+        """
+        if self._geodetic_crs:
+            return self._geodetic_crs
+        cdef CRS obj = CRS.__new__(CRS)
+        try:
+            obj._osr = exc_wrap_pointer(OSRCloneGeogCS(self._osr))
+        except CPLE_BaseError as exc:
+            raise CRSError("Cannot determine Geodetic CRS. {}".format(exc))
+        else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
+            self._geodetic_crs = obj
+        return self._geodetic_crs 
+        
 
     def to_dict(self, projjson=False):
         """Convert CRS to a PROJ dict.
