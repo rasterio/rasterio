@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.5a1 (TBD)
+-----------
+
+New features:
+
+- The CRS class has a new, lazily computed, geodetic_crs property (#3218)
+
 1.4.2 (2024-10-30)
 ------------------
 
