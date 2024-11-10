@@ -22,4 +22,4 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: ['master', 'release/3.8']
+        branch: ['master', 'release/3.10']
