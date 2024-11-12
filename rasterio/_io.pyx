@@ -2031,6 +2031,28 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         finally:
             GDALDestroyColorTable(hTable)
 
+    def write_rat(self, bidx, rat):
+        """Write a raster attribute table for a band to the dataset.
+
+        A raster attribute table contains tabular data describing the raster
+        band such as category names, category descriptions, statistics,
+        and color.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+        rat: list
+            List of dictionaries containing column values and metadata
+            with keys 'NameOfCol', 'TypeOfCol', 'UsageOfCol', and 'Values'
+
+        Returns
+        -------
+        None
+
+        """
+        raise DatasetAttributeError("RAT write not supported")
+
     def write_mask(self, mask_array, window=None):
         """Write to the dataset's band mask.
 
