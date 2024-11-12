@@ -2051,7 +2051,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         None
 
         """
-        raise DatasetAttributeError("RAT write not supported")
+        raise RasterioIOError("RAT write not supported")
 
     def write_mask(self, mask_array, window=None):
         """Write to the dataset's band mask.
