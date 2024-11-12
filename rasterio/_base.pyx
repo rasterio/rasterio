@@ -3,7 +3,7 @@
 """Numpy-free base classes."""
 
 from collections import (
-    defaultdict, OrderedDict)
+    defaultdict)
 from contextlib import ExitStack
 import logging
 import math
@@ -1343,7 +1343,7 @@ cdef class DatasetBase:
         row_count = GDALRATGetRowCount(rat)
         col_count = GDALRATGetColumnCount(rat)
 
-        retval = OrderedDict()
+        retval = []
 
         for c in range(col_count):
             col_name = GDALRATGetNameOfCol(rat, c)
@@ -1361,11 +1361,12 @@ cdef class DatasetBase:
                 else:
                     raise ValueError(f'Unknown column type {col_type}')
 
-            retval[col_name] = {
-                'field_type': RATFieldType(col_type),
-                'field_usage': RATFieldUsage(col_use),
-                'values': values
-            }
+            retval.append({
+                'NameOfCol': col_name,
+                'TypeOfCol': RATFieldType(col_type),
+                'UsageOfCol': RATFieldUsage(col_use),
+                'Values': values
+            })
 
         return retval
 
