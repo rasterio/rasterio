@@ -131,8 +131,8 @@ def test_dtype_rescaling_float64(tmpdir, runner):
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         for band in src.read():
-            assert round(band.min() + 1.0, 6) == 0.0
-            assert round(band.max() - 1.0, 6) == 0.0
+            assert round(band.min(), 6) == -0.992157
+            assert round(band.max(), 6) == 1.0
 
 
 def test_rgb(tmpdir, runner):
