@@ -308,6 +308,10 @@ cdef extern from "gdal.h" nogil:
         GFU_AlphaMax
         GFU_MaxCount
 
+    ctypedef enum GDALRATTableType:
+        GRTT_THEMATIC
+        GRTT_ATHEMATIC
+
     ctypedef struct GDALColorEntry:
         short c1
         short c2
@@ -431,13 +435,25 @@ cdef extern from "gdal.h" nogil:
     int GDALGetRasterColorInterpretation(GDALRasterBandH band)
     int GDALSetRasterColorInterpretation(GDALRasterBandH band, GDALColorInterp)
     GDALRasterAttributeTableH GDALGetDefaultRAT(GDALRasterBandH band)
+    CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
+    GDALRasterAttributeTableH GDALCreateRasterAttributeTable()
+    CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
+    CPLErr GDALRATCreateColumn(GDALRasterAttributeTableH hRAT,
+                               const char * pszFieldName,
+                               GDALRATFieldType eFieldType,
+                               GDALRATFieldUsage eFieldUsage)
     int GDALRATGetRowCount(GDALRasterAttributeTableH hRAT)
     int GDALRATGetColumnCount(GDALRasterAttributeTableH hRAT)
     const char* GDALRATGetValueAsString(GDALRasterAttributeTableH hRAT, int iRow, int iField)
     int GDALRATGetValueAsInt(GDALRasterAttributeTableH hRAT, int iRow, int iField)
     double GDALRATGetValueAsDouble(GDALRasterAttributeTableH hRAT, int iRow, int iField)
+    void GDALRATSetValueAsDouble(GDALRasterAttributeTableH hRAT, int iRow, int iField, double dfValue)
+    void GDALRATSetValueAsInt(GDALRasterAttributeTableH hRAT, int iRow, int iField, int nValue)
+    void GDALRATSetValueAsString(GDALRasterAttributeTableH hRAT, int iRow, int iField, const char * pszValue)
     GDALRATFieldType GDALRATGetTypeOfCol(GDALRasterAttributeTableH hRAT, int iCol)
     GDALRATFieldUsage GDALRATGetUsageOfCol(GDALRasterAttributeTableH hRAT, int iCol)
+    CPLErr GDALRATSetTableType(GDALRasterAttributeTableH hRAT, const GDALRATSetTableType elnTableType)
+    GDALRATSetTableType GDALRATGetTableType(GDALRasterAttributeTableH hRAT)
     const char *GDALRATGetNameOfCol(void *hRat, int col)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)

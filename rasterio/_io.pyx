@@ -2031,7 +2031,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         finally:
             GDALDestroyColorTable(hTable)
 
-    def write_rat(self, bidx, rat):
+    def write_rat(self, bidx, rat, thematic=True):
         """Write a raster attribute table for a band to the dataset.
 
         A raster attribute table contains tabular data describing the raster
@@ -2045,13 +2045,52 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         rat: list
             List of dictionaries containing column values and metadata
             with keys 'NameOfCol', 'TypeOfCol', 'UsageOfCol', and 'Values'
+        thematic: bool, Optional. Defaults True
+            Set the raster attribute table typ to thematic (True) or Athematic (False)
 
         Returns
         -------
         None
 
         """
-        raise RasterioIOError("RAT write not supported")
+
+        cdef GDALRasterAttributeTableH hRAT = NULL
+        cdef GDALRasterBandH hBand = NULL
+
+        hBand = self.band(bidx)
+
+        hRAT = GDALCreateRasterAttributeTable()
+
+        # TODO: Add rat input validation
+
+        for icol, column_info in enumerate(rat):
+            
+            # Ensure column name is utf-8 encoded
+            if isinstance(column_info['NameOfCol'], bytes):
+                column_name = column_info['NameOfCol'] 
+            elif isinstance(column_info['NameOfCol'], str):
+                column_name = column_info['NameOfCol'].encode('utf-8') 
+
+            GDALRATCreateColumn(
+                hRAT,
+                column_name,
+                column_info['TypeOfCol'],
+                column_info['UsageOfCol']
+            )
+            for irow, value in enumerate(column_info['Values']):
+                if column_info['TypeOfCol'] == GFT_Integer:
+                    GDALRATSetValueAsInt(hRAT, irow, icol, value)
+                if column_info['TypeOfCol'] == GFT_Real:
+                    GDALRATSetValueAsDouble(hRAT, irow, icol, value)
+                if column_info['TypeOfCol'] == GFT_String:
+                    GDALRATSetValueAsString(hRAT, irow, icol, value)
+
+        if thematic:
+            GDALRATSetTableType(RATFieldType.Thematic)
+        else:
+            GDALRATSetTableType(RATFieldType.Athematic)
+
+        GDALSetDefaultRAT(hBand, hRAT)
 
     def write_mask(self, mask_array, window=None):
         """Write to the dataset's band mask.

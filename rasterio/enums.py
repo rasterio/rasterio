@@ -73,6 +73,10 @@ class RATFieldUsage(IntEnum):
     AlphaMax = 17
     MaxCount = 18
 
+class RATTableType(IntEnum):
+    Thematic = 0
+    Athematic = 1
+
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
     
