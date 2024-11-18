@@ -251,7 +251,7 @@ def _compute_intersection(w1, w2):
 def _intersection(w1, w2):
     """ Compute intersection of window 1 and window 2"""
     coeffs = _compute_intersection(w1, w2)
-    if coeffs[2] > 0 and coeffs[3] > 0:
+    if coeffs[2] >= 0 and coeffs[3] >= 0:
         return Window(*coeffs)
     else:
         raise WindowError(f"Intersection is empty {w1} {w2}")
