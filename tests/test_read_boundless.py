@@ -146,6 +146,7 @@ def test_msk_read_masks(path_rgb_msk_byte_tif):
         assert msk.mean() > 90
 
 
+@pytest.mark.network
 def test_issue1982(capfd):
     """See a curl request for overview file"""
     with rasterio.Env(CPL_CURL_VERBOSE=True), rasterio.open(

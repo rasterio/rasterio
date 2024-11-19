@@ -70,6 +70,7 @@ def test_opener_fsspec_fs():
         assert profile["count"] == 3
 
 
+@pytest.mark.network
 def test_opener_fsspec_http_fs():
     """Use fsspec http filesystem as opener."""
     fs = fsspec.filesystem("http")
@@ -170,6 +171,7 @@ def test_fsspec_msk_sidecar():
             assert val == [MaskFlags.per_dataset]
 
 
+@pytest.mark.network
 def test_fsspec_http_msk_sidecar():
     """Use fsspec http filesystem as opener."""
     fs = fsspec.filesystem("http")

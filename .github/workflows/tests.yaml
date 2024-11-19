@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, maint-1.4 ]
     paths:
       - '.github/workflows/tests.yaml'
       - 'requirements*.txt'
@@ -14,7 +14,7 @@ on:
       - 'rasterio/**'
       - 'tests/**'
   pull_request:
-    branches: [ main ]
+    branches: [ main, maint-1.4 ]
     paths:
       - '.github/workflows/tests.yaml'
       - 'requirements*.txt'
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-            python-version: 3.9
+            python-version: 3.12
       - name: Code Linting
         shell: bash
         run: |
@@ -98,8 +98,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        gdal-version: ['3.9.2']
+        gdal-version: ['3.9.3']
         include:
+          - python-version: '3.12'
+            gdal-version: 'latest'
           - python-version: '3.9'
             gdal-version: '3.8.5'
           - python-version: '3.9'
@@ -160,7 +162,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Conda
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           init-shell: bash
           environment-name: test

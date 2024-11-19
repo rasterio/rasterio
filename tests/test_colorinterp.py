@@ -4,7 +4,9 @@ import pytest
 
 import rasterio
 from rasterio.enums import ColorInterp
+from rasterio.env import GDALVersion
 
+from .conftest import gdal_version
 
 def test_cmyk_interp(tmpdir):
     """A CMYK TIFF has cyan, magenta, yellow, black bands."""
@@ -80,7 +82,7 @@ def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
         assert src.colorinterp == dst_ci
 
 
-@pytest.mark.parametrize("ci", ColorInterp.__members__.values())
+@pytest.mark.parametrize("ci", ColorInterp.__members__.values() if gdal_version >= GDALVersion(3, 10) else list(filter(lambda x: x <= 16, ColorInterp.__members__.values())))
 def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
     """Test setting with all color interpretations."""
 

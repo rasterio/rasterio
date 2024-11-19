@@ -22,7 +22,7 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.env import GDALVersion
+from rasterio.env import Env, GDALVersion
 from rasterio.crs import CRS
 from rasterio.errors import (
     GDALOptionNotImplementedError,
@@ -423,6 +423,8 @@ def _reproject(
         raise
 
     # Next, do the same for the destination raster.
+    dest_2d = False
+
     try:
         if dtypes.is_ndarray(destination):
             if not dst_crs:
@@ -436,6 +438,7 @@ def _reproject(
                 destination = np.asanyarray(destination)
 
             if len(destination.shape) == 2:
+                dest_2d = True
                 destination = destination.reshape(1, *destination.shape)
 
             if destination.shape[0] == src_count:
@@ -531,9 +534,10 @@ def _reproject(
         log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
     try:
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer2(
-                src_dataset, dst_dataset, imgProjOptions))
+        with Env(GDAL_MEM_ENABLE_OPEN=True):
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateGenImgProjTransformer2(
+                    src_dataset, dst_dataset, imgProjOptions))
         if bUseApproxTransformer:
             hTransformArg = exc_wrap_pointer(
                 GDALCreateApproxTransformer(
@@ -623,7 +627,7 @@ def _reproject(
             0, 0, cols, rows)
 
         try:
-            with stack_errors() as checker:
+            with stack_errors() as checker, Env(GDAL_MEM_ENABLE_OPEN=True):
                 if num_threads > 1:
                     with nogil:
                         err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
@@ -646,7 +650,7 @@ def _reproject(
                 alpha_arr = np.empty((height, width), dtype=dest_arr.dtype)
                 io_band(mem_raster.band(count), 0, 0.0, 0.0, width, height, alpha_arr)
                 destination = np.ma.masked_array(
-                    destination.data, 
+                    destination.data,
                     mask=np.repeat(
                         ~(alpha_arr.astype("bool"))[np.newaxis, :, :],
                         count - 1,
@@ -655,6 +659,9 @@ def _reproject(
                 )
             else:
                 exc_wrap_int(io_auto(destination, dst_dataset, 0))
+
+            if dest_2d:
+                destination = destination[0]
 
             return destination
 
@@ -778,9 +785,10 @@ def _calculate_default_transform(
             )
             bUseApproxTransformer = False
 
-        hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
-        )
+        with Env(GDAL_MEM_ENABLE_OPEN=True):
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
+            )
 
         pfnTransformer = GDALGenImgProjTransform
         log.debug("Created exact transformer")

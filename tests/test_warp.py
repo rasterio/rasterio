@@ -1362,6 +1362,7 @@ def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
         dst_nodata=99,
     )
     assert np.ma.is_masked(source)
+    assert source.shape == out.shape
     assert np.count_nonzero(out[out != 99]) == count_nonzero
     assert not np.ma.is_masked(out)
 
@@ -1400,6 +1401,7 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
         dst_transform=DST_TRANSFORM,
         dst_crs="EPSG:3857",
     )
+    assert inp.shape == out.shape
     assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
 
@@ -2147,7 +2149,7 @@ def test_reproject_error_propagation(http_error_server, caplog):
                 dst_transform=src.transform,
             )
 
-    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
+    assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) >= 2
 
 
 def test_reproject_to_specified_output_bands():

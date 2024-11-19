@@ -81,7 +81,7 @@ except ImportError:
     have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
-__version__ = "1.4.0.dev1"
+__version__ = "1.5.0.dev"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
@@ -176,27 +176,27 @@ def open(
         descriptors, rasterio maintains a pool of shared low level
         dataset handles. If True this function will use a shared
         handle if one is available. Multithreaded programs must avoid
-        sharing and should set *sharing* to `False`.
+        sharing and should set *sharing* to False.
     opener : callable, optional
         A custom dataset opener which can serve GDAL's virtual
         filesystem machinery via Python file-like objects. The
         underlying file-like object is obtained by calling *opener* with
-        (*fp*, *mode*) or (*fp*, *mode* + "b") depending on the format
+        (*fp*, *mode*) or (*fp*, *mode* + 'b') depending on the format
         driver's native mode. *opener* must return a Python file-like
         object that provides read, seek, tell, and close methods. Note:
         only one opener at a time per fp, mode pair is allowed. 
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
-        a `tiled=True` keyword argument will direct the GeoTIFF format
+        a tiled=True keyword argument will direct the GeoTIFF format
         driver to create a tiled, rather than striped, TIFF.
 
     Returns
     -------
     :class:`rasterio.io.DatasetReader`
-        If `mode` is "r".
+        If mode is 'r'.
     :class:`rasterio.io.DatasetWriter`
-        If `mode` is "r+", "w", or "w+".
+        If mode is 'r+', 'w', or 'w+'.
 
     Raises
     ------
@@ -209,6 +209,12 @@ def open(
         If the detected format driver does not support the requested
         opening mode.
 
+    Notes
+    -----
+    If *fp* is a is a file-like object, its entire contents will be
+    read into a MemoryFile instance. It will almost always be better
+    to use a path or URL, or the *opener* keyword argument.
+    
     Examples
     --------
     To open a local GeoTIFF dataset for reading using standard driver
@@ -287,8 +293,7 @@ def open(
 
         return dataset
 
-    # If the fp argument is a file-like object and can be adapted by
-    # rasterio's FilePath we do so. Otherwise, we use a MemoryFile to
+    # If the fp argument is a file-like object we use a MemoryFile to
     # hold fp's contents and store that in an ExitStack attached to the
     # dataset object that we will return. When a dataset's close method
     # is called, this ExitStack will be unwound and the MemoryFile's

@@ -43,6 +43,28 @@ class ColorInterp(IntEnum):
     Y = 14
     Cb = 15
     Cr = 16
+    # Below values since GDAL 3.10
+    pan = 17
+    coastal = 18
+    rededge = 19
+    nir = 20
+    swir = 21
+    mwir = 22
+    lwir = 23
+    tir = 24
+    other_ir = 25
+    # GCI_IR_Reserved_1 = 26
+    # GCI_IR_Reserved_2 = 27
+    # GCI_IR_Reserved_3 = 28
+    # GCI_IR_Reserved_4 = 29
+    sar_ka = 30
+    sar_k = 31
+    sar_ku = 32
+    sar_x = 33
+    sar_c = 34
+    sar_s = 35
+    sar_l = 36
+    sar_p = 37
 
 
 class RATFieldType(IntEnum):

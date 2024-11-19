@@ -166,6 +166,7 @@ cdef extern from "ogr_srs_api.h" nogil:
                      double *y, double *z)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
+    OGRSpatialReferenceH OSRCloneGeogCS(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
     int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
     const char *OSRGetAuthorityName(OGRSpatialReferenceH srs, const char *key)
@@ -176,6 +177,7 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSRIsGeographic(OGRSpatialReferenceH srs)
     int OSRIsProjected(OGRSpatialReferenceH srs)
     int OSRIsSame(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2)
+    int OSRIsSameEx(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2, const char* const* papszOptions)
     OGRSpatialReferenceH OSRNewSpatialReference(const char *wkt)
     void OSRRelease(OGRSpatialReferenceH srs)
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
@@ -265,23 +267,6 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
-    ctypedef enum GDALColorInterp:
-        GCI_Undefined
-        GCI_GrayIndex
-        GCI_PaletteIndex
-        GCI_RedBand
-        GCI_GreenBand
-        GCI_BlueBand
-        GCI_AlphaBand
-        GCI_HueBand
-        GCI_SaturationBand
-        GCI_LightnessBand
-        GCI_CyanBand
-        GCI_YCbCr_YBand
-        GCI_YCbCr_CbBand
-        GCI_YCbCr_CrBand
-        GCI_Max
-    
     ctypedef enum GDALRATFieldType:
         GFT_Integer
         GFT_Real
@@ -311,6 +296,70 @@ cdef extern from "gdal.h" nogil:
     ctypedef enum GDALRATTableType:
         GRTT_THEMATIC
         GRTT_ATHEMATIC
+
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
+    cdef extern from "gdal.h" nogil:
+
+        ctypedef enum GDALColorInterp:
+            GCI_Undefined
+            GCI_GrayIndex
+            GCI_PaletteIndex
+            GCI_RedBand
+            GCI_GreenBand
+            GCI_BlueBand
+            GCI_AlphaBand
+            GCI_HueBand
+            GCI_SaturationBand
+            GCI_LightnessBand
+            GCI_CyanBand
+            GCI_YCbCr_YBand
+            GCI_YCbCr_CbBand
+            GCI_YCbCr_CrBand
+            GCI_PanBand
+            GCI_CoastalBand
+            GCI_RedEdgeBand
+            GCI_NIRBand
+            GCI_SWIRBand
+            GCI_MWIRBand
+            GCI_LWIRBand
+            GCI_TIRBand
+            GCI_OtherIRBand
+            GCI_IR_Reserved_1
+            GCI_IR_Reserved_2
+            GCI_IR_Reserved_3
+            GCI_IR_Reserved_4
+            GCI_SAR_Ka_Band
+            GCI_SAR_K_Band
+            GCI_SAR_Ku_Band
+            GCI_SAR_X_Band
+            GCI_SAR_C_Band
+            GCI_SAR_S_Band
+            GCI_SAR_L_Band
+            GCI_SAR_P_Band
+            GCI_SAR_Reserved_1
+            GCI_SAR_Reserved_2
+            GCI_Max
+ELSE:
+    cdef extern from "gdal.h" nogil:
+
+        ctypedef enum GDALColorInterp:
+            GCI_Undefined
+            GCI_GrayIndex
+            GCI_PaletteIndex
+            GCI_RedBand
+            GCI_GreenBand
+            GCI_BlueBand
+            GCI_AlphaBand
+            GCI_HueBand
+            GCI_SaturationBand
+            GCI_LightnessBand
+            GCI_CyanBand
+            GCI_YCbCr_YBand
+            GCI_YCbCr_CbBand
+            GCI_YCbCr_CrBand
+
+
+cdef extern from "gdal.h" nogil:
 
     ctypedef struct GDALColorEntry:
         short c1
@@ -452,8 +501,8 @@ cdef extern from "gdal.h" nogil:
     void GDALRATSetValueAsString(GDALRasterAttributeTableH hRAT, int iRow, int iField, const char * pszValue)
     GDALRATFieldType GDALRATGetTypeOfCol(GDALRasterAttributeTableH hRAT, int iCol)
     GDALRATFieldUsage GDALRATGetUsageOfCol(GDALRasterAttributeTableH hRAT, int iCol)
-    CPLErr GDALRATSetTableType(GDALRasterAttributeTableH hRAT, const GDALRATSetTableType elnTableType)
-    GDALRATSetTableType GDALRATGetTableType(GDALRasterAttributeTableH hRAT)
+    CPLErr GDALRATSetTableType(GDALRasterAttributeTableH hRAT, GDALRATTableType elnTableType)
+    GDALRATTableType GDALRATGetTableType(GDALRasterAttributeTableH hRAT)
     const char *GDALRATGetNameOfCol(void *hRat, int col)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)

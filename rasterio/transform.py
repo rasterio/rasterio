@@ -86,7 +86,7 @@ class TransformMethodsMixin:
         x,
         y,
         z=None,
-        op=np.floor,
+        op=None,
         precision=None,
         transform_method=TransformMethod.affine,
         **rpc_options
@@ -100,14 +100,15 @@ class TransformMethodsMixin:
         y : float
             y value in coordinate reference system
         z : float, optional
-            Height associated with coordinates. Primarily used for RPC based
-            coordinate transformations. Ignored for affine based
+            Height associated with coordinates. Primarily used for RPC
+            based coordinate transformations. Ignored for affine based
             transformations. Default: 0.
-        op : function, optional (default: math.floor)
-            Function to convert fractional pixels to whole numbers (floor,
-            ceiling, round)
+        op : function, optional (default: numpy.floor)
+            Function to convert fractional pixels to whole numbers
+            (floor, ceiling, round)
         transform_method: TransformMethod, optional
-            The coordinate transformation method. Default: `TransformMethod.affine`.
+            The coordinate transformation method. Default:
+            `TransformMethod.affine`.
         rpc_options: dict, optional
             Additional arguments passed to GDALCreateRPCTransformer
         precision : int, optional
@@ -116,7 +117,7 @@ class TransformMethodsMixin:
 
         Returns
         -------
-        tuple
+        tuple: int, int
             (row index, col index)
 
         """
@@ -131,7 +132,7 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError(f"Dataset has no {transform_method}")
-        return rowcol(transform, x, y, zs=z, op=op, **rpc_options)
+        return tuple(int(val) for val in rowcol(transform, x, y, zs=z, op=op, **rpc_options))
 
 
 def get_transformer(transform, **rpc_options):
@@ -251,13 +252,22 @@ def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
         return transformer.xy(rows, cols, zs=zs, offset=offset)
 
 
-def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_options):
+def rowcol(
+    transform,
+    xs,
+    ys,
+    zs=None,
+    op=None,
+    precision=None,
+    **rpc_options,
+):
     """Get rows and cols of the pixels containing (x, y).
 
     Parameters
     ----------
     transform : Affine or sequence of GroundControlPoint or RPC
-        Transform suitable for input to AffineTransformer, GCPTransformer, or RPCTransformer.
+        Transform suitable for input to AffineTransformer,
+        GCPTransformer, or RPCTransformer.
     xs : list or float
         x values in coordinate reference system.
     ys : list or float
@@ -266,9 +276,9 @@ def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_option
         Height associated with coordinates. Primarily used for RPC based
         coordinate transformations. Ignored for affine based
         transformations. Default: 0.
-    op : function
-        Function to convert fractional pixels to whole numbers (floor, ceiling,
-        round).
+    op : function, optional (default: numpy.floor)
+        Function to convert fractional pixels to whole numbers (floor,
+        ceiling, round)
     precision : int or float, optional
         This parameter is unused, deprecated in rasterio 1.3.0, and
         will be removed in version 2.0.0.
@@ -277,10 +287,10 @@ def rowcol(transform, xs, ys, zs=None, op=np.floor, precision=None, **rpc_option
 
     Returns
     -------
-    rows : list of ints
-        list of row indices
-    cols : list of ints
-        list of column indices
+    rows : array of ints or floats
+    cols : array of ints or floats
+        Integers are the default. The numerical type is determined by
+        the type returned by op().
 
     """
     if precision is not None:
@@ -339,10 +349,6 @@ class TransformerBase:
 
         try:
             broadcasted = np.broadcast(xs, ys, zs)
-            if broadcasted.ndim != 1:
-                raise TransformError(
-                    "Input coordinates must be broadcastable to a 1d array"
-                )
         except ValueError as error:
             raise TransformError() from error
 
@@ -354,7 +360,7 @@ class TransformerBase:
     def __exit__(self, *args):
         pass
 
-    def rowcol(self, xs, ys, zs=None, op=np.floor, precision=None):
+    def rowcol(self, xs, ys, zs=None, op=None, precision=None):
         """Get rows and cols coordinates given geographic coordinates.
 
         Parameters
@@ -362,24 +368,28 @@ class TransformerBase:
         xs, ys : float or list of float
             Geographic coordinates
         zs : float or list of float, optional
-            Height associated with coordinates. Primarily used for RPC based
-            coordinate transformations. Ignored for affine based
+            Height associated with coordinates. Primarily used for RPC
+            based coordinate transformations. Ignored for affine based
             transformations. Default: 0.
-        op : function, optional (default: math.floor)
-            Function to convert fractional pixels to whole numbers (floor,
-            ceiling, round)
+        op : function, optional (default: numpy.floor)
+            Function to convert fractional pixels to whole numbers
+            (floor, ceiling, round)
         precision : int, optional (default: None)
             This parameter is unused, deprecated in rasterio 1.3.0, and
             will be removed in version 2.0.0.
 
         Raises
         ------
+        TypeError
+            If coordinate transformation fails.
         ValueError
-            If input coordinates are not all equal length
+            If input coordinates are not all equal length.
 
         Returns
         -------
-        tuple of float or list of float.
+        tuple of numbers or array of numbers.
+            Integers are the default. The numerical type is determined
+            by the type returned by op().
 
         """
         if precision is not None:
@@ -396,8 +406,10 @@ class TransformerBase:
                 xs, ys, zs, transform_direction=TransformDirection.reverse
             )
 
-            is_op_ufunc = isinstance(op, np.ufunc)
-            if is_op_ufunc:
+            if op is None:
+                new_rows = np.floor(new_rows).astype(dtype="int32")
+                new_cols = np.floor(new_cols).astype(dtype="int32")
+            elif isinstance(op, np.ufunc):
                 op(new_rows, out=new_rows)
                 op(new_cols, out=new_cols)
             else:
@@ -408,6 +420,7 @@ class TransformerBase:
                 return new_rows[0], new_cols[0]
             else:
                 return new_rows, new_cols
+
         except TypeError:
             raise TransformError("Invalid inputs")
 
