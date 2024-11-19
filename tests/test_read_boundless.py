@@ -17,6 +17,17 @@ def rgb_byte_tif_reader(path_rgb_byte_tif):
     return rasterio.open(path_rgb_byte_tif)
 
 
+@pytest.fixture(scope='session')
+def int_nodata_array_masked(path_int_nodata_tif):
+    with rasterio.open(path_int_nodata_tif) as src:
+        return src.read(masked=True)
+
+
+@pytest.fixture(scope='function')
+def int_nodata_tif_reader(path_int_nodata_tif):
+    return rasterio.open(path_int_nodata_tif)
+
+
 def test_read_boundless_false(rgb_byte_tif_reader, rgb_array):
     """Reading natural window with boundless=False works"""
     with rgb_byte_tif_reader as src:
@@ -165,3 +176,12 @@ def test_issue1982(capfd):
     assert "green.tif.ovr" in captured.err
     assert (42 == image[:, :3, :]).all()
     assert (42 == image[:, :, :3]).all()
+
+
+def test_read_int_raster_boundless(int_nodata_tif_reader, int_nodata_array_masked):
+    """Reading int raster with nonzero nodata with boundless=True"""
+    with int_nodata_tif_reader as src:
+        window = Window(0, 0, src.width, src.height)
+        data = src.read(window=window, boundless=True, masked=True)
+        assert data.shape == int_nodata_array_masked.shape
+        assert np.ma.allequal(data, int_nodata_array_masked, fill_value=False)
