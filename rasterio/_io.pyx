@@ -22,7 +22,7 @@ from rasterio._err import (
     CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
-from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling, RATTableType
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
@@ -2086,9 +2086,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     GDALRATSetValueAsString(hRAT, irow, icol, value)
 
         if thematic:
-            GDALRATSetTableType(RATFieldType.Thematic)
+            GDALRATSetTableType(hRAT, RATTableType.Thematic)
         else:
-            GDALRATSetTableType(RATFieldType.Athematic)
+            GDALRATSetTableType(hRAT, RATTableType.Athematic)
 
         GDALSetDefaultRAT(hBand, hRAT)
 
