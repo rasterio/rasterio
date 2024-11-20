@@ -1398,10 +1398,10 @@ cdef class DatasetBase:
                     raise ValueError(f'Unknown column type {col_type}')
 
             retval.append({
-                'NameOfCol': col_name,
-                'TypeOfCol': RATFieldType(col_type),
-                'UsageOfCol': RATFieldUsage(col_use),
-                'Values': values
+                'column_name': col_name,
+                'column_type': RATFieldType(col_type),
+                'column_usage': RATFieldUsage(col_use),
+                'column_values': values
             })
 
         table_type = GDALRATGetTableType(rat)

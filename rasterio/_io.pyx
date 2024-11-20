@@ -2031,7 +2031,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         finally:
             GDALDestroyColorTable(hTable)
 
-    def write_rat(self, bidx, rat, thematic=True):
+    def write_rat(self, bidx, rat, table_type):
         """Write a raster attribute table for a band to the dataset.
 
         A raster attribute table contains tabular data describing the raster
@@ -2044,9 +2044,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Index of the band (starting with 1).
         rat: list
             List of dictionaries containing column values and metadata
-            with keys 'NameOfCol', 'TypeOfCol', 'UsageOfCol', and 'Values'
-        thematic: bool, Optional. Defaults True
-            Set the raster attribute table typ to thematic (True) or Athematic (False)
+            with keys 'column_name', 'column_type', 'column_usage', and 'column_values'
+        table_type: GDALRATTableType.<enum>
+            Set the raster attribute table typ to Thematic or Athematic
 
         Returns
         -------
@@ -2066,29 +2066,26 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         for icol, column_info in enumerate(rat):
             
             # Ensure column name is utf-8 encoded
-            if isinstance(column_info['NameOfCol'], bytes):
-                column_name = column_info['NameOfCol'] 
-            elif isinstance(column_info['NameOfCol'], str):
-                column_name = column_info['NameOfCol'].encode('utf-8') 
+            if isinstance(column_info['column_name'], bytes):
+                column_name = column_info['column_name'] 
+            elif isinstance(column_info['column_name'], str):
+                column_name = column_info['column_name'].encode('utf-8') 
 
             GDALRATCreateColumn(
                 hRAT,
                 column_name,
-                column_info['TypeOfCol'],
-                column_info['UsageOfCol']
+                column_info['column_type'],
+                column_info['column_usage']
             )
-            for irow, value in enumerate(column_info['Values']):
-                if column_info['TypeOfCol'] == GFT_Integer:
+            for irow, value in enumerate(column_info['column_values']):
+                if column_info['column_type'] == GFT_Integer:
                     GDALRATSetValueAsInt(hRAT, irow, icol, value)
-                if column_info['TypeOfCol'] == GFT_Real:
+                if column_info['column_type'] == GFT_Real:
                     GDALRATSetValueAsDouble(hRAT, irow, icol, value)
-                if column_info['TypeOfCol'] == GFT_String:
+                if column_info['column_type'] == GFT_String:
                     GDALRATSetValueAsString(hRAT, irow, icol, value)
 
-        if thematic:
-            GDALRATSetTableType(hRAT, RATTableType.Thematic)
-        else:
-            GDALRATSetTableType(hRAT, RATTableType.Athematic)
+        GDALRATSetTableType(hRAT, table_type)
 
         GDALSetDefaultRAT(hBand, hRAT)
 
