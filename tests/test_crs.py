@@ -664,3 +664,8 @@ def test_crs_compound_epsg():
 def test_epsg_4326_ogc_crs84(crs):
     """EPSG:4326 not equivalent to OGC:CRS84."""
     assert CRS.from_string("OGC:CRS84") != crs
+
+
+def test_to_authority_x():
+    crs = CRS.from_epsg(32618)
+    assert crs.to_authority() == ("EPSG", "32618")
