@@ -10,6 +10,11 @@ Bug fixes:
 - A major performance regression in Rasterio's merge tool has been corrected
   (#3234).
 
+Other changes:
+
+- CRS._matches() has been rewritten to better support CRS.to_authority() and
+  CRS.to_epsg() (#3255).
+
 1.4.2 (2024-10-30)
 ------------------
 

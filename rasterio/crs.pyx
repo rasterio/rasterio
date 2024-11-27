@@ -479,7 +479,7 @@ cdef class CRS:
 
             grouped = groupby(matches, key=itemgetter(0))
             for k, group in grouped:
-                conf, auth, val = sorted(list(group), key=auth_preference)[0]
+                conf, auth, val = sorted(group, key=auth_preference)[0]
                 return auth, str(val)
 
     def _matches(self, confidence_threshold=70):
