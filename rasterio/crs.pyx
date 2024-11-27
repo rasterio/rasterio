@@ -149,7 +149,7 @@ cdef class CRS:
 
         """
         try:
-            return bool(self._epsg)
+            return bool(self.to_epsg())
         except CRSError:
             return False
 
