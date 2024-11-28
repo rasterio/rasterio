@@ -7,7 +7,10 @@ Changes
 Bug fixes:
 
 - The flag for GDAL driver registration has been changed to an _env module
-  attribute. Drivers should only be registered once per process at most (#).
+  attribute. Drivers should only be registered once per process at most
+  (#3260).
+- Allow a dataset's compression metadata to surface in profile and compression
+  properties even if the value isn't present in the Compression enum (#3259).
 - A bug that causes CRS.from_wkt().is_epsg_code() to erroneously return False
   when an EPSG code is embedded in WKT has been fixed (#3258).
 - IAU 2015 has been added to the list of known CRS authorities (#3243).
