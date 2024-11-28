@@ -24,7 +24,7 @@ def get_gdal_version_info(str key not None):
           i.e. “20020416”.
         - RELEASE_NAME: Returns the GDAL_RELEASE_NAME. ie. “1.1.7”
         - --version: Returns one line version message suitable for use
-          in respons to version requests. i.e. “GDAL 1.1.7, released 2002/04/16”
+          in response to version requests. i.e. “GDAL 1.1.7, released 2002/04/16”
         - LICENSE: Returns the content of the LICENSE.TXT file
           from the GDAL_DATA directory.
         - BUILD_INFO: List of NAME=VALUE pairs separated by newlines with

@@ -180,7 +180,7 @@ def copyfiles(src, dst):
     if src_path.as_vsi() == dst_path.as_vsi():
         raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
 
-    # VFS paths probabaly don't work, but its hard to be completely certain
+    # VFS paths probably don't work, but its hard to be completely certain
     # so just attempt to use them.
     gdal_src_path = src_path.as_vsi()
     gdal_dst_path = dst_path.as_vsi()

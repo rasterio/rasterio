@@ -1734,7 +1734,7 @@ def test_transform_geom_gdal22():
 
 
 def test_issue1056():
-    """Warp sucessfully from RGB's upper bands to an array"""
+    """Warp successfully from RGB's upper bands to an array"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)

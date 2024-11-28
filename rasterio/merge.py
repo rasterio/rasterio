@@ -190,7 +190,7 @@ def merge(
     dst_path : str or PathLike, optional
         Path of output dataset
     dst_kwds : dict, optional
-        Dictionary of creation options and other paramters that will be
+        Dictionary of creation options and other parameters that will be
         overlaid on the profile of the output dataset.
 
     Returns

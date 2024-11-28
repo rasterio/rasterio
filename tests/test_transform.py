@@ -385,7 +385,7 @@ def test_rowcol_gcps_rpcs(dataset, transform_attr, coords, expected):
     ]
 )
 def test_xy_rowcol_inverse(transform):
-    # TODO this is an ideal candiate for
+    # TODO this is an ideal candidate for
     # property-based testing with hypothesis
     rows = [0, 0, 10, 10]
     cols = [0, 10, 0, 10]

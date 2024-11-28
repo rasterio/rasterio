@@ -199,7 +199,7 @@ New Features:
   processed in chunks that default to 64 MB.
 - Errors that GDAL handles internally within GDALDatasetRasterIO() and
   GDALRasterIO() and WarpAndChunk() are chained together to be visible and
-  accessable from Python (#2526).
+  accessible from Python (#2526).
 - The new "rio create" command allows creation of new, empty datasets (#3023).
 - An optional range keyword argument (like that of numpy.histogram()) has been
   added to show_hist() (#2873, #3001).
@@ -666,7 +666,7 @@ Bug fixes:
 - Guard against use of gauss resampling when creating a WarpedVRT (#2190).
 - Prevent segfaults when buffer and band indexes are mismatched in
   io_multi_band and io_multi_mask (#2189).
-- Change comparisons of nodata to IgnoreOption to accomodate changes in click
+- Change comparisons of nodata to IgnoreOption to accommodate changes in click
   8.0.
 - Use Window constructor instead of from_slices in windows.union to allow a
   proper union to be formed from windows extending outside a dataset (#2186).
@@ -704,7 +704,7 @@ Bug fixes:
 - A regression in the merge tool's min and max methods has been fixed (#2145).
 - windows.from_bounds raises WindowError when the given bounds and transform are
   inconsistent with each other (#2138).
-- Support for GDAL's "sum" resampling algorith has been added (#2137).
+- Support for GDAL's "sum" resampling algorithm has been added (#2137).
 - Cython and numpy versions are pinned in pyproject.toml. Numpy versions
   correspond to scipy's oldest supported versions for Python versions 3.6-3.10.
 - GDAL data path is configured in env.py with set_gdal_config (#2139).
@@ -1236,7 +1236,7 @@ Other:
   perfectly to PROJ.
 - Ensure that GDAL and PROJ support files can be found in Rasterio wheels when
   we call CRS methods (#1539).
-- Accomodate the Esri flavor of projection WKT (#1537).
+- Accommodate the Esri flavor of projection WKT (#1537).
 - Add missing raster offsets and scales properties (#1527).
 
 1.0.9 (2018-10-25)
@@ -1631,7 +1631,7 @@ New features:
 - Addition of ``rasterio.shutil.exists()`` for determining if a dataset
   exists (#1173).
 - Addition of ``rasterio.shutil.copyfiles()`` to copy files associated
-  with a datset from one location to another (#1173).
+  with a dataset from one location to another (#1173).
 - Allow setting band color interpretation in a ``set_colorinterp()`` method
   and in ``$ rio edit-info --colorinterp`` (#1133).
 
@@ -1738,7 +1738,7 @@ Bug fixes:
   isolate the environments of child threads from each other while
   permitting inheritance from the main Python thread (#993, #996, #997).
   Tests using both `ThreadPoolExecutor` and `ProcessPoolExecutor` have
-  been added to guard against regresion.
+  been added to guard against regression.
 
 1.0a7 (2017-02-14)
 ------------------
@@ -1952,7 +1952,7 @@ Documentation:
 
 - Contributing guidelines have been added (#701).
 - Axis order has been corrected in image processing doc (#700).
-- A framework for comprehensive documentaton has been created (#713, #723,
+- A framework for comprehensive documentation has been created (#713, #723,
   #729, #737, #738, #739, #740, #748, #756, #760).
 
 New features:
@@ -2277,7 +2277,7 @@ this release to the best #33 of all time, Larry Bird.
 
 0.15 (2014-10-11)
 -----------------
-- Support for more data types in seive() (#159).
+- Support for more data types in sieve() (#159).
 - Handle unexpected PROJ.4 values like "+no_defs=True" (#173).
 - Support for writing PNG, JPEG, etc using GDALCreateCopy (#177).
 - New rio-stack command (#180).
@@ -2285,7 +2285,7 @@ this release to the best #33 of all time, Larry Bird.
 - Add rio-env command and --version option to rio.
 - Make -f and --format aliases for --driver in CLI options (#183).
 - Remove older rio_* scripts (#184).
-- `out` keyword arg supercedes `output` in rasterio.features (#179).
+- `out` keyword arg supersedes `output` in rasterio.features (#179).
 
 0.14.1 (2014-10-02)
 -------------------
@@ -2293,7 +2293,7 @@ this release to the best #33 of all time, Larry Bird.
 
 0.14 (2014-10-01)
 -----------------
-- Fixed tag update crasher (#145).
+- Fixed tag update crash (#145).
 - Add --mask and --bidx options to rio shapes (#150).
 - Faster geometry transforms and antimeridian cutting (#163).
 - Support for more data types in shapes() and rasterize() (#155, #158).
@@ -2396,7 +2396,7 @@ this release to the best #33 of all time, Larry Bird.
 - Add support for dataset and band tags (#32).
 - Add testing dependence on pytest (#33).
 - Add support for simple RGBA colormaps (#34).
-- Fix for a crasher that occurs when a file is sent through a write-read
+- Fix for a crash that occurs when a file is sent through a write-read
   revolving door.
 - New docs for tags and colormaps.
 
