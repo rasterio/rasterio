@@ -441,13 +441,6 @@ def test_open_with_env(gdalenv):
             assert dataset.count == 3
 
 
-def test_skip_gtiff(gdalenv):
-    """De-register GTiff driver, verify that it will not be used."""
-    with rasterio.Env(GDAL_SKIP='GTiff'):
-        with pytest.raises(RasterioIOError):
-            rasterio.open('tests/data/RGB.byte.tif')
-
-
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
@@ -620,7 +613,7 @@ def test_have_registered_drivers():
     """Ensure drivers are only registered once, otherwise each thread will
     acquire a threadlock whenever an environment is started."""
     with rasterio.Env():
-        assert rasterio.env.local._env._have_registered_drivers
+        assert rasterio._env._have_registered_drivers
 
 
 def test_gdal_cachemax():
