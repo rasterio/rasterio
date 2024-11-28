@@ -75,7 +75,7 @@ def test_read_epsg():
 def test_read_compdcs():
     """Expect no match for a single EPSG for this COMPDCS"""
     with rasterio.open('zip://tests/data/ak-compdcs.zip!test.tif') as src:
-        assert src.crs.to_epsg() == None
+        assert src.crs.to_epsg() is None
 
 
 def test_read_no_crs():
