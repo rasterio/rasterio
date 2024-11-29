@@ -34,7 +34,9 @@ def _fillnodata(
             mask_band = mask_dataset.band(1)
 
         for k, v in filloptions.items():
-            alg_options = CSLSetNameValue(alg_options, k.upper(), v)
+            k = k.upper()
+            v = str(v)
+            alg_options = CSLSetNameValue(alg_options, k, v)
 
         if CSLFindName(alg_options, "TEMP_FILE_DRIVER") < 0:
             alg_options = CSLSetNameValue(alg_options, "TEMP_FILE_DRIVER", "MEM")

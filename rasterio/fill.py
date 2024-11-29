@@ -47,7 +47,10 @@ def fillnodata(
         The number of 3x3 smoothing filter passes to run. The default is
         0.
     filloptions :
-        See https://gdal.org/en/stable/api/gdal_alg.html.
+        Keyword arguments providing finer control over filling. See
+        https://gdal.org/en/stable/api/gdal_alg.html. Lowercase option
+        names and numerical values are allowed. For example:
+        nodata=0 is a valid keyword argument.
 
     Returns
     -------
