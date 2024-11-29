@@ -6,4 +6,4 @@ cdef class ConfigEnv:
 
 
 cdef class GDALEnv(ConfigEnv):
-    cdef public object _have_registered_drivers
+    pass
