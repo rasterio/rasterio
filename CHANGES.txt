@@ -7,7 +7,7 @@ Changes
 Bug fixes:
 
 - All options of GDALFillNodata() are now supported by the method in
-  rasterio.fill (#).
+  rasterio.fill (#3265).
 - The flag for GDAL driver registration has been changed to an _env module
   attribute. Drivers should only be registered once per process at most
   (#3260). A side effect of this is that the GDAL_SKIP configuration option,
