@@ -81,7 +81,7 @@ When to use rasterio.Env()
 --------------------------
 
 Rasterio code is often without the use of an :class:`.Env` context block. For instance,
-you could use :func:`rasterio.open` directly without explicity creating an :class:`.Env`.
+you could use :func:`rasterio.open` directly without explicitly creating an :class:`.Env`.
 In that case, the :func:`~rasterio.open` function will initialize a default environment in
 which to execute the code. Often this default environment is sufficient for most
 use cases and you only need to create an explicit :class:`.Env` if you are customizing

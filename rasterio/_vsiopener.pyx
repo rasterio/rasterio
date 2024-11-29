@@ -187,7 +187,7 @@ cdef void* pyopener_open(
 
     This function is mandatory in the GDAL Filesystem Plugin API.
     GDAL may call this function multiple times per filename and each
-    result must be seperately seekable.
+    result must be separately seekable.
     """
     cdef FSData *fsdata = <FSData *>pUserData
     path = fsdata.path.decode("utf-8")

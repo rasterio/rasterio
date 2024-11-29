@@ -33,7 +33,7 @@ other well.
 The GDAL Environment
 --------------------
 
-GDAL library functions are excuted in a context of format drivers, error
+GDAL library functions are executed in a context of format drivers, error
 handlers, and format-specific configuration options that this document will
 call the "GDAL Environment." Rasterio has an abstraction for the GDAL
 environment, ``gdal`` does not.
