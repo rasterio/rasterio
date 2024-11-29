@@ -1073,7 +1073,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 dst_alpha_band = bidx
 
         # Adding an alpha band when the source has one is trouble.
-        # It will result in suprisingly unmasked data. We will
+        # It will result in surprisingly unmasked data. We will
         # raise an exception instead.
 
         if add_alpha:
@@ -1392,7 +1392,7 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None,
 cdef double antimeridian_min(data):
     """
     Handles the case when longitude values cross the antimeridian
-    when calculating the minumum.
+    when calculating the minimum.
 
     Note: The data array must be in a linear ring.
 
@@ -1443,7 +1443,7 @@ cdef double antimeridian_min(data):
     the antimeridian was crossed.
 
     However, even though the spacing was even in the source projection, it isn't
-    guaranteed in the targed geographic projection. So, instead of 240, 200 is used
+    guaranteed in the target geographic projection. So, instead of 240, 200 is used
     as it significantly larger than 120 to be sure that the antimeridian was crossed
     but smalller than 240 to account for possible irregularities in distances
     when re-projecting. Also, 200 ensures latitudes are ignored for axis order handling.
@@ -1478,7 +1478,7 @@ cdef double antimeridian_min(data):
         # positive meridian side min
         if positive_meridian and data[iii] < positive_min:
             positive_min = data[iii]
-        # track genral min value
+        # track general min value
         if data[iii] < min_value:
             min_value = data[iii]
     if crossed_meridian_count == 2:
@@ -1494,7 +1494,7 @@ cdef double antimeridian_min(data):
 cdef double antimeridian_max(data):
     """
     Handles the case when longitude values cross the antimeridian
-    when calculating the minumum.
+    when calculating the minimum.
 
     Note: The data array must be in a linear ring.
 
@@ -1535,7 +1535,7 @@ cdef double antimeridian_max(data):
             and data[iii] != HUGE_VAL
         ):
             negative_max = data[iii]
-        # track genral max value
+        # track general max value
         if (data[iii] > max_value or max_value == HUGE_VAL) and data[iii] != HUGE_VAL:
             max_value = data[iii]
     if crossed_meridian_count == 2:

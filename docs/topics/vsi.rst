@@ -10,7 +10,7 @@ to GDAL's ordinary filesystem handler and is the default for dataset URIs that
 have no other scheme.
 
 To access a dataset in a local ZIP file like the one in Rasterio's test suite,
-preprend ``zip`` to the URI of the local file and add the interior path to the
+prepend ``zip`` to the URI of the local file and add the interior path to the
 dataset after a ``!`` character. For example:
 
 .. code-block:: python
