@@ -93,7 +93,7 @@ def test_env_accessors(gdalenv):
 
 
 def test_env_accessors_no_env():
-    """Sould all raise an exception."""
+    """Should all raise an exception."""
     with pytest.raises(EnvError):
         delenv()
     with pytest.raises(EnvError):

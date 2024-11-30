@@ -16,7 +16,7 @@ import attr
 from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
-# TODO: extend for other cloud plaforms.
+# TODO: extend for other cloud platforms.
 SCHEMES = {
     'ftp': 'curl',
     'gzip': 'gzip',
@@ -34,7 +34,7 @@ SCHEMES = {
 ARCHIVESCHEMES = set
 CURLSCHEMES = {k for k, v in SCHEMES.items() if v == "curl"}
 
-# TODO: extend for other cloud plaforms.
+# TODO: extend for other cloud platforms.
 REMOTESCHEMES = {
     k
     for k, v in SCHEMES.items()

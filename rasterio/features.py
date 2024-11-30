@@ -246,7 +246,7 @@ def rasterize(
     dst_path : str or PathLike, optional
         Path of output dataset
     dst_kwds : dict, optional
-        Dictionary of creation options and other paramters that will be
+        Dictionary of creation options and other parameters that will be
         overlaid on the profile of the output dataset.
 
     Returns
@@ -577,7 +577,7 @@ def is_valid_geom(geom):
                     len(coords[0][0]) >= 2)
 
         if geom_type == 'MultiPolygon':
-            # Muti polygons must have at least one Polygon
+            # Multi polygons must have at least one Polygon
             return (len(coords) > 0 and len(coords[0]) > 0 and
                     len(coords[0][0]) >= 4 and len(coords[0][0][0]) >= 2)
 

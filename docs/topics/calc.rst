@@ -109,7 +109,7 @@ Here is a more complicated example of scaling bands by different factors.
 Logical operations
 ------------------
 
-Logical operations can be used in conjunction with arithemtic operations. In
+Logical operations can be used in conjunction with arithmetic operations. In
 this example, the output values are 255 wherever the input values are greater
 than or equal to 40.
 

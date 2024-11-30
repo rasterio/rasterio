@@ -272,7 +272,7 @@ def test_out_shape(path_rgb_byte_tif, shape, indexes):
             assert out_shape.shape == out.shape
             assert (out_shape == out).all()
 
-            # Sanity check fo the test itself
+            # Sanity check of the test itself
             assert shape[-2:] == (72, 80)
 
 
