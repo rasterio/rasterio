@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- If passed a dataset object, rasterio.open() now raises TypeError instead of
+  proceeding and crashing (#).
 - All options of GDALFillNodata() are now supported by the method in
   rasterio.fill (#3265).
 - The flag for GDAL driver registration has been changed to an _env module
