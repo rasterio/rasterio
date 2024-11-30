@@ -22,6 +22,7 @@ if platform.system() == "Windows":
                 if p and glob.glob(os.path.join(p, "gdal*.dll")):
                     os.add_dll_directory(os.path.abspath(p))
 
+from rasterio._base import DatasetBase
 from rasterio._io import Statistics
 from rasterio._vsiopener import _opener_registration
 from rasterio._show_versions import show_versions
@@ -241,7 +242,7 @@ def open(
             or hasattr(fp, "read")
             or hasattr(fp, "write")
             or isinstance(fp, (os.PathLike, MemoryFile, FilePath))
-        ):
+        ) or isinstance(fp, DatasetBase):
             raise TypeError(f"invalid path or file: {fp!r}")
     if not isinstance(mode, str):
         raise TypeError(f"invalid mode: {mode!r}")
