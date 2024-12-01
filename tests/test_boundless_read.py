@@ -189,3 +189,13 @@ def test_boundless_open_options():
     with rasterio.open("tests/data/cogeo.tif", overview_level=2) as src:
         data2 = src.read(1, boundless=True)
     assert not numpy.array_equal(data1, data2)
+
+
+def test_issue3245(data):
+    """Boundless read of a dataset without a mask should have no masking."""
+    with rasterio.open(data / "RGB.byte.tif", "r+") as dst:
+        dst.nodata = None
+        assert not dst.read(masked=True).mask.any()
+        data = dst.read(boundless=True, masked=True, window=Window(0, 0, dst.width, dst.height))
+        assert not data.mask.any()
+
