@@ -198,4 +198,5 @@ def test_issue3245(data):
         assert not dst.read(masked=True).mask.any()
         data = dst.read(boundless=True, masked=True, window=Window(0, 0, dst.width, dst.height))
         assert not data.mask.any()
+        assert (data >= 0).all()
 

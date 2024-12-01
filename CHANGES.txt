@@ -7,7 +7,7 @@ Changes
 Bug fixes:
 
 - Erroneous masking of 0-valued raster data by boundless, masked reads has been
-  fixed (#).
+  fixed (#3268).
 - If passed a dataset object, rasterio.open() now raises TypeError instead of
   proceeding and crashing (#3266).
 - All options of GDALFillNodata() are now supported by the method in
