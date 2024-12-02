@@ -82,7 +82,7 @@ except ImportError:
     have_vsi_plugin = False
 
 __all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
-__version__ = "1.4.3dev"
+__version__ = "1.4.3"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
