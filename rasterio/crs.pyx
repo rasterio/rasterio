@@ -20,8 +20,10 @@ not call PROJ functions directly, but invokes them via calls to GDAL's
 """
 
 from collections import defaultdict
+from itertools import groupby
 import json
 import logging
+from operator import itemgetter
 import pickle
 import typing
 import warnings
@@ -47,6 +49,14 @@ _RE_PROJ_PARAM = re.compile(r"""
     \s*?            # consume remaining whitespace, if any
 """, re.X)
 
+
+def auth_preference(item):
+    preferred_order = ["EPSG", "OGC", "ESRI", "IAU_2015"]
+    conf, auth, val = item
+    if auth in preferred_order:
+        return preferred_order.index(auth)
+    else:
+        return 100
 
 
 cdef _safe_osr_release(OGRSpatialReferenceH srs):
@@ -140,7 +150,7 @@ cdef class CRS:
 
         """
         try:
-            return bool(self._epsg)
+            return bool(self.to_epsg())
         except CRSError:
             return False
 
@@ -456,11 +466,13 @@ cdef class CRS:
             return self._epsg
         else:
             matches = self._matches(confidence_threshold=confidence_threshold)
-            if "EPSG" in matches:
-                self._epsg = int(matches["EPSG"][0])
-                return self._epsg
-            else:
+            if not matches:
                 return None
+            else:
+                for conf, auth, val in matches:
+                    if auth == "EPSG":
+                        return int(val)
+        return None
 
     def to_authority(self, confidence_threshold=70):
         """Convert to the best match authority name and code.
@@ -485,20 +497,17 @@ cdef class CRS:
         or None
 
         """
-        matches = self._matches(confidence_threshold=confidence_threshold)
-        # Note: before version 1.2.7 this function only paid attention
-        # to EPSG as an authority, which is why it takes priority over
-        # others even if they were a better match.
-        if "EPSG" in matches:
-            return "EPSG", matches["EPSG"][0]
-        elif "OGC" in matches:
-            return "OGC", matches["OGC"][0]
-        elif "ESRI" in matches:
-            return "ESRI", matches["ESRI"][0]
-        elif "IAU_2015" in matches:
-            return "IAU_2015", matches["IAU_2015"][0]
+        if self._epsg is not None:
+            return ("EPSG", str(self._epsg))
         else:
-            return None
+            matches = self._matches(confidence_threshold=confidence_threshold)
+            if not matches:
+                return None
+
+            grouped = groupby(matches, key=itemgetter(0))
+            for k, group in grouped:
+                conf, auth, val = sorted(group, key=auth_preference)[0]
+                return auth, str(val)
 
     def _matches(self, confidence_threshold=70):
         """Find matches in authority files.
@@ -516,12 +525,10 @@ cdef class CRS:
         cdef int *confidences = NULL
         cdef int num_matches = 0
         cdef int i = 0
-
-        results = defaultdict(list)
+        cdef list results = []
 
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
-
             matches = OSRFindMatches(osr, NULL, &num_matches, &confidences)
 
             for i in range(num_matches):
@@ -535,12 +542,10 @@ cdef class CRS:
                     log.debug("returned authority name was null")
 
                 if c_code != NULL and c_name != NULL and confidence >= confidence_threshold:
-                    log.debug(
-                        "Matched. confidence=%r, c_code=%r, c_name=%r",
-                        confidence, c_code, c_name)
                     code = c_code.decode('utf-8')
                     name = c_name.decode('utf-8')
-                    results[name].append(code)
+                    results.append((confidence, name, code))
+
             return results
 
         finally:

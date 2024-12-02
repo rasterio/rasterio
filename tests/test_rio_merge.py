@@ -2,7 +2,6 @@
 
 from io import StringIO
 import os
-import sys
 import textwrap
 from pathlib import Path
 
@@ -449,8 +448,6 @@ def test_merge_tiny_output_opt(tiffs, runner):
         assert data[0][3][0] == 40
 
 
-@pytest.mark.xfail(sys.version_info < (3,),
-                   reason="Test is sensitive to rounding behavior")
 def test_merge_tiny_res_bounds(tiffs, runner):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
@@ -736,7 +733,8 @@ def test_merge_no_gap(tiffs, runner):
 
     with rasterio.open(outputname) as src:
         data = src.read(1)
-        assert data[184, 61] != 0
+        assert data[183, 61] != 0
+        assert data[184, 60] != 0
 
 
 @pytest.mark.parametrize(
