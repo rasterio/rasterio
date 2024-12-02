@@ -648,6 +648,11 @@ def path_zip_file(data_dir):
     return path
 
 
+@pytest.fixture(scope='session')
+def path_int_nodata_tif(data_dir):
+    return os.path.join(data_dir, 'int_raster_with_nodata.tif')
+
+
 @pytest.fixture(autouse=True)
 def set_mem_name(request, monkeypatch):
     def youyoueyedeefour():
