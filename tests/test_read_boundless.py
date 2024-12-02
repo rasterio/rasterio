@@ -18,9 +18,9 @@ def rgb_byte_tif_reader(path_rgb_byte_tif):
 
 
 @pytest.fixture(scope='session')
-def int_nodata_array_masked(path_int_nodata_tif):
+def int_nodata_array(path_int_nodata_tif):
     with rasterio.open(path_int_nodata_tif) as src:
-        return src.read(masked=True)
+        return src.read()
 
 
 @pytest.fixture(scope='function')
@@ -178,10 +178,10 @@ def test_issue1982(capfd):
     assert (42 == image[:, :, :3]).all()
 
 
-def test_read_int_raster_boundless(int_nodata_tif_reader, int_nodata_array_masked):
+def test_read_int_raster_boundless(int_nodata_tif_reader, int_nodata_array):
     """Reading int raster with nonzero nodata with boundless=True"""
     with int_nodata_tif_reader as src:
         window = Window(0, 0, src.width, src.height)
-        data = src.read(window=window, boundless=True, masked=True)
-        assert data.shape == int_nodata_array_masked.shape
-        assert np.ma.allequal(data, int_nodata_array_masked, fill_value=False)
+        data = src.read(window=window, boundless=True)
+        assert data.shape == int_nodata_array.shape
+        assert np.array_equal(data, int_nodata_array)
