@@ -9,10 +9,8 @@ from rasterio import dtypes
 
 @ensure_env
 def fillnodata(
-        image,
-        mask=None,
-        max_search_distance=100.0,
-        smoothing_iterations=0):
+    image, mask=None, max_search_distance=100.0, smoothing_iterations=0, **filloptions
+):
     """Fill holes in raster data by interpolation
 
     This algorithm will interpolate values for all designated nodata
@@ -48,6 +46,11 @@ def fillnodata(
     smoothing_iterations : integer, optional
         The number of 3x3 smoothing filter passes to run. The default is
         0.
+    filloptions :
+        Keyword arguments providing finer control over filling. See
+        https://gdal.org/en/stable/api/gdal_alg.html. Lowercase option
+        names and numerical values are allowed. For example:
+        nodata=0 is a valid keyword argument.
 
     Returns
     -------
@@ -66,5 +69,4 @@ def fillnodata(
 
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
-    return _fillnodata(
-        image, mask, max_search_distance, smoothing_iterations)
+    return _fillnodata(image, mask, max_search_distance, smoothing_iterations)

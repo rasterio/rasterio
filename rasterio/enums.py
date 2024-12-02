@@ -162,7 +162,11 @@ class OverviewResampling(IntEnum):
 
 
 class Compression(Enum):
-    """Available compression algorithms."""
+    """Available compression algorithms for GeoTIFFs.
+
+    Note that compression options for EXR, MRF, etc are not included
+    in this enum.
+    """
     jpeg = 'JPEG'
     lzw = 'LZW'
     packbits = 'PACKBITS'

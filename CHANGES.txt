@@ -8,6 +8,35 @@ New features:
 
 - The CRS class has a new, lazily computed, geodetic_crs property (#3218)
 
+1.4.3 (2024-12-02)
+------------------
+
+Bug fixes:
+
+- Erroneous masking of 0-valued raster data by boundless, masked reads has been
+  fixed (#3268).
+- If passed a dataset object, rasterio.open() now raises TypeError instead of
+  proceeding and crashing (#3266).
+- All options of GDALFillNodata() are now supported by the method in
+  rasterio.fill (#3265).
+- The flag for GDAL driver registration has been changed to an _env module
+  attribute. Drivers should only be registered once per process at most
+  (#3260). A side effect of this is that the GDAL_SKIP configuration option,
+  which affects format driver registration, only has an effect the first time
+  a dataset is opened.
+- Allow a dataset's compression metadata to surface in profile and compression
+  properties even if the value isn't present in the Compression enum (#3259).
+- A bug that causes CRS.from_wkt().is_epsg_code() to erroneously return False
+  when an EPSG code is embedded in WKT has been fixed (#3258).
+- IAU 2015 has been added to the list of known CRS authorities (#3243).
+- A major performance regression in Rasterio's merge tool has been corrected
+  (#3234).
+
+Other changes:
+
+- CRS._matches() has been rewritten to better support CRS.to_authority() and
+  CRS.to_epsg() (#3255).
+
 1.4.2 (2024-10-30)
 ------------------
 
