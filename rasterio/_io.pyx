@@ -22,7 +22,10 @@ from rasterio._err import (
     CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
-from rasterio.enums import ColorInterp, MaskFlags, Resampling, RATTableType
+from rasterio.enums import (
+    ColorInterp, MaskFlags, Resampling,
+    RATTableType, RATFieldUsage
+)
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
@@ -972,6 +975,84 @@ cdef class DatasetReaderBase(DatasetBase):
             raise RasterioIOError("Read failed. See previous exception for details.") from cplerr
 
         return out
+
+    def read_rat(self, bidx):
+        """Read a raster attribute table (rat) for a band from the dataset.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band whose raster attribute table will be returned.
+            Band index starts at 1.
+
+        Returns
+        -------
+        dict
+            Mapping of column name to a numpy array of column values
+        dict
+            Mapping of column name to field usage, and a table type enum.
+        GDALRATTableType.<enum>
+            Raster attribute table type (thematic or athematic)
+
+        Raises
+        ------
+        ValueError
+            If no raster attribute table is found for the specified band.
+        ValueError
+            If a column data type is not understood.
+        IndexError
+            If no band exists for the provided index.
+        """
+
+        cdef GDALRasterBandH band = NULL
+        cdef GDALRasterAttributeTableH rat = NULL
+
+        band = self.band(bidx)
+        rat = GDALGetDefaultRAT(band)
+
+        if rat == NULL:
+            raise ValueError("NULL raster attribute table")
+        
+        row_count = GDALRATGetRowCount(rat)
+        col_count = GDALRATGetColumnCount(rat)
+
+        retval = {}
+        retuse = {}
+
+        for c in range(col_count):
+            col_name = GDALRATGetNameOfCol(rat, c).decode('utf-8')
+            col_type = GDALRATGetTypeOfCol(rat, c)
+            col_use  = GDALRATGetUsageOfCol(rat, c)
+
+            if col_type == GFT_Integer:
+                values = np.array(
+                    [GDALRATGetValueAsInt(rat, r, c) for r in range(row_count)],
+                    dtype=np.int32
+                )
+            elif col_type == GFT_Real:
+                values = np.array(
+                    [GDALRATGetValueAsDouble(rat, r, c) for r in range(row_count)],
+                    dtype=np.float64
+                )
+            elif col_type == GFT_String:
+                values = [GDALRATGetValueAsString(rat, r, c) for r in range(row_count)]
+                maxlen = max(len(v) for v in values)
+
+                values = np.array(
+                    values,
+                    dtype=f'S{maxlen}'
+                ).astype(str)
+
+            else:
+                raise ValueError(f'Unknown column type {col_type}')
+
+
+            retval[col_name] = values
+            retuse[col_name] = RATFieldUsage(col_use)
+
+        table_type = GDALRATGetTableType(rat)
+
+        return retval, retuse, RATTableType(table_type)
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):
@@ -2031,8 +2112,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         finally:
             GDALDestroyColorTable(hTable)
 
-    def write_rat(self, bidx, rat, table_type):
-        """Write a raster attribute table for a band to the dataset.
+    def write_rat(self, bidx, values, usages=None, table_type=RATTableType.Thematic):
+        """Write a raster attribute table (rat) for a band to the dataset.
 
         A raster attribute table contains tabular data describing the raster
         band such as category names, category descriptions, statistics,
@@ -2042,15 +2123,27 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         ----------
         bidx : int
             Index of the band (starting with 1).
-        rat: list
-            List of dictionaries containing column values and metadata
-            with keys 'column_name', 'column_type', 'column_usage', and 'column_values'
-        table_type: GDALRATTableType.<enum>
+        values : dict
+            Dictionary of column data with column name as the key and a value 
+            as a numpy array.
+        usages : dict. Optional, defaults None
+            Dictionary mapping the column name (key) to the field usage (value)
+            enums.RATFieldUsage.<enum>
+            If no dictionary is passed or if a column is missing, a Generic field
+            usage is assigned.
+        table_type: enums.GDALRATTableType.<enum>
             Set the raster attribute table typ to Thematic or Athematic
 
         Returns
         -------
         None
+
+        Raises
+        ------
+        ValueError
+            When an unsupported data type is used in the value dict
+            When an unrecognized field usage is passed to the usages dict
+            
 
         """
 
@@ -2061,32 +2154,51 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         hRAT = GDALCreateRasterAttributeTable()
 
-        # TODO: Add rat input validation
+        if usages is None:
+            usages = {}
 
-        for icol, column_info in enumerate(rat):
+        for icol, (col_name, vals) in enumerate(values.items()):
             
             # Ensure column name is utf-8 encoded
-            if isinstance(column_info['column_name'], bytes):
-                column_name = column_info['column_name'] 
-            elif isinstance(column_info['column_name'], str):
-                column_name = column_info['column_name'].encode('utf-8') 
+            if isinstance(col_name, bytes):
+                col_name_utf = col_name
+            elif isinstance(col_name, str):
+                col_name_utf = col_name.encode('utf-8') 
+
+            dtype = vals.dtype
+
+            if np.issubdtype(dtype, np.integer):
+                col_type = GFT_Integer
+            elif np.issubdtype(dtype, np.double):
+                col_type = GFT_Real
+            elif np.issubdtype(dtype, object) | np.issubdtype(dtype, np.str_):
+                vals = vals.astype('S')
+                col_type = GFT_String
+            else:
+                raise ValueError(f'Illegal column type {vals.dtype} for column {col_name_utf}')
+
+            usage = usages.get(col_name, RATFieldUsage.Generic)
+            try:
+                RATFieldUsage(usage)
+            except ValueError:
+                raise ValueError(f'Field usage {usage} for column {col_name} is not valid')
 
             GDALRATCreateColumn(
                 hRAT,
-                column_name,
-                column_info['column_type'],
-                column_info['column_usage']
+                col_name_utf,
+                col_type,
+                usage
             )
-            for irow, value in enumerate(column_info['column_values']):
-                if column_info['column_type'] == GFT_Integer:
+
+            for irow, value in enumerate(vals):
+                if col_type == GFT_Integer:
                     GDALRATSetValueAsInt(hRAT, irow, icol, value)
-                if column_info['column_type'] == GFT_Real:
+                if col_type == GFT_Real:
                     GDALRATSetValueAsDouble(hRAT, irow, icol, value)
-                if column_info['column_type'] == GFT_String:
+                if col_type == GFT_String:
                     GDALRATSetValueAsString(hRAT, irow, icol, value)
 
         GDALRATSetTableType(hRAT, table_type)
-
         GDALSetDefaultRAT(hBand, hRAT)
 
     def write_mask(self, mask_array, window=None):
