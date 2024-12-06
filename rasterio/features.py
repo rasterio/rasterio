@@ -490,7 +490,7 @@ def geometry_window(
         height = dataset.height
         width = dataset.width
     except AttributeError:
-        height, width = dataset.shape[:-2]
+        height, width = dataset.shape[-2:]
 
     cols = []
     rows = []
