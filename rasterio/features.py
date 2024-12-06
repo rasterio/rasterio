@@ -72,7 +72,8 @@ def geometry_mask(
         transform=transform,
         all_touched=all_touched,
         fill=fill,
-        default_value=mask_value).astype('bool')
+        default_value=mask_value,
+        dtype='uint8').view('bool')
 
 
 @ensure_env
