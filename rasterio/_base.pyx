@@ -23,7 +23,8 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
-    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp,
+    RATFieldType, RATFieldUsage, RATTableType)
 from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
