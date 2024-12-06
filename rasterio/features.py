@@ -486,11 +486,7 @@ def geometry_window(
         except AttributeError:
             raise ValueError("Unable to read transform from dataset. Please provide a transform.")
 
-    try:
-        height = dataset.height
-        width = dataset.width
-    except AttributeError:
-        height, width = dataset.shape[-2:]
+    height, width = dataset.shape[-2:]
 
     cols = []
     rows = []
