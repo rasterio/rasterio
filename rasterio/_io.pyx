@@ -1040,8 +1040,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
                 values = np.array(
                     values,
-                    dtype=f'S{maxlen}'
-                ).astype(str)
+                    dtype='str'
+                )
 
             else:
                 raise ValueError(f'Unknown column type {col_type}')
@@ -2172,7 +2172,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             elif np.issubdtype(dtype, np.double):
                 col_type = GFT_Real
             elif np.issubdtype(dtype, object) | np.issubdtype(dtype, np.str_):
+                # Strings must be converted to bytes to pass to gdal
                 vals = vals.astype('S')
+                col_type = GFT_String
+            elif np.issubdtype(dtype, np.bytes_):
                 col_type = GFT_String
             else:
                 raise ValueError(f'Illegal column type {vals.dtype} for column {col_name_utf}')
