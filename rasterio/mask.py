@@ -7,13 +7,22 @@ import numpy as np
 
 from rasterio.errors import WindowError
 from rasterio.features import geometry_mask, geometry_window
+from rasterio import windows
 
 
 logger = logging.getLogger(__name__)
 
 
-def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
-                         crop=False, pad=False, pad_width=0.5):
+def raster_geometry_mask(
+        dataset,
+        shapes,
+        all_touched=False,
+        invert=False,
+        crop=False,
+        pad=False,
+        pad_width=0.5,
+        transform=None
+    ):
     """Create a mask from shapes, transform, and optional window within original
     raster.
 
@@ -26,7 +35,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
     Parameters
     ----------
-    dataset : a dataset object opened in 'r' mode
+    dataset : ndarray or dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes : iterable object
         The values must be a GeoJSON-like dict or an object that implements
@@ -50,6 +59,8 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
     pad_width : float (opt)
         If pad is set (to maintain back-compatibility), then this will be the
         pixel-size width of the padding around the mask.
+    transform : Affine, (opt)
+        Transform for ndarray or dataset.
 
     Returns
     -------
@@ -76,8 +87,14 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         pad_x = 0
         pad_y = 0
 
+    if transform is None:
+        if hasattr(dataset, 'transform'):
+            transform = dataset.transform
+        else:
+            raise ValueError("Unknown transform. Please supply a transform.")
+
     try:
-        window = geometry_window(dataset, shapes, pad_x=pad_x, pad_y=pad_y)
+        window = geometry_window(dataset, shapes, pad_x=pad_x, pad_y=pad_y, transform=transform)
 
     except WindowError:
         # If shapes do not overlap raster, raise Exception or UserWarning
@@ -92,16 +109,15 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         mask = np.ones(shape=dataset.shape[-2:], dtype="bool")
         if invert:
             mask = ~mask
-        return mask, dataset.transform, None
+        return mask, transform, None
 
     if crop:
-        transform = dataset.window_transform(window)
+        transform = windows.transform(window, transform)
         out_shape = (int(window.height), int(window.width))
 
     else:
         window = None
-        transform = dataset.transform
-        out_shape = (int(dataset.height), int(dataset.width))
+        out_shape = dataset.shape[-2:]
 
     mask = geometry_mask(shapes, transform=transform, invert=invert,
                          out_shape=out_shape, all_touched=all_touched)
