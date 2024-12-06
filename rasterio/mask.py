@@ -5,6 +5,7 @@ import warnings
 
 import numpy as np
 
+from rasterio.dtypes import is_ndarray
 from rasterio.errors import WindowError
 from rasterio.features import geometry_mask, geometry_window
 from rasterio import windows
@@ -125,8 +126,19 @@ def raster_geometry_mask(
     return mask, transform, window
 
 
-def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
-         filled=True, crop=False, pad=False, pad_width=0.5, indexes=None):
+def mask(
+        dataset,
+        shapes,
+        all_touched=False,
+        invert=False,
+        nodata=None,
+        filled=True,
+        crop=False,
+        pad=False,
+        pad_width=0.5,
+        indexes=None,
+        transform=None
+    ):
     """Creates a masked or filled array using input shapes.
     Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
@@ -136,7 +148,7 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
 
     Parameters
     ----------
-    dataset : a dataset object opened in 'r' mode
+    dataset : ndarray or dataset object opened in 'r' mode
         Raster to which the mask will be applied.
     shapes : iterable object
         The values must be a GeoJSON-like dict or an object that implements
@@ -165,6 +177,8 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
     indexes : list of ints or a single int (opt)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
+    transform : Affine (opt)
+        Transform to use for masking. Only used if dataset doesn't have a transform.
 
     Returns
     -------
@@ -186,26 +200,43 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
                 Information for mapping pixel coordinates in `masked` to another
                 coordinate system.
     """
-
     if nodata is None:
-        if dataset.nodata is not None:
+        if hasattr(dataset, 'nodata') and dataset.nodata is not None:
             nodata = dataset.nodata
         else:
             nodata = 0
 
     shape_mask, transform, window = raster_geometry_mask(
-        dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
-        pad=pad, pad_width=pad_width)
+        dataset,
+        shapes,
+        all_touched=all_touched,
+        invert=invert,
+        crop=crop,
+        pad=pad,
+        pad_width=pad_width,
+        transform=transform)
 
     if indexes is None:
-        out_shape = (dataset.count, ) + shape_mask.shape
+        if len(dataset.shape) == 3:
+            out_shape = (dataset.shape[0], *shape_mask.shape)
+        elif hasattr(dataset, 'count'):
+            out_shape = (dataset.count, *shape_mask.shape)
+        else:
+            out_shape = (1, *shape_mask.shape)
+        ndindexes = slice(None)
     elif isinstance(indexes, int):
         out_shape = shape_mask.shape
+        ndindexes = out_shape[0]
     else:
         out_shape = (len(indexes), ) + shape_mask.shape
+        ndindexes = indexes
 
-    out_image = dataset.read(
-        window=window, out_shape=out_shape, masked=True, indexes=indexes)
+    if is_ndarray(dataset):
+        out_image = dataset[ndindexes, *window.toslices()]
+        out_image = np.ma.masked_equal(out_image, nodata)
+    else:
+        out_image = dataset.read(
+            window=window, out_shape=out_shape, masked=True, indexes=indexes)
 
     out_image.mask = out_image.mask | shape_mask
 
