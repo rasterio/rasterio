@@ -439,6 +439,7 @@ def geometry_window(
     rotated=None,
     pixel_precision=None,
     boundless=False,
+    transform=None
 ):
     """Calculate the window within the raster that fits the bounds of
     the geometry plus optional padding.  The window is the outermost
@@ -449,7 +450,7 @@ def geometry_window(
 
     Parameters
     ----------
-    dataset : dataset object opened in 'r' mode
+    dataset : ndarray or dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes : iterable over geometries.
         A geometry is a GeoJSON-like object or implements the geo
@@ -471,14 +472,25 @@ def geometry_window(
         evaluating bounds of shapes.
     boundless : bool, optional
         Whether to allow a boundless window or not.
+    transform : Affine, optional
+        Override transform of dataset. Required if dataset is an ndarray.
 
     Returns
     -------
     rasterio.windows.Window
 
     """
+    if transform is None:
+        try:
+            transform = dataset.transform
+        except AttributeError:
+            raise ValueError("Unable to read transform from dataset. Please provide a transform.")
 
-    all_bounds = [bounds(shape, transform=~dataset.transform) for shape in shapes]
+    if isinstance(dataset, DatasetBase):
+        height = dataset.height
+        width = dataset.width
+    else:
+        height, width = dataset.shape[:-2]
 
     cols = [
         x
@@ -502,7 +514,7 @@ def geometry_window(
     )
 
     # Make sure that window overlaps raster
-    raster_window = Window(0, 0, dataset.width, dataset.height)
+    raster_window = Window(0, 0, width, height)
     if not boundless:
         window = window.intersection(raster_window)
 
