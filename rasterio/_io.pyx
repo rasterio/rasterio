@@ -1006,6 +1006,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         cdef GDALRasterBandH band = NULL
         cdef GDALRasterAttributeTableH rat = NULL
+        cdef int r, c
 
         band = self.band(bidx)
         rat = GDALGetDefaultRAT(band)
