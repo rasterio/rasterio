@@ -1036,7 +1036,6 @@ cdef class DatasetReaderBase(DatasetBase):
                 )
             elif col_type == GFT_String:
                 values = [GDALRATGetValueAsString(rat, r, c) for r in range(row_count)]
-                maxlen = max(len(v) for v in values)
 
                 values = np.array(
                     values,
