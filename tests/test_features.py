@@ -168,7 +168,7 @@ def test_geometry_window_no_pad(basic_image_file, basic_geometry):
 
 def test_geometry_window_array(basic_geometry):
     arr = np.zeros((10, 15))
-    window = geometry_window(arr, [basic_geometry], transform=identity)
+    window = geometry_window(arr, [basic_geometry], transform=Affine.identity())
     assert window.flatten() == (2, 2, 3, 3)
 
 
