@@ -506,15 +506,17 @@ cdef class GeomBuilder:
     cdef _buildCoords(self, OGRGeometryH geom):
         # Build a coordinate sequence
         cdef int i
+        cdef list coords = []
         if geom == NULL:
             raise ValueError("Null geom")
         npoints = OGR_G_GetPointCount(geom)
-        coords = []
-        for i in range(npoints):
-            values = [OGR_G_GetX(geom, i), OGR_G_GetY(geom, i)]
-            if self.ndims > 2:
-                values.append(OGR_G_GetZ(geom, i))
-            coords.append(tuple(values))
+
+        if self.ndims == 2:
+            for i in range(npoints):
+                coords.append((OGR_G_GetX(geom, i), OGR_G_GetY(geom, i)))
+        else:
+            for i in range(npoints):
+                coords.append((OGR_G_GetX(geom, i), OGR_G_GetY(geom, i), OGR_G_GetZ(geom, i)))
         return coords
 
     cpdef _buildPoint(self):
