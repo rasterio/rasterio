@@ -1,6 +1,18 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
 
-"""Rasterio caches HTTP responses using GDAL's VSI CURL cache."""
+"""Rasterio caches HTTP responses using GDAL's VSI CURL cache.
+
+A global LRU cache of 16 MB shared among all downloaded content is
+enabled by default, and content in it may be reused after a dataset has
+been closed and reopened. Responses from FTP and HTTP servers, including
+cloud storage like AWS S3 and Microsoft Azure, are stored in this cache.
+Responses from HTTP servers used by Rasterio's Python openers are not.
+
+The size of the cache and which responses are stored can be controlled
+by GDAL's CPL_VSIL_CURL_CACHE_SIZE and CPL_VSIL_CURL_NON_CACHED
+configuration options. For details See
+https://gdal.org/en/latest/user/configoptions.html.
+"""
 
 include "gdal.pxi"
 
