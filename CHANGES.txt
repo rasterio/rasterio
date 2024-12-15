@@ -6,6 +6,8 @@ Changes
 
 New features:
 
+- The cache module and its invalidate() and invalidate_all() functions
+  allow invalidation of responses in Rasterio's HTTP cache (#3276).
 - The CRS class has a new, lazily computed, geodetic_crs property (#3218)
 
 1.4.3 (2024-12-02)
