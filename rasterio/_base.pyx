@@ -1,4 +1,4 @@
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 """Numpy-free base classes."""
 
