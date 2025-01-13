@@ -46,16 +46,17 @@ import operator
 import re
 from typing import Mapping
 
+import numpy
 from pyparsing import (  # type: ignore
     Keyword,
     Word,
-    oneOf,
     Literal,
     QuotedString,
     ParseException,
     Forward,
     Group,
     OneOrMore,
+    Or,
     ParseResults,
     Regex,
     ZeroOrMore,
@@ -161,14 +162,14 @@ var = pyparsing_common.identifier.set_parse_action(resolve_var)
 string = QuotedString("'") | QuotedString('"')
 lparen = Literal("(").suppress()
 rparen = Literal(")").suppress()
-op = oneOf(" ".join(op_map.keys())).set_parse_action(
+op = Or(Keyword(k) for k in op_map).set_parse_action(
     lambda source, loc, toks: op_map[toks[0]]
 )
 
 
 def resolve_func(source, loc, toks):
     try:
-        return func_map[toks[0]]
+        return func_map[toks[0]] if toks[0] in func_map else getattr(numpy, toks[0])
     except (AttributeError, KeyError):
         err = ExpressionError("'{}' is not a function or operator".format(toks[0]))
         err.text = source
@@ -177,7 +178,7 @@ def resolve_func(source, loc, toks):
 
 
 func = Word(alphanums + "_").set_parse_action(resolve_func)
-higher_func = oneOf(" ".join(higher_func_map.keys())).set_parse_action(
+higher_func = Or(Keyword(k) for k in higher_func_map).set_parse_action(
     lambda source, loc, toks: higher_func_map[toks[0]]
 )
 

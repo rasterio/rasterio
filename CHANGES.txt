@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.4.4 (TBD)
+-----------
+
+Bug fixes:
+
+- Parsing of snuggs expressions containing "is" has been fixed (#3288).
+
 1.4.3 (2024-12-02)
 ------------------
 
