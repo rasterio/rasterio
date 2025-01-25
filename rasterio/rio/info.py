@@ -14,7 +14,7 @@ from rasterio.serde import to_json
 
 @to_json.register(Affine)
 def _(obj):
-    """Convert an Affine instance to a JSON serializable form."""
+    """Convert an Affine (version 3) obj to a tuple."""
     return obj._astuple
 
 
