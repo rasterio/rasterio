@@ -11,7 +11,7 @@ from rasterio.serde import to_json
 
 @to_json.register(numpy.ndarray)
 def _(obj):
-    """Convert an ndarry to a JSON serializable form."""
+    """Convert an ndarry to a list."""
     return obj.tolist()
 
 
