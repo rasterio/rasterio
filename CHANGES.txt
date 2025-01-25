@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Add support for JSON serialization of affine 3.0 Affine arrays (#3299).
 - Parsing of snuggs expressions containing "is" has been fixed (#3288).
 
 1.4.3 (2024-12-02)
