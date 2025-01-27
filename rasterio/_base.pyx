@@ -46,6 +46,7 @@ from rasterio.errors import (
 )
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
+from rasterio.serde import to_json
 from rasterio._path import _parse_path
 from rasterio import windows
 

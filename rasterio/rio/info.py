@@ -7,7 +7,14 @@ import click
 
 import rasterio
 from rasterio.rio import options
-from rasterio.transform import from_gcps
+from rasterio.transform import Affine, from_gcps
+from rasterio.serde import to_json
+
+
+@to_json.register(Affine)
+def _(obj):
+    """Convert an Affine (version 3) obj to a tuple."""
+    return obj._astuple
 
 
 @click.command(short_help="Print information about a data file.")
@@ -177,7 +184,11 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx, mask
                 else:
                     click.echo(info[meta_member])
             else:
-                click.echo(json.dumps(info, sort_keys=True, indent=indent))
+                click.echo(
+                    json.dumps(info, sort_keys=True, indent=indent, default=to_json)
+                )
 
         elif aspect == "tags":
-            click.echo(json.dumps(src.tags(ns=namespace), indent=indent))
+            click.echo(
+                json.dumps(src.tags(ns=namespace), indent=indent, default=to_json)
+            )

@@ -7,6 +7,7 @@ import pytest
 import rasterio
 from rasterio._err import CPLE_AppDefinedError
 from rasterio.errors import DatasetIOShapeError, RasterioIOError
+from rasterio.transform import Affine
 
 # Find out if we've got HDF support (needed below).
 try:
@@ -36,16 +37,13 @@ class ReaderContextTest(unittest.TestCase):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
                 s.transform,
-                (
+                Affine(
                     300.0379266750948,
                     0.0,
                     101985.0,
                     0.0,
                     -300.041782729805,
                     2826915.0,
-                    0,
-                    0,
-                    1.0,
                 ),
             )
             self.assertEqual(s.meta["crs"], s.crs)
@@ -62,16 +60,13 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.crs.to_epsg(), 32618)
         self.assertEqual(
             s.transform,
-            (
+            Affine(
                 300.0379266750948,
                 0.0,
                 101985.0,
                 0.0,
                 -300.041782729805,
                 2826915.0,
-                0,
-                0,
-                1.0,
             ),
         )
         self.assertEqual(
