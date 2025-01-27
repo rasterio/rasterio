@@ -15,11 +15,18 @@ from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
 from rasterio.transform import Affine
+from rasterio.serde import to_json
 from rasterio.warp import (
     reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
     aligned_target, calculate_default_transform as calcdt)
 
 logger = logging.getLogger(__name__)
+
+
+@to_json.register(Affine)
+def _(obj):
+    """Convert an Affine instance to a JSON serializable form."""
+    return obj._astuple
 
 
 @click.command(short_help='Warp a raster dataset.')
@@ -384,7 +391,7 @@ def warp(
                         out_kwargs['crs'] = src.crs.to_string()
 
                 click.echo("Output dataset profile:")
-                click.echo(json.dumps(dict(**out_kwargs), indent=2))
+                click.echo(json.dumps(dict(**out_kwargs), indent=2, default=to_json))
             else:
                 with rasterio.open(output, "w", **out_kwargs) as dst:
                     reproject(
