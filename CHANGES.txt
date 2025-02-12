@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Prevent instances of BufferedDatasetWriter from finalizing twice (#3308).
 - Add support for JSON serialization of affine 3.0 Affine arrays (#3299).
 - Parsing of snuggs expressions containing "is" has been fixed (#3288).
 

@@ -2412,8 +2412,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
             self._hds = exc_wrap_pointer(
-                GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, options))
+                GDALCreate(memdrv, "temp", self.width, self.height, self._count, gdal_dtype, options)
+            )
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -2467,6 +2467,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef GDALDriverH drv = NULL
         cdef GDALDatasetH temp = NULL
         cdef const char *fname = NULL
+
+        # Bail out immediately if the GDALDatasetH is NULL.
+        if self._hds == NULL:
+            return
 
         name_b = self.name.encode('utf-8')
         fname = name_b
