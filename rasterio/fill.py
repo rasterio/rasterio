@@ -69,4 +69,4 @@ def fillnodata(
 
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
-    return _fillnodata(image, mask, max_search_distance, smoothing_iterations)
+    return _fillnodata(image, mask, max_search_distance, smoothing_iterations, **filloptions)
