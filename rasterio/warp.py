@@ -382,7 +382,7 @@ def reproject(
                 (int(dst_count), int(dst_height), int(dst_width)), dtype=source.dtype
             )
             if masked:
-                destination = np.ma.masked_array(destination).filled(dst_nodata)
+                destination = np.ma.masked_array(destination)
 
     dest = _reproject(
         source,
