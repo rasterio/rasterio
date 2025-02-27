@@ -512,7 +512,7 @@ class AffineTransformer(TransformerBase):
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
-        self._transform_arr = np.array(affine_transform, dtype='float64').reshape(3, 3)
+        self._transform_arr = np.asarray(affine_transform, dtype='float64').reshape(3, 3)
 
     def _transform(self, xs, ys, zs, transform_direction):
         bi = np.broadcast(xs, ys)
