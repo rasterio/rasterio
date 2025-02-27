@@ -6,6 +6,7 @@ from math import ceil, floor
 import sys
 
 import click
+import numpy as np
 
 import rasterio
 from rasterio.crs import CRS
@@ -14,7 +15,7 @@ from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
-from rasterio.transform import Affine
+from rasterio.transform import Affine, rowcol
 from rasterio.warp import (
     reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
     aligned_target, calculate_default_transform as calcdt)
@@ -309,20 +310,14 @@ def warp(
 
             else:
                 dst_crs = src.crs
-                inv_transform = ~src.transform
                 eps = sys.float_info.epsilon
-                c1, r1 = inv_transform * (left + eps, top + eps)
-                c2, r2 = inv_transform * (right + eps, top + eps)
-                c3, r3 = inv_transform * (right + eps, bottom + eps)
-                c4, r4 = inv_transform * (left + eps, bottom + eps)
-                col1 = min(c1, c2, c3, c4)
-                col2 = max(c1, c2, c3, c4)
-                row1 = min(r1, r2, r3, r4)
-                row2 = max(r1, r2, r3, r4)
-                col1 = floor(col1)
-                col2 = ceil(col2)
-                row1 = floor(row1)
-                row2 = ceil(row2)
+                rows = np.array([top, top, bottom, bottom]) + eps
+                cols = np.array([left, right, right, left]) + eps
+                rows, cols = rowcol(src.transform, rows, cols)
+                col1 = floor(cols.min())
+                col2 = ceil(cols.max())
+                row1 = floor(rows.min())
+                row2 = ceil(rows.max())
                 px = (right - left) / (col2 - col1)
                 py = (top - bottom) / (row2 - row1)
                 res = max(px, py)
