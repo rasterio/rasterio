@@ -1405,6 +1405,51 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
     assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
 
+@pytest.mark.parametrize(
+    "test3d,count_nonzero",
+    [
+        pytest.param(
+            True,
+            1309625,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+        pytest.param(
+            False,
+            437686,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
+            ),
+        ),
+    ]
+)
+def test_reproject_masked_no_mask(test3d, count_nonzero, path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            source = src.read(masked=True)
+        else:
+            source = src.read(1, masked=True)
+
+    # Fill in the masked values:
+    source = np.ma.masked_array(source.filled(), fill_value=source.fill_value)
+    assert source.mask is np.ma.nomask
+
+    out = np.empty(source.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert source.shape == out.shape
+    assert np.count_nonzero(out[out != 99]) == count_nonzero
+    assert not np.ma.is_masked(out)
+
+
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling_alpha(method):
     """Reprojection of a source with alpha band succeeds"""

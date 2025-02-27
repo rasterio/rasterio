@@ -378,7 +378,14 @@ def _reproject(
             src_bidx = range(1, src_count + 1)
 
             if hasattr(source, "mask"):
-                mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
+                if source.mask is np.ma.nomask:
+                    if source.ndim == 2:
+                        mask_shape = source.shape
+                    else:
+                        mask_shape = source.shape[1:]
+                    mask = np.full(mask_shape, np.uint8(255))
+                else:
+                    mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
                 source_arr = np.concatenate((source.data, [mask]))
                 src_alpha = src_alpha or source_arr.shape[0]
             else:
