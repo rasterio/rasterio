@@ -468,8 +468,8 @@ def geometry_window(
         This parameter is ignored since version 1.2.1. A deprecation
         warning will be emitted in 1.3.0.
     pixel_precision : int or float, optional
-        Number of places of rounding precision or absolute precision for
-        evaluating bounds of shapes.
+        This parameter is ignored since version 1.4.4. A deprecation
+        warning will be emitted.
     boundless : bool, optional
         Whether to allow a boundless window or not.
 
@@ -478,6 +478,19 @@ def geometry_window(
     rasterio.windows.Window
 
     """
+    if north_up is not None:
+        warnings.warn("The north_up parameter is unused, deprecated, and will be removed in the future.",
+                       RasterioDeprecationWarning
+        )
+    if rotated is not None:
+        warnings.warn("The rotated parameter is unused, deprecated, and will be removed in the future.",
+                      RasterioDeprecationWarning
+        )
+    if pixel_precision is not None:
+        warnings.warn("The pixel_precision paramter is unused, deprecated, and will be removed in the future.",
+                      RasterioDeprecationWarning
+        )
+
     shape_windows = []
     for shape in shapes:
         shape_bounds = bounds(shape)
