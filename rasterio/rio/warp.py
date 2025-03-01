@@ -2,8 +2,7 @@
 
 import json
 import logging
-from math import ceil, floor
-import sys
+from math import ceil
 
 import click
 import numpy as np
