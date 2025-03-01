@@ -310,10 +310,9 @@ def warp(
 
             else:
                 dst_crs = src.crs
-                eps = sys.float_info.epsilon
-                rows = np.array([top, top, bottom, bottom]) + eps
-                cols = np.array([left, right, right, left]) + eps
-                rows, cols = rowcol(src.transform, rows, cols)
+                rows = np.array([top, top, bottom, bottom])
+                cols = np.array([left, right, right, left])
+                rows, cols = rowcol(src.transform, rows, cols, op=float)
                 col1 = cols.min()
                 col2 = cols.max()
                 row1 = rows.min()
