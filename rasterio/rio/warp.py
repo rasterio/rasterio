@@ -314,10 +314,10 @@ def warp(
                 rows = np.array([top, top, bottom, bottom]) + eps
                 cols = np.array([left, right, right, left]) + eps
                 rows, cols = rowcol(src.transform, rows, cols)
-                col1 = floor(cols.min())
-                col2 = ceil(cols.max())
-                row1 = floor(rows.min())
-                row2 = ceil(rows.max())
+                col1 = cols.min()
+                col2 = cols.max()
+                row1 = rows.min()
+                row2 = rows.max()
                 px = (right - left) / (col2 - col1)
                 py = (top - bottom) / (row2 - row1)
                 res = max(px, py)
