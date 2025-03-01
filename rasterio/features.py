@@ -14,7 +14,7 @@ from rasterio._base import DatasetBase
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
-from rasterio.errors import ShapeSkipWarning
+from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
