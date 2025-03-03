@@ -500,7 +500,6 @@ def geometry_window(
             shape_bounds = bounds(shape, north_up=False)
             _window = windows.from_bounds(*shape_bounds, transform=dataset.transform)
 
-
         # pad window
         col_off = math.floor(_window.col_off - pad_x)
         row_off = math.floor(_window.row_off - pad_y)
