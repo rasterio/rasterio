@@ -2,7 +2,7 @@
 
 import json
 import logging
-from math import ceil
+from math import ceil, floor
 
 import click
 import numpy as np
@@ -312,10 +312,10 @@ def warp(
                 rows = np.array([top, top, bottom, bottom])
                 cols = np.array([left, right, right, left])
                 rows, cols = rowcol(src.transform, rows, cols, op=float)
-                col1 = cols.min()
-                col2 = cols.max()
-                row1 = rows.min()
-                row2 = rows.max()
+                col1 = floor(cols.min())
+                col2 = ceil(cols.max())
+                row1 = floor(rows.min())
+                row2 = ceil(rows.max())
                 px = (right - left) / (col2 - col1)
                 py = (top - bottom) / (row2 - row1)
                 res = max(px, py)
