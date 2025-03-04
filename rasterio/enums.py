@@ -67,6 +67,38 @@ class ColorInterp(IntEnum):
     sar_p = 37
 
 
+class RATFieldType(IntEnum):
+    """Raster attribute table field type"""
+    Integer = 0
+    Real = 1
+    String = 2
+
+class RATFieldUsage(IntEnum):
+    """Raster attribute table field usage"""
+    Generic = 0
+    PixelCount = 1
+    Name = 2
+    Min = 3
+    Max = 4 
+    MinMax = 5
+    Red = 6
+    Green = 7
+    Blue = 8
+    Alpha = 9
+    RedMin = 10
+    GreenMin = 11
+    BlueMin = 12
+    AlphaMin = 13
+    RedMax = 14
+    GreenMax = 15
+    BlueMax = 16
+    AlphaMax = 17
+    MaxCount = 18
+
+class RATTableType(IntEnum):
+    Thematic = 0
+    Athematic = 1
+
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
     
