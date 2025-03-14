@@ -485,8 +485,8 @@ cdef extern from "gdal.h" nogil:
     int GDALSetRasterColorInterpretation(GDALRasterBandH band, GDALColorInterp)
     GDALRasterAttributeTableH GDALGetDefaultRAT(GDALRasterBandH band)
     CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
-    GDALRasterAttributeTableH GDALCreateRasterAttributeTable()
-    CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
+    GDALRasterAttributeTableH *GDALCreateRasterAttributeTable()
+    void GDALDestroyRasterAttributeTable(GDALRasterAttributeTableH hRAT)
     CPLErr GDALRATCreateColumn(GDALRasterAttributeTableH hRAT,
                                const char * pszFieldName,
                                GDALRATFieldType eFieldType,
@@ -503,6 +503,7 @@ cdef extern from "gdal.h" nogil:
     GDALRATFieldUsage GDALRATGetUsageOfCol(GDALRasterAttributeTableH hRAT, int iCol)
     CPLErr GDALRATSetTableType(GDALRasterAttributeTableH hRAT, GDALRATTableType elnTableType)
     GDALRATTableType GDALRATGetTableType(GDALRasterAttributeTableH hRAT)
+    CPLErr GDALRATValuesIOAsInteger(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, int * pnData )
     const char *GDALRATGetNameOfCol(void *hRat, int col)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)
