@@ -16,6 +16,7 @@ import numpy as np
 
 from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
+
 from rasterio._env import catch_errors
 from rasterio._err import (
     GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
@@ -46,6 +47,7 @@ from rasterio.env import Env, GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
+from rasterio._rat cimport GDALRasterAttributeTableWrapper, RATReader
 
 cimport numpy as np
 
@@ -976,7 +978,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         return out
 
-    def read_rat(self, bidx):
+    def _read_rat(self, bidx, clone=False):
         """Read a raster attribute table (rat) for a band from the dataset.
 
         Parameters
@@ -1005,54 +1007,22 @@ cdef class DatasetReaderBase(DatasetBase):
         """
 
         cdef GDALRasterBandH band = NULL
-        cdef GDALRasterAttributeTableH rat = NULL
-        cdef int r, c
+        cdef GDALRasterAttributeTableH hRat = NULL
 
         band = self.band(bidx)
-        rat = GDALGetDefaultRAT(band)
+        hRat = GDALGetDefaultRAT(band)
 
-        if rat == NULL:
-            raise ValueError("NULL raster attribute table")
+        if hRat == NULL:
+            raise ValueError("No raster attribute table found for band {}".format(bidx))
         
-        row_count = GDALRATGetRowCount(rat)
-        col_count = GDALRATGetColumnCount(rat)
+        count = GDALRATGetColumnCount(hRat)
+        print(count)
 
-        retval = {}
-        retuse = {}
-
-        for c in range(col_count):
-            col_name = GDALRATGetNameOfCol(rat, c).decode('utf-8')
-            col_type = GDALRATGetTypeOfCol(rat, c)
-            col_use  = GDALRATGetUsageOfCol(rat, c)
-
-            if col_type == GFT_Integer:
-                values = np.array(
-                    [GDALRATGetValueAsInt(rat, r, c) for r in range(row_count)],
-                    dtype=np.int32
-                )
-            elif col_type == GFT_Real:
-                values = np.array(
-                    [GDALRATGetValueAsDouble(rat, r, c) for r in range(row_count)],
-                    dtype=np.float64
-                )
-            elif col_type == GFT_String:
-                values = [GDALRATGetValueAsString(rat, r, c) for r in range(row_count)]
-
-                values = np.array(
-                    values,
-                    dtype='str'
-                )
-
-            else:
-                raise ValueError(f'Unknown column type {col_type}')
-
-
-            retval[col_name] = values
-            retuse[col_name] = RATFieldUsage(col_use)
-
-        table_type = GDALRATGetTableType(rat)
-
-        return retval, retuse, RATTableType(table_type)
+        rat = RATReader()
+        rat.read(hRat, clone=clone)
+        c = rat._get_column_count()
+        print(c)
+        return rat
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):

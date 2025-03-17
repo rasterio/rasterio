@@ -328,6 +328,7 @@ cdef class DatasetBase:
         self._gcps = None
         self._rpcs = None
         self._read = False
+        self._read_rat = False
 
         self._set_attrs_from_dataset_handle()
         self._env = ExitStack()
@@ -1500,6 +1501,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         transform = exc_wrap_pointer(transform)
         # OCTTransform() returns TRUE/FALSE contrary to most GDAL API functions
         exc_wrap_int(OCTTransform(transform, n, x, y, z) == 0)
+    except:
+        pass
     else:
         res_xs = [0]*n
         res_ys = [0]*n
@@ -1524,7 +1527,6 @@ def _can_create_osr(crs):
     """Evaluate if a valid OGRSpatialReference can be created from crs.
 
     Specifically, it must not be None or an empty dict or string.
-
     Parameters
     ----------
     crs: Source coordinate reference system, in rasterio dict format.

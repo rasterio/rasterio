@@ -486,6 +486,7 @@ cdef extern from "gdal.h" nogil:
     GDALRasterAttributeTableH GDALGetDefaultRAT(GDALRasterBandH band)
     CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
     GDALRasterAttributeTableH *GDALCreateRasterAttributeTable()
+    GDALRasterAttributeTableH GDALRATClone(const GDALRasterAttributeTableH hRAT)
     void GDALDestroyRasterAttributeTable(GDALRasterAttributeTableH hRAT)
     CPLErr GDALRATCreateColumn(GDALRasterAttributeTableH hRAT,
                                const char * pszFieldName,

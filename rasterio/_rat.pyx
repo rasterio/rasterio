@@ -1,33 +1,47 @@
 import numpy as np
 cimport numpy as np
 
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
+
 cdef class GDALRasterAttributeTableWrapper:
 
     def __cinit__(self):
-        self._hRAT = GDALCreateRasterAttributeTable()
+        self._hRAT = NULL
         if self._hRAT == NULL:
-            raise MemoryError("Failed to create GDALRasterAttributeTable")
+            print("Initialized to NULL")
 
     def __dealloc__(self):
         if self._hRAT != NULL:
             GDALDestroyRasterAttributeTable(self._hRAT)
 
-    def get_column_count(self):
+    cdef read(self, GDALRasterAttributeTableH rat):
+        self._hRAT = rat
+        if self._hRAT == NULL:
+            print("Read failed, RAT is NULL")
+        else:
+            print("Read successful, RAT is not NULL")
+
+    cdef _get_column_count(self):
+        print('Getting column count')
         if self._hRAT == NULL:
             raise ValueError("Raster attribute table is NULL")
-        
-        cdef int count = GDALRATGetColumnCount(self._hRAT)
+        count =  exc_wrap_int(GDALRATGetColumnCount(self._hRAT))
+        print(f"Column count: {count}")
         return count
     
-    def get_row_count(self):
+    def get_column_count(self):
+        print("get_column_count() called")
+        count = self._get_column_count()
+        print(f"get_column_count() returning {count}")
+        return count
+
+    cdef get_row_count(self):
         if self._hRAT == NULL:
             raise ValueError("Raster attribute table is NULL")
-        
         cdef int count = GDALRATGetRowCount(self._hRAT)
         return count
 
     cdef _get_column_index(self, const char * name):
-        
         for i in range(self.get_column_count()):
             if GDALRATGetNameOfCol(self._hRAT, i) == name:
                 return i
@@ -61,7 +75,6 @@ cdef class GDALRasterAttributeTableWrapper:
             row_end
         )
 
-
     cdef add_column(
         self,
         const char * column_name,
@@ -88,29 +101,35 @@ cdef class GDALRasterAttributeTableWrapper:
             row_end,
             values
         )	
-    
-#    def get_column(self, index):
 
-#        if isinstance(index, str):
-#            index = self._get_column_index(index)
-#        if isinstance(index, int):
-#            if index < 0 or index >= self.get_column_count():
-#                raise IndexError("Column index out of range")
-#        else:
-#            raise TypeError("Index must be an integer or string")
+cdef class RATReader:
 
-#        values = np.ndarray(
-#            shape=(self.get_row_count(),),
-#            dtype=np.int32,
-#        )
-#        GDALRATValuesIOAsInteger(
-#            self._hRAT,
-#            GF_Read,
-#            index,
-#            0,
-#            self.get_row_count(),
-#            values
-#        )
-#        return values
+    def __cinit__(self):
+        self.hRAT = NULL
 
+    cdef GDALRasterAttributeTableH handle(self) except NULL:
+        if self.hRAT == NULL:
+            raise ValueError("Raster attribute table is NULL")
+        else:
+            return self.hRAT
 
+    cdef void read(self, GDALRasterAttributeTableH rat, bint clone):
+
+        if clone:
+            self.hRAT = GDALRATClone(rat)
+        else:
+            self.hRAT = rat
+
+        if self.hRAT == NULL:
+            raise ValueError("RAT handle failed to load")
+
+    cdef int _get_column_count(self):
+        print('Getting column count')
+        cdef int count = GDALRATGetColumnCount(self.handle())
+        print(f"Column count: {count}")
+        return count
+
+    def get_column_count(self):
+        print("RATReader get_column_count() called")
+        cdef int count = self._get_column_count()
+        return(count)
