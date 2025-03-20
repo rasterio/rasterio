@@ -87,7 +87,7 @@ ignore/
 MANIFEST
 .ipynb_checkpoints
 .pytest_cache
-# *.ipynb
+*.ipynb
 mprofile*.dat
 memray-*
 issue????.py
