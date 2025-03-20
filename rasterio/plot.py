@@ -58,7 +58,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     transform : Affine, optional
         Defines the affine transform if source is an array
     percent_range: tuple, optional
-        percent_range[0], the minimum values (cumulative percentage) of the histogram for histogram streching, 
+        percent_range[0], the minimum value (cumulative percentage) of the histogram for histogram streching, 
         percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram streching
         default percent_range is set to (2, 98).
     adjust : bool
