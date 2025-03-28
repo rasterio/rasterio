@@ -35,6 +35,8 @@ from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio._path import _parse_path
 from rasterio import windows
 
+from rasterio._rat cimport RATBase
+
 cimport cython
 
 include "gdal.pxi"
@@ -1328,6 +1330,50 @@ cdef class DatasetBase:
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
 
         return retval
+
+    def rat(self, bidx, clone=False):
+        """Read a raster attribute table (rat) for a band from the dataset.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band whose raster attribute table will be returned.
+            Band index starts at 1.
+
+        Returns
+        -------
+        dict
+            Mapping of column name to a numpy array of column values
+        dict
+            Mapping of column name to field usage, and a table type enum.
+        GDALRATTableType.<enum>
+            Raster attribute table type (thematic or athematic)
+
+        Raises
+        ------
+        ValueError
+            If no raster attribute table is found for the specified band.
+        ValueError
+            If a column data type is not understood.
+        IndexError
+            If no band exists for the provided index.
+        """
+
+        cdef GDALRasterBandH band = NULL
+        cdef GDALRasterAttributeTableH hRat = NULL
+
+        band = self.band(bidx)
+        hRat = GDALGetDefaultRAT(band)
+
+        if hRat == NULL:
+            raise ValueError("No raster attribute table found for band {}".format(bidx))
+        
+        count = GDALRATGetColumnCount(hRat)
+        print(count)
+
+        rat = RATBase()
+        rat._clone(hRat)
+        return rat
 
     def overviews(self, bidx):
         cdef GDALRasterBandH ovrband = NULL

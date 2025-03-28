@@ -47,7 +47,6 @@ from rasterio.env import Env, GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
-from rasterio._rat cimport GDALRasterAttributeTableWrapper, RATReader
 
 cimport numpy as np
 
@@ -978,51 +977,6 @@ cdef class DatasetReaderBase(DatasetBase):
 
         return out
 
-    def _read_rat(self, bidx, clone=False):
-        """Read a raster attribute table (rat) for a band from the dataset.
-
-        Parameters
-        ----------
-        bidx : int
-            Index of the band whose raster attribute table will be returned.
-            Band index starts at 1.
-
-        Returns
-        -------
-        dict
-            Mapping of column name to a numpy array of column values
-        dict
-            Mapping of column name to field usage, and a table type enum.
-        GDALRATTableType.<enum>
-            Raster attribute table type (thematic or athematic)
-
-        Raises
-        ------
-        ValueError
-            If no raster attribute table is found for the specified band.
-        ValueError
-            If a column data type is not understood.
-        IndexError
-            If no band exists for the provided index.
-        """
-
-        cdef GDALRasterBandH band = NULL
-        cdef GDALRasterAttributeTableH hRat = NULL
-
-        band = self.band(bidx)
-        hRat = GDALGetDefaultRAT(band)
-
-        if hRat == NULL:
-            raise ValueError("No raster attribute table found for band {}".format(bidx))
-        
-        count = GDALRATGetColumnCount(hRat)
-        print(count)
-
-        rat = RATReader()
-        rat.read(hRat, clone=clone)
-        c = rat._get_column_count()
-        print(c)
-        return rat
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):
@@ -2081,98 +2035,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         finally:
             GDALDestroyColorTable(hTable)
-
-    def write_rat(self, bidx, values, usages=None, table_type=RATTableType.Thematic):
-        """Write a raster attribute table (rat) for a band to the dataset.
-
-        A raster attribute table contains tabular data describing the raster
-        band such as category names, category descriptions, statistics,
-        and color.
-
-        Parameters
-        ----------
-        bidx : int
-            Index of the band (starting with 1).
-        values : dict
-            Dictionary of column data with column name as the key and a value 
-            as a numpy array.
-        usages : dict. Optional, defaults None
-            Dictionary mapping the column name (key) to the field usage (value)
-            enums.RATFieldUsage.<enum>
-            If no dictionary is passed or if a column is missing, a Generic field
-            usage is assigned.
-        table_type: enums.GDALRATTableType.<enum>
-            Set the raster attribute table typ to Thematic or Athematic
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            When an unsupported data type is used in the value dict
-            When an unrecognized field usage is passed to the usages dict
-            
-
-        """
-
-        cdef GDALRasterAttributeTableH hRAT = NULL
-        cdef GDALRasterBandH hBand = NULL
-
-        hBand = self.band(bidx)
-
-        hRAT = GDALCreateRasterAttributeTable()
-
-        if usages is None:
-            usages = {}
-
-        for icol, (col_name, vals) in enumerate(values.items()):
-            
-            # Ensure column name is utf-8 encoded
-            if isinstance(col_name, bytes):
-                col_name_utf = col_name
-            elif isinstance(col_name, str):
-                col_name_utf = col_name.encode('utf-8') 
-
-            dtype = vals.dtype
-
-            if np.issubdtype(dtype, np.integer):
-                col_type = GFT_Integer
-            elif np.issubdtype(dtype, np.double):
-                col_type = GFT_Real
-            elif np.issubdtype(dtype, object) | np.issubdtype(dtype, np.str_):
-                # Strings must be converted to bytes to pass to gdal
-                vals = vals.astype('S')
-                col_type = GFT_String
-            elif np.issubdtype(dtype, np.bytes_):
-                col_type = GFT_String
-            else:
-                raise ValueError(f'Illegal column type {vals.dtype} for column {col_name_utf}')
-
-            usage = usages.get(col_name, RATFieldUsage.Generic)
-            try:
-                RATFieldUsage(usage)
-            except ValueError:
-                raise ValueError(f'Field usage {usage} for column {col_name} is not valid')
-
-            GDALRATCreateColumn(
-                hRAT,
-                col_name_utf,
-                col_type,
-                usage
-            )
-
-            for irow, value in enumerate(vals):
-                if col_type == GFT_Integer:
-                    GDALRATSetValueAsInt(hRAT, irow, icol, value)
-                if col_type == GFT_Real:
-                    GDALRATSetValueAsDouble(hRAT, irow, icol, value)
-                if col_type == GFT_String:
-                    GDALRATSetValueAsString(hRAT, irow, icol, value)
-
-        GDALRATSetTableType(hRAT, table_type)
-        GDALSetDefaultRAT(hBand, hRAT)
 
     def write_mask(self, mask_array, window=None):
         """Write to the dataset's band mask.

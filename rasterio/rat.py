@@ -2,7 +2,7 @@
 import numpy as np
 
 from rasterio._rat import (
-    GDALRasterAttributeTableWrapper,
+    RATBase,
 )
 
 from rasterio.enums import (
@@ -11,7 +11,6 @@ from rasterio.enums import (
     RATFieldUsage
 )
 
-from rasterio.enums import RATFieldUsage
 
 numpy_types = {
     RATFieldType.Integer: np.int32,
@@ -45,7 +44,7 @@ class Column:
         self.values[index] = value
     
 
-class Table(GDALRasterAttributeTableWrapper):
+class Table(RATBase):
     """Raster attribute table.
 
     Parameters
@@ -62,7 +61,7 @@ class Table(GDALRasterAttributeTableWrapper):
         return self.columns[index]
     
     def add_column(self, column: Column):
-        self._add_column_wrapper(
+        self._add_column(
             column.name,
             column.field_type,
             column.usage,
