@@ -53,20 +53,6 @@ class Table(RATBase):
         A GDAL raster attribute table.
     """
 
-    def __init__(self, *args):
+    def __init__(self):
         super().__init__()
-
-    def __getitem__(self, index):
-
-        return self.columns[index]
-    
-    def add_column(self, column: Column):
-        self._add_column(
-            column.name,
-            column.field_type,
-            column.usage,
-            column.values,
-            0,
-            len(column.values)
-        )
-
+        self._new_hRAT()

@@ -1331,32 +1331,9 @@ cdef class DatasetBase:
 
         return retval
 
-    def rat(self, bidx, clone=False):
+    def rat(self, bidx: int, clone: bool=True):
         """Read a raster attribute table (rat) for a band from the dataset.
 
-        Parameters
-        ----------
-        bidx : int
-            Index of the band whose raster attribute table will be returned.
-            Band index starts at 1.
-
-        Returns
-        -------
-        dict
-            Mapping of column name to a numpy array of column values
-        dict
-            Mapping of column name to field usage, and a table type enum.
-        GDALRATTableType.<enum>
-            Raster attribute table type (thematic or athematic)
-
-        Raises
-        ------
-        ValueError
-            If no raster attribute table is found for the specified band.
-        ValueError
-            If a column data type is not understood.
-        IndexError
-            If no band exists for the provided index.
         """
 
         cdef GDALRasterBandH band = NULL
@@ -1368,12 +1345,15 @@ cdef class DatasetBase:
         if hRat == NULL:
             raise ValueError("No raster attribute table found for band {}".format(bidx))
         
-        count = GDALRATGetColumnCount(hRat)
-        print(count)
-
         rat = RATBase()
         rat._clone(hRat)
         return rat
+    
+    def write_rat(self, bidx: int, rat: RATBase):
+
+        cdef GDALRasterBandH band = NULL
+        band = self.band(bidx)
+        GDALSetDefaultRAT(band, rat._hRAT)
 
     def overviews(self, bidx):
         cdef GDALRasterBandH ovrband = NULL

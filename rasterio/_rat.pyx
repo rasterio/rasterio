@@ -3,13 +3,6 @@ cimport numpy as np
 
 from rasterio.rat import (
     numpy_types,
-    Column
-)
-
-from rasterio.enums import (
-    RATFieldType,
-    RATTableType,
-    RATFieldUsage
 )
 
 cdef class RATBase:
@@ -27,30 +20,29 @@ cdef class RATBase:
 
     def __getitem__(self, ix):
 
-        if isinstance(ix, str):
+        if isinstance(ix, (str, bytes, int)):
             # Single column by name
-            column_indexes = [ix]
+            ix = [ix]
 
-        if isinstance(ix, int):
-            # Single column by index
-            column_indexes = [ix]
-
-        if isinstance(ix, slice):
+        elif isinstance(ix, slice):
             # Slice of columns
-            column_indexes= list(
+            ix = list(
                 range( *ix.indices( self._get_column_count()))
             )
-
-        if hasattr(ix, '__iter__'):
+        elif not isinstance(ix, (list, tuple, set)):
             # Collection of columns
-            column_indexes = []
-            for index in ix:
-                if isinstance(index, str):
-                    column_indexes.append(self._get_column_index(index))
-                elif isinstance(index, int):
-                    column_indexes.append(index)
-                else:
-                    raise AttributeError(f'Column indexes must be integers or string, got {type(index)}')
+            raise AttributeError(f"Index {ix} not recognized")
+
+        column_indexes = []
+        for index in ix:
+            if isinstance(index, str):
+                column_indexes.append(self._get_column_index(index))
+            elif isinstance(index, bytes):
+                column_indexes.append(self._get_column_index(index.decode()))
+            elif isinstance(index, int):
+                column_indexes.append(index)
+            else:
+                raise AttributeError(f'Column indexes must be integers or string, got {type(index)}')
         
         column_names = [self._get_column_name(i).decode('utf-8') for i in column_indexes]
 
@@ -64,39 +56,29 @@ cdef class RATBase:
 
         return retvalue
 
-    def __setitem__(self, ix, col: Column):
+    def __setitem__(self, ix, col):
 
-        if isinstance(ix, str):
-            index = self._get_column_index(ix)
-        elif isinstance(ix, int):
-            index = ix
-
-        # Add field if it doesn't already exist
-        if 0 < ix > self._get_column_count():
-            index = self._create_column(
-                col.name,
+        if 0 > ix < self._get_column_count():
+            print('DEBUG: CREATING COLUMN')
+            ix = self._create_column(
+                col.name.encode('utf-8'),
                 col.field_type,
                 col.usage
             )
-        else:
-            index = self._get_column
         
+        cdef int *val = <int*>np.PyArray_DATA(col.values)
+        array_len = len(col.values)
 
-        if col.field_type == RATFieldType.Integer:
-            GDALRATValuesIOAsInteger(
-                self._hRAT,
-                GF_Read,
-                index,
-                0,
-                len(col.values),
-                <int *>np.PyArray_DATA(col.values)
-            )
+        assert array_len == self._get_row_count()
 
-
-
-        else:
-            raise NotImplementedError
-
+        GDALRATValuesIOAsInteger(
+            self._hRAT,
+            GF_Write,
+            ix,
+            0,
+            array_len,
+            val
+        )
 
     cdef void _clone(self, GDALRasterAttributeTableH rat):
 
@@ -126,8 +108,11 @@ cdef class RATBase:
             raise ValueError("Raster attribute table is NULL")
         return GDALRATGetColumnCount(self._hRAT)
 
-    cdef int _get_column_index(self, const char * name):
-        for i in range(self.get_column_count()):
+    cdef int _get_column_index(self, str name):
+
+        cdef int i
+
+        for i in range(self._get_column_count()):
             if GDALRATGetNameOfCol(self._hRAT, i) == name:
                 return i
         return -1
@@ -141,7 +126,6 @@ cdef class RATBase:
         
         return GDALRATGetTypeOfCol(self._hRAT, index)
         
-
     cdef int _create_column(self,
         const char * column_name,
         const GDALRATFieldType column_type,
@@ -181,6 +165,8 @@ cdef class RATBase:
         CPLFree(papszStringList)
         return arr
 
+    def _new_hRAT(self):
+        self._create()
 
     def _get_column(
         self,
@@ -190,13 +176,16 @@ cdef class RATBase:
 
         if isinstance(column_index, str):
             # Convert from column name to integer index
+            column_index = column_index.encode('utf-8')
+        
+        if isinstance(column_index, bytes):
             column_index = self._get_column_index(column_index)
         elif isinstance(column_index, int):
             pass
         else:
             raise AttributeError(f'column_index must for str or int, got {type(column_index)}')
 
-        if (column_index+1) > self._get_column_count():
+        if 0 > column_index > self._get_column_count():
             raise AttributeError(f'Column with index {column_index} does not exist')
         # Return a subset of the column if specified
         start_row = start_row or 0
@@ -240,36 +229,31 @@ cdef class RATBase:
         
         return retval
 
-
     def shape(self):
         return self._get_row_count(), self._get_column_count()
+    
+    def columns(self):
+        
+        retval = []
+        for ix in range(self._get_column_count()):
+            retval.append(self._get_column_name(ix).decode())
+        
+        return retval
+    
+    def TEST(self, arr):
 
-    def _write_column(
-        self,
-        values: np.ndarray,
-        column_name: str=None,
-        column_index=None,
-        column_usage=None,
-        column_type=None):
+        # cdef int *val = [1,1,1,1,1,1,1,1,1,1,1,1]
 
-        if isinstance(column_name, str):
-            column_name = column_name.encode('utf-8')
-        elif isinstance(column_name, bytes):
-            pass
-        else:
-            raise TypeError("Column name must be a string or bytes")
+        # cdef int *val = <int*>np.PyArray_DATA(np.array([2,2,2,2,2,2,2,2,2,2,2,2]))
+        cdef int *val = <int*>np.PyArray_DATA(arr)
+        
 
-        cdef char * c_column_name = column_name
-        cdef int *buf = <int *>np.PyArray_DATA(values)
+        GDALRATValuesIOAsInteger(
+            self._hRAT,
+            GF_Write,
+            0,
+            0,
+            12,
+            val
+        )
 
-        if column_type == GFT_Integer:
-            GDALRATValuesIOAsInteger(
-                self._hRAT,
-                GF_Write,
-                column_index,
-                start_row,
-                end_row,
-                <int *>np.PyArray_DATA(retval)
-            )
-        else:
-            raise NotImplementedError

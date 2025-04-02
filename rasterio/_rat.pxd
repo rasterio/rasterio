@@ -6,7 +6,7 @@ cdef class RATBase:
     cdef void _create(self)
     cdef int _get_column_count(self)
     cdef int _get_row_count(self)
-    cdef int _get_column_index(self, const char * name)
+    cdef int _get_column_index(self, str name)
     cdef char * _get_column_name(self, const int index)
     cdef GDALRATFieldType _get_column_type(self, int index)
     cdef _get_string_column( self, int column_index, int start_row, int end_row)

@@ -502,6 +502,7 @@ cdef extern from "gdal.h" nogil:
     CPLErr GDALRATValuesIOAsInteger(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, int * pnData )
     CPLErr GDALRATValuesIOAsDouble(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, double * pdfData )
     CPLErr GDALRATValuesIOAsString(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, char ** papszStrList )
+    void GDALRATSetValueAsInt(GDALRasterAttributeTableH hRAT, int iRow, int iField, int nValue )
     const char *GDALRATGetNameOfCol(void *hRat, int col)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)
