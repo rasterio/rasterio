@@ -221,6 +221,7 @@ def _reproject(
         src_alpha=0,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
+        tolerance=0.125,
         num_threads=1,
         warp_mem_limit=0,
         working_data_type=0,
@@ -294,6 +295,10 @@ def _reproject(
     init_dest_nodata : bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
+    tolerance : float, optional
+        The maximum error tolerance in input pixels when
+        approximating the warp transformation. Default: 0.125,
+        or one-eigth of a pixel.
     num_threads : int
         Number of worker threads.
     warp_mem_limit : int, optional
@@ -321,7 +326,6 @@ def _reproject(
     cdef char **warp_extras = NULL
     cdef const char* pszWarpThread = NULL
     cdef int i
-    cdef double tolerance = 0.125
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
