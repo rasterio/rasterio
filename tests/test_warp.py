@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import sys
 
 from affine import Affine
@@ -36,7 +37,11 @@ from . import rangehttpserver
 from .conftest import gdal_version
 
 log = logging.getLogger(__name__)
-gdal_version_info = tuple(int(x) for x in rasterio.gdal_version().split("."))
+
+# Make a gdal version tuple.
+version_name = rasterio.gdal_version()
+version_name = re.split(r"[a-z]", version_name)[0]
+gdal_version_info = tuple(int(x) for x in version_name.split("."))
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
 
