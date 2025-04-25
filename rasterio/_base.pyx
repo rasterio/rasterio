@@ -330,7 +330,6 @@ cdef class DatasetBase:
         self._gcps = None
         self._rpcs = None
         self._read = False
-        self._read_rat = False
 
         self._set_attrs_from_dataset_handle()
         self._env = ExitStack()
@@ -1331,29 +1330,23 @@ cdef class DatasetBase:
 
         return retval
 
-    def rat(self, bidx: int, clone: bool=True):
+    def rat(self, bidx: int):
         """Read a raster attribute table (rat) for a band from the dataset.
 
         """
 
-        cdef GDALRasterBandH band = NULL
-        cdef GDALRasterAttributeTableH hRat = NULL
+        cdef GDALRasterBandH hBand = NULL
+        cdef GDALRasterAttributeTableH hRAT = NULL
 
-        band = self.band(bidx)
-        hRat = GDALGetDefaultRAT(band)
+        hBand = self.band(bidx)
+        hRAT = GDALGetDefaultRAT(hBand)
 
-        if hRat == NULL:
+        if hRAT == NULL:
             raise ValueError("No raster attribute table found for band {}".format(bidx))
-        
-        rat = RATBase()
-        rat._clone(hRat)
-        return rat
-    
-    def write_rat(self, bidx: int, rat: RATBase):
 
-        cdef GDALRasterBandH band = NULL
-        band = self.band(bidx)
-        GDALSetDefaultRAT(band, rat._hRAT)
+        rat = RATBase.clone(hRAT)
+
+        return rat
 
     def overviews(self, bidx):
         cdef GDALRasterBandH ovrband = NULL

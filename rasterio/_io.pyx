@@ -25,7 +25,6 @@ from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.enums import (
     ColorInterp, MaskFlags, Resampling,
-    RATTableType, RATFieldUsage
 )
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
@@ -47,6 +46,8 @@ from rasterio.env import Env, GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
+
+from rasterio._rat cimport RATBase
 
 cimport numpy as np
 

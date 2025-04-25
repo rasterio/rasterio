@@ -2,7 +2,7 @@
 import numpy as np
 
 from rasterio._rat import (
-    RATBase,
+    RATBase
 )
 
 from rasterio.enums import (
@@ -42,17 +42,10 @@ class Column:
 
     def __setitem__(self, index, value):
         self.values[index] = value
-    
 
 class Table(RATBase):
     """Raster attribute table.
-
-    Parameters
-    ----------
-    table : gdal.RasterAttributeTable
-        A GDAL raster attribute table.
     """
 
     def __init__(self):
-        super().__init__()
-        self._new_hRAT()
+        self._create()
