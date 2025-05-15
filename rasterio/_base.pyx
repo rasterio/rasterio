@@ -1,4 +1,4 @@
-# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 """Numpy-free base classes."""
 
@@ -984,9 +984,10 @@ cdef class DatasetBase:
     def compression(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
         if val:
-            # 'YCbCr JPEG' will be normalized to 'JPEG'
-            val = val.split(' ')[-1]
-            return Compression(val)
+            try:
+                return Compression(val)
+            except ValueError:
+                return val
         else:
             return None
 
@@ -1040,7 +1041,7 @@ cdef class DatasetBase:
         m.update(tiled=self.block_shapes and all(self.width != w for _, w in self.block_shapes))
 
         if self.compression:
-            m['compress'] = self.compression.name
+            m['compress'] = getattr(self.compression, "name", self.compression)
         if self.interleaving:
             m['interleave'] = self.interleaving.name
         if self.photometric:

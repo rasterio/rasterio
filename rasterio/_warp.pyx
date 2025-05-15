@@ -221,6 +221,7 @@ def _reproject(
         src_alpha=0,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
+        tolerance=0.125,
         num_threads=1,
         warp_mem_limit=0,
         working_data_type=0,
@@ -294,6 +295,10 @@ def _reproject(
     init_dest_nodata : bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
+    tolerance : float, optional
+        The maximum error tolerance in input pixels when
+        approximating the warp transformation. Default: 0.125,
+        or one-eigth of a pixel.
     num_threads : int
         Number of worker threads.
     warp_mem_limit : int, optional
@@ -321,7 +326,6 @@ def _reproject(
     cdef char **warp_extras = NULL
     cdef const char* pszWarpThread = NULL
     cdef int i
-    cdef double tolerance = 0.125
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
@@ -378,7 +382,14 @@ def _reproject(
             src_bidx = range(1, src_count + 1)
 
             if hasattr(source, "mask"):
-                mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
+                if source.mask is np.ma.nomask:
+                    if source.ndim == 2:
+                        mask_shape = source.shape
+                    else:
+                        mask_shape = source.shape[1:]
+                    mask = np.full(mask_shape, np.uint8(255))
+                else:
+                    mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
                 source_arr = np.concatenate((source.data, [mask]))
                 src_alpha = src_alpha or source_arr.shape[0]
             else:
@@ -1073,7 +1084,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 dst_alpha_band = bidx
 
         # Adding an alpha band when the source has one is trouble.
-        # It will result in suprisingly unmasked data. We will
+        # It will result in surprisingly unmasked data. We will
         # raise an exception instead.
 
         if add_alpha:
@@ -1392,7 +1403,7 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None,
 cdef double antimeridian_min(data):
     """
     Handles the case when longitude values cross the antimeridian
-    when calculating the minumum.
+    when calculating the minimum.
 
     Note: The data array must be in a linear ring.
 
@@ -1443,7 +1454,7 @@ cdef double antimeridian_min(data):
     the antimeridian was crossed.
 
     However, even though the spacing was even in the source projection, it isn't
-    guaranteed in the targed geographic projection. So, instead of 240, 200 is used
+    guaranteed in the target geographic projection. So, instead of 240, 200 is used
     as it significantly larger than 120 to be sure that the antimeridian was crossed
     but smalller than 240 to account for possible irregularities in distances
     when re-projecting. Also, 200 ensures latitudes are ignored for axis order handling.
@@ -1478,7 +1489,7 @@ cdef double antimeridian_min(data):
         # positive meridian side min
         if positive_meridian and data[iii] < positive_min:
             positive_min = data[iii]
-        # track genral min value
+        # track general min value
         if data[iii] < min_value:
             min_value = data[iii]
     if crossed_meridian_count == 2:
@@ -1494,7 +1505,7 @@ cdef double antimeridian_min(data):
 cdef double antimeridian_max(data):
     """
     Handles the case when longitude values cross the antimeridian
-    when calculating the minumum.
+    when calculating the minimum.
 
     Note: The data array must be in a linear ring.
 
@@ -1535,7 +1546,7 @@ cdef double antimeridian_max(data):
             and data[iii] != HUGE_VAL
         ):
             negative_max = data[iii]
-        # track genral max value
+        # track general max value
         if (data[iii] > max_value or max_value == HUGE_VAL) and data[iii] != HUGE_VAL:
             max_value = data[iii]
     if crossed_meridian_count == 2:

@@ -183,12 +183,12 @@ def clip(
             if "blockxsize" in out_kwargs and int(out_kwargs["blockxsize"]) > width:
                 del out_kwargs["blockxsize"]
                 logger.warning(
-                    "Blockxsize removed from creation options to accomodate small output width"
+                    "Blockxsize removed from creation options to accommodate small output width"
                 )
             if "blockysize" in out_kwargs and int(out_kwargs["blockysize"]) > height:
                 del out_kwargs["blockysize"]
                 logger.warning(
-                    "Blockysize removed from creation options to accomodate small output height"
+                    "Blockysize removed from creation options to accommodate small output height"
                 )
 
             with rasterio.open(output, "w", **out_kwargs) as out:

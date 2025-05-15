@@ -700,7 +700,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         log.debug("Boundless read: self.transform=%r, self.window_transform(window)=%r", self.transform, self.window_transform(window))
 
                         mask_vrt_doc = _boundless_vrt_doc(
-                            self, nodata=0,
+                            self, nodata=nodataval,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
                             transform=self.window_transform(window),

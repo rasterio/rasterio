@@ -411,7 +411,7 @@ class GSSession(Session):
     """Configures access to secured resources stored in Google Cloud Storage
     """
     def __init__(self, google_application_credentials=None):
-        """Create new Google Cloude Storage session
+        """Create new Google Cloud Storage session
 
         Parameters
         ----------
