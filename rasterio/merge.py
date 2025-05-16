@@ -11,9 +11,13 @@ import numbers
 import numpy as np
 
 import rasterio
-from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import MergeError, RasterioDeprecationWarning, RasterioError
+from rasterio.errors import (
+    MergeError,
+    RasterioDeprecationWarning,
+    RasterioError,
+    WindowError,
+)
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -190,7 +194,7 @@ def merge(
     dst_path : str or PathLike, optional
         Path of output dataset
     dst_kwds : dict, optional
-        Dictionary of creation options and other paramters that will be
+        Dictionary of creation options and other parameters that will be
         overlaid on the profile of the output dataset.
 
     Returns
@@ -396,7 +400,27 @@ def merge(
         else:
             chunks = [dout_window]
 
-        logger.debug("Chunks=%r", chunks)
+        def _intersect_bounds(bounds1, bounds2, transform):
+            """Based on gdal_merge.py."""
+            int_w = max(bounds1[0], bounds2[0])
+            int_e = min(bounds1[2], bounds2[2])
+
+            if int_w >= int_e:
+                raise ValueError
+
+            if transform.e < 0:
+                # north up
+                int_s = max(bounds1[1], bounds2[1])
+                int_n = min(bounds1[3], bounds2[3])
+                if int_s >= int_n:
+                    raise ValueError
+            else:
+                int_s = min(bounds1[1], bounds2[1])
+                int_n = max(bounds1[3], bounds2[3])
+                if int_n >= int_s:
+                    raise ValueError
+
+            return int_w, int_s, int_e, int_n
 
         for chunk in chunks:
             dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
@@ -404,66 +428,80 @@ def merge(
             if inrange:
                 dest.fill(nodataval)
 
+            # From gh-2221
+            chunk_bounds = windows.bounds(chunk, output_transform)
+            chunk_transform = windows.transform(chunk, output_transform)
+
+            def win_align(window):
+                """Equivalent to rounding both offsets and lengths.
+
+                This method computes offsets, width, and height that are
+                useful for compositing arrays into larger arrays and
+                datasets without seams. It is used by Rasterio's merge
+                tool and is based on the logic in gdal_merge.py.
+
+                Returns
+                -------
+                Window
+                """
+                row_off = math.floor(window.row_off + 0.1)
+                col_off = math.floor(window.col_off + 0.1)
+                height = math.floor(window.height + 0.5)
+                width = math.floor(window.width + 0.5)
+                return windows.Window(col_off, row_off, width, height)
+
             for idx, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
-                    # 0. Precondition checks
-                    #    - Check that source is within destination bounds
-                    #    - Check that CRS is same
 
-                    if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                        logger.debug(
-                            "Skipping source: src=%r, bounds=%r",
-                            src,
-                            (dst_w, dst_s, dst_e, dst_n),
-                        )
-                        continue
-
+                    # Intersect source bounds and tile bounds
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")
 
-                    # 1. Compute the source window
-                    src_window = windows.from_bounds(
-                        dst_w, dst_s, dst_e, dst_n, src.transform
-                    ).round(3)
+                    try:
+                        ibounds = _intersect_bounds(
+                            src.bounds, chunk_bounds, chunk_transform
+                        )
+                        sw = windows.from_bounds(*ibounds, src.transform)
+                        cw = windows.from_bounds(*ibounds, chunk_transform)
+                    except (ValueError, WindowError):
+                        logger.info(
+                            "Skipping source: src=%r, bounds=%r", src, src.bounds
+                        )
+                        continue
 
-                    temp_shape = (src_count, chunk.height, chunk.width)
+                    cw = win_align(cw)
+                    rows, cols = cw.toslices()
+                    region = dest[:, rows, cols]
 
-                    temp_src = src.read(
-                        out_shape=temp_shape,
-                        window=src_window,
-                        boundless=True,
-                        masked=True,
+                    if cmath.isnan(nodataval):
+                        region_mask = np.isnan(region)
+                    elif not np.issubdtype(region.dtype, np.integer):
+                        region_mask = np.isclose(region, nodataval)
+                    else:
+                        region_mask = region == nodataval
+
+                    data = src.read(
+                        out_shape=(src_count, cw.height, cw.width),
                         indexes=indexes,
+                        masked=True,
+                        window=sw,
                         resampling=resampling,
                     )
 
-                region = dest[:, :, :]
-
-                if cmath.isnan(nodataval):
-                    region_mask = np.isnan(region)
-                elif not np.issubdtype(region.dtype, np.integer):
-                    region_mask = np.isclose(region, nodataval)
-                else:
-                    region_mask = region == nodataval
-
-                # Ensure common shape, resolving issue #2202.
-                temp = temp_src[:, : region.shape[1], : region.shape[2]]
-                temp_mask = np.ma.getmask(temp)
-                copyto(
-                    region,
-                    temp,
-                    region_mask,
-                    temp_mask,
-                    index=idx,
-                    roff=0,
-                    coff=0,
-                )
+                    copyto(
+                        region,
+                        data,
+                        region_mask,
+                        data.mask,
+                        index=idx,
+                        roff=cw.row_off,
+                        coff=cw.col_off,
+                    )
 
             if dst:
-                dst_window = windows.from_bounds(
-                    dst_w, dst_s, dst_e, dst_n, output_transform
-                ).round(3)
-                dst.write(dest, window=dst_window)
+                dw = windows.from_bounds(*chunk_bounds, output_transform)
+                dw = win_align(dw)
+                dst.write(dest, window=dw)
 
         if dst is None:
             if masked:

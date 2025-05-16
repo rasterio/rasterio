@@ -21,7 +21,7 @@ class GroundControlPoint:
         z : float, optional
             Optional ``z`` coordinate.
         id : str, optional
-            A unique identifer for the ground control point.
+            A unique identifier for the ground control point.
         info : str, optional
             A short description for the ground control point.
         """

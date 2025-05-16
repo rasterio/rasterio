@@ -18,7 +18,7 @@ simultaneously can lead to further speedups.
 
 .. note::
     If you wish to do multiprocessing that is not trivially parallelizable
-    accross very large images that do not fit in memory, or if you wish to
+    across very large images that do not fit in memory, or if you wish to
     do multiprocessing across multiple machines. You might want to have a
     look at `dask <https://dask.org/>`__ and in particular this
     `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
@@ -152,7 +152,7 @@ GIL, you unfortunately cannot simply replace
 :class:`~concurrent.futures.ThreadPoolExecutor` with
 :class:`~concurrent.futures.ProcessPoolExecutor`.
 :class:`.DatasetReader`/:class:`.DatasetWriter` cannot be shared by multiple
-processes, which means that each process needs to open the file seperately.
+processes, which means that each process needs to open the file separately.
 You can do all the reading and writing from the main thread, as shown in this
 next example, at the expense of serializing arrays.
 

@@ -356,12 +356,14 @@ class PROJDataFinder:
         return datadir if os.path.exists(datadir) else None
 
 
+_have_registered_drivers = False
+
+
 cdef class GDALEnv(ConfigEnv):
     """Configuration and driver management"""
 
     def __init__(self, **options):
         super().__init__(**options)
-        self._have_registered_drivers = False
 
     def start(self):
         CPLPushErrorHandler(<CPLErrorHandler>logging_error_handler)
@@ -369,64 +371,15 @@ cdef class GDALEnv(ConfigEnv):
         # The outer if statement prevents each thread from acquiring a
         # lock when the environment starts, and the inner avoids a
         # potential race condition.
-        if not self._have_registered_drivers:
+        if not _have_registered_drivers:
 
             with threading.Lock():
 
-                if not self._have_registered_drivers:
+                global _have_registered_drivers
+                if not _have_registered_drivers:
                     GDALAllRegister()
                     OGRRegisterAll()
                     install_filepath_plugin(filepath_plugin)
-
-                    if 'GDAL_DATA' in os.environ:
-                        log.debug("GDAL_DATA found in environment.")
-                        self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
-
-                    else:
-                        path = GDALDataFinder().search_wheel()
-
-                        if path:
-                            log.debug("GDAL data found in package: path=%r.", path)
-                            self.update_config_options(GDAL_DATA=path)
-
-                        # See https://github.com/rasterio/rasterio/issues/1631.
-                        elif GDALDataFinder().find_file("gdalvrt.xsd"):
-                            log.debug("GDAL data files are available at built-in paths.")
-
-                        else:
-                            path = GDALDataFinder().search()
-
-                            if path:
-                                log.debug("GDAL data found in other locations: path=%r.", path)
-                                self.update_config_options(GDAL_DATA=path)
-
-                    if 'PROJ_DATA' in os.environ:
-                        # PROJ 9.1+
-                        log.debug("PROJ_DATA found in environment.")
-                        path = os.environ["PROJ_DATA"]
-                        set_proj_data_search_path(path)
-                    elif 'PROJ_LIB' in os.environ:
-                        # PROJ < 9.1
-                        log.debug("PROJ_LIB found in environment.")
-                        path = os.environ["PROJ_LIB"]
-                        set_proj_data_search_path(path)
-
-                    else:
-                        path = PROJDataFinder().search_wheel()
-
-                        if path:
-                            log.debug("PROJ data found in package: path=%r.", path)
-                            set_proj_data_search_path(path)
-
-                        elif PROJDataFinder().has_data():
-                            log.debug("PROJ data files are available at built-in paths.")
-
-                        else:
-                            path = PROJDataFinder().search()
-
-                            if path:
-                                log.debug("PROJ data found in other locations: path=%r.", path)
-                                set_proj_data_search_path(path)
 
                     if driver_count() == 0:
                         CPLPopErrorHandler()
@@ -436,7 +389,57 @@ cdef class GDALEnv(ConfigEnv):
                     # will acquire a threadlock every time a new environment
                     # is started rather than just whenever the first thread
                     # actually makes it this far.
-                    self._have_registered_drivers = True
+                    _have_registered_drivers = True
+
+        if 'GDAL_DATA' in os.environ:
+            log.debug("GDAL_DATA found in environment.")
+            self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
+
+        else:
+            path = GDALDataFinder().search_wheel()
+
+            if path:
+                log.debug("GDAL data found in package: path=%r.", path)
+                self.update_config_options(GDAL_DATA=path)
+
+            # See https://github.com/rasterio/rasterio/issues/1631.
+            elif GDALDataFinder().find_file("gdalvrt.xsd"):
+                log.debug("GDAL data files are available at built-in paths.")
+
+            else:
+                path = GDALDataFinder().search()
+
+                if path:
+                    log.debug("GDAL data found in other locations: path=%r.", path)
+                    self.update_config_options(GDAL_DATA=path)
+
+        if 'PROJ_DATA' in os.environ:
+            # PROJ 9.1+
+            log.debug("PROJ_DATA found in environment.")
+            path = os.environ["PROJ_DATA"]
+            set_proj_data_search_path(path)
+        elif 'PROJ_LIB' in os.environ:
+            # PROJ < 9.1
+            log.debug("PROJ_LIB found in environment.")
+            path = os.environ["PROJ_LIB"]
+            set_proj_data_search_path(path)
+
+        else:
+            path = PROJDataFinder().search_wheel()
+
+            if path:
+                log.debug("PROJ data found in package: path=%r.", path)
+                set_proj_data_search_path(path)
+
+            elif PROJDataFinder().has_data():
+                log.debug("PROJ data files are available at built-in paths.")
+
+            else:
+                path = PROJDataFinder().search()
+
+                if path:
+                    log.debug("PROJ data found in other locations: path=%r.", path)
+                    set_proj_data_search_path(path)
 
         log.debug("Started GDALEnv: self=%r.", self)
 

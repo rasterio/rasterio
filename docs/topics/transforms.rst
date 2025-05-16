@@ -65,7 +65,7 @@ a value of 0 is assumed.
 .. code-block:: python
 
     >>> with rasterio.open('RGB.byte.rpc.vrt') as src:
-            transformer = rasterio.trasform.RPCTransformer(src.rpcs)
+            transformer = rasterio.transform.RPCTransformer(src.rpcs)
             transformer.xy(0, 0)
     (-123.47959047080701, 49.52794990575094)
 
@@ -88,7 +88,7 @@ using the ``rpc_dem`` keyword argument. :class:`.RPCTransformer` allows for opti
 .. code-block:: python
 
     >>> with rasterio.open('RGB.byte.rpc.vrt') as src:
-            transformer = rasterio.trasform.RPCTransformer(src.rpcs, rpc_dem='vancouver-dem.tif')
+            transformer = rasterio.transform.RPCTransformer(src.rpcs, rpc_dem='vancouver-dem.tif')
             transformer.xy(0, 0)
     (-123.47954729595642, 49.5279448909449)
 

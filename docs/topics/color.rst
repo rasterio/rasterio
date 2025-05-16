@@ -37,7 +37,7 @@ update mode:
     ...     src.colorinterp = [
     ...         ColorInterp.red, ColorInterp.green, ColorInterp.blue]
 
-And the resulting raster will be interpretted as RGB.
+And the resulting raster will be interpreted as RGB.
 
 .. code:: python
 

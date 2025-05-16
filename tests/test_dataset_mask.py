@@ -181,7 +181,7 @@ def test_rgb_msk_int(tiffs):
 
 def test_rgba_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgba_msk.tif'))) as src:
-        # mask takes precendent over alpha
+        # mask takes precedent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
 
 

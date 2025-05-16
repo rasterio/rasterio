@@ -122,7 +122,7 @@ cdef void* filepath_open(void *pUserData, const char *pszFilename, const char *p
 
     This function returns clones of the file wrappers stored in
     _FILESYSTEM_INFO. GDAL may call this function multiple times per
-    filename and each result must be seperately seekable.
+    filename and each result must be separately seekable.
 
     """
     cdef object file_obj
