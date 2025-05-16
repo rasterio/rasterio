@@ -8,6 +8,12 @@ def test_open_bad_path():
         rasterio.open(3.14)
 
 
+def test_open_bad_path_2(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as dst:
+        with pytest.raises(TypeError):
+            rasterio.open(dst)
+
+
 def test_open_bad_mode_1():
     with pytest.raises(TypeError):
         rasterio.open("tests/data/RGB.byte.tif", mode=3.14)

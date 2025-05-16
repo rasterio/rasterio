@@ -10,7 +10,7 @@ distributed with the `Geospatial Data Abstraction Library, GDAL
 <http://gdal.org/>`__.  These bindings extend Python, but provide little
 abstraction for GDAL's C API. This means that Python programs using them tend
 to read and run like C programs. For example, GDAL's Python bindings require
-users to watch out for dangling C pointers, potential crashers of programs.
+users to watch out for dangling C pointers, potential crasher of programs.
 This is bad: among other considerations we've chosen Python instead of C to
 avoid problems with pointers.
 

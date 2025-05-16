@@ -75,7 +75,7 @@ def test_read_epsg():
 def test_read_compdcs():
     """Expect no match for a single EPSG for this COMPDCS"""
     with rasterio.open('zip://tests/data/ak-compdcs.zip!test.tif') as src:
-        assert src.crs.to_epsg() == None
+        assert src.crs.to_epsg() is None
 
 
 def test_read_no_crs():
@@ -698,3 +698,15 @@ def test_epsg_4326_ogc_crs84(crs):
     """EPSG:4326 not equivalent to OGC:CRS84."""
     assert CRS.from_string("OGC:CRS84") != crs
 
+
+def test_to_authority():
+    crs = CRS.from_epsg(32618)
+    assert crs.to_authority() == ("EPSG", "32618")
+
+
+def test_is_epsg_code():
+    crs = CRS.from_wkt(
+        'PROJCS["RGF93 v1 / Lambert-93",GEOGCS["RGF93 v1",DATUM["Reseau_Geodesique_Francais_1993_v1",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6171"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4171"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",46.5],PARAMETER["central_meridian",3],PARAMETER["standard_parallel_1",49],PARAMETER["standard_parallel_2",44],PARAMETER["false_easting",700000],PARAMETER["false_northing",6600000],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","2154"]]'
+    )
+    assert crs.to_epsg() == 2154
+    assert crs.is_epsg_code

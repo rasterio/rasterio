@@ -220,7 +220,7 @@ Dataset masks
 -------------
 
 Sometimes a per-band mask is not appropriate. In this case you can either
-construct a mask out of the component bands (or other auxillary data) manually
+construct a mask out of the component bands (or other auxiliary data) manually
 *or* use the Rasterio dataset's :meth:`~.DatasetReader.dataset_mask` function. This returns
 a 2D array with a GDAL-style mask determined by the following criteria,
 in order of precedence:
@@ -245,6 +245,6 @@ details when reading, it's often important to understand the differences when
 creating, manipulating and writing raster data.
 
    * **Nodata values**: the :attr:`~.DatasetReader.nodata` value is used to define which pixels should be masked.
-   * **Alpha band**: with RGB imagery, an additional 4th band (containing a GDAL-style 8-bit mask) is sometimes provided to explictly define the mask.
+   * **Alpha band**: with RGB imagery, an additional 4th band (containing a GDAL-style 8-bit mask) is sometimes provided to explicitly define the mask.
    * **Internal mask band**: GDAL provides the ability to store an additional boolean 1-bit mask that is stored internally to the dataset. This option relies on a GDAL environment with ``GDAL_TIFF_INTERNAL_MASK=True``. Otherwise the mask will be written externally.
    * **External mask band**: Same as above but the mask band is stored in a sidecar ``.msk`` file (default).

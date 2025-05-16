@@ -113,7 +113,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
     The command above produces a 3-band RGB GeoTIFF, with red levels
     incremented by 125, from the single-band input.
 
-    The maximum amount of memory used to perform caculations defaults to
+    The maximum amount of memory used to perform calculations defaults to
     64 MB. This number can be increased to improve speed of calculation.
 
     """

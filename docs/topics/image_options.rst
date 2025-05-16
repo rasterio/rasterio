@@ -16,7 +16,7 @@ Configuration Options
 
 GDAL options are typically set as environment variables. While
 environment variables will influence the behavior of ``rasterio``, we
-highly recommended avoiding them in favor of defining behavior programatically.
+highly recommended avoiding them in favor of defining behavior programmatically.
 
 The preferred way to set options for rasterio is via :class:`rasterio.Env`.
 Options set on entering the context are deleted on exit.

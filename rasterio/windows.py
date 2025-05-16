@@ -721,9 +721,8 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.5))
-        width = operator(self.width)
-        height = operator(self.height)
+        width = math.floor(self.width + 0.5)
+        height = math.floor(self.height + 0.5)
         return Window(self.col_off, self.row_off, width, height)
 
     def round_shape(self, **kwds):
@@ -749,9 +748,8 @@ class Window:
         Window
 
         """
-        operator = lambda x: int(math.floor(x + 0.001))
-        row_off = operator(self.row_off)
-        col_off = operator(self.col_off)
+        row_off = math.floor(self.row_off + 0.1)
+        col_off = math.floor(self.col_off + 0.1)
         return Window(col_off, row_off, self.width, self.height)
 
     def round(self, ndigits=None):

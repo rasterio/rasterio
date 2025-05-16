@@ -254,10 +254,10 @@ def test_write_crs_transform_2(tmpdir, monkeypatch):
             driver='GTiff', width=100, height=100, count=1,
             crs='EPSG:32618',
             transform=transform,
-            dtype=rasterio.ubyte) as s:
-        s.write(a, indexes=1)
+            dtype=rasterio.ubyte) as src:
+        src.write(a, indexes=1)
 
-    assert s.crs.to_epsg() == 32618
+    assert src.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform

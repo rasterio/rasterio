@@ -147,6 +147,8 @@ cdef extern from "cpl_vsi.h" nogil:
     size_t VSIFWriteL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIStatL(const char *pszFilename, VSIStatBufL *psStatBuf)
 
+    void VSICurlPartialClearCache(const char *)
+    void VSICurlClearCache()
 
 IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 9):
     cdef extern from "cpl_vsi.h" nogil:
