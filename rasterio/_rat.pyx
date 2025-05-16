@@ -56,20 +56,11 @@ cdef class RATBase:
                     col.field_type,
                     col.usage
                 )
-        
-            val = <int*>np.PyArray_DATA(col.values)
-            array_len = len(col.values)
 
-            assert array_len == self._get_row_count()
-
-            GDALRATValuesIOAsInteger(
-                self._hRAT,
-                GF_Write,
-                ix,
-                0,
-                array_len,
-                val
-            )
+                self._set_column_values(
+                    ix,
+                    col
+                )
 
     @staticmethod
     cdef RATBase clone(GDALRasterAttributeTableH rat_ptr):
