@@ -47,5 +47,11 @@ class Table(RATBase):
     """Raster attribute table.
     """
 
-    def __init__(self):
+    def __init__(self, columns=None):
         self._create()
+
+        if columns is None:
+            columns = []
+
+        for i, column in enumerate(columns):
+            self[i] = column
