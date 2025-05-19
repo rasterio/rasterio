@@ -28,7 +28,7 @@ def test_get_deps_info():
     deps_info = _get_deps_info()
 
     assert "affine" in deps_info
-    assert "attrs" in deps_info
+    assert "attr" in deps_info
     assert "certifi" in deps_info
     assert "click" in deps_info
     assert "click-plugins" in deps_info

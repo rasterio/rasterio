@@ -59,7 +59,7 @@ def _get_deps_info():
     """
     deps = [
         "affine",
-        "attrs",
+        "attr",
         "certifi",
         "click",
         "cligj",

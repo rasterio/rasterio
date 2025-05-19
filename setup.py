@@ -248,7 +248,7 @@ with open("README.rst", encoding="utf-8") as f:
 # Runtime requirements.
 inst_reqs = [
     "affine",
-    "attrs",
+    "attr",
     "certifi",
     "click>=4.0",
     "cligj>=0.5",
