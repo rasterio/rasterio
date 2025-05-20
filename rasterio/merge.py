@@ -164,10 +164,12 @@ def merge(
         Default: `Resampling.nearest`.
     method : str or callable
         pre-defined method:
-            first: reverse painting
-            last: paint valid new on top of existing
-            min: pixel-wise min of existing and new
-            max: pixel-wise max of existing and new
+
+            * first: reverse painting
+            * last: paint valid new on top of existing
+            * min: pixel-wise min of existing and new
+            * max: pixel-wise max of existing and new
+
         or custom callable with signature:
             merged_data : array_like
                 array to update with new_data
