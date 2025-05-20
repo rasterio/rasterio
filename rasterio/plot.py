@@ -31,7 +31,7 @@ def get_plt():
         raise ImportError(msg)
 
 
-def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None, 
+def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None,
          ax=None, title=None, transform=None, percent_range=None, adjust=True, **kwargs):
     """Display a raster or raster band using matplotlib.
 
@@ -58,7 +58,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     transform : Affine, optional
         Defines the affine transform if source is an array
     percent_range: tuple, optional
-        percent_range[0], the minimum value (cumulative percentage) of the histogram for histogram streching, 
+        percent_range[0], the minimum value (cumulative percentage) of the histogram for histogram streching,
         percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram streching
         default percent_range is set to (2, 98).
     adjust : bool
@@ -130,8 +130,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     if adjust:
         if percent_range:
             arr = contrast_strech(arr, percent_range)
-        else: 
-            if arr.ndim == 2: 
+        else:
+            if arr.ndim == 2:
                 arr = adjust_band(arr)
             elif arr.ndim >= 3:
                 # Adjust each band by the min/max so it will plot as RGB.
@@ -339,19 +339,20 @@ def show_hist(
 def contrast_strech(arr, percent_range=(2.0, 98.0)):
     """
     Histogram streching for better image visualization.
-   Parameters
+
+    Parameters
     ----------
     arr : array-like in the image form of (rows, columns, bands)
-        image to reshape      
+        image to reshape
     percent_range: tuple, optional
-        percent_range[0], the minimum values (cumulative percentage) of the histogram for histogram streching, 
+        percent_range[0], the minimum values (cumulative percentage) of the histogram for histogram streching,
         percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram streching
         default percent_range is set to (2, 98).
-    """    
+    """
     arr_hist = np.nanpercentile(np.array(arr), (percent_range[0], percent_range[1]))
-    arr = (arr - arr_hist[0])/(arr_hist[1]-arr_hist[0])  
+    arr = (arr - arr_hist[0])/(arr_hist[1]-arr_hist[0])
     arr = np.clip(arr, 0, 1)
-    return arr 
+    return arr
 
 
 def adjust_band(band, kind=None):
