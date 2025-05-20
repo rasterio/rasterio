@@ -78,7 +78,7 @@ def geometry_mask(
 
 @ensure_env
 def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
-    """Get shapes and values of connected regions in a dataset or array.
+    r"""Get shapes and values of connected regions in a dataset or array.
 
     Parameters
     ----------
@@ -86,7 +86,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object, optional
-        Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
+        Must evaluate to bool (rasterio.bool\_ or rasterio.uint8). Values
         of False or 0 will be excluded from feature generation.  Note
         well that this is the inverse sense from Numpy's, where a mask
         value of True indicates invalid data in an array. If `source` is
@@ -131,7 +131,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
 @ensure_env
 def sieve(source, size, out=None, mask=None, connectivity=4):
-    """Remove small polygon regions from a raster.
+    r"""Remove small polygon regions from a raster.
 
     Polygons are found for each set of neighboring pixels of the same
     value.
@@ -150,7 +150,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
         results.
     mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
-        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
+        Must evaluate to bool (rasterio.bool\_ or rasterio.uint8)
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
 
