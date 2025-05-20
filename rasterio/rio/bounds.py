@@ -48,7 +48,7 @@ def bounds(
     geojson_type,
 ):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
-    geojsonio
+    geojsonio::
 
       $ rio bounds *.tif | geojsonio
 
