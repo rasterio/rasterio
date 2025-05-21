@@ -4,8 +4,8 @@ from enum import Enum, IntEnum
 
 class TransformDirection(IntEnum):
     """Coordinate transform direction
-    
-    Forward transform direction defined as image pixel (row, col) to 
+
+    Forward transform direction defined as image pixel (row, col) to
     geographic/projected (x, y) coordinates. Reverse transform direction defined as
     geographic/projected (x, y) to image pixel (row, col) coordinates.
 
@@ -69,40 +69,7 @@ class ColorInterp(IntEnum):
 
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
-    
-    Attributes
-    ----------
-    nearest
-        Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality).
-    bilinear
-        Bilinear resampling.
-    cubic
-        Cubic resampling.
-    cubic_spline
-        Cubic spline resampling.
-    lanczos
-        Lanczos windowed sinc resampling.
-    average
-        Average resampling, computes the weighted average of all non-NODATA contributing pixels.
-    mode
-        Mode resampling, selects the value which appears most often of all the sampled points.
-    gauss
-        Gaussian resampling, Note: not available to the functions in rio.warp.
-    max
-        Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.0)
-    min
-        Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.0)
-    med
-        Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.0)
-    q1
-        Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)
-    q3
-        Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)
-    sum
-        Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)
-    rms
-        RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)
-    
+
     Notes
     ----------
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
@@ -135,6 +102,23 @@ class Resampling(IntEnum):
     q3 = 12
     sum = 13
     rms = 14
+
+
+Resampling.nearest.__doc__ = "Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality)."
+Resampling.bilinear.__doc__ = "Bilinear resampling."
+Resampling.cubic.__doc__ = "Cubic resampling."
+Resampling.cubic_split.__doc__ = "Cubic spline resampling."
+Resampling.lanczos.__doc__ = "Lanczos windowed sinc resampling."
+Resampling.average.__doc__ = "Average resampling, computes the weighted average of all non-NODATA contributing pixels."
+Resampling.mode.__doc__ = "Mode resampling, selects the value which appears most often of all the sampled points."
+Resampling.gauss.__doc__ = "Gaussian resampling, Note: not available to the functions in rio.warp."
+Resampling.max.__doc__ = "Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"
+Resampling.min.__doc__ = "Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"
+Resampling.med.__doc__ = "Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
+Resampling.q1.__doc__ = "Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
+Resampling.q3.__doc__ = "Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
+Resampling.sum.__doc__ = "Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)"
+Resampling.rms.__doc__ = "RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)"
 
 
 class OverviewResampling(IntEnum):
