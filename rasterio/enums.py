@@ -88,37 +88,35 @@ class Resampling(IntEnum):
     Note: 'gauss' is not available to the functions in rio.warp.
     """
     nearest = 0
+    """Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality)."""
     bilinear = 1
+    """Bilinear resampling."""
     cubic = 2
+    """Cubic resampling."""
     cubic_spline = 3
+    """Cubic spline resampling."""
     lanczos = 4
+    """Lanczos windowed sinc resampling."""
     average = 5
+    """Average resampling, computes the weighted average of all non-NODATA contributing pixels."""
     mode = 6
+    """Mode resampling, selects the value which appears most often of all the sampled points."""
     gauss = 7
+    """Gaussian resampling, Note: not available to the functions in rio.warp."""
     max = 8
+    """Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"""
     min = 9
+    """Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"""
     med = 10
+    """Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.0)"""
     q1 = 11
+    """Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"""
     q3 = 12
+    """Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"""
     sum = 13
+    """Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)"""
     rms = 14
-
-
-Resampling.nearest.__doc__ = "Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality)."
-Resampling.bilinear.__doc__ = "Bilinear resampling."
-Resampling.cubic.__doc__ = "Cubic resampling."
-Resampling.cubic_spline.__doc__ = "Cubic spline resampling."
-Resampling.lanczos.__doc__ = "Lanczos windowed sinc resampling."
-Resampling.average.__doc__ = "Average resampling, computes the weighted average of all non-NODATA contributing pixels."
-Resampling.mode.__doc__ = "Mode resampling, selects the value which appears most often of all the sampled points."
-Resampling.gauss.__doc__ = "Gaussian resampling, Note: not available to the functions in rio.warp."
-Resampling.max.__doc__ = "Maximum resampling, selects the maximum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"
-Resampling.min.__doc__ = "Minimum resampling, selects the minimum value from all non-NODATA contributing pixels. (GDAL >= 2.0)"
-Resampling.med.__doc__ = "Median resampling, selects the median value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
-Resampling.q1.__doc__ = "Q1, first quartile resampling, selects the first quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
-Resampling.q3.__doc__ = "Q3, third quartile resampling, selects the third quartile value of all non-NODATA contributing pixels. (GDAL >= 2.0)"
-Resampling.sum.__doc__ = "Sum, compute the weighted sum of all non-NODATA contributing pixels. (GDAL >= 3.1)"
-Resampling.rms.__doc__ = "RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)"
+    """RMS, root mean square / quadratic mean of all non-NODATA contributing pixels. (GDAL >= 3.3)"""
 
 
 class OverviewResampling(IntEnum):
