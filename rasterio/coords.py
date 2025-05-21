@@ -3,6 +3,8 @@
 from collections import namedtuple
 
 BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
+
+# Required to properly document this namedtuple and its attributes
 BoundingBox.__doc__ = \
     """Bounding box named tuple, defining extent in cartesian coordinates.
 
