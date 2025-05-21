@@ -9,18 +9,11 @@ BoundingBox.__doc__ = \
     .. code::
 
         BoundingBox(left, bottom, right, top)
-
-    Attributes
-    ----------
-    left :
-        Left coordinate
-    bottom :
-        Bottom coordinate
-    right :
-        Right coordinate
-    top :
-        Top coordinate
     """
+BoundingBox.left.__doc__ = "Left coordinate"
+BoundingBox.bottom.__doc__ = "Bottom coordinate"
+BoundingBox.right.__doc__ = "Right coordinate"
+BoundingBox.top.__doc__ = "Top coordinate"
 
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint.
