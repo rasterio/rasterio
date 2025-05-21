@@ -107,7 +107,7 @@ class Resampling(IntEnum):
 Resampling.nearest.__doc__ = "Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality)."
 Resampling.bilinear.__doc__ = "Bilinear resampling."
 Resampling.cubic.__doc__ = "Cubic resampling."
-Resampling.cubic_split.__doc__ = "Cubic spline resampling."
+Resampling.cubic_spline.__doc__ = "Cubic spline resampling."
 Resampling.lanczos.__doc__ = "Lanczos windowed sinc resampling."
 Resampling.average.__doc__ = "Average resampling, computes the weighted average of all non-NODATA contributing pixels."
 Resampling.mode.__doc__ = "Mode resampling, selects the value which appears most often of all the sampled points."
