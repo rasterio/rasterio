@@ -16,13 +16,16 @@ import numpy as np
 
 from rasterio._base import tastes_like_gdal
 from rasterio._base cimport open_dataset
+
 from rasterio._env import catch_errors
 from rasterio._err import (
     GDALError, CPLE_AppDefinedError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError,
     CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError, stack_errors)
 from rasterio.crs import CRS
 from rasterio import dtypes
-from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.enums import (
+    ColorInterp, MaskFlags, Resampling,
+)
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
@@ -43,6 +46,8 @@ from rasterio.env import Env, GDALVersion
 from rasterio.errors import ResamplingAlgorithmError, DatasetIOShapeError
 from rasterio._base cimport get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile, StackChecker
+
+from rasterio._rat cimport RATBase
 
 cimport numpy as np
 
@@ -972,6 +977,7 @@ cdef class DatasetReaderBase(DatasetBase):
             raise RasterioIOError("Read failed. See previous exception for details.") from cplerr
 
         return out
+
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):
