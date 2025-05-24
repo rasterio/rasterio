@@ -1,3 +1,4 @@
-.. click:: rasterio.rio.options:options
-   :prog: rio options
-   :show-nested:
+.. automodule:: rasterio.rio.options
+   :members:
+   :undoc-members:
+   :show-inheritance:
