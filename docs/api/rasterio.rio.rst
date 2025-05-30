@@ -2,7 +2,7 @@ rio CLI
 ====================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 0
 
    rasterio.rio.blocks
    rasterio.rio.bounds
