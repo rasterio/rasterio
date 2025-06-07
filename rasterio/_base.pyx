@@ -23,7 +23,8 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
-    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
+    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp,
+    RATFieldType, RATFieldUsage, RATTableType)
 from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     DatasetAttributeError,
@@ -33,6 +34,8 @@ from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio._path import _parse_path
 from rasterio import windows
+
+from rasterio._rat cimport RATBase
 
 cimport cython
 
@@ -1328,6 +1331,24 @@ cdef class DatasetBase:
 
         return retval
 
+    def rat(self, bidx: int):
+        """Read a raster attribute table (rat) for a band from the dataset.
+
+        """
+
+        cdef GDALRasterBandH hBand = NULL
+        cdef GDALRasterAttributeTableH hRAT = NULL
+
+        hBand = self.band(bidx)
+        hRAT = GDALGetDefaultRAT(hBand)
+
+        if hRAT == NULL:
+            raise ValueError("No raster attribute table found for band {}".format(bidx))
+
+        rat = RATBase.clone(hRAT)
+
+        return rat
+
     def overviews(self, bidx):
         cdef GDALRasterBandH ovrband = NULL
         cdef GDALRasterBandH band = NULL
@@ -1500,6 +1521,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         transform = exc_wrap_pointer(transform)
         # OCTTransform() returns TRUE/FALSE contrary to most GDAL API functions
         exc_wrap_int(OCTTransform(transform, n, x, y, z) == 0)
+    except:
+        pass
     else:
         res_xs = [0]*n
         res_ys = [0]*n
@@ -1524,7 +1547,6 @@ def _can_create_osr(crs):
     """Evaluate if a valid OGRSpatialReference can be created from crs.
 
     Specifically, it must not be None or an empty dict or string.
-
     Parameters
     ----------
     crs: Source coordinate reference system, in rasterio dict format.
