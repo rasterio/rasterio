@@ -32,6 +32,7 @@ from rasterio.errors import (
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio._path import _parse_path
+from rasterio._version import get_gdal_version_info
 from rasterio import windows
 
 cimport cython
@@ -305,6 +306,10 @@ cdef class DatasetBase:
 
             # Read-only + Rasters + Sharing + Errors
             flags = 0x00 | 0x02 | sharing_flag | 0x40
+
+            # Threadsafe support added in GDAL 3.10 for Read-only rasters
+            if get_gdal_version_info("VERSION_NUM") >= "310":
+                flags |= 0x800
 
             try:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
