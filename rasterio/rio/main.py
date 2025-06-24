@@ -36,7 +36,6 @@ import sys
 
 from click_plugins import with_plugins
 import click
-import cligj
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
@@ -44,6 +43,7 @@ else:
     from importlib.metadata import entry_points
 
 import rasterio
+from rasterio.rio import options
 from rasterio.session import AWSSession
 
 
@@ -74,8 +74,8 @@ def show_versions_cb(ctx, param, value):
     )
 )
 @click.group()
-@cligj.verbose_opt
-@cligj.quiet_opt
+@options.verbose_opt
+@options.quiet_opt
 @click.option(
     "--aws-profile", help="Select a profile from the AWS credentials file"
 )

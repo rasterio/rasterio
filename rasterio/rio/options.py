@@ -1,5 +1,5 @@
 """
-Registry of common rio CLI options.  See cligj for more options.
+Registry of common rio CLI options.
 
 .. code-block:: none
 
@@ -239,6 +239,7 @@ files_inout_arg = click.argument(
     metavar="INPUTS... OUTPUT",
     callback=files_inout_handler)
 
+# Options
 bidx_opt = click.option(
     '-b', '--bidx',
     type=int,
@@ -259,7 +260,6 @@ bidx_magic_opt = click.option(
     multiple=True,
     help="Indexes of input file bands.")
 
-# TODO: may be better suited to cligj?
 bounds_opt = click.option(
     "--bounds",
     default=None,
@@ -370,3 +370,92 @@ sequence_opt = click.option(
 format_opt = click.option(
     "-f", "--format", "--driver", "driver", help="Output format driver."
 )
+
+# cligj options
+verbose_opt = click.option(
+    '--verbose', '-v',
+    count=True,
+    help="Increase verbosity.")
+
+quiet_opt = click.option(
+    '--quiet', '-q',
+    count=True,
+    help="Decrease verbosity.")
+
+# JSON formatting options.
+indent_opt = click.option(
+    '--indent',
+    type=int,
+    default=None,
+    help="Indentation level for JSON output")
+
+compact_opt = click.option(
+    '--compact/--not-compact',
+    default=False,
+    help="Use compact separators (',', ':').")
+
+# Coordinate precision option.
+precision_opt = click.option(
+    '--precision',
+    type=int,
+    default=-1,
+    help="Decimal precision of coordinates.")
+
+# Geographic (default), projected, or Mercator switch.
+projection_geographic_opt = click.option(
+    '--geographic',
+    'projection',
+    flag_value='geographic',
+    default=True,
+    help="Output in geographic coordinates (the default).")
+
+projection_projected_opt = click.option(
+    '--projected',
+    'projection',
+    flag_value='projected',
+    help="Output in dataset's own, projected coordinates.")
+
+projection_mercator_opt = click.option(
+    '--mercator',
+    'projection',
+    flag_value='mercator',
+    help="Output in Web Mercator coordinates.")
+
+
+use_rs_opt = click.option(
+    '--rs/--no-rs',
+    'use_rs',
+    default=False,
+    help="Use RS (0x1E) as a prefix for individual texts in a sequence "
+         "as per http://tools.ietf.org/html/draft-ietf-json-text-sequence-13 "
+         "(default is False).")
+
+
+def geojson_type_collection_opt(default=False):
+    """GeoJSON FeatureCollection output mode"""
+    return click.option(
+        '--collection',
+        'geojson_type',
+        flag_value='collection',
+        default=default,
+        help="Output as GeoJSON feature collection(s).")
+
+
+def geojson_type_feature_opt(default=False):
+    """GeoJSON Feature or Feature sequence output mode"""
+    return click.option(
+        '--feature',
+        'geojson_type',
+        flag_value='feature',
+        default=default,
+        help="Output as GeoJSON feature(s).")
+
+
+def geojson_type_bbox_opt(default=False):
+    """GeoJSON bbox output mode"""
+    return click.option(
+        '--bbox',
+        'geojson_type',
+        flag_value='bbox',
+        default=default,
+        help="Output as GeoJSON bounding box array(s).")

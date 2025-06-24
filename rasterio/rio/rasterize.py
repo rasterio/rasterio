@@ -24,7 +24,7 @@ def files_handler(ctx, param, value):
     return value
 
 
-# Unlike the version in cligj, this one doesn't require values.
+# Unlike the version in rio.options, this one doesn't require values.
 files_inout_arg = click.argument(
     'files',
     nargs=-1,
