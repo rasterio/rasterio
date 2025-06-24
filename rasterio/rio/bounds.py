@@ -2,11 +2,6 @@ import logging
 import os
 
 import click
-from cligj import (
-    precision_opt, indent_opt, compact_opt, projection_geographic_opt,
-    projection_mercator_opt, projection_projected_opt,
-    use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
-)
 
 from .helpers import write_features, to_lower
 from rasterio.rio import options
@@ -21,19 +16,19 @@ logger = logging.getLogger(__name__)
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
 @click.argument('INPUT', nargs=-1, type=click.Path(), required=True)
-@precision_opt
-@indent_opt
-@compact_opt
-@projection_geographic_opt
-@projection_projected_opt
-@projection_mercator_opt
+@options.precision_opt
+@options.indent_opt
+@options.compact_opt
+@options.projection_geographic_opt
+@options.projection_projected_opt
+@options.projection_mercator_opt
 @click.option(
     '--dst-crs', default='', metavar="EPSG:NNNN", callback=to_lower,
     help="Output in specified coordinates.")
 @options.sequence_opt
-@use_rs_opt
-@geojson_type_feature_opt(True)
-@geojson_type_bbox_opt(False)
+@options.use_rs_opt
+@options.geojson_type_feature_opt(True)
+@options.geojson_type_bbox_opt(False)
 @click.pass_context
 def bounds(
     ctx,

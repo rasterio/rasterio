@@ -62,7 +62,6 @@ def _get_deps_info():
         "attrs",
         "certifi",
         "click",
-        "cligj",
         "cython",
         "numpy",
         "click-plugins",
