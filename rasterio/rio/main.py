@@ -37,10 +37,10 @@ from importlib.metadata import entry_points
 
 import click
 import cligj
-from click_plugins import with_plugins
 
 import rasterio
 from rasterio.session import AWSSession
+from rasterio._vendor.click_plugins import with_plugins
 
 
 def configure_logging(verbosity):
