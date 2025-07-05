@@ -1,16 +1,17 @@
 """Copy valid pixels from input files to an output file."""
 
-from contextlib import ExitStack, contextmanager
-import logging
-import os
-import math
 import cmath
-import warnings
+import logging
+import math
 import numbers
+import os
+import warnings
+from contextlib import ExitStack, contextmanager
 
 import numpy as np
 
 import rasterio
+from rasterio import windows
 from rasterio.enums import Resampling
 from rasterio.errors import (
     MergeError,
@@ -19,7 +20,6 @@ from rasterio.errors import (
     WindowError,
 )
 from rasterio.io import DatasetWriter
-from rasterio import windows
 from rasterio.transform import Affine
 from rasterio.windows import subdivide
 
@@ -169,6 +169,8 @@ def merge(
             * last: paint valid new on top of existing
             * min: pixel-wise min of existing and new
             * max: pixel-wise max of existing and new
+            * sum: pixel-wise sum of existing and new
+            * count: pixel-wise count of valid pixels
 
         or custom callable with signature:
             merged_data : array_like
@@ -288,9 +290,11 @@ def merge(
                         best_res = min(
                             best_res,
                             src.res,
-                            key=lambda x: x
-                            if isinstance(x, numbers.Number)
-                            else math.sqrt(x[0] ** 2 + x[1] ** 2),
+                            key=lambda x: (
+                                x
+                                if isinstance(x, numbers.Number)
+                                else math.sqrt(x[0] ** 2 + x[1] ** 2)
+                            ),
                         )
 
                     # The merge tool requires non-rotated rasters with origins at their
