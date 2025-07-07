@@ -254,7 +254,6 @@ inst_reqs = [
     "cligj>=0.5",
     "importlib-metadata ; python_version < '3.10'",
     "numpy>=1.24",
-    "click-plugins",
     "pyparsing",
 ]
 

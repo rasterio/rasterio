@@ -34,9 +34,10 @@ import itertools
 import logging
 import sys
 
-from click_plugins import with_plugins
 import click
 import cligj
+
+from rasterio.click_plugins import with_plugins
 
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
