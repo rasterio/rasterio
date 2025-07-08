@@ -228,6 +228,7 @@ if "clean" not in sys.argv:
         Extension("rasterio._err", ["rasterio/_err.pyx"], **ext_options),
         Extension("rasterio._example", ["rasterio/_example.pyx"], **ext_options),
         Extension("rasterio._version", ["rasterio/_version.pyx"], **ext_options),
+        Extension("rasterio._rat", ["rasterio/_rat.pyx"], **ext_options),
         Extension("rasterio.cache", ["rasterio/cache.pyx"], **ext_options),
         Extension("rasterio.crs", ["rasterio/crs.pyx"], **ext_options),
         Extension("rasterio.shutil", ["rasterio/shutil.pyx"], **ext_options),
