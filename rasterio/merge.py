@@ -285,7 +285,7 @@ def merge(
                             key=lambda x: (
                                 x
                                 if isinstance(x, numbers.Number)
-                                else math.sqrt(x[0] ** 2 + x[1] ** 2)
+                                else math.hypot(*x)
                             ),
                         )
 
