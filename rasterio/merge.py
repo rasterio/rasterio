@@ -372,7 +372,9 @@ def merge(
         # When dataset output is selected, we might need to create one
         # and will also provide the option of merging by chunks.
         dout_window = windows.Window(0, 0, output_width, output_height)
-        if dst_path is not None:
+        if dst_path is None:
+            chunks = [dout_window]
+        else:
             if isinstance(dst_path, DatasetWriter):
                 dst = dst_path
             else:
@@ -395,8 +397,6 @@ def merge(
             else:
                 n = math.floor(math.sqrt(max_pixels))
                 chunks = subdivide(dout_window, n, n)
-        else:
-            chunks = [dout_window]
 
         def _intersect_bounds(bounds1, bounds2, transform):
             """Based on gdal_merge.py."""
