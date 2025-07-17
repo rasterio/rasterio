@@ -427,6 +427,24 @@ def merge(
                     raise ValueError
 
             return int_w, int_s, int_e, int_n
+        
+        def _win_align(window):
+            """Equivalent to rounding both offsets and lengths.
+
+            This method computes offsets, width, and height that are
+            useful for compositing arrays into larger arrays and
+            datasets without seams. It is used by Rasterio's merge
+            tool and is based on the logic in gdal_merge.py.
+
+            Returns
+            -------
+            Window
+            """
+            row_off = math.floor(window.row_off + 0.1)
+            col_off = math.floor(window.col_off + 0.1)
+            height = math.floor(window.height + 0.5)
+            width = math.floor(window.width + 0.5)
+            return windows.Window(col_off, row_off, width, height)
 
         for chunk in chunks:
             dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
@@ -437,24 +455,6 @@ def merge(
             # From gh-2221
             chunk_bounds = windows.bounds(chunk, output_transform)
             chunk_transform = windows.transform(chunk, output_transform)
-
-            def win_align(window):
-                """Equivalent to rounding both offsets and lengths.
-
-                This method computes offsets, width, and height that are
-                useful for compositing arrays into larger arrays and
-                datasets without seams. It is used by Rasterio's merge
-                tool and is based on the logic in gdal_merge.py.
-
-                Returns
-                -------
-                Window
-                """
-                row_off = math.floor(window.row_off + 0.1)
-                col_off = math.floor(window.col_off + 0.1)
-                height = math.floor(window.height + 0.5)
-                width = math.floor(window.width + 0.5)
-                return windows.Window(col_off, row_off, width, height)
 
             for idx, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
@@ -475,7 +475,7 @@ def merge(
                         )
                         continue
 
-                    cw = win_align(cw)
+                    cw = _win_align(cw)
                     rows, cols = cw.toslices()
                     region = dest[:, rows, cols]
 
@@ -506,7 +506,7 @@ def merge(
 
             if dst:
                 dw = windows.from_bounds(*chunk_bounds, output_transform)
-                dw = win_align(dw)
+                dw = _win_align(dw)
                 dst.write(dest, window=dw)
 
         if dst is None:
