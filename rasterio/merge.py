@@ -390,7 +390,8 @@ def merge(
                 dst = rasterio.open(dst_path, "w", **out_profile)
                 exit_stack.enter_context(dst)
 
-            max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count)
+            # We allocate up to 5 arrays during merge
+            max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count * 5)
 
             if output_width * output_height < max_pixels:
                 chunks = [dout_window]
