@@ -6,7 +6,7 @@ import math
 import numbers
 import os
 import warnings
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack
 
 import numpy as np
 
@@ -234,34 +234,35 @@ def merge(
             )
         )
 
-    # Create a dataset_opener object to use in several places in this function.
-    if isinstance(sources[0], (str, os.PathLike)):
-        dataset_opener = rasterio.open
-    else:
-        dataset_opener = nullcontext
-
     dst = None
 
     with ExitStack() as exit_stack:
-        with dataset_opener(sources[0]) as first:
-            first_profile = first.profile
-            first_crs = first.crs
-            best_res = first.res
-            first_nodataval = first.nodatavals[0]
-            nodataval = first_nodataval
-            dt = first.dtypes[0]
-
-            if indexes is None:
-                src_count = first.count
-            elif isinstance(indexes, int):
-                src_count = indexes
+        source_datasets = []
+        for s in sources:
+            if isinstance(s, (str, os.PathLike)):
+                source_datasets.append(exit_stack.enter_context(rasterio.open(s)))
             else:
-                src_count = len(indexes)
+                source_datasets.append(s)
 
-            try:
-                first_colormap = first.colormap(1)
-            except ValueError:
-                first_colormap = None
+        first = source_datasets[0]
+        first_profile = first.profile
+        first_crs = first.crs
+        best_res = first.res
+        first_nodataval = first.nodatavals[0]
+        nodataval = first_nodataval
+        dt = first.dtypes[0]
+
+        if indexes is None:
+            src_count = first.count
+        elif isinstance(indexes, int):
+            src_count = indexes
+        else:
+            src_count = len(indexes)
+
+        try:
+            first_colormap = first.colormap(1)
+        except ValueError:
+            first_colormap = None
 
         if not output_count:
             output_count = src_count
@@ -274,37 +275,36 @@ def merge(
             xs = []
             ys = []
 
-            for i, dataset in enumerate(sources):
-                with dataset_opener(dataset) as src:
-                    src_transform = src.transform
+            for i, src in enumerate(source_datasets):
+                src_transform = src.transform
 
-                    if use_highest_res:
-                        best_res = min(
-                            best_res,
-                            src.res,
-                            key=lambda x: (
-                                x
-                                if isinstance(x, numbers.Number)
-                                else math.hypot(*x)
-                            ),
-                        )
+                if use_highest_res:
+                    best_res = min(
+                        best_res,
+                        src.res,
+                        key=lambda x: (
+                            x
+                            if isinstance(x, numbers.Number)
+                            else math.hypot(*x)
+                        ),
+                    )
 
-                    # The merge tool requires non-rotated rasters with origins at their
-                    # upper left corner. This limitation may be lifted in the future.
-                    if not src_transform.is_rectilinear:
-                        raise MergeError(
-                            "Rotated, non-rectilinear rasters cannot be merged."
-                        )
-                    if src_transform.a < 0:
-                        raise MergeError(
-                            'Rasters with negative pixel width ("flipped" rasters) cannot be merged.'
-                        )
-                    if src_transform.e > 0:
-                        raise MergeError(
-                            'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
-                        )
+                # The merge tool requires non-rotated rasters with origins at their
+                # upper left corner. This limitation may be lifted in the future.
+                if not src_transform.is_rectilinear:
+                    raise MergeError(
+                        "Rotated, non-rectilinear rasters cannot be merged."
+                    )
+                if src_transform.a < 0:
+                    raise MergeError(
+                        'Rasters with negative pixel width ("flipped" rasters) cannot be merged.'
+                    )
+                if src_transform.e > 0:
+                    raise MergeError(
+                        'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
+                    )
 
-                    left, bottom, right, top = src.bounds
+                left, bottom, right, top = src.bounds
 
                 xs.extend([left, right])
                 ys.extend([bottom, top])
@@ -448,53 +448,51 @@ def merge(
             chunk_bounds = windows.bounds(chunk, output_transform)
             chunk_transform = windows.transform(chunk, output_transform)
 
-            for idx, dataset in enumerate(sources):
-                with dataset_opener(dataset) as src:
+            for idx, src in enumerate(source_datasets):
+                # Intersect source bounds and tile bounds
+                if first_crs != src.crs:
+                    raise RasterioError(f"CRS mismatch with source: {src}")
 
-                    # Intersect source bounds and tile bounds
-                    if first_crs != src.crs:
-                        raise RasterioError(f"CRS mismatch with source: {dataset}")
-
-                    try:
-                        ibounds = _intersect_bounds(
-                            src.bounds, chunk_bounds, chunk_transform
-                        )
-                        sw = windows.from_bounds(*ibounds, src.transform)
-                        cw = windows.from_bounds(*ibounds, chunk_transform)
-                    except (ValueError, WindowError):
-                        logger.info(
-                            "Skipping source: src=%r, bounds=%r", src, src.bounds
-                        )
-                        continue
-
-                    cw = _win_align(cw)
-                    rows, cols = cw.toslices()
-                    region = dest[:, rows, cols]
-
-                    if cmath.isnan(nodataval):
-                        region_mask = np.isnan(region)
-                    elif not np.issubdtype(region.dtype, np.integer):
-                        region_mask = np.isclose(region, nodataval)
-                    else:
-                        region_mask = region == nodataval
-
-                    data = src.read(
-                        out_shape=(src_count, cw.height, cw.width),
-                        indexes=indexes,
-                        masked=True,
-                        window=sw,
-                        resampling=resampling,
+                try:
+                    ibounds = _intersect_bounds(
+                        src.bounds, chunk_bounds, chunk_transform
                     )
-
-                    copyto(
-                        region,
-                        data,
-                        region_mask,
-                        data.mask,
-                        index=idx,
-                        roff=cw.row_off,
-                        coff=cw.col_off,
+                    sw = windows.from_bounds(*ibounds, src.transform)
+                    cw = windows.from_bounds(*ibounds, chunk_transform)
+                except (ValueError, WindowError):
+                    logger.info(
+                        "Skipping source: src=%r, bounds=%r", src, src.bounds
                     )
+                    continue
+
+                cw = _win_align(cw)
+                rows, cols = cw.toslices()
+                region = dest[:, rows, cols]
+
+                if cmath.isnan(nodataval):
+                    region_mask = np.isnan(region)
+                elif not np.issubdtype(region.dtype, np.integer):
+                    region_mask = np.isclose(region, nodataval)
+                else:
+                    region_mask = region == nodataval
+
+                data = src.read(
+                    out_shape=(src_count, cw.height, cw.width),
+                    indexes=indexes,
+                    masked=True,
+                    window=sw,
+                    resampling=resampling,
+                )
+
+                copyto(
+                    region,
+                    data,
+                    region_mask,
+                    data.mask,
+                    index=idx,
+                    roff=cw.row_off,
+                    coff=cw.col_off,
+                )
 
             if dst:
                 dw = windows.from_bounds(*chunk_bounds, output_transform)
