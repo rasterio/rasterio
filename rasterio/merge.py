@@ -511,7 +511,11 @@ def merge(
 
         if dst is None:
             if masked:
-                dest = np.ma.masked_equal(dest, nodataval, copy=False)
+                if cmath.isfinite(nodataval):
+                    # Handles both integer and float nodataval
+                    dest = np.ma.masked_values(dest, nodataval, copy=False)
+                else:
+                    dest = np.ma.masked_invalid(dest, copy=False)
             return dest, output_transform
         else:
             if first_colormap:
