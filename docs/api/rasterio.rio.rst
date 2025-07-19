@@ -2,7 +2,7 @@ rio CLI
 ====================
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 1
 
    rasterio.rio.blocks
    rasterio.rio.bounds
@@ -16,7 +16,6 @@ rio CLI
    rasterio.rio.insp
    rasterio.rio.mask
    rasterio.rio.merge
-   rasterio.rio.options
    rasterio.rio.overview
    rasterio.rio.rasterize
    rasterio.rio.rm
