@@ -4,10 +4,6 @@
 import json
 
 import click
-from cligj import (
-    compact_opt, use_rs_opt, geojson_type_collection_opt,
-    geojson_type_feature_opt, projection_geographic_opt,
-    projection_projected_opt, precision_opt, indent_opt)
 
 import rasterio
 import rasterio.crs
@@ -15,26 +11,16 @@ from rasterio.rio import options
 from rasterio.warp import transform_geom
 
 
-# Feature collection or feature sequence switch, defaulting to the
-# latter, the opposite of cligj's default.
-sequence_opt = click.option(
-    '--sequence/--no-sequence',
-    default=True,
-    help="Write a LF-delimited sequence of texts containing individual "
-         "objects or write a single JSON text containing a feature "
-         "collection object (the default).")
-
-
 @click.command(short_help="Print ground control points as GeoJSON.")
 @options.file_in_arg
-@geojson_type_collection_opt()
-@geojson_type_feature_opt(default=True)
-@projection_geographic_opt
-@projection_projected_opt
-@precision_opt
-@use_rs_opt
-@indent_opt
-@compact_opt
+@options.geojson_type_collection_opt()
+@options.geojson_type_feature_opt(default=True)
+@options.projection_geographic_opt
+@options.projection_projected_opt
+@options.precision_opt
+@options.use_rs_opt
+@options.indent_opt
+@options.compact_opt
 @click.pass_context
 def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent, compact):
     """Print GeoJSON representations of a dataset's control points.

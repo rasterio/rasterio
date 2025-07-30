@@ -251,7 +251,6 @@ inst_reqs = [
     "attrs",
     "certifi",
     "click>=4.0",
-    "cligj>=0.5",
     "importlib-metadata ; python_version < '3.10'",
     "numpy>=1.24",
     "click-plugins",
