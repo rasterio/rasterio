@@ -7,6 +7,7 @@ from rasterio.rio.main import main_group
 
 from .conftest import credentials
 
+import subprocess
 
 with rasterio.Env() as env:
     HAVE_NETCDF = "netCDF" in env.drivers().keys()
@@ -176,34 +177,37 @@ def test_transform_err(runner):
     assert result.exit_code == 1
 
 
-def test_transform_point(runner):
-    result = runner.invoke(main_group, [
-        'transform',
-        '--dst-crs', 'EPSG:32618',
-        '--precision', '2'
-    ], "[-78.0, 23.0]", catch_exceptions=False)
-    assert result.exit_code == 0
-    assert result.output.strip() == '[192457.13, 2546667.68]'
+def test_transform_point_subprocess():
+    result = subprocess.run([
+        "rio", "transform",
+        "--dst-crs", "EPSG:32618",
+        "--precision", "2",
+        "[-78.0, 23.0]"
+    ], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == '[192457.13, 2546667.68]'
 
 
-def test_transform_point_dst_file(runner):
-    result = runner.invoke(main_group, [
-        'transform',
-        '--dst-crs', 'tests/data/RGB.byte.tif', '--precision', '2'
-    ], "[-78.0, 23.0]")
-    assert result.exit_code == 0
-    assert result.output.strip() == '[192457.13, 2546667.68]'
+def test_transform_point_dst_file_subprocess():
+    result = subprocess.run([
+        "rio", "transform",
+        "--dst-crs", "tests/data/RGB.byte.tif",
+        "--precision", "2",
+        "[-78.0, 23.0]"
+    ], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == '[192457.13, 2546667.68]'
 
 
-def test_transform_point_src_file(runner):
-    result = runner.invoke(main_group, [
-        'transform',
-        '--src-crs',
-        'tests/data/RGB.byte.tif',
-        '--precision', '2'
-    ], "[192457.13, 2546667.68]")
-    assert result.exit_code == 0
-    assert result.output.strip() == '[-78.0, 23.0]'
+def test_transform_point_src_file_subprocess():
+    result = subprocess.run([
+        "rio", "transform",
+        "--src-crs", "tests/data/RGB.byte.tif",
+        "--precision", "2",
+        "[192457.13, 2546667.68]"
+    ], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == '[-78.0, 23.0]'
 
 
 def test_transform_point_2(runner):
@@ -217,14 +221,15 @@ def test_transform_point_2(runner):
     assert result.output.strip() == '[192457.13, 2546667.68]'
 
 
-def test_transform_point_multi(runner):
-    result = runner.invoke(main_group, [
-        'transform',
-        '--dst-crs', 'EPSG:32618',
-        '--precision', '2'
-    ], "[-78.0, 23.0]\n[-78.0, 23.0]", catch_exceptions=False)
-    assert result.exit_code == 0
-    assert result.output.strip() == (
+def test_transform_point_multi_subprocess():
+    input_data = "[-78.0, 23.0]\n[-78.0, 23.0]"
+    result = subprocess.run([
+        "rio", "transform",
+        "--dst-crs", "EPSG:32618",
+        "--precision", "2"
+    ], input=input_data, capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == (
         '[192457.13, 2546667.68]\n[192457.13, 2546667.68]')
 
 
