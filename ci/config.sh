@@ -1,43 +1,142 @@
-# Custom utilities for Rasterio wheels.
-#
-# Test for OSX with [ -n "$IS_OSX" ].
+PROJ_VERSION=9.6.0
+GDAL_VERSION=3.10.3
+SQLITE_VERSION=3490100
+OPENSSL_VERSION=3.4.1
+CURL_VERSION=8.8.0
+ZLIB_VERSION=1.3.1
+TIFF_VERSION=4.7.0
+NGHTTP2_VERSION=1.60.0
+LERC_VERSION=4.0.0
+JPEG_VERSION=9f
+LIBWEBP_VERSION=1.6.0
+ZSTD_VERSION=1.5.7
+LIBPNG_VERSION=1.6.47
+OPENJPEG_VERSION=2.5.3
+GIFLIB_VERSION=5.2.2
+JSONC_VERSION=0.18
+XZ_VERSION=5.6.3
+LCMS2_VERSION=2.17
+HDF5_VERSION=1.14.5
+LIBAEC_VERSION=1.1.3
+NETCDF_VERSION=4.9.3
+GEOS_VERSION=3.13.0
+BLOSC_VERSION=1.21.6
+PCRE_VERSION=10.45
+EXPAT_VERSION=2.7.1
+LIBDEFLATE_VERSION=1.18
 
-function fetch_unpack {
-    # Fetch input archive name from input URL
-    # Parameters
-    #    url - URL from which to fetch archive
-    #    archive_fname (optional) archive name
-    #
-    # Echos unpacked directory and file names.
-    #
-    # If `archive_fname` not specified then use basename from `url`
-    # If `archive_fname` already present at download location, use that instead.
-    local url=$1
-    if [ -z "$url" ];then echo "url not defined"; exit 1; fi
-    local archive_fname=${2:-$(basename $url)}
-    local arch_sdir="${ARCHIVE_SDIR:-archives}"
-    # Make the archive directory in case it doesn't exist
-    mkdir -p $arch_sdir
-    local out_archive="${arch_sdir}/${archive_fname}"
-    # If the archive is not already in the archives directory, get it.
-    if [ ! -f "$out_archive" ]; then
-        # Source it from multibuild archives if available.
-        local our_archive="${MULTIBUILD_DIR}/archives/${archive_fname}"
-        if [ -f "$our_archive" ]; then
-            ln -s $our_archive $out_archive
-        else
-            # Otherwise download it.
-            curl --insecure -L $url > $out_archive
-        fi
-    fi
-    # Unpack archive, refreshing contents, echoing dir and file
-    # names.
-    rm_mkdir arch_tmp
-    install_rsync
-    (cd arch_tmp && \
-        untar ../$out_archive && \
-        ls -1d * &&
-        rsync --delete -ah * ..)
+
+
+BUILD_PREFIX="${BUILD_PREFIX:-/usr/local}"
+
+export GDAL_CONFIG="$BUILD_PREFIX/bin/gdal-config"
+export PROJ_DATA="$BUILD_PREFIX/share/proj"
+
+echo "BUILD_PREFIX:"
+echo "$BUILD_PREFIX"
+echo "GDAL_CONFIG:"
+echo "$GDAL_CONFIG"
+echo "PROJ_DATA:"
+echo "$PROJ_DATA"
+
+set -e
+
+# 🔍 Detect OS and architecture
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+
+# 🧠 Normalize OS
+case "$OS" in
+    Darwin)
+        OS="macos"
+        IS_MACOS=1
+        ;;
+    Linux)
+        OS="linux"
+        ;;
+    *)
+        echo "❌ Unsupported OS: $OS"
+        exit 1
+        ;;
+esac
+
+PLATFORM="${OS}-${ARCH}"
+echo "✅ Detected platform: $PLATFORM"
+
+# 📦 Set OpenSSL Configure target
+case "$PLATFORM" in
+    macos-arm64)    TARGET="darwin64-arm64-cc" ;;
+    macos-x86_64)   TARGET="darwin64-x86_64-cc" ;;
+    linux-aarch64)  TARGET="linux-aarch64" ;;
+    linux-x86_64)   TARGET="linux-x86_64" ;;
+    *) echo "❌ Unsupported platform: $PLATFORM"; exit 1 ;;
+esac
+
+echo "IS_MACOS: ${IS_MACOS}"
+
+if [ -n "$IS_MACOS" ]; then
+    export CFLAGS="$CFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
+    export CXXFLAGS="$CXXFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
+else
+    export CFLAGS="$CFLAGS -g -O2"
+    export CXXFLAGS="$CXXFLAGS -g -O2"
+fi
+
+echo "Flags:"
+echo "$CFLAGS"
+echo "$CXXFLAGS"
+
+
+# ------------------------------------------------
+# From:
+#	 https://github.com/rasterio/rasterio-wheels
+#    https://github.com/multi-build/multibuild
+#
+#    (customized and updated)
+# ------------------------------------------------
+
+
+if [ -z "$IS_MACOS" ]; then
+    # Strip all binaries after compilation.
+    STRIP_FLAGS=${STRIP_FLAGS:-"-Wl,-strip-all"}
+    export CFLAGS="${CFLAGS:-$STRIP_FLAGS}"
+    export CXXFLAGS="${CXXFLAGS:-$STRIP_FLAGS}"
+    export FFLAGS="${FFLAGS:-$STRIP_FLAGS}"
+fi
+
+export CPPFLAGS_BACKUP="$CPPFLAGS"
+export LIBRARY_PATH_BACKUP="$LIBRARY_PATH"
+export PKG_CONFIG_PATH_BACKUP="$PKG_CONFIG_PATH"
+
+
+
+function suppress {
+    # Run a command, show output only if return code not 0.
+    # Takes into account state of -e option.
+    # Compare
+    # https://unix.stackexchange.com/questions/256120/how-can-i-suppress-output-only-if-the-command-succeeds#256122
+    # Set -e stuff agonized over in
+    # https://unix.stackexchange.com/questions/296526/set-e-in-a-subshell
+    local tmp=$(mktemp tmp.XXXXXXXXX) || return
+    local errexit_set
+    echo "Running $@"
+    if [[ $- = *e* ]]; then errexit_set=true; fi
+    set +e
+    ( if [[ -n $errexit_set ]]; then set -e; fi; "$@"  > "$tmp" 2>&1 ) ; ret=$?
+    [ "$ret" -eq 0 ] || cat "$tmp"
+    rm -f "$tmp"
+    if [[ -n $errexit_set ]]; then set -e; fi
+    return "$ret"
+}
+
+
+function update_env_for_build_prefix {
+  # Promote BUILD_PREFIX on search path to any newly built libs
+  export CPPFLAGS="-I$BUILD_PREFIX/include $CPPFLAGS_BACKUP"
+  export LIBRARY_PATH="$BUILD_PREFIX/lib:$LIBRARY_PATH_BACKUP"
+  export PKG_CONFIG_PATH="$BUILD_PREFIX/lib/pkgconfig/:$PKG_CONFIG_PATH_BACKUP"
+  # Add binary path for configure utils etc
+  export PATH="$BUILD_PREFIX/bin:$PATH"
 }
 
 
@@ -46,13 +145,15 @@ function build_hdf5 {
     build_zlib
     # libaec is a drop-in replacement for szip
     build_libaec
-    local hdf5_url=https://support.hdfgroup.org/ftp/HDF5/releases
-    local short=$(echo $HDF5_VERSION | awk -F "." '{printf "%d.%d", $1, $2}')
-    fetch_unpack $hdf5_url/hdf5-$short/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
-    (cd hdf5-$HDF5_VERSION \
+    HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"
+    HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
+    wget https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz
+    tar -xzf hdf5-${HDF5_VERSION}.tar.gz
+    (cd hdf5-${HDF5_VERSION} \
         && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib \
+        && export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib \
         && ./configure --with-szlib=$BUILD_PREFIX --prefix=$BUILD_PREFIX \
-        --enable-cxx --enable-threadsafe --enable-unsupported --with-pthread=yes \
+        --enable-threadsafe --enable-unsupported --with-pthread=yes \
         && make -j4 \
         && make install)
     touch hdf5-stamp
@@ -62,9 +163,11 @@ function build_hdf5 {
 function build_blosc {
     if [ -e blosc-stamp ]; then return; fi
     local cmake=cmake
-    fetch_unpack https://github.com/Blosc/c-blosc/archive/v${BLOSC_VERSION}.tar.gz
+    BLOSC_URL="https://github.com/Blosc/c-blosc/archive/refs/tags/v${BLOSC_VERSION}.tar.gz"
+    wget "$BLOSC_URL" -O "c-blosc-${BLOSC_VERSION}.tar.gz"
+    tar -xzf "c-blosc-${BLOSC_VERSION}.tar.gz"
     (cd c-blosc-${BLOSC_VERSION} \
-        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX . \
+        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
         && make install)
     if [ -n "$IS_MACOS" ]; then
         # Fix blosc library id bug
@@ -77,16 +180,18 @@ function build_blosc {
 
 
 function build_geos {
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
+
     if [ -e geos-stamp ]; then return; fi
     local cmake=cmake
-    fetch_unpack http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
+    wget http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
+    tar -xjf geos-${GEOS_VERSION}.tar.bz2
     (cd geos-${GEOS_VERSION} \
         && mkdir build && cd build \
         && $cmake .. \
         -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	    -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
         -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_IPO=ON \
@@ -101,12 +206,13 @@ function build_geos {
 function build_jsonc {
     if [ -e jsonc-stamp ]; then return; fi
     local cmake=cmake
-    fetch_unpack https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
+    wget https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
+    tar -xzf json-c-${JSONC_VERSION}.tar.gz
     (cd json-c-${JSONC_VERSION} \
-        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET . \
+        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
         && make -j4 \
         && make install)
-    if [ -n "$IS_OSX" ]; then
+    if [ -n "$IS_MACOS" ]; then
         for lib in $(ls ${BUILD_PREFIX}/lib/libjson-c.5*.dylib); do
             install_name_tool -id $lib $lib
         done
@@ -119,45 +225,67 @@ function build_jsonc {
 
 
 function build_proj {
-    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS -g -O2"
-    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -g -O2"
+    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
+    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
     if [ -e proj-stamp ]; then return; fi
+
+    if [ -n "$IS_MACOS" ]; then
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
+    else
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
+    fi
+
+    wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
+    tar -xzf proj-${PROJ_VERSION}.tar.gz
+
     local cmake=cmake
-    build_sqlite
-    fetch_unpack http://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
     (cd proj-${PROJ_VERSION} \
-        && mkdir build && cd build \
-        && $cmake .. \
+        && $cmake . \
         -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_INCLUDE_PATH=$BUILD_PREFIX/include \
+        -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
+        -DSQLite3_LIBRARY=$SQLITE_LIB \
         -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
         -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_IPO=ON \
         -DBUILD_APPS:BOOL=OFF \
         -DBUILD_TESTING:BOOL=OFF \
-        && $cmake --build . -j4 \
+        && $cmake --build . -j$(nproc) \
         && $cmake --install .)
     touch proj-stamp
 }
 
 
 function build_sqlite {
-    if [ -e sqlite-stamp ]; then return; fi
-    fetch_unpack https://www.sqlite.org/2020/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
-    (cd sqlite-autoconf-${SQLITE_VERSION} \
-        && ./configure --prefix=$BUILD_PREFIX \
-        && make -j4 \
+
+  if [ -z "$IS_MACOS" ]; then
+        CFLAGS="$CFLAGS -DHAVE_PREAD64 -DHAVE_PWRITE64"
+  fi
+
+  if [ -e sqlite-stamp ]; then return; fi
+  wget https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
+  tar -xzf sqlite-autoconf-${SQLITE_VERSION}.tar.gz
+
+  (cd sqlite-autoconf-${SQLITE_VERSION} \
+        && ./configure --enable-rtree --enable-threadsafe --prefix=$BUILD_PREFIX \
+        && make \
         && make install)
-    touch sqlite-stamp
+  touch sqlite-stamp
 }
 
 
 function build_expat {
     if [ -e expat-stamp ]; then return; fi
-    if [ -n "$IS_OSX" ]; then
+    if [ -n "$IS_MACOS" ]; then
         :
     else
-        fetch_unpack https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-${EXPAT_VERSION}.tar.bz2
+
+    EXPAT_VERSION_UNDERSCORED="${EXPAT_VERSION//./_}"
+	wget https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORED}/expat-${EXPAT_VERSION}.tar.bz2
+    tar -xjf expat-${EXPAT_VERSION}.tar.bz2
         (cd expat-${EXPAT_VERSION} \
             && ./configure --prefix=$BUILD_PREFIX \
             && make -j4 \
@@ -168,14 +296,18 @@ function build_expat {
 
 
 function build_lerc {
-    if [-e lerc-stamp ]; then return; fi
+
+	if [ -e lerc-stamp ]; then return; fi
     local cmake=cmake
-    fetch_unpack https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz
+    wget https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz -O lerc-$LERC_VERSION.tar.gz
+    tar -xzf lerc-${LERC_VERSION}.tar.gz
     (cd lerc-${LERC_VERSION} \
         && mkdir cmake_build && cd cmake_build \
         && $cmake .. \
         -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	    -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
         -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_IPO=ON \
@@ -186,58 +318,91 @@ function build_lerc {
 
 
 function build_tiff {
+
     if [ -e tiff-stamp ]; then return; fi
+    local cmake=cmake
     build_lerc
     build_jpeg
     build_libwebp
     build_zlib
     build_zstd
     build_xz
-    fetch_unpack https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
+    wget https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
+    tar -xvf tiff-${TIFF_VERSION}.tar.gz
+
     (cd tiff-${TIFF_VERSION} \
-        && mv VERSION VERSION.txt \
-        && (patch -u --force < ../patches/libtiff-rename-VERSION.patch || true) \
-        && ./configure --prefix=$BUILD_PREFIX --enable-zstd --enable-webp --enable-lerc \
-        && make -j4 \
-        && make install)
+        && cd build \
+        && $cmake .. \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+	       -DJPEG_SUPPORT=ON \
+           -DZSTD_SUPPORT=ON \
+	       -DWEBP_SUPPORT=ON \
+           -DLERC_SUPPORT=ON \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
     touch tiff-stamp
 }
 
 
 function build_openjpeg {
-    if [ -e openjpeg-stamp ]; then return; fi
-    build_zlib
-    build_tiff
-    build_lcms2
-    local cmake=cmake
-    local archive_prefix="v"
-    if [ $(lex_ver $OPENJPEG_VERSION) -lt $(lex_ver 2.1.1) ]; then
-        archive_prefix="version."
-    fi
-    local out_dir=$(fetch_unpack https://github.com/uclouvain/openjpeg/archive/${archive_prefix}${OPENJPEG_VERSION}.tar.gz)
-    (cd $out_dir \
-        && $cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET . \
-        && make -j4 \
-        && make install)
+
+  if [ -e openjpeg-stamp ]; then return; fi
+
+   build_zlib
+   build_tiff
+   build_lcms2
+
+   wget https://github.com/uclouvain/openjpeg/archive/refs/tags/v${OPENJPEG_VERSION}.tar.gz -O openjpeg-${OPENJPEG_VERSION}.tar.gz
+   tar -xvzf openjpeg-${OPENJPEG_VERSION}.tar.gz
+   local cmake=cmake
+  (cd openjpeg-${OPENJPEG_VERSION} \
+        && mkdir build \
+        && cd build \
+        && $cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
+
     touch openjpeg-stamp
 }
 
 
 function build_libwebp {
-    ls -l $BUILD_PREFIX
-    ls -l $BUILD_PREFIX/share
-    ls -l $BUILD_PREFIX/share/man
+
     build_libpng
     build_giflib
-    build_simple libwebp $LIBWEBP_VERSION \
-        https://storage.googleapis.com/downloads.webmproject.org/releases/webp tar.gz \
-        --enable-libwebpmux --enable-libwebpdemux
+
+    if [ -e libwebp-stamp ]; then return; fi
+    wget https://github.com/webmproject/libwebp/archive/refs/tags/v$LIBWEBP_VERSION.tar.gz -O libwebp-$LIBWEBP_VERSION.tar.gz
+    tar -xzf libwebp-$LIBWEBP_VERSION.tar.gz
+
+    (cd libwebp-$LIBWEBP_VERSION \
+       && ./autogen.sh \
+       && CPPFLAGS="-I$BUILD_PREFIX/include" \
+        LDFLAGS="-L$BUILD_PREFIX/lib" \
+        ./configure --prefix=$BUILD_PREFIX \
+                 --enable-libwebpmux \
+                 --enable-libwebpdemux \
+       && make \
+       && make install)
+    touch libwebp-stamp
 }
 
 
 function build_nghttp2 {
     if [ -e nghttp2-stamp ]; then return; fi
-    fetch_unpack https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
+    wget https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
+    tar -xzf nghttp2-${NGHTTP2_VERSION}.tar.gz
     (cd nghttp2-${NGHTTP2_VERSION}  \
         && ./configure --enable-lib-only --prefix=$BUILD_PREFIX \
         && make -j4 \
@@ -248,53 +413,243 @@ function build_nghttp2 {
 
 function build_openssl {
     if [ -e openssl-stamp ]; then return; fi
-    fetch_unpack ${OPENSSL_DOWNLOAD_URL}/${OPENSSL_ROOT}.tar.gz
-    check_sha256sum $ARCHIVE_SDIR/${OPENSSL_ROOT}.tar.gz ${OPENSSL_HASH}
-    (cd ${OPENSSL_ROOT} \
-        && ./config no-ssl2 -fPIC --prefix=$BUILD_PREFIX \
+
+    TAR_FILE="openssl-$OPENSSL_VERSION.tar.gz"
+    SHA_FILE="openssl-$OPENSSL_VERSION.tar.gz.sha256"
+    wget https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz
+    wget https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz.sha256
+
+    EXPECTED_HASH=$(cut -d ' ' -f1 "$SHA_FILE")
+    ACTUAL_HASH=$(sha256sum "$TAR_FILE" | cut -d ' ' -f1)
+    echo "Expected hash: $EXPECTED_HASH"
+    echo "Actual hash: $ACTUAL_HASH"
+   # Compare hashes
+   if [ "$EXPECTED_HASH" == "$ACTUAL_HASH" ]; then
+
+      echo "SHA256 hash verified. Extracting..."
+      tar -xzf "$TAR_FILE"
+   else
+      echo "Hash mismatch! Aborting."
+      exit 1
+   fi
+   (cd openssl-${OPENSSL_VERSION} \
+        && ./config $TARGET -fPIC --prefix=$BUILD_PREFIX \
         && make -j4 \
-        && if [ -n "$IS_OSX" ]; then sudo make install; else make install; fi)
+        && make install)
     touch openssl-stamp
 }
 
 
 function build_curl {
     if [ -e curl-stamp ]; then return; fi
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
-    build_openssl
+
+    suppress build_openssl
     build_nghttp2
-    local flags="--prefix=$BUILD_PREFIX --with-nghttp2=$BUILD_PREFIX --with-libz --with-ssl --without-libidn2"
-    #    fetch_unpack https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz
+    local flags="--prefix=$BUILD_PREFIX --with-nghttp2=$BUILD_PREFIX --with-zlib=$BUILD_PREFIX --with-ssl=$BUILD_PREFIX --without-libidn2 --without-libpsl"
+    wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+    tar -xzvf curl-${CURL_VERSION}.tar.gz
     (cd curl-${CURL_VERSION} \
         && LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib:$BUILD_PREFIX/lib64 ./configure $flags \
         && make -j4 \
-        && if [ -n "$IS_OSX" ]; then sudo make install; else make install; fi)
+        && if [ -n "$IS_MACOS" ]; then make install; else make install; fi)
     touch curl-stamp
 }
 
+
 function build_zstd {
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
+
     if [ -e zstd-stamp ]; then return; fi
-    fetch_unpack https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz
-    if [ -n "$IS_OSX" ]; then
+    wget https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz -O zstd-$ZSTD_VERSION.tar.gz
+    tar -xzf zstd-${ZSTD_VERSION}.tar.gz
+
+    if [ -n "$IS_MACOS" ]; then
         sed_ere_opt="-E"
     else
         sed_ere_opt="-r"
     fi
-    (cd zstd-${ZSTD_VERSION}  \
-        && make -j4 PREFIX=$BUILD_PREFIX ZSTD_LEGACY_SUPPORT=0 \
-        && make install PREFIX=$BUILD_PREFIX SED_ERE_OPT=$sed_ere_opt)
+    local cmake=cmake
+    (cd zstd-${ZSTD_VERSION}/build/cmake  \
+        && $cmake . \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+           -DCMAKE_OSX_ARCHITECTURES="${ARCH}" \
+		   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+           -DZSTD_LEGACY_SUPPORT=0 \
+           -DSED_ERE_OPT=$sed_ere_opt \
+        && $cmake --build . \
+        && $cmake --install .)
+
     touch zstd-stamp
 }
 
+
 function build_pcre2 {
-    build_simple pcre2 $PCRE_VERSION https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}
+    if [ -e pcre-stamp ]; then return; fi
+    wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2
+    tar -xjf "pcre2-${PCRE_VERSION}.tar.bz2"
+    (cd pcre2-${PCRE_VERSION} \
+        && ./configure --prefix=$BUILD_PREFIX \
+        && make -j4 \
+        && make install)
+    touch pcre-stamp
 }
+
+
+function build_zlib {
+    if [ -e zlib-stamp ]; then return; fi
+    # Careful, this one may cause yum to segfault
+    # Fossils directory should also contain latest
+    # build_simple zlib $ZLIB_VERSION https://zlib.net/fossils
+    wget https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz
+    tar -xvf zlib-$ZLIB_VERSION.tar.gz
+   (cd zlib-${ZLIB_VERSION} \
+    && ./configure --prefix=$BUILD_PREFIX \
+    && make \
+    && make install)
+    touch zlib-stamp
+}
+
+
+function build_jpeg {
+
+    if [ -e jpeg-stamp ]; then return; fi
+    wget http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz
+    tar -xzf jpegsrc.v${JPEG_VERSION}.tar.gz
+    (cd jpeg-${JPEG_VERSION} \
+        && ./configure --prefix=$BUILD_PREFIX \
+        && make \
+        && make install)
+    touch jpeg-stamp
+}
+
+
+ function build_giflib {
+  if [ -e giflib-stamp ]; then return; fi
+  GIFLIB_TAR="giflib-${GIFLIB_VERSION}.tar.gz"
+  GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
+  wget -O "$GIFLIB_TAR" "$GIFLIB_URL"
+  tar -xzf "$GIFLIB_TAR"
+        (cd "giflib-${GIFLIB_VERSION}" \
+        && make \
+        && make install PREFIX=$BUILD_PREFIX)
+        touch giflib-stamp
+}
+
+
+function build_libpng {
+
+    # if [ -e libpng-stamp ]; then return; fi
+    build_zlib
+
+    wget https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz
+    tar -xzf libpng-$LIBPNG_VERSION.tar.gz
+    (cd libpng-$LIBPNG_VERSION\
+        && ./configure --prefix=$BUILD_PREFIX \
+        && make \
+        && make install)
+    touch libpng-stamp
+}
+
+
+function build_xz {
+  if [ -e xz-stamp ]; then return; fi
+  wget "https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz"
+  tar -xzf "xz-${XZ_VERSION}.tar.gz"
+  (cd "xz-${XZ_VERSION}" \
+   && ./configure --prefix=$BUILD_PREFIX \
+   && make \
+   && make install)
+   touch xz-stamp
+}
+
+
+function build_lcms2 {
+
+  if [ -e lcms2-stamp ]; then return; fi
+
+  build_tiff
+
+  wget https://downloads.sourceforge.net/project/lcms/lcms/${LCMS2_VERSION}/lcms2-${LCMS2_VERSION}.tar.gz
+  tar -xzf lcms2-${LCMS2_VERSION}.tar.gz
+  (cd lcms2-${LCMS2_VERSION} \
+    && ./configure --prefix=$BUILD_PREFIX \
+    && make -j$(nproc) \
+    && make install)
+  touch lcms2-stamp
+
+}
+
+
+function build_libdeflate {
+
+   if [ -e libdeflate-stamp ]; then return; fi
+
+   wget https://github.com/ebiggers/libdeflate/archive/refs/tags/v${LIBDEFLATE_VERSION}.tar.gz -O libdeflate-${LIBDEFLATE_VERSION}.tar.gz
+   tar -xvzf libdeflate-${LIBDEFLATE_VERSION}.tar.gz
+       local cmake=cmake
+       (cd libdeflate-${LIBDEFLATE_VERSION} \
+         && mkdir build && cd build \
+         && $cmake .. \
+        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        && $cmake --build . -j4 \
+        && $cmake --install .)
+
+   touch libdeflate-stamp
+}
+
+
+function build_libaec {
+    if [ -e libaec-stamp ]; then return; fi
+    LIBAEC_URL="https://github.com/MathisRosenhauer/libaec/releases/download/v${LIBAEC_VERSION}/libaec-${LIBAEC_VERSION}.tar.gz"
+    wget "$LIBAEC_URL" -O libaec-${LIBAEC_VERSION}.tar.gz
+    tar -xzf libaec-${LIBAEC_VERSION}.tar.gz
+    (cd libaec-${LIBAEC_VERSION} \
+        && ./configure --prefix=$BUILD_PREFIX \
+        && make \
+        && make install)
+    touch libaec-stamp
+}
+
+
+function build_netcdf {
+
+    if [ -e netcdf-stamp ]; then return; fi
+    local cmake=cmake
+    build_hdf5
+    NETCDF_URL="https://github.com/Unidata/netcdf-c/archive/refs/tags/v${NETCDF_VERSION}.tar.gz"
+    wget "$NETCDF_URL" -O "netcdf-c-${NETCDF_VERSION}.tar.gz"
+    tar -xzf netcdf-c-${NETCDF_VERSION}.tar.gz
+    (cd netcdf-c-${NETCDF_VERSION} \
+        && mkdir build && cd build \
+        && $cmake .. \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+		   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+		   -DENABLE_DAP=ON \
+	       -DBUILD_SHARED_LIBS=ON \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
+    touch netcdf-stamp
+}
+
 
 function build_gdal {
     if [ -e gdal-stamp ]; then return; fi
+
+    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
+    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
 
     build_blosc
     build_curl
@@ -312,32 +667,42 @@ function build_gdal {
     build_zstd
     build_pcre2
 
-    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS -g -O2"
-    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -g -O2"
-
-    if [ -n "$IS_OSX" ]; then
+    if [ -n "$IS_MACOS" ]; then
         GEOS_CONFIG="-DGDAL_USE_GEOS=OFF"
         PCRE2_LIB="$BUILD_PREFIX/lib/libpcre2-8.dylib"
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
     else
         GEOS_CONFIG="-DGDAL_USE_GEOS=ON"
         PCRE2_LIB="$BUILD_PREFIX/lib/libpcre2-8.so"
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
     fi
 
+    # To use GDAL 3.10.3 with PDF: Fix build against Poppler 2025.05.0
+    # wget https://github.com/OSGeo/gdal/archive/refs/heads/release/3.10.zip
+    # 7z x 3.10.zip
+    # mv gdal-release-3.10 gdal-3.10.3
+
+    wget https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz
+    tar -xzf gdal-${GDAL_VERSION}.tar.gz
+
     local cmake=cmake
-    fetch_unpack http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz
     (cd gdal-${GDAL_VERSION} \
         && mkdir build \
         && cd build \
         && $cmake .. \
         -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
         -DCMAKE_INCLUDE_PATH=$BUILD_PREFIX/include \
         -DCMAKE_LIBRARY_PATH=$BUILD_PREFIX/lib \
         -DCMAKE_PROGRAM_PATH=$BUILD_PREFIX/bin \
         -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
         -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_BUILD_TYPE=Release \
         -DGDAL_BUILD_OPTIONAL_DRIVERS=ON \
         -DOGR_BUILD_OPTIONAL_DRIVERS=OFF \
+        -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
+        -DSQLite3_LIBRARY=$SQLITE_LIB \
         ${GEOS_CONFIG} \
         -DGDAL_USE_CURL=ON \
         -DGDAL_USE_TIFF=ON \
@@ -393,7 +758,7 @@ function build_gdal {
         -DGDAL_USE_ODBC=OFF \
         && $cmake --build . -j4 \
         && $cmake --install .)
-    if [ -n "$IS_OSX" ]; then
+    if [ -n "$IS_MACOS" ]; then
         :
     else
         strip -v --strip-unneeded ${BUILD_PREFIX}/lib/libgdal.so.* || true
@@ -402,134 +767,33 @@ function build_gdal {
     touch gdal-stamp
 }
 
-
-function pre_build {
-    # Any stuff that you need to do before you start building the wheels
-    # Runs in the root directory of this repository.
-    #if [ -n "$IS_OSX" ]; then
-    #    # Update to latest zlib for OSX build
-    #    build_new_zlib
-    #fi
-
-    local cmake=$(get_modern_cmake)
-
-    build_openssl
-
+    suppress update_env_for_build_prefix
+    build_zlib
     suppress build_xz
     suppress build_nghttp2
-
-    if [ -n "$IS_OSX" ]; then
-        rm /usr/local/lib/libpng* || true
-    fi
-
-    fetch_unpack https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz
-
     # Remove previously installed curl.
-    rm -rf /usr/local/lib/libcurl* || true
-
-    suppress build_curl
-    suppress build_libwebp
-    suppress build_zstd
-    suppress build_libpng
-    suppress build_jpeg
+    rm -rf $BUILD_PREFIX/lib/libcurl* || true
+	suppress build_curl
+    build_libwebp
+    build_zstd
+	build_libdeflate
+    build_jpeg
     build_lerc
-
-    if [ -n "$IS_OSX" ]; then
-        export LDFLAGS="${LDFLAGS} -Wl,-rpath,${BUILD_PREFIX}/lib"
-    fi
-
     build_tiff
-
-    suppress build_openjpeg
+    build_openjpeg
     suppress build_jsonc
-    suppress build_sqlite
+    build_sqlite
     suppress build_proj
     suppress build_expat
     suppress build_geos
-    build_hdf5
-    build_netcdf
-
+    suppress build_hdf5
+    suppress build_netcdf
     build_gdal
-}
 
+echo "List contents of $BUILD_PREFIX/lib directory"
+ls "$BUILD_PREFIX/lib"
 
-function install_run {
-    if [ -n "$IS_OSX" ]; then
-        install_wheel
-        mkdir tmp_for_test
-        (cd tmp_for_test && run_tests)
-        rmdir tmp_for_test  2>/dev/null || echo "Cannot remove tmp_for_test"
-    else
-        if [ "${MB_PYTHON_VERSION}" != "3.13" ]; then
-            install_wheel
-            mkdir tmp_for_test
-            (cd tmp_for_test && run_tests)
-            rmdir tmp_for_test  2>/dev/null || echo "Cannot remove tmp_for_test"
-        else
-            :
-        fi
-    fi
-}
+echo "Using GDAL_CONFIG at: $GDAL_CONFIG"
 
-
-function run_tests {
-    unset GDAL_DATA
-    unset PROJ_DATA
-    if [ -n "$IS_OSX" ]; then
-        export PATH=$PATH:${BUILD_PREFIX}/bin
-        export LC_ALL=en_US.UTF-8
-        export LANG=en_US.UTF-8
-    else
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-        apt-get update
-        apt-get install -y ca-certificates
-    fi
-    cp -R ../rasterio/tests ./tests
-    python -m pip install $TEST_DEPENDS
-    PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_issue2353 and not test_info_azure_unsigned and not test_datasetreader_ctor_url and not test_outer_boundless_pixel_fidelity"
-    rio --version
-    rio env --formats
-    python ../test_fiona_issue383.py
-}
-
-
-function build_wheel_cmd {
-    local cmd=${1:-build_cmd}
-    local repo_dir=${2:-$REPO_DIR}
-    [ -z "$repo_dir" ] && echo "repo_dir not defined" && exit 1
-    local wheelhouse=$(abspath ${WHEEL_SDIR:-wheelhouse})
-    start_spinner
-    if [ -n "$(is_function "pre_build")" ]; then pre_build; fi
-    stop_spinner
-    pip install -U pip
-    pip install -U build
-    if [ -n "$BUILD_DEPENDS" ]; then
-        pip install $(pip_opts) $BUILD_DEPENDS
-    fi
-    (cd $repo_dir && GDAL_VERSION=3.9.1 $cmd $wheelhouse)
-    if [ -n "$IS_OSX" ]; then
-        pip install delocate
-        delocate-listdeps --all --depending $wheelhouse/*.whl
-    else  # manylinux
-        pip install -I "auditwheel @ git+https://github.com/sgillies/auditwheel.git@extra-lib-name-tag"
-    fi
-    repair_wheelhouse $wheelhouse
-}
-
-
-function build_cmd {
-    local abs_wheelhouse=$1
-    python -m build -o $abs_wheelhouse
-}
-
-
-function macos_arm64_native_build_setup {
-    # Setup native build for single arch arm_64 wheels
-    export PLAT="arm64"
-    # We don't want universal2 builds and only want an arm64 build
-    export _PYTHON_HOST_PLATFORM="macosx-11.0-arm64"
-    export ARCHFLAGS+=" -arch arm64"
-    $@
-}
+# Run the gdal-config binary
+"$GDAL_CONFIG" --version
