@@ -1,0 +1,144 @@
+---
+name: Windows wheels
+
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  REF: rel-1.4.3
+
+# cancel running jobs on new commit to PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-wheels-win:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: "windows-2019"
+            arch: AMD64
+            msvc_arch: x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Bootstrap vcpkg
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-windows
+        run: |
+          cd "$VCPKG_INSTALLATION_ROOT"
+          git pull > nul
+          ./bootstrap-vcpkg.bat -disableMetrics
+        shell: bash
+
+      - name: Install C Packages (GDAL et al)
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-windows
+        run: |
+          vcpkg install --feature-flags="versions,manifests" --x-manifest-root=$Env:GITHUB_WORKSPACE --x-install-root=$Env:VCPKG_INSTALLATION_ROOT/installed
+        shell: pwsh
+
+      - name: Upload vcpkg build logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "C:/vcpkg/buildtrees/**/*.log"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: rasterio/rasterio
+          fetch-depth: 0
+          ref: ${{ env.REF }}
+
+      - name: Add to rasterio setup.cfg
+        run: |
+          echo -e "\n[build_ext]" >> setup.cfg
+          echo "include_dirs = C:/vcpkg/installed/x64-windows/include" >> setup.cfg
+          echo "libraries = gdal" >> setup.cfg
+          echo "library_dirs = C:/vcpkg/installed/x64-windows/lib" >> setup.cfg
+          cat setup.cfg
+        shell: bash
+
+      - name: vcpkg debugging
+        run: |
+          find $VCPKG_INSTALLATION_ROOT -name gdal.lib
+          find $VCPKG_INSTALLATION_ROOT -name header.dxf
+        shell: bash
+ 
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.1
+        env:
+          CIBW_SKIP: "*-win32 pp*"
+          CIBW_ENVIRONMENT_WINDOWS:
+            VCPKG_INSTALL="C:/vcpkg/installed/x64-windows"
+            GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
+            GDAL_LIBRARY_PATH="$VCPKG_INSTALL/lib"
+            PACKAGE_DATA=1
+            GDAL_DATA="$VCPKG_INSTALL/share/gdal"
+            PROJ_DATA="$VCPKG_INSTALL/share/proj"
+            GDAL_VERSION="3.8.4"
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: wheelhouse/*.whl
+
+  test-wheels:
+    name: Test wheels on ${{ matrix.os }} (Python ${{ matrix.python-version }})
+    needs: [build-wheels-win]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-latest"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout Rasterio
+        uses: actions/checkout@v3
+        with:
+          repository: rasterio/rasterio
+          ref: ${{ env.REF }}
+          path: ./rasterio
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: Download wheels from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: wheelhouse
+
+      - name: Install dependencies and rasterio wheel
+        shell: bash
+        run: |
+          python -m pip install oldest-supported-numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec requests
+          python -m pip install --pre --no-deps --find-links wheelhouse/artifact rasterio
+          python -m pip install rasterio
+          python -m pip list
+
+      - name: Run tests
+        shell: bash
+        run: |
+          rio --version
+          rio env --formats
+          python test_fiona_issue383.py
+          cp -R rasterio/tests tests
+          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_issue2353 and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
+
+      - name: Check for conflicts with fiona wheel
+        shell: bash
+        if: matrix.python-version == '3.11'
+        run: |
+          python -m pip install fiona
+          python -c "import fiona; import rasterio; print(rasterio.show_versions())"
