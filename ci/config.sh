@@ -65,7 +65,7 @@ echo "✅ Detected platform: $PLATFORM"
 
 # 📦 Set OpenSSL Configure target
 case "$PLATFORM" in
-    macos-arm64)    TARGET="darwin64-arm64-cc" ;;
+    macos-arm64)    TARGET="darwin64-${CMAKE_OSX_ARCHITECTURES}-cc" ;;
     macos-x86_64)   TARGET="darwin64-x86_64-cc" ;;
     linux-aarch64)  TARGET="linux-aarch64" ;;
     linux-x86_64)   TARGET="linux-x86_64" ;;
