@@ -387,9 +387,9 @@ function build_libwebp {
 
     (cd libwebp-$LIBWEBP_VERSION \
        && ./autogen.sh \
-        ./configure --prefix=$BUILD_PREFIX \
-                 --enable-libwebpmux \
-                 --enable-libwebpdemux \
+       && ./configure --prefix=$BUILD_PREFIX \
+                      --enable-libwebpmux \
+                      --enable-libwebpdemux \
        && make \
        && make install)
     touch libwebp-stamp
