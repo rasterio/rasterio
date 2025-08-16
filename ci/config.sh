@@ -542,7 +542,7 @@ function build_libpng {
 
     build_zlib
 
-    wget https://github.com/pnggroup/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz
+    wget https://github.com/pnggroup/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz -O libpng-$LIBPNG_VERSION.tar.gz
     tar -xzf libpng-$LIBPNG_VERSION.tar.gz
     (cd libpng-$LIBPNG_VERSION\
         && ./configure --prefix=$BUILD_PREFIX \
