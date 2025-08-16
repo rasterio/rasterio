@@ -26,7 +26,6 @@ EXPAT_VERSION=2.7.1
 LIBDEFLATE_VERSION=1.18
 
 
-
 BUILD_PREFIX="${BUILD_PREFIX:-/usr/local}"
 
 export GDAL_CONFIG="$BUILD_PREFIX/bin/gdal-config"
@@ -388,8 +387,6 @@ function build_libwebp {
 
     (cd libwebp-$LIBWEBP_VERSION \
        && ./autogen.sh \
-       && CPPFLAGS="-I$BUILD_PREFIX/include" \
-        LDFLAGS="-L$BUILD_PREFIX/lib" \
         ./configure --prefix=$BUILD_PREFIX \
                  --enable-libwebpmux \
                  --enable-libwebpdemux \
@@ -541,10 +538,11 @@ function build_jpeg {
 
 function build_libpng {
 
-    # if [ -e libpng-stamp ]; then return; fi
+    if [ -e libpng-stamp ]; then return; fi
+
     build_zlib
 
-    wget https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz
+    wget https://github.com/pnggroup/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz
     tar -xzf libpng-$LIBPNG_VERSION.tar.gz
     (cd libpng-$LIBPNG_VERSION\
         && ./configure --prefix=$BUILD_PREFIX \
@@ -572,7 +570,7 @@ function build_lcms2 {
 
   build_tiff
 
-  wget https://downloads.sourceforge.net/project/lcms/lcms/${LCMS2_VERSION}/lcms2-${LCMS2_VERSION}.tar.gz
+  wget https://github.com/mm2/Little-CMS/releases/download/lcms${LCMS2_VERSION}/lcms2-${LCMS2_VERSION}.tar.gz
   tar -xzf lcms2-${LCMS2_VERSION}.tar.gz
   (cd lcms2-${LCMS2_VERSION} \
     && ./configure --prefix=$BUILD_PREFIX \
