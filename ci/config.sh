@@ -73,19 +73,6 @@ esac
 
 echo "IS_MACOS: ${IS_MACOS}"
 
-if [ -n "$IS_MACOS" ]; then
-    export CFLAGS="$CFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
-    export CXXFLAGS="$CXXFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
-else
-    export CFLAGS="$CFLAGS -g -O2"
-    export CXXFLAGS="$CXXFLAGS -g -O2"
-fi
-
-echo "Flags:"
-echo "$CFLAGS"
-echo "$CXXFLAGS"
-
-
 # ------------------------------------------------
 # From:
 #	 https://github.com/rasterio/rasterio-wheels
@@ -102,6 +89,18 @@ if [ -z "$IS_MACOS" ]; then
     export CXXFLAGS="${CXXFLAGS:-$STRIP_FLAGS}"
     export FFLAGS="${FFLAGS:-$STRIP_FLAGS}"
 fi
+
+if [ -n "$IS_MACOS" ]; then
+    export CFLAGS="$CFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
+    export CXXFLAGS="$CXXFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
+else
+    export CFLAGS="$CFLAGS -g -O2"
+    export CXXFLAGS="$CXXFLAGS -g -O2"
+fi
+
+echo "Flags:"
+echo "$CFLAGS"
+echo "$CXXFLAGS"
 
 export CPPFLAGS_BACKUP="$CPPFLAGS"
 export LIBRARY_PATH_BACKUP="$LIBRARY_PATH"
