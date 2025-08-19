@@ -141,8 +141,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
     source : ndarray, dataset, or Band
         The source is a 2 or 3-D ndarray, a dataset opened in "r" mode,
         or a single or a multiple Rasterio Band object. Must be of type
-        rasterio.int16, rasterio.int32, rasterio.uint8, rasterio.uint16,
-        or rasterio.float32
+        rasterio.int16, rasterio.int32, rasterio.uint8 or rasterio.uint16.
     size : int
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray, optional
