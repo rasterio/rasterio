@@ -319,7 +319,6 @@ creation_options = click.option(
 rgb_opt = click.option(
     '--rgb', 'photometric',
     flag_value='rgb',
-    default=False,
     help="Set RGB photometric interpretation.")
 
 overwrite_opt = click.option(
