@@ -5,8 +5,7 @@ import json
 
 import click
 from cligj import (
-    compact_opt, use_rs_opt, geojson_type_collection_opt,
-    geojson_type_feature_opt, projection_geographic_opt,
+    compact_opt, use_rs_opt, projection_geographic_opt,
     projection_projected_opt, precision_opt, indent_opt)
 
 import rasterio
@@ -27,8 +26,7 @@ sequence_opt = click.option(
 
 @click.command(short_help="Print ground control points as GeoJSON.")
 @options.file_in_arg
-@geojson_type_collection_opt()
-@geojson_type_feature_opt(default=True)
+@options.geojson_type_opt(allowed=('collection', 'feature'), default='feature')
 @projection_geographic_opt
 @projection_projected_opt
 @precision_opt
