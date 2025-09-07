@@ -647,14 +647,18 @@ def test_warpedvrt_gcps__width_height(tmp_path):
     with rasterio.open(tiffname, mode='w', height=800, width=800, count=3, dtype=numpy.uint8) as source:
         source.gcps = (src_gcps, crs)
 
+    expected_transforms = [
+        # GDAL 3.11+ uses corner‐based origin: c == minX
+        affine.Affine(22271.389322449897, 0.0, 115698.0, 0.0, -20016.05875815117, 2818720.0),
+        # GDAL 3.10 and earlier used a half‐pixel center offset
+        affine.Affine(22271.389322449897, 0.0, 115698.25, 0.0, -20016.05875815117, 2818720.0),
+    ]
     with rasterio.open(tiffname) as src:
         with WarpedVRT(src, width=10, height=10) as vrt:
             assert vrt.height == 10
             assert vrt.width == 10
             assert vrt.crs == crs
-            assert vrt.dst_transform.almost_equals(
-                affine.Affine(22271.389322449897, 0.0, 115698.25, 0.0, -20016.05875815117, 2818720.0)
-            )
+            assert any(vrt.dst_transform.almost_equals(t) for t in expected_transforms)
 
 
 def test_warpedvrt_rpcs__width_height():
