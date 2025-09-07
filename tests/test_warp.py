@@ -1326,40 +1326,15 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
     assert np.count_nonzero(out) in expected[method]
 
 
-@pytest.mark.parametrize(
-    "test3d,count_nonzero",
-    [
-        pytest.param(
-            True,
-            1309625,
-            marks=pytest.mark.skipif(
-                gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-            ),
-        ),
-        pytest.param(
-            True,
-            1314520,
-            marks=pytest.mark.skipif(
-                gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-            ),
-        ),
-        pytest.param(
-            False,
-            437686,
-            marks=pytest.mark.skipif(
-                gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-            ),
-        ),
-        pytest.param(
-            False,
-            438113,
-            marks=pytest.mark.skipif(
-                gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-            ),
-        ),
-    ],
-)
-def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
+@pytest.mark.parametrize("test3d", [True, False])
+def test_reproject_array_interface(test3d, path_rgb_byte_tif):
+    count_nonzero = {
+        # See GDAL gh-11713 for second values in GDAL 3.11.
+        True: {False: 1309625, True: 1314520},
+        False: {False: 437686, True: 438113},
+    }
+    count_nonzero = count_nonzero[test3d][gdal_version_info >= (3, 11, 0)]
+
     class DataArray:
         def __init__(self, data):
             self.data = data
@@ -1391,60 +1366,15 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
 
 
-@pytest.mark.parametrize(
-    "test3d,count_nonzero",
-    [
-        pytest.param(
-            True,
-            1308064,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            True,
-            1312959,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            False,
-            437686,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            False,
-            438113,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-    ],
-)
-def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
+@pytest.mark.parametrize("test3d", [True, False])
+def test_reproject_masked(test3d, path_rgb_byte_tif):
+    count_nonzero = {
+        # See GDAL gh-11713 for second values in GDAL 3.11.
+        True: {False: 1308064, True: 1312959},
+        False: {False: 437686, True: 438113},
+    }
+    count_nonzero = count_nonzero[test3d][gdal_version_info >= (3, 11, 0)]
+
     with rasterio.open(path_rgb_byte_tif) as src:
         if test3d:
             source = src.read(masked=True)
@@ -1504,60 +1434,15 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
     assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
 
-@pytest.mark.parametrize(
-    "test3d,count_nonzero",
-    [
-        pytest.param(
-            True,
-            1309625,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            True,
-            1314520,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            False,
-            437686,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-        pytest.param(
-            False,
-            438113,
-            marks=[
-                pytest.mark.skipif(
-                    not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
-                ),
-                pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
-                ),
-            ],
-        ),
-    ],
-)
-def test_reproject_masked_no_mask(test3d, count_nonzero, path_rgb_byte_tif):
+@pytest.mark.parametrize("test3d", [True, False])
+def test_reproject_masked_no_mask(test3d, path_rgb_byte_tif):
+    count_nonzero = {
+        # See GDAL gh-11713 for second values in GDAL 3.11.
+        True: {False: 1309625, True: 1314520},
+        False: {False: 437686, True: 438113},
+    }
+    count_nonzero = count_nonzero[test3d][gdal_version_info >= (3, 11, 0)]
+
     with rasterio.open(path_rgb_byte_tif) as src:
         if test3d:
             source = src.read(masked=True)
