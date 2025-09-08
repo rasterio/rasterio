@@ -57,7 +57,7 @@ def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
         assert vrt.dst_nodata is None
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
-        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+        assert vrt.warp_extras == {"init_dest": "0"}
         assert vrt.mask_flag_enums == ([MaskFlags.all_valid],) * 3
 
 

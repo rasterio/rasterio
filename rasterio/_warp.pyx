@@ -571,7 +571,8 @@ def _reproject(
     log.debug("Setting NUM_THREADS option: %d", num_threads)
 
     if init_dest_nodata:
-        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
+        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST",
+                                      "NO_DATA" if dst_nodata is not None else "0")
 
     # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
@@ -1008,7 +1009,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_transform = transform
         self.warp_extras = warp_extras.copy()
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
-            self.warp_extras['init_dest'] = 'NO_DATA'
+            self.warp_extras['init_dest'] = 'NO_DATA' if self.dst_nodata is not None else '0'
 
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL
