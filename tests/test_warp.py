@@ -1333,28 +1333,28 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
             True,
             1309625,
             marks=pytest.mark.skipif(
-                gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
             ),
         ),
         pytest.param(
             True,
             1314520,
             marks=pytest.mark.skipif(
-                gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
             ),
         ),
         pytest.param(
             False,
             437686,
             marks=pytest.mark.skipif(
-                gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
             ),
         ),
         pytest.param(
             False,
             438113,
             marks=pytest.mark.skipif(
-                gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
             ),
         ),
     ],
@@ -1402,7 +1402,7 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1414,7 +1414,7 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1426,7 +1426,7 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1438,7 +1438,7 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1515,7 +1515,7 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1527,7 +1527,7 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1539,7 +1539,7 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info >= (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info >= (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
@@ -1551,7 +1551,7 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
                     not gdal_version.at_least("3.8"), reason="Requires GDAL 3.8.x"
                 ),
                 pytest.mark.skipif(
-                    gdal_version_info < (3, 10, 2), reason="See GDAL gh-11713"
+                    gdal_version_info < (3, 11, 0), reason="See GDAL gh-11713"
                 ),
             ],
         ),
