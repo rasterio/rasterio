@@ -97,15 +97,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        gdal-version: ['3.9.3']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        gdal-version: ['3.11.4']
         include:
-          - python-version: '3.12'
+          - python-version: '3.13'
             gdal-version: 'latest'
           - python-version: '3.9'
-            gdal-version: '3.11.3'
+            gdal-version: '3.11.4'
           - python-version: '3.9'
             gdal-version: '3.10.3'
+          - python-version: '3.9'
+            gdal-version: '3.9.3'
           - python-version: '3.9'
             gdal-version: '3.8.5'
           - python-version: '3.9'
@@ -157,7 +159,7 @@ jobs:
         # macos-13 is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         include:
           - os: ubuntu-latest
             python-version: '*'
