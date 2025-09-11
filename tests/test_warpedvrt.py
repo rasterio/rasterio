@@ -634,8 +634,24 @@ def test_gauss_no(path_rgb_byte_tif):
         with pytest.raises(Exception):
             WarpedVRT(src, resampling=Resampling.gauss)
 
-
-def test_warpedvrt_gcps__width_height(tmp_path):
+@pytest.mark.parametrize(
+    "affine_c_param",
+    [
+        pytest.param(
+            115698.25,
+            marks=pytest.mark.skipif(
+                gdal_version.at_least("3.11"), reason="GDAL 3.10 and earlier used METHOD=GCP_POLYNOMIAL by default"
+            ),
+        ),
+        pytest.param(
+            115698.0,
+            marks=pytest.mark.skipif(
+                not gdal_version.at_least("3.11"), reason="GDAL 3.11+ uses METHOD=GCP_HOMOGRAPHY by default if 4 or 5 GCPs (https://github.com/OSGeo/gdal/pull/11949)"
+            ),
+        ),
+    ],
+)
+def test_warpedvrt_gcps__width_height(affine_c_param, tmp_path):
     tiffname = tmp_path / "test.tif"
     src_gcps = [
         GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
@@ -653,7 +669,7 @@ def test_warpedvrt_gcps__width_height(tmp_path):
             assert vrt.width == 10
             assert vrt.crs == crs
             assert vrt.dst_transform.almost_equals(
-                affine.Affine(22271.389322449897, 0.0, 115698.25, 0.0, -20016.05875815117, 2818720.0)
+                affine.Affine(22271.389322449897, 0.0, affine_c_param, 0.0, -20016.05875815117, 2818720.0)
             )
 
 
