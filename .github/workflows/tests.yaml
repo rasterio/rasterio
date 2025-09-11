@@ -175,7 +175,7 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
             libgdal
-            geos=3.11
+            geos
             cython=3
             numpy
 
