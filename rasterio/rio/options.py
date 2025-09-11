@@ -370,3 +370,45 @@ sequence_opt = click.option(
 format_opt = click.option(
     "-f", "--format", "--driver", "driver", help="Output format driver."
 )
+
+
+def geojson_type_opt(*, allowed, default):
+    """GeoJSON output mode"""
+    options = {
+        "collection": "feature collection(s)",
+        "feature": "feature(s)",
+        "bbox": "bounding box array(s)",
+    }
+
+    def verify_geojson_type(ctx, param, value):
+        geojson_type = ctx.params.setdefault("geojson_type", {})
+        geojson_type[param.name] = value
+        if len(geojson_type) == len(allowed):
+            # We've now seen all options for geojson_type, so verify their contents.
+            specified = [
+                name.removeprefix("geojson_type_")
+                for name, value in geojson_type.items()
+                if value
+            ]
+            if len(specified) > 1:
+                names = ",".join(f"--{name}" for name in specified)
+                raise click.BadParameter(
+                    f"too many GeoJSON output formats: {names} may not be specified together"
+                )
+            ctx.params["geojson_type"] = specified[0] if specified else default
+
+    def wrapper(func):
+        for name in allowed:
+            help_suffix = " (default)" if name == default else ""
+            opt = click.option(
+                f"--{name}",
+                f"geojson_type_{name}",
+                is_flag=True,
+                expose_value=False,
+                callback=verify_geojson_type,
+                help=f"Output as GeoJSON {options[name]}{help_suffix}",
+            )
+            func = opt(func)
+        return func
+
+    return wrapper

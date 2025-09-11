@@ -25,8 +25,7 @@ logger = logging.getLogger(__name__)
 @cligj.projection_projected_opt
 @options.sequence_opt
 @cligj.use_rs_opt
-@cligj.geojson_type_feature_opt(True)
-@cligj.geojson_type_bbox_opt(False)
+@options.geojson_type_opt(allowed=('feature', 'bbox'), default='feature')
 @click.option('--band/--mask', default=True,
               help="Choose to extract from a band (the default) or a mask.")
 @click.option('--bidx', 'bandidx', type=int, default=None,
