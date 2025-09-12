@@ -6,6 +6,7 @@ from libc.stdio cimport FILE
 cdef extern from "cpl_conv.h" nogil:
 
     void *CPLMalloc(size_t)
+    void *CPLCalloc(size_t, size_t)
     void CPLFree(void* ptr)
     void CPLSetThreadLocalConfigOption(const char* key, const char* val)
     void CPLSetConfigOption(const char* key, const char* val)
@@ -269,6 +270,35 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
+    ctypedef enum GDALRATFieldType:
+        GFT_Integer
+        GFT_Real
+        GFT_String
+
+    ctypedef enum GDALRATFieldUsage:
+        GFU_Generic
+        GFU_PixelCount
+        GFU_Name
+        GFU_Min
+        GFU_Max
+        GFU_MinMax
+        GFU_Red
+        GFU_Green
+        GFU_Blue
+        GFU_Alpha
+        GFU_RedMin
+        GFU_GreenMin
+        GFU_BlueMin
+        GFU_AlphaMin
+        GFU_RedMax
+        GFU_GreenMax
+        GFU_BlueMax
+        GFU_AlphaMax
+        GFU_MaxCount
+
+    ctypedef enum GDALRATTableType:
+        GRTT_THEMATIC
+        GRTT_ATHEMATIC
 
 IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
     cdef extern from "gdal.h" nogil:
@@ -456,6 +486,26 @@ cdef extern from "gdal.h" nogil:
     int GDALGetColorEntryCount(GDALColorTableH table)
     int GDALGetRasterColorInterpretation(GDALRasterBandH band)
     int GDALSetRasterColorInterpretation(GDALRasterBandH band, GDALColorInterp)
+    GDALRasterAttributeTableH GDALGetDefaultRAT(GDALRasterBandH band)
+    CPLErr GDALSetDefaultRAT(GDALRasterBandH hBand, GDALRasterAttributeTableH hRAT)
+    GDALRasterAttributeTableH *GDALCreateRasterAttributeTable()
+    GDALRasterAttributeTableH GDALRATClone(const GDALRasterAttributeTableH hRAT)
+    void GDALDestroyRasterAttributeTable(GDALRasterAttributeTableH hRAT)
+    CPLErr GDALRATCreateColumn(GDALRasterAttributeTableH hRAT,
+                               const char * pszFieldName,
+                               GDALRATFieldType eFieldType,
+                               GDALRATFieldUsage eFieldUsage)
+    int GDALRATGetRowCount(GDALRasterAttributeTableH hRAT)
+    int GDALRATGetColumnCount(GDALRasterAttributeTableH hRAT)
+    GDALRATFieldType GDALRATGetTypeOfCol(GDALRasterAttributeTableH hRAT, int iCol)
+    GDALRATFieldUsage GDALRATGetUsageOfCol(GDALRasterAttributeTableH hRAT, int iCol)
+    CPLErr GDALRATSetTableType(GDALRasterAttributeTableH hRAT, GDALRATTableType elnTableType)
+    GDALRATTableType GDALRATGetTableType(GDALRasterAttributeTableH hRAT)
+    CPLErr GDALRATValuesIOAsInteger(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, int * pnData )
+    CPLErr GDALRATValuesIOAsDouble(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, double * pdfData )
+    CPLErr GDALRATValuesIOAsString(GDALRasterAttributeTableH hRAT, GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, char ** papszStrList )
+    void GDALRATSetValueAsInt(GDALRasterAttributeTableH hRAT, int iRow, int iField, int nValue )
+    const char *GDALRATGetNameOfCol(void *hRat, int col)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)
     void *GDALGetMaskBand(GDALRasterBandH band)
