@@ -5,7 +5,7 @@ import click
 from cligj import (
     precision_opt, indent_opt, compact_opt, projection_geographic_opt,
     projection_mercator_opt, projection_projected_opt,
-    use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
+    use_rs_opt,
 )
 
 from .helpers import write_features, to_lower
@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
     help="Output in specified coordinates.")
 @options.sequence_opt
 @use_rs_opt
-@geojson_type_feature_opt(True)
-@geojson_type_bbox_opt(False)
+@options.geojson_type_opt(allowed=('feature', 'bbox'), default='feature')
 @click.pass_context
 def bounds(
     ctx,
