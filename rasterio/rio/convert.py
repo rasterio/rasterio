@@ -76,8 +76,8 @@ def convert(
 
             bxsize = bysize = 1024
             if profile.get('tiled', False):
-                bxsize = profile.get('blockxsize', bxsize)
-                bysize = profile.get('blockysize', bysize)
+                bxsize = int(profile.get('blockxsize', bxsize))
+                bysize = int(profile.get('blockysize', bysize))
             srcds = Window(0, 0, src.width, src.height)
 
             with rasterio.open(outputfile, 'w', **profile) as dst:
