@@ -121,7 +121,7 @@ def colorinterp_handler(ctx, param, value):
 @click.option('--tag', 'tags', callback=tags_handler, multiple=True,
               metavar='KEY=VAL', help="New tag.")
 @click.option('--all', 'allmd', callback=all_handler, flag_value='like',
-              is_eager=True, default=False,
+              is_eager=True,
               help="Copy all metadata items from the template file.")
 @click.option(
     '--colorinterp', callback=colorinterp_handler,
