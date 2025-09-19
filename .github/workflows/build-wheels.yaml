@@ -134,9 +134,9 @@ jobs:
         if: ${{ matrix.msvc_arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
-          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && '*pp3* cp39* *cp310*' || '*pp* cp39* *musllinux*' }}
+          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && 'cp39* *cp310* *cp3??t*' || '*pp* *musllinux* *cp3??t*' }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_LINUX:
             PACKAGE_DATA=1
@@ -171,6 +171,7 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.triplet }}/bin -w {dest_dir} {wheel}
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: export DYLD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rasterio_libs/lib:$DYLD_LIBRARY_PATH && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: export 'LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH' && auditwheel repair -w {dest_dir} {wheel}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -185,7 +186,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-13"]
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
         exclude:
          - os: "windows-11-arm"
            python-version: "3.10"

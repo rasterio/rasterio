@@ -2,7 +2,7 @@ PROJ_VERSION=9.6.0
 GDAL_VERSION=3.10.3
 SQLITE_VERSION=3490100
 OPENSSL_VERSION=3.4.1
-CURL_VERSION=8.8.0
+CURL_VERSION=8.13.0
 ZLIB_VERSION=1.3.1
 TIFF_VERSION=4.7.0
 NGHTTP2_VERSION=1.60.0
@@ -14,16 +14,16 @@ LIBPNG_VERSION=1.6.47
 OPENJPEG_VERSION=2.5.3
 GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
-XZ_VERSION=5.6.3
+XZ_VERSION=5.8.1
 LCMS2_VERSION=2.17
 HDF5_VERSION=1.14.5
 LIBAEC_VERSION=1.1.3
-NETCDF_VERSION=4.9.3
+NETCDF_VERSION=4.8.1
 GEOS_VERSION=3.13.0
 BLOSC_VERSION=1.21.6
 PCRE_VERSION=10.45
 EXPAT_VERSION=2.7.1
-LIBDEFLATE_VERSION=1.18
+LIBDEFLATE_VERSION=1.24
 
 
 BUILD_PREFIX="${BUILD_PREFIX:-/usr/local}"
@@ -329,20 +329,9 @@ function build_tiff {
     tar -xvf tiff-${TIFF_VERSION}.tar.gz
 
     (cd tiff-${TIFF_VERSION} \
-        && cd build \
-        && $cmake .. \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
-	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-	       -DJPEG_SUPPORT=ON \
-           -DZSTD_SUPPORT=ON \
-	       -DWEBP_SUPPORT=ON \
-           -DLERC_SUPPORT=ON \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
+        && ./configure --prefix=$BUILD_PREFIX --libdir=$BUILD_PREFIX/lib --enable-zstd --enable-webp --enable-lerc --with-jpeg-include-dir=$BUILD_PREFIX/include --with-jpeg-lib-dir=$BUILD_PREFIX/lib \
+        && make -j4 \
+        && make install)
     touch tiff-stamp
 }
 
