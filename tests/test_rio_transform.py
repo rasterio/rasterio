@@ -1,15 +1,11 @@
-import subprocess
+from rasterio.rio.main import main_group
 
-def test_transform_with_subprocess():
-    input_coords = b"[-78.0, 23.0]\n"
-    expected_output = "[192457.13, 2546667.68]"
 
-    proc = subprocess.run(
-        ["rio", "transform", "--dst-crs=EPSG:32618", "--precision=2"],
-        input=input_coords,
-        capture_output=True
+def test_transform(runner):
+    """Coordinates are transformed."""
+    result = runner.invoke(
+        main_group,
+        ["transform", "--dst-crs=EPSG:32618", "--precision=2"],
+        input="[-78.0, 23.0]",
     )
-
-    output = proc.stdout.decode("utf-8").strip()
-    assert proc.returncode == 0, f"CLI exited with code {proc.returncode}"
-    assert output == expected_output, f"Unexpected output: {repr(output)}"
+    assert result.output.rstrip("\n") == "[192457.13, 2546667.68]"
