@@ -249,7 +249,7 @@ inst_reqs = [
     "affine",
     "attrs",
     "certifi",
-    "click>=4.0",
+    "click==8.1.8",
     "cligj>=0.5",
     "importlib-metadata ; python_version < '3.10'",
     "numpy>=1.24",
