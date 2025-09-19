@@ -329,20 +329,9 @@ function build_tiff {
     tar -xvf tiff-${TIFF_VERSION}.tar.gz
 
     (cd tiff-${TIFF_VERSION} \
-        && cd build \
-        && $cmake .. \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
-	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-	       -DJPEG_SUPPORT=ON \
-           -DZSTD_SUPPORT=ON \
-	       -DWEBP_SUPPORT=ON \
-           -DLERC_SUPPORT=ON \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
+        && ./configure --prefix=$BUILD_PREFIX --libdir=$BUILD_PREFIX/lib --enable-zstd --enable-webp --enable-lerc --with-jpeg-include-dir=$BUILD_PREFIX/include --with-jpeg-lib-dir=$BUILD_PREFIX/lib \
+        && make -j4 \
+        && make install)
     touch tiff-stamp
 }
 
