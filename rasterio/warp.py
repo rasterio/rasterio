@@ -278,7 +278,7 @@ def reproject(
     Returns
     ---------
     destination: ndarray or Band
-        The transformed narray or Band.
+        The transformed ndarray or Band.
     dst_transform: Affine
         The affine transformation matrix of the destination.
     """
