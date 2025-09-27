@@ -115,7 +115,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                 for name in src.subdatasets:
                     click.echo(name)
             elif meta_member == 'stats':
-                st = src.statistics(bidx)
+                st = src.stats(indexes=bidx)[0]
                 click.echo("{st.min} {st.max} {st.mean} {st.std}".format(st=st))
             elif meta_member == 'checksum':
                 click.echo(str(src.checksum(bidx)))
