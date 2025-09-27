@@ -1,20 +1,23 @@
 """Tests of rasterio.merge"""
 
+import warnings
+import os
+import affine
 import boto3
-from hypothesis import given, settings
-from hypothesis.strategies import floats
 import numpy
 import pytest
-import warnings
+from affine import Affine
+from hypothesis import given, settings
+from hypothesis.strategies import floats
 
-import affine
 import rasterio
-from rasterio.merge import merge
+from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.errors import MergeError, RasterioError
+from rasterio.merge import merge
+from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
-from rasterio import windows
 
 from .conftest import gdal_version
 
@@ -91,8 +94,10 @@ def test_different_crs(test_data_dir_overlapping):
     # Create new raster with different crs
     with rasterio.open(test_data_dir_overlapping.joinpath(inputs[-1])) as ds_src:
         kwds = ds_src.profile
-        kwds['crs'] = CRS.from_epsg(3499)
-        with rasterio.open(test_data_dir_overlapping.joinpath("new.tif"), 'w', **kwds) as ds_out:
+        kwds["crs"] = CRS.from_epsg(3499)
+        with rasterio.open(
+            test_data_dir_overlapping.joinpath("new.tif"), "w", **kwds
+        ) as ds_out:
             ds_out.write(ds_src.read())
 
     with pytest.raises(RasterioError):
@@ -152,16 +157,19 @@ def test_unsafe_casting():
 )
 def test_issue2202(dx, dy):
     shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
-    import rasterio.merge
     from shapely import wkt
     from shapely.affinity import translate
+
+    import rasterio.merge
 
     aoi = wkt.loads(
         r"POLYGON((11.09 47.94, 11.06 48.01, 11.12 48.11, 11.18 48.11, 11.18 47.94, 11.09 47.94))"
     )
     aoi = translate(aoi, dx, dy)
 
-    with rasterio.Env(AWS_NO_SIGN_REQUEST=True,):
+    with rasterio.Env(
+        AWS_NO_SIGN_REQUEST=True,
+    ):
         ds = [
             rasterio.open(i)
             for i in [
@@ -231,10 +239,9 @@ def test_merge_destination_2(tmp_path):
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
 def test_complex_merge(test_data_complex):
-
     with warnings.catch_warnings():
-        warnings.simplefilter('error')
-        result, _ = merge([test_data_complex/"r2.tif"])
+        warnings.simplefilter("error")
+        result, _ = merge([test_data_complex / "r2.tif"])
         assert result.dtype == numpy.complex64
         assert numpy.all(result == 1)
 
@@ -243,19 +250,19 @@ def test_complex_nodata(test_data_complex):
     inputs = list(test_data_complex.iterdir())
 
     with warnings.catch_warnings():
-        warnings.simplefilter('error')
+        warnings.simplefilter("error")
 
         result, _ = merge(inputs, nodata=numpy.nan)
         assert numpy.all(numpy.isnan(result[:, 2]))
 
-        result, _ = merge(inputs, nodata=0-1j)
-        assert numpy.all(result[:, 2] == 0-1j)
+        result, _ = merge(inputs, nodata=0 - 1j)
+        assert numpy.all(result[:, 2] == 0 - 1j)
 
 
 def test_complex_outrange_nodata_():
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
         with pytest.warns(UserWarning, match="Ignoring nodata value"):
-            res, _ = merge([src], nodata=1+1j, dtype='float64')
+            res, _ = merge([src], nodata=1 + 1j, dtype="float64")
 
 
 @pytest.mark.parametrize(
@@ -296,3 +303,81 @@ def test_merge_warpedvrt(tmp_path):
     with rasterio.open(tmp_path.joinpath("test.tif")) as dst:
         result = dst.read()
         assert numpy.allclose(data.mean(), result.mean(), rtol=1e-4)
+
+
+@pytest.mark.slow
+def test_merge_no_dst(tmp_path):
+    """
+    Test chunking for merging with/without a destination dataset.
+    """
+
+    def _create_geotiff(output_path):
+        # Define the output file path
+
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        # Define the CRS (EPSG:3035 - ETRS89-extended / LAEA Europe)
+        crs = CRS.from_epsg(3035)
+
+        # Define the spatial parameters
+        width = 10000
+        height = 10000
+
+        # Origin coordinates (upper left corner)
+        origin_x = 3900000.0
+        origin_y = 3100000.0
+
+        # Pixel size (10m x -10m, negative for north-up)
+        pixel_size_x = 10.0
+        pixel_size_y = -10.0
+
+        # Create the affine transform
+        transform = from_origin(origin_x, origin_y, pixel_size_x, abs(pixel_size_y))
+
+        # Generate random data for the raster
+        # Using Float64 as specified
+        numpy.random.seed(42)  # For reproducible results
+        data = numpy.random.rand(height, width).astype(numpy.float64)
+
+        # Define the profile for the output raster
+        profile = {
+            "driver": "GTiff",
+            "dtype": "float64",
+            "nodata": None,
+            "width": width,
+            "height": height,
+            "count": 1,  # Single band
+            "crs": crs,
+            "transform": transform,
+            "compress": "deflate",  # COMPRESSION=DEFLATE
+            "interleave": "band",  # INTERLEAVE=BAND
+            "tiled": True,  # For block structure
+            "blockxsize": 256,  # Block size 256x256
+            "blockysize": 256,
+            "AREA_OR_POINT": "Area",  # Metadata
+        }
+
+        with rasterio.open(output_path, "w", **profile) as dst:
+            dst.write(data, 1)
+            dst.update_tags(AREA_OR_POINT="Area")
+            overview_factors = [2, 4, 8, 16]
+            dst.build_overviews(
+                overview_factors, resampling=rasterio.enums.Resampling.nearest
+            )
+
+        print(f"GeoTIFF file created successfully: {output_path}")
+        return output_path
+
+    lst_of_dst = [
+        _create_geotiff(tmp_path.joinpath(f"raster_{i}.tif")) for i in range(1, 4)
+    ]
+    src_files_to_mosaic = [rasterio.open(fp) for fp in lst_of_dst]
+    mosaic, out_trans = merge(src_files_to_mosaic)
+    mosaic_path = tmp_path.joinpath("mosaic.tif")
+    merge(src_files_to_mosaic, dst_path=mosaic_path)
+    with rasterio.open(mosaic_path) as mosaic_src:
+        mosaic_2 = mosaic_src.read()
+        out_trans_2 = mosaic_src.transform
+    assert numpy.array_equal(mosaic, mosaic_2)
+    assert out_trans == out_trans_2
