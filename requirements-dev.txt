@@ -5,7 +5,7 @@ aiohttp
 build
 cython>=3.0
 delocate
-fsspec
+fsspec>=2025.9.0
 hypothesis
 mypy
 numpydoc
@@ -14,6 +14,7 @@ pytest
 pytest-cov>=2.2.0
 pytest-randomly==3.10.1
 requests
+s3fs>=2025.9.0
 shapely
 sphinx
 sphinx-click
