@@ -12,6 +12,7 @@ import numpy as np
 
 import rasterio
 from rasterio import windows
+from rasterio._io import MemoryDataset
 from rasterio.enums import Resampling
 from rasterio.errors import (
     MergeError,
@@ -19,7 +20,7 @@ from rasterio.errors import (
     RasterioError,
     WindowError,
 )
-from rasterio.io import DatasetWriter, MemoryFile
+from rasterio.io import DatasetWriter
 from rasterio.transform import Affine
 from rasterio.windows import subdivide
 
@@ -397,9 +398,12 @@ def merge(
                 dst = rasterio.open(dst_path, "w", **out_profile)
                 exit_stack.enter_context(dst)
             else:
-                memfile = MemoryFile()
-                exit_stack.enter_context(memfile)
-                dst = memfile.open(**out_profile)
+                dst = MemoryDataset(
+                    np.full((output_height, output_width), nodataval, dtype=dt),
+                    transform=output_transform,
+                    crs=first_crs,
+                )
+                exit_stack.enter_context(dst)
 
         max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count)
 
@@ -461,7 +465,6 @@ def merge(
 
             for idx, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
-
                     # Intersect source bounds and tile bounds
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")
