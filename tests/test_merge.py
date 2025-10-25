@@ -305,7 +305,6 @@ def test_merge_warpedvrt(tmp_path):
         assert numpy.allclose(data.mean(), result.mean(), rtol=1e-4)
 
 
-@pytest.mark.slow
 def test_merge_no_dst(tmp_path):
     """
     Test chunking for merging with/without a destination dataset.
