@@ -321,8 +321,8 @@ def test_merge_no_dst(tmp_path):
         crs = CRS.from_epsg(3035)
 
         # Define the spatial parameters
-        width = 10000
-        height = 10000
+        width = 1024
+        height = 1024
 
         # Origin coordinates (upper left corner)
         origin_x = 3900000.0
@@ -339,6 +339,10 @@ def test_merge_no_dst(tmp_path):
         # Using Float64 as specified
         numpy.random.seed(42)  # For reproducible results
         data = numpy.random.rand(height, width).astype(numpy.float64)
+
+        # adding some zeros matching profile's no data "nodata": None, -> zero values in dataset initial array
+        nan_mask = numpy.random.rand(height, width) < 0.05  # 5% will be Zero
+        data[nan_mask] = 0
 
         # Define the profile for the output raster
         profile = {
@@ -379,5 +383,5 @@ def test_merge_no_dst(tmp_path):
     with rasterio.open(mosaic_path) as mosaic_src:
         mosaic_2 = mosaic_src.read()
         out_trans_2 = mosaic_src.transform
-    assert numpy.array_equal(mosaic, mosaic_2)
+    assert numpy.array_equal(mosaic, mosaic_2, equal_nan=True)
     assert out_trans == out_trans_2
