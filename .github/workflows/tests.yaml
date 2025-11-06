@@ -156,9 +156,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # macos-13 is OSX Intel
+        # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
-        os: [macos-13, macos-14]
+        os: [macos-15-intel, macos-14]
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         include:
           - os: ubuntu-latest
@@ -198,7 +198,7 @@ jobs:
           micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
-        if: "${{matrix.os}} == 'macos-13' || ${{matrix.os}} == 'macos-14'"
+        if: "${{matrix.os}} == 'macos-15-intel' || ${{matrix.os}} == 'macos-14'"
         shell: bash -l {0}
         run: |
            micromamba run python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
