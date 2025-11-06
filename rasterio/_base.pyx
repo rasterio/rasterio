@@ -981,6 +981,8 @@ cdef class DatasetBase:
     def compression(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
         if val:
+            # 'YCbCr JPEG' will be normalized to 'JPEG'
+            val = val.split()[-1]
             try:
                 return Compression(val)
             except ValueError:
