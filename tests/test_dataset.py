@@ -45,6 +45,20 @@ def test_dataset_compression(path_rgb_byte_tif, tag_value):
         assert dataset.compression == Compression(tag_value)
 
 
+def test_dataset_compression__ycbcr_jpeg(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        dataset.tags = MagicMock()
+        dataset.tags.return_value = {'COMPRESSION': "YCbCr JPEG"}
+        assert dataset.compression == Compression("JPEG")
+
+
+def test_dataset_compression__not_in_enum(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        dataset.tags = MagicMock()
+        dataset.tags.return_value = {'COMPRESSION': "MRF"}
+        assert dataset.compression == "MRF"
+
+
 def test_untiled_dataset_blocksize(tmpdir):
     """Blocksize is not relevant to untiled datasets (see #1689)"""
     tmpfile = str(tmpdir.join("test.tif"))
