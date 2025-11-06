@@ -2112,7 +2112,6 @@ def test_reproject_rpcs_approx_transformer(caplog):
         assert "Created approximate transformer" in caplog.text
 
 
-@pytest.mark.network
 @pytest.fixture
 def http_error_server(data):
     """Serves files from the test data directory, poorly."""
@@ -2122,9 +2121,10 @@ def http_error_server(data):
 
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
     httpd = http.server.HTTPServer(("", 0), Handler)
-    p = multiprocessing.Process(target=httpd.serve_forever)
+    mp_context = multiprocessing.get_context("fork")
+    p = mp_context.Process(target=httpd.serve_forever)
     p.start()
-    yield f'{httpd.server_name}:{httpd.server_port}'
+    yield f"{httpd.server_address[0]}:{httpd.server_address[1]}"
     p.terminate()
     p.join()
 
