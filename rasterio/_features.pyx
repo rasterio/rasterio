@@ -158,8 +158,7 @@ def _sieve(image, size, out, mask, connectivity):
     image : ndarray or Band
         The source is a 2 or 3-D ndarray, or a single or a multiple
         Rasterio Band object.  Must be of type rasterio.int16,
-        rasterio.int32, rasterio.uint8, rasterio.uint16, or
-        rasterio.float32
+        rasterio.int32, rasterio.uint8 or rasterio.uint16.
     size : int
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray

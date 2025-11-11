@@ -12,19 +12,26 @@ Mutual Incompatibilities
 ------------------------
 
 Rasterio and GDAL's bindings can contend for global GDAL objects. Unless you
-have deep knowledge about both packages, choose exactly one of ``import
-osgeo.gdal`` or ``import rasterio``.
+have deep knowledge about both packages, choose exactly one of
+
+``import osgeo.gdal`` (or ``osgeo.ogr``, for the same reasons)
+
+or
+
+``import rasterio``.
 
 GDAL's bindings (``gdal`` for the rest of this document) and Rasterio are not
-entirely compatible and should not, without a great deal of care, be imported
+designed or developed with compatibility as a goal, and should not, without an excess of care, be imported
 and used in a single Python program. The reason is that the dynamic library
 they each load (these are C extension modules, remember), ``libgdal.so`` on
 Linux, ``gdal.dll`` on Windows, has a number of global objects and the two
-modules take different approaches to managing these objects.
+modules take different approaches to managing these objects. These global objects include an HTTP cache,
+a filesystem cache, a raster block cache, a format driver registry, an error stack, and configuration
+options.
 
-Static linking of the GDAL library for ``gdal`` and ``rasterio`` can avoid 
-this contention, but in practice you will almost never see distributions of
-these modules that statically link the GDAL library.
+Furthermore, Python does not prevent us from importing ``gdal`` and ``rasterio`` modules that link
+different and incompatible versions of shared libraries. Not only GDAL, but all of GDAL's dependencies.
+"DLL Hell", in other words.
 
 Beyond the issues above, the modules have different styles – ``gdal`` reads and
 writes like C while ``rasterio`` is more Pythonic – and don't complement each

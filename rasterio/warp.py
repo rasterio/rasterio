@@ -278,9 +278,9 @@ def reproject(
     Returns
     ---------
     destination: ndarray or Band
-        The transformed narray or Band.
+        The transformed ndarray or Band.
     dst_transform: Affine
-        THe affine transformation matrix of the destination.
+        The affine transformation matrix of the destination.
     """
     # Source geolocation parameters are mutually exclusive.
     if (

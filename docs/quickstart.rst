@@ -224,7 +224,7 @@ last grid points on the vertical axis are located at 3 degrees south and
 
     >>> import numpy as np
     >>> x = np.linspace(-4.0, 4.0, 240)
-    >>> y = np.linspace(-3.0, 3.0, 180)
+    >>> y = np.linspace(-3.0, 3.0, 180)[::-1]
     >>> X, Y = np.meshgrid(x, y)
     >>> Z1 = np.exp(-2 * np.log(2) * ((X - 0.5) ** 2 + (Y - 0.5) ** 2) / 1 ** 2)
     >>> Z2 = np.exp(-3 * np.log(2) * ((X + 0.5) ** 2 + (Y + 0.5) ** 2) / 2.5 ** 2)
@@ -266,10 +266,10 @@ product of a translation and a scaling.
 
    >>> from rasterio.transform import Affine
    >>> res = (x[-1] - x[0]) / 240.0
-   >>> transform = Affine.translation(x[0] - res / 2, y[0] - res / 2) * Affine.scale(res, res)
+   >>> transform = Affine.translation(x[0] - res / 2, y[0] + res / 2) * Affine.scale(res, -res)
    >>> transform
-   Affine(0.033333333333333333, 0.0, -4.0166666666666666,
-          0.0, 0.033333333333333333, -3.0166666666666666)
+   Affine(0.03333333333333333, 0.0, -4.016666666666667,
+          0.0, -0.03333333333333333, 3.0166666666666666)
 
 The upper left point in the example grid is at 3 degrees west and 2 degrees
 north. The raster pixel centered on this grid point extends ``res / 2``, or
