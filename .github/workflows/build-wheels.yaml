@@ -1,0 +1,273 @@
+
+name: Build and publish wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload wheels to PyPI? (0: no, 1: yes)'
+        required: true
+        default: '0'
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+ # push:
+
+# cancel running jobs on new commit to PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+ # contents: write
+  actions: read
+
+jobs:
+
+  build_sdist:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install GDAL system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+          gdalinfo --version
+
+      - name: Install Python build dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel build twine
+
+      - name: Build source distribution
+        run: python -m build --sdist
+
+      - name: Verify sdist for PyPI
+        run: |
+           twine check dist/*
+
+      - name: Upload sdist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  build_wheels:
+    name: Build ${{ matrix.arch }} wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+         - os: ubuntu-22.04
+           arch: x86_64
+         - os: ubuntu-22.04-arm
+           arch: aarch64
+         - os: macos-15-intel
+           arch: x86_64
+           cmake_osx_architectures: x86_64
+           macos_deployment_target: "14.0"
+         - os: macos-14
+           arch: arm64
+           cmake_osx_architectures: arm64
+           macos_deployment_target: "14.0"
+         - os: "windows-2022"
+           arch: "auto64"
+           triplet: "x64-windows"
+           vcpkg_cache: "c:\\vcpkg\\installed"
+           vcpkg_logs: "c:\\vcpkg\\buildtrees\\**\\*.log"
+           msvc_arch: x64
+         - os: "windows-11-arm"
+           arch: "ARM64"
+           triplet: "arm64-windows"
+           vcpkg_cache: "c:\\vcpkg\\installed"
+           vcpkg_logs: "c:\\vcpkg\\buildtrees\\**\\*.log"
+           msvc_arch: ARM64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+
+      - name: Activate MSVC
+        uses: ilammy/msvc-dev-cmd@v1.13.0
+        with:
+           arch: ${{ matrix.msvc_arch }}
+        if: ${{ matrix.msvc_arch }}
+
+      - name: Bootstrap vcpkg
+        env:
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+        run: |
+          cd "$VCPKG_INSTALLATION_ROOT"
+          git pull > nul
+          ./bootstrap-vcpkg.bat -disableMetrics
+        shell: bash
+        if: ${{ matrix.msvc_arch }}
+
+      - name: Install C Packages (GDAL et al)
+        env:
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+        run: |
+          vcpkg install --feature-flags="versions,manifests" --x-manifest-root=$Env:GITHUB_WORKSPACE/ci --x-install-root=$Env:VCPKG_INSTALLATION_ROOT/installed
+        shell: pwsh
+        if: ${{ matrix.msvc_arch }}
+
+      - name: Add to rasterio setup.cfg
+        run: |
+          echo -e "\n[build_ext]" >> setup.cfg
+          echo "include_dirs = C:/vcpkg/installed/${{ matrix.triplet }}/include" >> setup.cfg
+          echo "libraries = gdal" >> setup.cfg
+          echo "library_dirs = C:/vcpkg/installed/${{ matrix.triplet }}/lib" >> setup.cfg
+          cat setup.cfg
+        shell: bash
+        if: ${{ matrix.msvc_arch }}
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.2.1
+        env:
+          CIBW_ENABLE: cpython-freethreading
+          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && 'cp39* *cp310*' || 'cp39* *pp* *musllinux*' }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_ENVIRONMENT_LINUX:
+            PACKAGE_DATA=1
+          CIBW_ENVIRONMENT_MACOS:
+            CMAKE_OSX_ARCHITECTURES='${{ matrix.cmake_osx_architectures }}'
+            MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos_deployment_target }}
+            PACKAGE_DATA=1
+            BUILD_PREFIX=${GITHUB_WORKSPACE}/rasterio_libs
+            GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
+            PROJ_DATA=${GITHUB_WORKSPACE}/rasterio_libs/share/proj
+            LDFLAGS="${LDFLAGS} -arch ${{ matrix.arch }} -Wl,-rpath,${GITHUB_WORKSPACE}/rasterio_libs/lib"
+          CIBW_ENVIRONMENT_WINDOWS:
+            VCPKG_INSTALL="C:/vcpkg/installed/${{ matrix.triplet }}"
+            GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
+            GDAL_LIBRARY_PATH="$VCPKG_INSTALL/lib"
+            PACKAGE_DATA=1
+            GDAL_DATA="$VCPKG_INSTALL/share/gdal"
+            PROJ_DATA="$VCPKG_INSTALL/share/proj"
+            GDAL_VERSION="3.11.5"
+          CIBW_BEFORE_ALL_LINUX: |
+            yum install -y wget cmake perl-core zlib-devel ImageMagick bzip2
+            cmake --version
+            bash ./ci/config.sh
+          CIBW_BEFORE_ALL_MACOS: |
+            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg xz giflib rtmpdump brotli snappy
+            # brew remove -f --ignore-dependencies curl php
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils
+            bash ./ci/config.sh
+          CIBW_BEFORE_BUILD_MACOS: |
+            export GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
+            export DYLD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rasterio_libs/lib:$DYLD_LIBRARY_PATH
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.triplet }}/bin -w {dest_dir} {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: export DYLD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rasterio_libs/lib:$DYLD_LIBRARY_PATH && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: export 'LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH' && auditwheel repair -w {dest_dir} {wheel}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./wheelhouse/*.whl
+
+  test_wheels:
+    name: Test wheels on ${{ matrix.os }} (Python ${{ matrix.python-version }})
+    needs: [build_wheels]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-15-intel"]
+        python-version: ["3.14","3.14t", "3.13", "3.12", "3.11", "3.10"]
+        exclude:
+         - os: "windows-11-arm"
+           python-version: "3.10"
+
+    steps:
+      - name: Checkout Rasterio
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: Download wheels from artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+
+      - name: Install dependencies and rasterio wheel
+        shell: bash
+        run: |
+          python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec requests
+          python -m pip install --pre --no-deps --find-links dist rasterio
+          python -m pip install rasterio
+          python -m pip list
+
+      - name: Clean workspace except dist and tests
+        shell: bash
+        run: |
+          shopt -s extglob
+          rm -rf !(dist|tests)
+
+      - name: Run tests
+        shell: bash
+        run: |
+          rio --version
+          rio env --formats
+          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_issue2353 and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
+
+
+      - name: Check for conflicts with fiona wheel
+        # Execute this step only if fiona wheel is available for the platform
+        if: matrix.python-version == '3.11' && !(runner.os == 'Linux' && runner.arch == 'ARM64') && !(runner.os == 'Windows' && runner.arch == 'ARM64')
+        shell: bash
+        run: |
+          python -m pip install fiona
+          python -c "import fiona; import rasterio; print(rasterio.show_versions())"
+
+
+  publish:
+    name: Publish
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download sdist artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: sdist
+          path: dist
+
+      - name: Download wheels artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+
+      - name: Upload wheels and sdist to PyPI
+        if: ${{ github.event.inputs.upload == '1'}}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
+          #repository_url: https://test.pypi.org/legacy/  # To test
