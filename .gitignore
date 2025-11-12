@@ -63,6 +63,7 @@ target/
 
 # IDE's etc.
 .idea/
+.venv/
 venv/
 venv2/
 .vscode/
