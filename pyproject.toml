@@ -20,3 +20,6 @@ markers = [
     "wheel: marks test specific to wheel-building infra",
     "network: marks tests that require network access"
 ]
+
+[tool.codespell]
+ignore-words-list = ["lsat", "recuse", "crasher"]
