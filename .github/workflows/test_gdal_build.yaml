@@ -77,7 +77,7 @@ jobs:
         run: |
           export PATH="${GDAL_DIR}/bin/:${PATH}"
           . testenv/bin/activate
-          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+          python -m pytest -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
       - if: success()
         run: echo "Success"
