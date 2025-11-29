@@ -399,7 +399,7 @@ def merge(
                 exit_stack.enter_context(dst)
             else:
                 dst = MemoryDataset(
-                    np.full((output_height, output_width), nodataval, dtype=dt),
+                    np.full((output_count, output_height, output_width), nodataval, dtype=dt),
                     transform=output_transform,
                     crs=first_crs,
                 )

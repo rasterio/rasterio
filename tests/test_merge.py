@@ -1,18 +1,18 @@
 """Tests of rasterio.merge"""
 
-import warnings
 import os
+import warnings
+
 import affine
 import boto3
 import numpy
 import pytest
-from affine import Affine
 from hypothesis import given, settings
 from hypothesis.strategies import floats
+from rasterio.crs import CRS
 
 import rasterio
 from rasterio import windows
-from rasterio.crs import CRS
 from rasterio.errors import MergeError, RasterioError
 from rasterio.merge import merge
 from rasterio.transform import from_origin
