@@ -271,12 +271,15 @@ extra_reqs = {
     "plot": ["matplotlib"],
     "s3": ["boto3>=1.2.4"],
     "test": [
+        "aiohttp",
         "boto3>=1.2.4",
         "fsspec",
         "hypothesis",
+        "matplotlib",
         "packaging",
         "pytest-cov>=2.2.0",
         "pytest>=2.8.2",
+        "requests",
         "shapely",
     ],
 }
