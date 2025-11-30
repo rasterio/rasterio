@@ -4,11 +4,11 @@
 affine~=2.3.0
 attrs>=19.2.0
 boto3>=1.3.1
-# Avoid pallets/click#2939
+# Avoid https://github.com/pallets/click/issues/2939
 click~=8.0,!=8.2.*
 click-plugins
 cligj>=0.5
 matplotlib
 numpy>=1.24
-setuptools>=20.0
+setuptools>=77.0.3
 pyparsing~=3.1
