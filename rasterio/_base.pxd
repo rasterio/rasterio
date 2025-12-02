@@ -24,6 +24,7 @@ cdef class DatasetBase:
     cdef public object _scales
     cdef public object _offsets
     cdef public object _read
+    cdef public object _read_rat
     cdef public object _gcps
     cdef public object _rpcs
     cdef public object _env
