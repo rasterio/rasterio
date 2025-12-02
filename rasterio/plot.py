@@ -50,7 +50,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     contour_label_kws : dictionary (opt)
         Keyword arguments for labeling the contours,
         empty dictionary for no labels.
-    indexes: list or tupel, optional, defines the color composite of bands.
+    indexes: list or tuple, optional, defines the color composite of bands.
     ax : matplotlib.axes.Axes, optional
         Axes to plot on, otherwise uses current axes.
     title : str, optional
@@ -58,8 +58,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
     transform : Affine, optional
         Defines the affine transform if source is an array
     percent_range: tuple, optional
-        percent_range[0], the minimum value (cumulative percentage) of the histogram for histogram streching,
-        percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram streching
+        percent_range[0], the minimum value (cumulative percentage) of the histogram for histogram stretching,
+        percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram stretching
         default percent_range is set to (2, 98).
     adjust : bool
         If the plotted data is an RGB image, adjust the values of
@@ -338,15 +338,15 @@ def show_hist(
 
 def contrast_strech(arr, percent_range=(2.0, 98.0)):
     """
-    Histogram streching for better image visualization.
+    Histogram stretching for better image visualization.
 
     Parameters
     ----------
     arr : array-like in the image form of (rows, columns, bands)
         image to reshape
     percent_range: tuple, optional
-        percent_range[0], the minimum values (cumulative percentage) of the histogram for histogram streching,
-        percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram streching
+        percent_range[0], the minimum values (cumulative percentage) of the histogram for histogram stretching,
+        percent_range[1], the maximum value (cumulative percentage) of the histogram for histogram stretching
         default percent_range is set to (2, 98).
     """
     arr_hist = np.nanpercentile(np.array(arr), (percent_range[0], percent_range[1]))
