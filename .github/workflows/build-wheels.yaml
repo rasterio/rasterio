@@ -8,12 +8,15 @@ on:
         description: 'Upload wheels to PyPI? (0: no, 1: yes)'
         required: true
         default: '0'
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
- # push:
+  push:
+    branches: [ main, maint-1.4 ]
+  release:
+    types: [ released, prereleased ]
+  pull_request:  # also build on PRs touching this file
+    branches: [ main, maint-1.4 ]
+    paths:
+      - ".github/workflows/build-wheels.yaml"
+      - "ci/config.sh"
 
 # cancel running jobs on new commit to PR
 concurrency:
