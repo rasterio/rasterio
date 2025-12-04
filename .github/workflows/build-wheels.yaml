@@ -242,8 +242,14 @@ jobs:
 
 
   publish:
-    name: Publish
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
     needs: [build_wheels, build_sdist]
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/project/rasterio/
     runs-on: ubuntu-latest
     steps:
 
@@ -263,11 +269,6 @@ jobs:
           merge-multiple: true
           path: dist
 
-      - name: Upload wheels and sdist to PyPI
+      - name: Publish distribution 📦 to PyPI
         if: ${{ github.event.inputs.upload == '1'}}
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
-          #repository_url: https://test.pypi.org/legacy/  # To test
