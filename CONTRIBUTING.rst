@@ -161,7 +161,7 @@ Developing Rasterio requires Python 3.6 or any final release after and
 including 3.10.  We prefer developing with the most recent version of Python
 but recognize this is not possible for all contributors.  A C compiler is also
 required to leverage `existing protocols
-<https://docs.python.org/3.5/extending/extending.html>`__ for extending Python
+<https://docs.python.org/3.10/extending/extending.html>`__ for extending Python
 with C or C++.  See the Windows install instructions in the `readme
 <README.rst>`__ for more information about building on Windows.
 
