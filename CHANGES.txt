@@ -4,11 +4,34 @@ Changes
 1.4.4 (TBD)
 -----------
 
+Dependencies:
+
+- Minimum supported versions: Python 3.10+ & GDAL 3.6+ (#3440)
+- Wheel: GDAL 3.10.3 & PROJ 9.7.1 (#3381, #3439)
+
+Enhancements:
+
+- Support for affine 3.0 (#3299)
+- Enable free threading python & support Python 3.14 (#3425)
+- rasterio.warp.reproject: Add tolerance argument (#3325)
+
 Bug fixes:
 
-- Prevent instances of BufferedDatasetWriter from finalizing twice (#3308).
-- Add support for JSON serialization of affine 3.0 Affine arrays (#3299).
 - Parsing of snuggs expressions containing "is" has been fixed (#3288).
+- rasterio.features.geometry_mask: Force uint8 dtype for geometry mask (#3272)
+- rasterio.fill.fillnodata: pass filloptions to _fillnodata (#3314)
+- rasterio.io.BaseDataset.compression: Fix compression for YCbCr JPEG (#3426)
+- rasterio.io.BufferedDatasetWriterBase: Prevent instances of BufferedDatasetWriter from finalizing twice (#3309).
+- rasterio.warp.reproject: Set INIT_DEST to 0 instead of NO_DATA if it's unset (#3389)
+- rasterio.warp.reproject: Support masked arrays with numpy.ma.nomask (#3306)
+- CLI:rio.convert: Make sure blocksizes are integers before using them (#3390)
+- CLI:rio.info: Fix use 'stats' for RasterioDeprecationWarning (#3380)
+- CLI:rio.rasterize: Use context manager to ensure dataset closed (#3443)
+- CLI: Remove default=False for flag_value of str type (#3392)
+- CLI: Fix geojson_type click option implementation (#3391)
+- CLI: Remove importlib_metatada import (#3445)
+- Documnentation (#3348, #3407, #3409, #3350, #3352, #3368, #3351, #3384, #3318, #3344, #3337, #3343, #3342, #3340, #3347, #3349)
+- Tests (#3400, #3330, #3404, #3293, #3360, #3444)
 
 1.4.3 (2024-12-02)
 ------------------
