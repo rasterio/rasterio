@@ -141,7 +141,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_ENABLE: cpython-freethreading
-          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && '*cp310*' || '*pp* *musllinux*' }}
+          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && '*cp310*' || runner.os == 'Windows' && '*cp3??t-win*' || '*pp* *musllinux*' }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_LINUX:
             PACKAGE_DATA=1
