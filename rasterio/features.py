@@ -348,16 +348,6 @@ def rasterize(
         values_arr = np.array(shape_values)
         dtype = values_arr.dtype.name
 
-        # GDAL 3.5 doesn't support int64 output. We'll try int32.
-        if dtype not in valid_dtypes and dtype.startswith("int"):
-            lo, hi = values_arr.min(), values_arr.max()
-            if -2147483648 <= lo and hi <= 2147483647:
-                dtype = "int32"
-            elif 0 <= lo and hi <= 4294967295:
-                dtype = "uint32"
-            else:
-                raise ValueError("GDAL versions < 3.6 cannot rasterize int64 values.")
-
     with ExitStack() as exit_stack:
         if dst_path is not None:
             if isinstance(dst_path, DatasetWriter):
