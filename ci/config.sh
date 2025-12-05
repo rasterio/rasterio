@@ -730,7 +730,6 @@ function build_gdal {
         -DGDAL_ENABLE_DRIVER_AAIGRID=ON \
         -DGDAL_USE_LERC=ON \
         -DGDAL_USE_LERC_INTERNAL=OFF \
-        -DGDAL_USE_PCRE2=OFF \
         -DGDAL_USE_POSTGRESQL=OFF \
         -DGDAL_USE_ODBC=OFF \
         && $cmake --build . -j4 \
