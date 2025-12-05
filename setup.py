@@ -133,8 +133,8 @@ if "clean" not in sys.argv:
         int, re.findall("[0-9]+", gdalversion)[:3]
     )
 
-    if (gdal_major_version, gdal_minor_version) < (3, 5):
-        raise SystemExit("ERROR: GDAL >= 3.5 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (3, 6):
+        raise SystemExit("ERROR: GDAL >= 3.6 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -297,7 +297,6 @@ setup_args = dict(
         "License :: OSI Approved :: BSD License",
         "Programming Language :: C",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
@@ -319,7 +318,7 @@ setup_args = dict(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
-    python_requires=">=3.9",
+    python_requires=">=3.10",
 )
 
 if os.environ.get('PACKAGE_DATA'):
