@@ -8,12 +8,15 @@ on:
         description: 'Upload wheels to PyPI? (0: no, 1: yes)'
         required: true
         default: '0'
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
- # push:
+  push:
+    branches: [ main, maint-1.4 ]
+  release:
+    types: [ released, prereleased ]
+  pull_request:  # also build on PRs touching this file
+    branches: [ main, maint-1.4 ]
+    paths:
+      - ".github/workflows/build-wheels.yaml"
+      - "ci/config.sh"
 
 # cancel running jobs on new commit to PR
 concurrency:
@@ -75,7 +78,7 @@ jobs:
          - os: macos-15-intel
            arch: x86_64
            cmake_osx_architectures: x86_64
-           macos_deployment_target: "14.0"
+           macos_deployment_target: "15.0"
          - os: macos-14
            arch: arm64
            cmake_osx_architectures: arm64
@@ -138,7 +141,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_ENABLE: cpython-freethreading
-          CIBW_SKIP: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && 'cp39* *cp310*' || 'cp39* *pp* *musllinux*' }}
+          CIBW_SKIP: '*cp310-win_arm* *pp* *musllinux*'
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_LINUX:
             PACKAGE_DATA=1
@@ -242,8 +245,14 @@ jobs:
 
 
   publish:
-    name: Publish
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
     needs: [build_wheels, build_sdist]
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/project/rasterio/
     runs-on: ubuntu-latest
     steps:
 
@@ -263,11 +272,6 @@ jobs:
           merge-multiple: true
           path: dist
 
-      - name: Upload wheels and sdist to PyPI
+      - name: Publish distribution 📦 to PyPI
         if: ${{ github.event.inputs.upload == '1'}}
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
-          #repository_url: https://test.pypi.org/legacy/  # To test
