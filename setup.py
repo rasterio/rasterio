@@ -297,7 +297,6 @@ setup_args = dict(
         "License :: OSI Approved :: BSD License",
         "Programming Language :: C",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
@@ -319,7 +318,7 @@ setup_args = dict(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
-    python_requires=">=3.9",
+    python_requires=">=3.10",
 )
 
 if os.environ.get('PACKAGE_DATA'):
