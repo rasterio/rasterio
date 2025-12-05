@@ -228,18 +228,19 @@ def test_issue2360_no_with(monkeypatch, request, capfd, rgb_file_object):
     monkeypatch.setattr(rasterio, "have_vsi_plugin", False)
     with rasterio.Env() as env:
         src = rasterio.open(rgb_file_object)
-        assert src.driver == "GTiff"
-        assert src.count == 3
-        assert src.dtypes == ("uint8", "uint8", "uint8")
-        assert src.read().shape == (3, 718, 791)
+        try:
+            assert src.driver == "GTiff"
+            assert src.count == 3
+            assert src.dtypes == ("uint8", "uint8", "uint8")
+            assert src.read().shape == (3, 718, 791)
 
-        env._dump_open_datasets()
-        captured = capfd.readouterr()
-        assert f"/vsimem/{request.node.name}" in captured.err
-
-        # Closing src causes the attached MemoryFile context to be
-        # exited and the temporary in-memory file is deleted.
-        src.close()
+            env._dump_open_datasets()
+            captured = capfd.readouterr()
+            assert f"/vsimem/{request.node.name}" in captured.err
+        finally:
+            # Closing src causes the attached MemoryFile context to be
+            # exited and the temporary in-memory file is deleted.
+            src.close()
         env._dump_open_datasets()
         captured = capfd.readouterr()
         assert f"/vsimem/{request.node.name}" not in captured.err
