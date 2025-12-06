@@ -65,7 +65,6 @@ def _get_deps_info():
         "cligj",
         "cython",
         "numpy",
-        "click-plugins",
         "setuptools",
     ]
 
