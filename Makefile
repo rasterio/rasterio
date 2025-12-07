@@ -1,4 +1,4 @@
-PYTHON_VERSION ?= 3.9
+PYTHON_VERSION ?= 3.10
 GDAL ?= ubuntu-small-3.6.4
 all: deps clean install test
 

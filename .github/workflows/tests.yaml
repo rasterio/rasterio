@@ -32,7 +32,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
             python-version: 3.12
@@ -55,7 +55,7 @@ jobs:
         gdal-version: ['3.8.4']
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Update
         run: |
           apt-get update
@@ -97,26 +97,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         gdal-version: ['3.11.5']
         include:
           - python-version: '3.14'
             gdal-version: 'latest'
-          - python-version: '3.9'
+          - python-version: '3.10'
             gdal-version: '3.10.3'
-          - python-version: '3.9'
+          - python-version: '3.10'
             gdal-version: '3.9.3'
-          - python-version: '3.9'
+          - python-version: '3.10'
             gdal-version: '3.8.5'
-          - python-version: '3.9'
+          - python-version: '3.10'
             gdal-version: '3.7.3'
-          - python-version: '3.9'
+          - python-version: '3.10'
             gdal-version: '3.6.4'
-          - python-version: '3.9'
-            gdal-version: '3.5.3'
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Update
         run: |
@@ -157,13 +155,13 @@ jobs:
         # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-15-intel, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         include:
           - os: ubuntu-latest
             python-version: '*'
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Conda
         uses: mamba-org/setup-micromamba@v2

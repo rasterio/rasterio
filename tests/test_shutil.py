@@ -1,6 +1,7 @@
 """Tests for ``rasterio.shutil```."""
 
 
+from contextlib import ExitStack
 import os
 
 import numpy
@@ -73,33 +74,33 @@ def test_copy(tmpdir, path_rgb_byte_tif, pass_handle):
 
     outfile = str(tmpdir.join('test_copy.tif'))
 
-    if pass_handle:
-        src = rasterio.open(path_rgb_byte_tif)
-    else:
-        src = path_rgb_byte_tif
+    with ExitStack() as exit_stack:
+        if pass_handle:
+            src = exit_stack.enter_context(rasterio.open(path_rgb_byte_tif))
+        else:
+            src = path_rgb_byte_tif
 
-    rasterio.shutil.copy(
-        src,
-        outfile,
-        # Test a mix of boolean, ints, and strings to make sure creation
-        # options passed as Python types are properly cast.
-        tiled=True,
-        blockxsize=512,
-        BLOCKYSIZE='256')
+        rasterio.shutil.copy(
+            src,
+            outfile,
+            # Test a mix of boolean, ints, and strings to make sure creation
+            # options passed as Python types are properly cast.
+            tiled=True,
+            blockxsize=512,
+            BLOCKYSIZE='256')
 
-    if isinstance(src, str):
-        src = rasterio.open(path_rgb_byte_tif)
+        if isinstance(src, str):
+            src = exit_stack.enter_context(rasterio.open(path_rgb_byte_tif))
 
-    with rasterio.open(outfile) as dst:
-        assert dst.driver == 'GTiff'
-        assert set(dst.block_shapes) == {(256, 512)}
+        with rasterio.open(outfile) as dst:
+            assert dst.driver == 'GTiff'
+            assert set(dst.block_shapes) == {(256, 512)}
 
-        src_data = src.read()
-        dst_data = dst.read()
+            src_data = src.read()
+            dst_data = dst.read()
 
-        assert numpy.array_equal(src_data, dst_data)
+            assert numpy.array_equal(src_data, dst_data)
 
-    src.close()
 
 
 def test_copy_bad_driver():
