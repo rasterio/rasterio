@@ -28,7 +28,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: C",
     "Programming Language :: Cython",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -38,7 +37,7 @@ classifiers = [
     "Topic :: Multimedia :: Graphics :: Graphics Conversion",
     "Topic :: Scientific/Engineering :: GIS",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "affine",
     "attrs",
@@ -47,7 +46,6 @@ dependencies = [
     "click>=4.0,!=8.2.*",
     "click-plugins",
     "cligj>=0.5",
-    "importlib-metadata ; python_version < '3.10'",
     "numpy>=1.24",
     "pyparsing",
 ]
@@ -69,6 +67,7 @@ test = [
     "boto3>=1.2.4",
     "fsspec",
     "hypothesis",
+    "matplotlib",
     "packaging",
     "pytest-cov>=2.2.0",
     "pytest>=2.8.2",
