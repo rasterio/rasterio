@@ -207,7 +207,7 @@ jobs:
           allow-prereleases: true
 
       - name: Download wheels from artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: wheels-*
           merge-multiple: true
@@ -260,13 +260,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download sdist artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: sdist
           path: dist
 
       - name: Download wheels artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: wheels-*
           merge-multiple: true
