@@ -1,9 +1,8 @@
 [build-system]
 requires = [
     "setuptools>=77.0.3",
-    "wheel",
-    "cython~=3.1.0",
-    "numpy>=2"
+    "cython>=3.1,<=3.2",
+    "numpy>=2,<3",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -16,7 +15,7 @@ authors = [
 maintainers = [
     {name = "Rasterio contributors"},
 ]
-description = "Fast and direct raster I/O for use with NumPy and SciPy"
+description = "Fast and direct raster I/O for use with NumPy"
 readme = "README.rst"
 keywords = ["gis", "raster", "gdal"]
 license = "BSD-3-Clause"
@@ -105,10 +104,8 @@ stack = "rasterio.rio.stack:stack"
 transform = "rasterio.rio.transform:transform"
 warp = "rasterio.rio.warp:warp"
 
-[tool.setuptools]
-include-package-data = true
-packages = ["rasterio", "rasterio._vendor", "rasterio.rio"]
-package-dir = {"" = "."}
+[tool.setuptools.packages.find]
+include = ["rasterio", "rasterio.*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "rasterio.__version__"}
