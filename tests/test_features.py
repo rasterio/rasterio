@@ -5,6 +5,7 @@ from unittest import mock
 from affine import Affine
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 import rasterio
 from rasterio.enums import MergeAlg
@@ -1031,24 +1032,35 @@ def test_shapes_invalid_mask_dtype(basic_image):
         pytest.param("int8", -127, marks=requires_gdal37),
         ("int16", -32768),
         ("int32", -2147483648),
+        ("int64", 20439845334323),
         ("uint8", 255),
         ("uint16", 65535),
+        ("uint32", 4294967295),
         ("float32", 1.434532),
-        ("float64", 1.434532),
     ],
 )
 def test_shapes_supported_dtypes(basic_image, dtype, test_value):
     """Supported data types should return valid results."""
     shape, value = next(shapes(basic_image.astype(dtype) * test_value))
-    assert np.allclose(value, test_value)
+    assert_allclose(value, test_value)
 
 
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
+        ("uint64", 20439845334323),
+        ("float64", 2717538304),
+    ],
+)
+def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
+    with pytest.warns(UserWarning, match="Truncation issues"):
+        shape, value = next(shapes(basic_image.astype(dtype) * test_value))
+        assert_allclose(value, test_value)
+
+@pytest.mark.parametrize(
+    "dtype, test_value",
+    [
         pytest.param("int8", -127, marks=requires_gdal_lt_37),
-        ("uint32", 4294967295),
-        ("int64", 20439845334323),
         ("float16", -9343.232),
     ],
 )

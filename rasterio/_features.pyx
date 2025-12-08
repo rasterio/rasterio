@@ -1,6 +1,7 @@
 """Feature extraction"""
 
 import logging
+import warnings
 
 import numpy as np
 
@@ -59,17 +60,31 @@ def _shapes(image, mask, connectivity, transform):
     cdef MemoryDataset mask_ds = None
     cdef ShapeIterator shape_iter = None
     cdef int fieldtp
-
-    is_float = _getnpdtype(image.dtype).kind == "f"
-    fieldtp = 2 if is_float else 0
-
-    valid_dtypes = ("int16", "int32", "uint8", "uint16", "float32", "float64")
+    cdef bint is_float = _getnpdtype(image.dtype).kind == "f"
+    cdef dict oft_dtypes = {
+       "int16": OFTInteger,
+       "int32": OFTInteger,
+       "int64": OFTInteger64,
+       "uint8": OFTInteger,
+       "uint16": OFTInteger,
+       "uint32": OFTInteger64,
+       "uint64": OFTInteger64,
+       "float32": OFTReal,
+       "float64": OFTReal,
+    }
     if GDALVersion.runtime().at_least("3.7"):
-        valid_dtypes += ("int8",)
+        oft_dtypes["int8"] = OFTInteger
 
-    if _getnpdtype(image.dtype).name not in valid_dtypes:
-        raise ValueError("image dtype must be one of: {0}".format(
-            ', '.join(valid_dtypes)))
+    cdef str dtype_name = _getnpdtype(image.dtype).name
+    if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
+        raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
+
+    if dtype_name in ("float64", "uint64"):
+        internal_dtype = "float32" if is_float else "int64"
+        warnings.warn(
+            f"The low-level implementation uses a {internal_dtype} buffer. "
+            "Truncation issues may occur."
+        )
 
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
