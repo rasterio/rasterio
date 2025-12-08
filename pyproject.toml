@@ -127,3 +127,20 @@ markers = [
     "wheel: marks test specific to wheel-building infra",
     "network: marks tests that require network access"
 ]
+
+[tool.ruff.lint]
+select = [
+    "F",  # pyflakes
+    "E", "W",  # pycodestyle
+]
+ignore = [
+    "E501",  # Line too long
+    "E722",  # Do not use bare `except`
+    "E741",  # Ambiguous variable name
+    "F841",  # Local variable is assigned to but never used
+]
+
+[tool.ruff.lint.per-file-ignores]
+"rasterio/__init__.py" = ["F401"]
+"rasterio/path.py" = ["F401"]
+"**/tests/*" = ["E402"]

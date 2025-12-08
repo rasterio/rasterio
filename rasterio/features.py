@@ -212,9 +212,9 @@ def rasterize(
     to rasterize.
 
     GDAL functions used:
-    
+
     - :cpp:func:`GDALRasterizeGeometries`
-    
+
     Parameters
     ----------
     shapes : iterable of (`geometry`, `value`) pairs or geometries

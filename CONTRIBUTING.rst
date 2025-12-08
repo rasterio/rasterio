@@ -285,9 +285,9 @@ A single test:
 Code Linting
 ^^^^^^^^^^^^^
 
-flake8 is the code linter used by rasterio.
+ruff is the code linter used by rasterio.
 
-Using pre-commit to run flake8 code linting:
+Using pre-commit to run `ruff check` code linting:
 
 .. code-block:: console
 

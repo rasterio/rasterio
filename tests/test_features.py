@@ -136,7 +136,7 @@ def test_geometry_invalid_geom(geom):
             transform=Affine.identity())
 
     assert mask.shape == DEFAULT_SHAPE
-    assert np.all(mask == True)
+    assert np.all(mask)
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -649,7 +649,7 @@ def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     assert np.array_equal(basic_image_2x2, out)
 
 
-def test_rasterize_unsupported_dtype(basic_geometry):
+def test_rasterize_unsupported_dtype_single(basic_geometry):
     """A non-supported data type for out should raise an exception."""
     out = np.zeros(DEFAULT_SHAPE, dtype=np.float16)
     with pytest.raises(ValueError):

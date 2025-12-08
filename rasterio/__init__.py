@@ -185,7 +185,7 @@ def open(
         (*fp*, *mode*) or (*fp*, *mode* + 'b') depending on the format
         driver's native mode. *opener* must return a Python file-like
         object that provides read, seek, tell, and close methods. Note:
-        only one opener at a time per fp, mode pair is allowed. 
+        only one opener at a time per fp, mode pair is allowed.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -215,7 +215,7 @@ def open(
     If *fp* is a is a file-like object, its entire contents will be
     read into a MemoryFile instance. It will almost always be better
     to use a path or URL, or the *opener* keyword argument.
-    
+
     Examples
     --------
     To open a local GeoTIFF dataset for reading using standard driver
@@ -343,7 +343,7 @@ def open(
             opener = fp.fs.open
         else:
             raw_dataset_path = os.fspath(fp)
- 
+
         try:
             # when opener is a callable that takes a filename or URL and returns
             # a file-like object with read, seek, tell, and close methods, we

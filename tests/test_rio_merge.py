@@ -585,7 +585,7 @@ def test_merge_precision(tmpdir, precision):
         # Compare header lines.
         for i in range(5):
             assert out_file.readline().strip() == expected_file.readline().strip()
-        
+
         # Compare raster data as single strings.
         out_data = " ".join(line.strip() for line in out_file.readlines())
         expected_data = " ".join(line.strip() for line in expected_file.readlines())
@@ -668,35 +668,12 @@ def test_merge_output_dataset(tiffs, tmpdir):
         assert result.height == result.width == 2
 
 
-@fixture(scope='function')
-def test_data_dir_resampling(tmpdir):
-    kwargs = {
-        "crs": {'init': 'epsg:4326'},
-        "transform": affine.Affine(0.2, 0, 0,
-                                   0, -0.2, 0),
-        "count": 1,
-        "dtype": rasterio.uint8,
-        "driver": "GTiff",
-        "width": 9,
-        "height": 1,
-        "nodata": 1
-    }
-
-    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-        data = np.ones((1, 9), dtype=rasterio.uint8)
-        data[:, :3] = 100
-        data[:, 3:6] = 255
-        dst.write(data, indexes=1)
-
-    return tmpdir
-
-
 @pytest.mark.parametrize(
     "resampling",
     [resamp for resamp in Resampling if resamp < 7]
     + [pytest.param(Resampling.gauss, marks=pytest.mark.xfail)],
 )
-def test_merge_resampling(test_data_dir_resampling, resampling, runner):
+def test_merge_resampling_tests(test_data_dir_resampling, resampling, runner):
     outputname = str(test_data_dir_resampling.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_resampling.listdir()]
     with rasterio.open(inputs[0]) as src:

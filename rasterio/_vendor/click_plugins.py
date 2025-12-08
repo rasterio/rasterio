@@ -188,8 +188,8 @@ class BrokenCommand(click.Command):
         # a little hint for what to do about it. U+2020 is a "dagger", whose
         # modern use typically indicates a footnote.
         self.short_help = (
-            f"\u2020 Warning: could not load plugin. Invoke command with"
-            f" '--help' for traceback."
+            "\u2020 Warning: could not load plugin. Invoke command with"
+            " '--help' for traceback."
         )
 
     def invoke(self, ctx):

@@ -130,7 +130,7 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
             return super().send_head()
         try:
             self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
-        except ValueError as e:
+        except ValueError:
             self.send_error(400, "Invalid byte range")
             return None
         first, last = self.range

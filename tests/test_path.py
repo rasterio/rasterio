@@ -245,7 +245,7 @@ def test_parse_zip_windows(monkeypatch):
     assert vsi_path.endswith("coutwildrnp.zip/coutwildrnp.shp")
 
 
-def test_parse_zip_windows(monkeypatch):
+def test_parse_tar_windows(monkeypatch):
     """Parse a tar+ Windows path."""
     monkeypatch.setattr(sys, "platform", "win32")
     path = _parse_path("tar://D:\\a\\Fiona\\Fiona\\tests\\data\\coutwildrnp.tar!testing/coutwildrnp.shp")
