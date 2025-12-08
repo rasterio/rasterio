@@ -91,7 +91,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
           the limits of the dataset's natural data type.
         * (take foo j) evaluates to the j-th band of a dataset named foo
           (see help on the --name option above).
-        * Standard numpy array operators (+, -, \\*, /) are available.
+        * Standard numpy array operators (+, -, \*, /) are available.
         * When the final result is a list of arrays, a multiple band
           output file is written.
         * When the final result is a single array, a single band output
@@ -116,7 +116,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
     The maximum amount of memory used to perform calculations defaults to
     64 MB. This number can be increased to improve speed of calculation.
 
-    """
+    """  # noqa: W605
     dst = None
     sources = []
 
