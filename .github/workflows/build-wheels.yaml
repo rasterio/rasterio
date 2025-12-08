@@ -27,6 +27,9 @@ permissions:
  # contents: write
   actions: read
 
+env:
+  GDAL_VERSION: 3.10.3
+
 jobs:
 
   build_sdist:
@@ -145,6 +148,7 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_LINUX:
             PACKAGE_DATA=1
+            GDAL_VERSION=${{ env.GDAL_VERSION }}
           CIBW_ENVIRONMENT_MACOS:
             CMAKE_OSX_ARCHITECTURES='${{ matrix.cmake_osx_architectures }}'
             MACOSX_DEPLOYMENT_TARGET=${{ matrix.macos_deployment_target }}
@@ -153,6 +157,7 @@ jobs:
             GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
             PROJ_DATA=${GITHUB_WORKSPACE}/rasterio_libs/share/proj
             LDFLAGS="${LDFLAGS} -arch ${{ matrix.arch }} -Wl,-rpath,${GITHUB_WORKSPACE}/rasterio_libs/lib"
+            GDAL_VERSION=${{ env.GDAL_VERSION }}
           CIBW_ENVIRONMENT_WINDOWS:
             VCPKG_INSTALL="C:/vcpkg/installed/${{ matrix.triplet }}"
             GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
@@ -160,7 +165,7 @@ jobs:
             PACKAGE_DATA=1
             GDAL_DATA="$VCPKG_INSTALL/share/gdal"
             PROJ_DATA="$VCPKG_INSTALL/share/proj"
-            GDAL_VERSION="3.11.5"
+            GDAL_VERSION=${{ env.GDAL_VERSION }}
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y wget cmake perl-core zlib-devel ImageMagick bzip2
             cmake --version
@@ -273,5 +278,5 @@ jobs:
           path: dist
 
       - name: Publish distribution 📦 to PyPI
-        if: ${{ github.event.inputs.upload == '1'}}
+        if: ${{ ( github.event_name == 'release' && github.ref_type == 'tag' ) || github.event.inputs.upload == '1'}}
         uses: pypa/gh-action-pypi-publish@release/v1
