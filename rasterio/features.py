@@ -80,6 +80,11 @@ def geometry_mask(
 def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     r"""Get shapes and values of connected regions in a dataset or array.
 
+    GDAL functions used:
+
+    - :cpp:func:`GDALPolygonize`
+    - :cpp:func:`GDALFPolygonize`
+
     Parameters
     ----------
     source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
@@ -135,6 +140,10 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Polygons are found for each set of neighboring pixels of the same
     value.
+
+    GDAL functions used:
+
+    - :cpp:func:`GDALSieveFilter`
 
     Parameters
     ----------
@@ -202,6 +211,10 @@ def rasterize(
     an exception will be raised if there are no valid shapes
     to rasterize.
 
+    GDAL functions used:
+    
+    - :cpp:func:`GDALRasterizeGeometries`
+    
     Parameters
     ----------
     shapes : iterable of (`geometry`, `value`) pairs or geometries
