@@ -29,7 +29,6 @@ Submodules
    rasterio.io
    rasterio.mask
    rasterio.merge
-   rasterio.path
    rasterio.plot
    rasterio.profiles
    rasterio.rpc
