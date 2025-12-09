@@ -4,7 +4,7 @@ channels:
 - defaults
 dependencies:
 - python=3.11
-- libgdal=3.6
+- libgdal=3.8
 - cython=3
 - numpy=2
 - sphinx-click

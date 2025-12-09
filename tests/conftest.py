@@ -664,15 +664,6 @@ class MockGeoInterface:
 # Define helpers to skip tests based on GDAL version
 gdal_version = GDALVersion.runtime()
 
-requires_gdal37 = pytest.mark.skipif(
-    not gdal_version.at_least('3.7'), reason="Requires GDAL 3.7.x"
-)
-
-requires_gdal_lt_37 = pytest.mark.skipif(
-    gdal_version.at_least('3.7'), reason="Requires GDAL before 3.7"
-)
-
-
 def assert_bounding_box_equal(expected, actual, tolerance=1e-4):
     if isinstance(expected, tuple):
         expected = BoundingBox(*expected)

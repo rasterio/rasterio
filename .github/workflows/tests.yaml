@@ -42,6 +42,7 @@ jobs:
           python -m pip install pre-commit
           pre-commit run --show-diff-on-failure --all-files
 
+
   docker_tests:
     needs: linting
     runs-on: ubuntu-latest
@@ -67,10 +68,6 @@ jobs:
             gdal-version: '3.9.3'
           - python-version: '3.10'
             gdal-version: '3.8.5'
-          - python-version: '3.10'
-            gdal-version: '3.7.3'
-          - python-version: '3.10'
-            gdal-version: '3.6.4'
 
     steps:
       - uses: actions/checkout@v6

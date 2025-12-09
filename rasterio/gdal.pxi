@@ -203,21 +203,17 @@ cdef extern from "ogr_srs_api.h" nogil:
                                 char ** ppszReturn,
                                 const char* const* papszOptions)
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
-    cdef extern from "ogr_srs_api.h" nogil:
-
-        int OCTTransformBounds(
-            OGRCoordinateTransformationH hCT,
-            const double xmin,
-            const double ymin,
-            const double xmax,
-            const double ymax,
-            double* out_xmin,
-            double* out_ymin,
-            double* out_xmax,
-            double* out_ymax,
-            const int densify_pts )
+    int OCTTransformBounds(
+        OGRCoordinateTransformationH hCT,
+        const double xmin,
+        const double ymin,
+        const double xmax,
+        const double ymax,
+        double* out_xmin,
+        double* out_ymin,
+        double* out_xmax,
+        double* out_ymax,
+        const int densify_pts )
 
 
 cdef extern from "gdal.h" nogil:
@@ -689,14 +685,10 @@ cdef extern from "gdalwarper.h" nogil:
         GDALDatasetH hSrcDS, int nPixels, int nLines,
          double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
-    cdef extern from "gdalwarper.h" nogil:
-
-        GDALDatasetH GDALAutoCreateWarpedVRTEx(
-            GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
-            GDALResampleAlg eResampleAlg, double dfMaxError,
-            const GDALWarpOptions *psOptions, char** papszTransformerOptions)
+    GDALDatasetH GDALAutoCreateWarpedVRTEx(
+        GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
+        GDALResampleAlg eResampleAlg, double dfMaxError,
+        const GDALWarpOptions *psOptions, char** papszTransformerOptions)
 
 
 

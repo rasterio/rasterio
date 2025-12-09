@@ -62,6 +62,7 @@ def _shapes(image, mask, connectivity, transform):
     cdef int fieldtp
     cdef bint is_float = _getnpdtype(image.dtype).kind == "f"
     cdef dict oft_dtypes = {
+       "int8": OFTInteger,
        "int16": OFTInteger,
        "int32": OFTInteger,
        "int64": OFTInteger64,
@@ -72,8 +73,6 @@ def _shapes(image, mask, connectivity, transform):
        "float32": OFTReal,
        "float64": OFTReal,
     }
-    if GDALVersion.runtime().at_least("3.7"):
-        oft_dtypes["int8"] = OFTInteger
 
     cdef str dtype_name = _getnpdtype(image.dtype).name
     if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
