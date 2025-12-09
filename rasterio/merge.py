@@ -516,4 +516,3 @@ def merge(
         else:
             if first_colormap:
                 dst.write_colormap(1, first_colormap)
-            dst.close()

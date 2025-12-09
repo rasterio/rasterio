@@ -357,10 +357,17 @@ def _reproject(
             in_transform = in_transform.translation(eps, eps)
         return in_transform
 
-    cdef MemoryDataset mem_raster = None
-    cdef MemoryDataset src_mem = None
+    cdef:
+        MemoryDataset mem_raster = None
+        MemoryDataset src_mem = None
+        char **imgProjOptions = NULL
+        GDALRasterBandH hBand = NULL
+        GDALWarpOperation oWarper
+        int rows
+        int cols
+        StackChecker checker
 
-    try:
+    with ExitStack() as exit_stack:
         # If the source is an ndarray, we copy to a MEM dataset.
         # We need a src_transform and src_dst in this case. These will
         # be copied to the MEM dataset.
@@ -395,13 +402,15 @@ def _reproject(
             else:
                 source_arr = source
 
-            src_mem = MemoryDataset(
-                source_arr,
-                transform=format_transform(src_transform),
-                gcps=gcps,
-                rpcs=rpcs,
-                crs=src_crs,
-                copy=True,
+            src_mem = exit_stack.enter_context(
+                MemoryDataset(
+                    source_arr,
+                    transform=format_transform(src_transform),
+                    gcps=gcps,
+                    rpcs=rpcs,
+                    crs=src_crs,
+                    copy=True,
+                )
             )
             src_dataset = src_mem.handle()
 
@@ -427,16 +436,9 @@ def _reproject(
         else:
             raise ValueError("Invalid source")
 
-    except:
-        if src_mem is not None:
-            src_mem.close()
-            src_mem = None
-        raise
+        # Next, do the same for the destination raster.
+        dest_2d = False
 
-    # Next, do the same for the destination raster.
-    dest_2d = False
-
-    try:
         if dtypes.is_ndarray(destination):
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
@@ -472,7 +474,9 @@ def _reproject(
             else:
                 dest_arr = destination
 
-            mem_raster = MemoryDataset(dest_arr, transform=format_transform(dst_transform), crs=dst_crs)
+            mem_raster = exit_stack.enter_context(
+                MemoryDataset(dest_arr, transform=format_transform(dst_transform), crs=dst_crs)
+            )
             dst_dataset = mem_raster.handle()
 
             if dst_alpha:
@@ -498,201 +502,173 @@ def _reproject(
         else:
             raise ValueError("Invalid destination")
 
-    except:
-        if src_mem is not None:
-            src_mem.close()
-            src_mem = None
-        if mem_raster is not None:
-            mem_raster.close()
-            mem_raster = None
-        raise
 
-    # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
-    cdef char **imgProjOptions = NULL
-    imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+        # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
 
-    if rpcs:
-        imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
-    elif src_geoloc_array is not None:
-        arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
-        geoloc_dataset = MemoryDataset(arr, crs=src_crs)
-        log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
-        imgProjOptions = CSLSetNameValue(
-            imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
-        )
-        imgProjOptions = CSLSetNameValue(
-            imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
-        )
-        bUseApproxTransformer = False
+        if rpcs:
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
+        elif src_geoloc_array is not None:
+            arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+            geoloc_dataset = exit_stack.enter_context(MemoryDataset(arr, crs=src_crs))
+            log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+            )
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+            )
+            bUseApproxTransformer = False
 
-    # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
-    # for a list of supported options. I (Sean) don't see harm in
-    # copying all the function's keyword arguments to the image to
-    # image transformer options mapping; unsupported options should be
-    # okay.
-    for key, val in kwargs.items():
-        key = key.upper().encode('utf-8')
-        if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
-            # don't .upper() since might be a path
-            val = str(val).encode('utf-8')
+        # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
+        # for a list of supported options. I (Sean) don't see harm in
+        # copying all the function's keyword arguments to the image to
+        # image transformer options mapping; unsupported options should be
+        # okay.
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
+                # don't .upper() since might be a path
+                val = str(val).encode('utf-8')
 
-            if rpcs:
-                bUseApproxTransformer = False
-        else:
-            val = str(val).upper().encode('utf-8')
-        imgProjOptions = CSLSetNameValue(
-            imgProjOptions, <const char *>key, <const char *>val)
-        log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
-
-    try:
-        with Env(GDAL_MEM_ENABLE_OPEN=True):
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateGenImgProjTransformer2(
-                    src_dataset, dst_dataset, imgProjOptions))
-        if bUseApproxTransformer:
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateApproxTransformer(
-                    GDALGenImgProjTransform, hTransformArg, tolerance))
-            pfnTransformer = GDALApproxTransform
-            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
-            log.debug("Created approximate transformer")
-        else:
-            pfnTransformer = GDALGenImgProjTransform
-            log.debug("Created exact transformer")
-
-        log.debug("Created transformer and options.")
-
-    except:
-        if bUseApproxTransformer:
-            GDALDestroyApproxTransformer(hTransformArg)
-        else:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
-        CPLFree(imgProjOptions)
-        if src_mem is not None:
-            src_mem.close()
-            src_mem = None
-        if mem_raster is not None:
-            mem_raster.close()
-            mem_raster = None
-        raise
-
-    valb = str(num_threads).encode('utf-8')
-    warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
-
-    log.debug("Setting NUM_THREADS option: %d", num_threads)
-
-    if init_dest_nodata:
-        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST",
-                                      "NO_DATA" if dst_nodata is not None else "0")
-
-    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
-    # for a list of supported options. Copying unsupported options
-    # is fine.
-    for key, val in kwargs.items():
-        key = key.upper().encode('utf-8')
-        val = str(val).upper().encode('utf-8')
-        warp_extras = CSLSetNameValue(
-            warp_extras, <const char *>key, <const char *>val)
-
-    cdef GDALRasterBandH hBand = NULL
-
-    psWOptions = create_warp_options(
-        <GDALResampleAlg>resampling,
-        src_nodata,
-        dst_nodata,
-        src_count,
-        dst_alpha,
-        src_alpha,
-        warp_mem_limit,
-        <GDALDataType>working_data_type,
-        <const char **>warp_extras
-    )
-
-    psWOptions.pfnTransformer = pfnTransformer
-    psWOptions.pTransformerArg = hTransformArg
-    psWOptions.hSrcDS = src_dataset
-    psWOptions.hDstDS = dst_dataset
-
-    for idx, (s, d) in enumerate(zip(src_bidx, dst_bidx)):
-        psWOptions.panSrcBands[idx] = s
-        psWOptions.panDstBands[idx] = d
-        log.debug('Configured to warp src band %d to destination band %d' % (s, d))
-
-    log.debug("Set transformer options")
-
-    # Now that the transformer and warp options are set up, we init
-    # and run the warper.
-    cdef GDALWarpOperation oWarper
-    cdef int rows
-    cdef int cols
-    cdef StackChecker checker
-
-    try:
-        exc_wrap_int(oWarper.Initialize(psWOptions))
-        if isinstance(destination, tuple):
-            rows, cols = destination[3]
-        else:
-            rows, cols = destination.shape[-2:]
-
-        log.debug(
-            "Chunk and warp window: %d, %d, %d, %d.",
-            0, 0, cols, rows)
+                if rpcs:
+                    bUseApproxTransformer = False
+            else:
+                val = str(val).upper().encode('utf-8')
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, <const char *>key, <const char *>val)
+            log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
         try:
-            with stack_errors() as checker, Env(GDAL_MEM_ENABLE_OPEN=True):
-                if num_threads > 1:
-                    with nogil:
-                        err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-                else:
-                    with nogil:
-                        err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
-
-                err = checker.exc_wrap_int(err)
-
-        except CPLE_BaseError as base:
-            raise WarpOperationError("Chunk and warp failed") from base
-
-        if mem_raster is not None:
-            count, height, width = dest_arr.shape
-            if hasattr(destination, "mask"):
-                # Pick off the alpha band and make a mask of it.
-                # TODO: do this efficiently, not copying unless necessary.
-                indexes = np.arange(1, count, dtype='intp')
-                io_multi_band(dst_dataset, 0, 0.0, 0.0, width, height, destination, indexes)
-                alpha_arr = np.empty((height, width), dtype=dest_arr.dtype)
-                io_band(mem_raster.band(count), 0, 0.0, 0.0, width, height, alpha_arr)
-                destination = np.ma.masked_array(
-                    destination.data,
-                    mask=np.repeat(
-                        ~(alpha_arr.astype("bool"))[np.newaxis, :, :],
-                        count - 1,
-                        axis=0,
-                    )
-                )
+            with Env(GDAL_MEM_ENABLE_OPEN=True):
+                hTransformArg = exc_wrap_pointer(
+                    GDALCreateGenImgProjTransformer2(
+                        src_dataset, dst_dataset, imgProjOptions))
+            if bUseApproxTransformer:
+                hTransformArg = exc_wrap_pointer(
+                    GDALCreateApproxTransformer(
+                        GDALGenImgProjTransform, hTransformArg, tolerance))
+                pfnTransformer = GDALApproxTransform
+                GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+                log.debug("Created approximate transformer")
             else:
-                exc_wrap_int(io_auto(destination, dst_dataset, 0))
+                pfnTransformer = GDALGenImgProjTransform
+                log.debug("Created exact transformer")
 
-            if dest_2d:
-                destination = destination[0]
+            log.debug("Created transformer and options.")
+        except:
+            if bUseApproxTransformer:
+                GDALDestroyApproxTransformer(hTransformArg)
+            else:
+                GDALDestroyGenImgProjTransformer(hTransformArg)
+            CPLFree(imgProjOptions)
+            raise
 
-            return destination
+        valb = str(num_threads).encode('utf-8')
+        warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
 
-    # Clean up transformer, warp options, and dataset handles.
-    finally:
-        if bUseApproxTransformer:
-            GDALDestroyApproxTransformer(hTransformArg)
-        else:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
+        log.debug("Setting NUM_THREADS option: %d", num_threads)
 
-        GDALDestroyWarpOptions(psWOptions)
-        CPLFree(imgProjOptions)
-        CSLDestroy(warp_extras)
+        if init_dest_nodata:
+            warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST",
+                                        "NO_DATA" if dst_nodata is not None else "0")
 
-        if mem_raster is not None:
-            mem_raster.close()
+        # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+        # for a list of supported options. Copying unsupported options
+        # is fine.
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            val = str(val).upper().encode('utf-8')
+            warp_extras = CSLSetNameValue(
+                warp_extras, <const char *>key, <const char *>val)
 
-        if src_mem is not None:
-            src_mem.close()
+        psWOptions = create_warp_options(
+            <GDALResampleAlg>resampling,
+            src_nodata,
+            dst_nodata,
+            src_count,
+            dst_alpha,
+            src_alpha,
+            warp_mem_limit,
+            <GDALDataType>working_data_type,
+            <const char **>warp_extras
+        )
+
+        psWOptions.pfnTransformer = pfnTransformer
+        psWOptions.pTransformerArg = hTransformArg
+        psWOptions.hSrcDS = src_dataset
+        psWOptions.hDstDS = dst_dataset
+
+        for idx, (s, d) in enumerate(zip(src_bidx, dst_bidx)):
+            psWOptions.panSrcBands[idx] = s
+            psWOptions.panDstBands[idx] = d
+            log.debug('Configured to warp src band %d to destination band %d' % (s, d))
+
+        log.debug("Set transformer options")
+
+        # Now that the transformer and warp options are set up, we init
+        # and run the warper.
+        try:
+            exc_wrap_int(oWarper.Initialize(psWOptions))
+            if isinstance(destination, tuple):
+                rows, cols = destination[3]
+            else:
+                rows, cols = destination.shape[-2:]
+
+            log.debug(
+                "Chunk and warp window: %d, %d, %d, %d.",
+                0, 0, cols, rows)
+
+            try:
+                with stack_errors() as checker, Env(GDAL_MEM_ENABLE_OPEN=True):
+                    if num_threads > 1:
+                        with nogil:
+                            err = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+                    else:
+                        with nogil:
+                            err = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+
+                    err = checker.exc_wrap_int(err)
+
+            except CPLE_BaseError as base:
+                raise WarpOperationError("Chunk and warp failed") from base
+
+            if mem_raster is not None:
+                count, height, width = dest_arr.shape
+                if hasattr(destination, "mask"):
+                    # Pick off the alpha band and make a mask of it.
+                    # TODO: do this efficiently, not copying unless necessary.
+                    indexes = np.arange(1, count, dtype='intp')
+                    io_multi_band(dst_dataset, 0, 0.0, 0.0, width, height, destination, indexes)
+                    alpha_arr = np.empty((height, width), dtype=dest_arr.dtype)
+                    io_band(mem_raster.band(count), 0, 0.0, 0.0, width, height, alpha_arr)
+                    destination = np.ma.masked_array(
+                        destination.data,
+                        mask=np.repeat(
+                            ~(alpha_arr.astype("bool"))[np.newaxis, :, :],
+                            count - 1,
+                            axis=0,
+                        )
+                    )
+                else:
+                    exc_wrap_int(io_auto(destination, dst_dataset, 0))
+
+                if dest_2d:
+                    destination = destination[0]
+
+                return destination
+
+        # Clean up transformer, warp options, and dataset handles.
+        finally:
+            if bUseApproxTransformer:
+                GDALDestroyApproxTransformer(hTransformArg)
+            else:
+                GDALDestroyGenImgProjTransformer(hTransformArg)
+
+            GDALDestroyWarpOptions(psWOptions)
+            CPLFree(imgProjOptions)
+            CSLDestroy(warp_extras)
+
 
 def _calculate_default_transform(
     src_crs,
@@ -755,81 +731,82 @@ def _calculate_default_transform(
 
     hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
 
-    try:
-        imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
-        imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
-        imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+    with ExitStack() as exit_stack:
+        try:
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
 
-        for key, val in kwargs.items():
-            key = key.upper().encode('utf-8')
-
-            if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
-                # don't .upper() since might be a path.
-                val = str(val).encode('utf-8')
-            else:
-                val = str(val).upper().encode('utf-8')
-
-            imgProjOptions = CSLSetNameValue(imgProjOptions, <const char *>key, <const char *>val)
-            log.debug("Set image projection option {0!r}={1!r}".format(key, val))
-
-        if rpcs:
-            if hasattr(rpcs, 'to_gdal'):
-                rpcs = rpcs.to_gdal()
-
-            for key, val in rpcs.items():
+            for key, val in kwargs.items():
                 key = key.upper().encode('utf-8')
-                val = str(val).encode('utf-8')
-                papszMD = CSLSetNameValue(papszMD, <const char *>key, <const char *>val)
 
-            exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
-            imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
-            bUseApproxTransformer = False
+                if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
+                    # don't .upper() since might be a path.
+                    val = str(val).encode('utf-8')
+                else:
+                    val = str(val).upper().encode('utf-8')
 
-        elif src_geoloc_array is not None:
-            arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
-            geoloc_dataset = MemoryDataset(arr, crs=src_crs)
-            log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
-            imgProjOptions = CSLSetNameValue(
-                imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+                imgProjOptions = CSLSetNameValue(imgProjOptions, <const char *>key, <const char *>val)
+                log.debug("Set image projection option {0!r}={1!r}".format(key, val))
+
+            if rpcs:
+                if hasattr(rpcs, 'to_gdal'):
+                    rpcs = rpcs.to_gdal()
+
+                for key, val in rpcs.items():
+                    key = key.upper().encode('utf-8')
+                    val = str(val).encode('utf-8')
+                    papszMD = CSLSetNameValue(papszMD, <const char *>key, <const char *>val)
+
+                exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
+                imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
+                bUseApproxTransformer = False
+
+            elif src_geoloc_array is not None:
+                arr = np.stack((src_geoloc_array[0], src_geoloc_array[1]))
+                geoloc_dataset = exit_stack.enter_context(MemoryDataset(arr, crs=src_crs))
+                log.debug("Geoloc dataset created: geoloc_dataset=%r", geoloc_dataset)
+                imgProjOptions = CSLSetNameValue(
+                    imgProjOptions, "SRC_GEOLOC_ARRAY", geoloc_dataset.name.encode("utf-8")
+                )
+                imgProjOptions = CSLSetNameValue(
+                    imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
+                )
+                bUseApproxTransformer = False
+
+            with Env(GDAL_MEM_ENABLE_OPEN=True):
+                hTransformArg = exc_wrap_pointer(
+                    GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
+                )
+
+            pfnTransformer = GDALGenImgProjTransform
+            log.debug("Created exact transformer")
+
+            exc_wrap_int(
+                GDALSuggestedWarpOutput2(
+                    hds,
+                    pfnTransformer,
+                    hTransformArg,
+                    geotransform,
+                    &npixels,
+                    &nlines,
+                    extent,
+                    0
+                )
             )
-            imgProjOptions = CSLSetNameValue(
-                imgProjOptions, "SRC_SRS", src_crs.to_string().encode("utf-8")
-            )
-            bUseApproxTransformer = False
 
-        with Env(GDAL_MEM_ENABLE_OPEN=True):
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
-            )
+        except CPLE_NotSupportedError as err:
+            raise CRSError(err.errmsg)
 
-        pfnTransformer = GDALGenImgProjTransform
-        log.debug("Created exact transformer")
-
-        exc_wrap_int(
-            GDALSuggestedWarpOutput2(
-                hds,
-                pfnTransformer,
-                hTransformArg,
-                geotransform,
-                &npixels,
-                &nlines,
-                extent,
-                0
-            )
-        )
-
-    except CPLE_NotSupportedError as err:
-        raise CRSError(err.errmsg)
-
-    finally:
-        if hTransformArg != NULL:
-            GDALDestroyGenImgProjTransformer(hTransformArg)
-        if hds != NULL:
-            GDALClose(hds)
-        if imgProjOptions != NULL:
-            CPLFree(imgProjOptions)
-        if papszMD != NULL:
-            CSLDestroy(papszMD)
+        finally:
+            if hTransformArg != NULL:
+                GDALDestroyGenImgProjTransformer(hTransformArg)
+            if hds != NULL:
+                GDALClose(hds)
+            if imgProjOptions != NULL:
+                CPLFree(imgProjOptions)
+            if papszMD != NULL:
+                CSLDestroy(papszMD)
 
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
     dst_width = npixels

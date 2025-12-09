@@ -2,6 +2,7 @@
 
 import logging
 import warnings
+from contextlib import ExitStack
 
 import numpy as np
 
@@ -89,10 +90,9 @@ def _shapes(image, mask, connectivity, transform):
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
-    try:
-
+    with ExitStack() as exit_stack:
         if dtypes.is_ndarray(image):
-            mem_ds = MemoryDataset(image, transform=transform)
+            mem_ds = exit_stack.enter_context(MemoryDataset(image, transform=transform))
             band = mem_ds.band(1)
         elif isinstance(image, tuple):
             rdr = image.ds
@@ -105,13 +105,15 @@ def _shapes(image, mask, connectivity, transform):
                 raise ValueError("Mask must have same shape as image")
 
             if _getnpdtype(mask.dtype).name not in ('bool', 'uint8'):
-                raise ValueError("Mask must be dtype rasterio.bool_ or "
-                                 "rasterio.uint8")
+                raise ValueError(
+                    "Mask must be dtype rasterio.bool_ or rasterio.uint8"
+                )
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_ds = MemoryDataset(mask.astype('uint8'),
-                                         transform=transform)
+                mask_ds = exit_stack.enter_context(
+                    MemoryDataset(mask.astype('uint8'), transform=transform)
+                )
                 maskband = mask_ds.band(1)
             elif isinstance(mask, tuple):
                 mrdr = mask.ds
@@ -136,21 +138,17 @@ def _shapes(image, mask, connectivity, transform):
         OGR_L_CreateField(layer, fielddefn, 1)
         OGR_Fld_Destroy(fielddefn)
 
-        if connectivity == 8:
-            options = CSLSetNameValue(options, "8CONNECTED", "8")
+        try:
+            if connectivity == 8:
+                options = CSLSetNameValue(options, "8CONNECTED", "8")
 
-        if is_float:
-            GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
-        else:
-            GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
-
-    finally:
-        if mem_ds is not None:
-            mem_ds.close()
-        if mask_ds is not None:
-            mask_ds.close()
-        if options:
-            CSLDestroy(options)
+            if is_float:
+                GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+            else:
+                GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+        finally:
+            if options:
+                CSLDestroy(options)
 
     try:
         # Yield Fiona-style features
@@ -219,14 +217,13 @@ def _sieve(image, size, out, mask, connectivity):
     if _getnpdtype(image.dtype).name != _getnpdtype(out.dtype).name:
         raise ValueError('out raster must match dtype of image')
 
-    try:
-
+    with ExitStack() as exit_stack:
         if dtypes.is_ndarray(image):
             if len(image.shape) == 2:
                 image = image.reshape(1, *image.shape)
             src_count = image.shape[0]
             src_bidx = list(range(1, src_count + 1))
-            in_mem_ds = MemoryDataset(image)
+            in_mem_ds = exit_stack.enter_context(MemoryDataset(image))
             src_dataset = in_mem_ds
 
         elif isinstance(image, tuple):
@@ -243,7 +240,7 @@ def _sieve(image, size, out, mask, connectivity):
                 out = out.reshape(1, *out.shape)
             dst_count = out.shape[0]
             dst_bidx = list(range(1, dst_count + 1))
-            out_mem_ds = MemoryDataset(out)
+            out_mem_ds = exit_stack.enter_context(MemoryDataset(out))
             dst_dataset = out_mem_ds
 
         elif isinstance(out, tuple):
@@ -260,11 +257,11 @@ def _sieve(image, size, out, mask, connectivity):
 
             if _getnpdtype(mask.dtype) not in ('bool', 'uint8'):
                 raise ValueError("Mask must be dtype rasterio.bool_ or "
-                                 "rasterio.uint8")
+                                "rasterio.uint8")
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_mem_ds = MemoryDataset(mask.astype('uint8'))
+                mask_mem_ds = exit_stack.enter_context(MemoryDataset(mask.astype('uint8')))
                 mask_band = mask_mem_ds.band(1)
 
             elif isinstance(mask, tuple):
@@ -276,14 +273,6 @@ def _sieve(image, size, out, mask, connectivity):
             out_band = (<DatasetReaderBase?>dst_dataset).band(j)
             GDALSieveFilter(in_band, mask_band, out_band, size, connectivity, NULL, NULL, NULL)
             io_auto(out[i - 1], out_band, False)
-
-    finally:
-        if in_mem_ds is not None:
-            in_mem_ds.close()
-        if out_mem_ds is not None:
-            out_mem_ds.close()
-        if mask_mem_ds is not None:
-            mask_mem_ds.close()
 
     if out.shape[0] == 1:
         out = out[0]
