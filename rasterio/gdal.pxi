@@ -772,3 +772,20 @@ cdef extern from "gdal_alg.h" nogil:
 cdef extern from "ogr_core.h" nogil:
 
     char *OGRGeometryTypeToName(int type)
+
+    ctypedef enum OGRFieldType:
+        OFTInteger
+        OFTIntegerList
+        OFTReal
+        OFTRealList
+        OFTString
+        OFTStringList
+        OFTWideString
+        OFTWideStringList
+        OFTBinary
+        OFTDate
+        OFTTime
+        OFTDateTime
+        OFTInteger64
+        OFTInteger64List
+        OFTMaxType

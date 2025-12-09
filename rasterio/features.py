@@ -80,11 +80,15 @@ def geometry_mask(
 def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     r"""Get shapes and values of connected regions in a dataset or array.
 
+    .. warning:: Because the low-level implementation uses either an int64 or float32
+                 buffer, uint64 and float64 data may encounter truncation issues.
+
     Parameters
     ----------
     source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
         Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
+        rasterio.int64, rasterio.uint8, rasterio.uint16, rasterio.uint32,
+        rasterio.uint64, rasterio.float32, rasterio.float64.
     mask : numpy.ndarray or rasterio Band object, optional
         Must evaluate to bool (rasterio.bool\_ or rasterio.uint8). Values
         of False or 0 will be excluded from feature generation.  Note
@@ -116,14 +120,11 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     variability, such as imagery, may produce one polygon per pixel and
     consume large amounts of memory.
 
-    Because the low-level implementation uses either an int32 or float32
-    buffer, uint32 and float64 data cannot be operated on without
-    truncation issues.
-
     GDAL functions used:
 
     - :cpp:func:`GDALPolygonize`
     - :cpp:func:`GDALFPolygonize`
+
     """
     if hasattr(source, 'mask') and mask is None:
         mask = ~source.mask
