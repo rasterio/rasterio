@@ -80,11 +80,6 @@ def geometry_mask(
 def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     r"""Get shapes and values of connected regions in a dataset or array.
 
-    GDAL functions used:
-
-    - :cpp:func:`GDALPolygonize`
-    - :cpp:func:`GDALFPolygonize`
-
     Parameters
     ----------
     source : numpy.ndarray, dataset object, Band, or tuple(dataset, bidx)
@@ -125,6 +120,10 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     buffer, uint32 and float64 data cannot be operated on without
     truncation issues.
 
+    GDAL functions used:
+
+    - :cpp:func:`GDALPolygonize`
+    - :cpp:func:`GDALFPolygonize`
     """
     if hasattr(source, 'mask') and mask is None:
         mask = ~source.mask
@@ -140,10 +139,6 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Polygons are found for each set of neighboring pixels of the same
     value.
-
-    GDAL functions used:
-
-    - :cpp:func:`GDALSieveFilter`
 
     Parameters
     ----------
@@ -178,6 +173,10 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
     high pixel-to-pixel variability, such as imagery, may produce one
     polygon per pixel and consume large amounts of memory.
 
+    GDAL functions used:
+
+    - :cpp:func:`GDALSieveFilter`
+
     """
     if isinstance(source, DatasetBase):
         source = rasterio.band(source, source.indexes)
@@ -210,10 +209,6 @@ def rasterize(
     Warnings will be raised for any invalid or empty geometries, and
     an exception will be raised if there are no valid shapes
     to rasterize.
-
-    GDAL functions used:
-
-    - :cpp:func:`GDALRasterizeGeometries`
 
     Parameters
     ----------
@@ -285,6 +280,11 @@ def rasterize(
     shapes will be iterated multiple times. Performance is thus a linear
     function of buffer size. For maximum speed, ensure that
     GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
+
+    GDAL functions used:
+
+    - :cpp:func:`GDALRasterizeGeometries`
+
     """
     valid_dtypes = (
         'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64'
