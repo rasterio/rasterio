@@ -14,6 +14,8 @@ Submodules
 
 .. toctree::
 
+   rasterio.abc
+   rasterio.cache
    rasterio.control
    rasterio.coords
    rasterio.crs
@@ -34,6 +36,7 @@ Submodules
    rasterio.sample
    rasterio.session
    rasterio.shutil
+   rasterio.stack
    rasterio.tools
    rasterio.transform
    rasterio.vrt
