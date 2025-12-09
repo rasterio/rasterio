@@ -80,13 +80,6 @@ def test_dataset_readonly_attributes(path_rgb_byte_tif):
             dataset.crs = "foo"
 
 
-def test_dataset_readonly_attributes(path_rgb_byte_tif):
-    """Attempts to set read-only attributes still fail with NotImplementedError"""
-    with pytest.raises(NotImplementedError):
-        with rasterio.open(path_rgb_byte_tif) as dataset:
-            dataset.crs = "foo"
-
-
 @pytest.mark.parametrize("blockysize", [1, 2, 3, 7, 61, 62])
 def test_creation_untiled_blockysize(tmp_path, blockysize):
     """Check for fix of gh-2599"""

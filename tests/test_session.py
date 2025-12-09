@@ -80,13 +80,13 @@ def test_aws_session_class_unsigned(monkeypatch):
     assert sesh.get_credential_options()['AWS_REGION'] == 'us-mountain-1'
     assert sesh.get_credential_options()['AWS_S3_ENDPOINT'] == 'http://localhost:9090'
 
-    # default to environment variable when not set 
+    # default to environment variable when not set
     monkeypatch.setenv("AWS_NO_SIGN_REQUEST", "YES")
     sesh = AWSSession()
     assert sesh.unsigned is True
     assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
 
-    # Arguments override environment variable 
+    # Arguments override environment variable
     sesh = AWSSession(aws_access_key_id="fake", aws_secret_access_key="fake", aws_unsigned=False)
     assert sesh.unsigned is False
     assert 'AWS_NO_SIGN_REQUEST' not in sesh.get_credential_options()
@@ -255,8 +255,8 @@ def test_swift_session_class():
 
 
 def test_swift_session_by_user_key():
-    def mock_init(self, session=None, 
-                swift_storage_url=None, swift_auth_token=None, 
+    def mock_init(self, session=None,
+                swift_storage_url=None, swift_auth_token=None,
                 swift_auth_v1_url=None, swift_user=None, swift_key=None):
         self._creds = {'SWIFT_STORAGE_URL':'foo',
                        'SWIFT_AUTH_TOKEN':'bar'}

@@ -209,7 +209,7 @@ def rasterize(
     Warnings will be raised for any invalid or empty geometries, and
     an exception will be raised if there are no valid shapes
     to rasterize.
-    
+
     Parameters
     ----------
     shapes : iterable of (`geometry`, `value`) pairs or geometries
