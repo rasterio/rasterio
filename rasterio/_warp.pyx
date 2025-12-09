@@ -57,6 +57,22 @@ def recursive_round(val, precision):
         return [recursive_round(part, precision) for part in val]
 
 
+cdef dict TRANSFORMER_OPTIONS = None
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 11):
+    TRANSFORMER_OPTIONS = {
+        option.get("name"): option.get("description") for option
+        in ET.fromstring(
+            GDALGetGenImgProjTranformerOptionList().decode("utf-8")
+        ).findall("Option")
+    }
+
+
+cdef bint is_transformer_option(bytes key):
+    if TRANSFORMER_OPTIONS is None:
+        return True
+    return key.decode("utf-8") in TRANSFORMER_OPTIONS
+
+
 cdef object _transform_single_geom(
     object single_geom,
     OGRGeometryFactory *factory,
@@ -530,6 +546,10 @@ def _reproject(
         # okay.
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
+
+            if not is_transformer_option(key):
+                continue
+
             if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
                 # don't .upper() since might be a path
                 val = str(val).encode('utf-8')
@@ -743,6 +763,9 @@ def _calculate_default_transform(
             for key, val in kwargs.items():
                 key = key.upper().encode('utf-8')
 
+                if not is_transformer_option(key):
+                    continue
+
                 if key in {b"RPC_DEM", b"COORDINATE_OPERATION"}:
                     # don't .upper() since might be a path.
                     val = str(val).encode('utf-8')
@@ -819,7 +842,6 @@ def _calculate_default_transform(
 
 
 DEFAULT_NODATA_FLAG = object()
-
 
 cdef GDALDatasetH auto_create_warped_vrt(
     GDALDatasetH hSrcDS,
@@ -991,6 +1013,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef char *dst_crs_wkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
         cdef char **c_warp_extras = NULL
+        cdef char **c_transformer_options = NULL
         cdef GDALWarpOptions *psWOptions = NULL
         cdef float c_tolerance = tolerance
         cdef GDALResampleAlg c_resampling = resampling
@@ -1035,6 +1058,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             val = str(val).upper().encode('utf-8')
             c_warp_extras = CSLSetNameValue(
                 c_warp_extras, <const char *>key, <const char *>val)
+            if is_transformer_option(key):
+                c_transformer_options = CSLSetNameValue(
+                    c_transformer_options, <const char *>key, <const char *>val)
 
         cdef GDALRasterBandH hBand = NULL
         src_alpha_band = 0
@@ -1099,10 +1125,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     c_resampling,
                     c_tolerance,
                     psWOptions,
-                    <const char **>c_warp_extras,
+                    <const char **>c_transformer_options,
                 )
             finally:
                 CSLDestroy(c_warp_extras)
+                CSLDestroy(c_transformer_options)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
 
@@ -1156,6 +1183,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             # We raise a Python exception to indicate that.
             else:
                 CSLDestroy(c_warp_extras)
+                CSLDestroy(c_transformer_options)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
                 raise RuntimeError("Parameterization error")
@@ -1194,6 +1222,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
             finally:
                 CSLDestroy(c_warp_extras)
+                CSLDestroy(c_transformer_options)
                 if psWOptions != NULL:
                     GDALDestroyWarpOptions(psWOptions)
 
