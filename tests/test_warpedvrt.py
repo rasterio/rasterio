@@ -86,11 +86,12 @@ def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
         assert "1 N GTiff" in records[0]
 
 
-def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
+def test_warped_vrt_msk_add_alpha(dsrec, caplog, path_rgb_msk_byte_tif):
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
+
     with rasterio.Env(
         GDAL_DISABLE_READDIR_ON_OPEN="TRUE"
-    ), rasterio.open(
+    ) as env, rasterio.open(
         path_rgb_msk_byte_tif
     ) as src, WarpedVRT(
         src, crs=DST_CRS, add_alpha=True
@@ -103,17 +104,31 @@ def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
         ) * 3 + (
             [MaskFlags.all_valid],
         )
+        assert vrt.colorinterp[3] == rasterio.enums.ColorInterp.alpha
 
         caplog.set_level(logging.DEBUG)
         with rasterio.Env(CPL_DEBUG=True):
             masks = vrt.read_masks()
-            assert masks[0, 0, 0] == 0
-            assert masks[0].mean() > 0
 
-    assert "RGB2.byte.tif.msk" in caplog.text
+        assert masks[0, 0, 0] == 0
+        assert masks[0].mean() > 0
+        assert masks[3, 0, 0] == 255
+        assert masks[3].mean() == 255
+        assert masks.shape == (4, vrt.height, vrt.width)
+
+        if gdal_version.at_least("3.12"):
+            records = dsrec(env)
+            assert len(records) == 2
+            for record in records:
+                if "RGB2.byte.tif.msk" in record:
+                    break
+            else:
+                pytest.fail("Missing .msk dataset in open datasets")
+        else:
+            assert "RGB2.byte.tif.msk" in caplog.text
 
 
-def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
+def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif):
     """Specifying dst nodata also works for source with .msk"""
     with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(src, crs=DST_CRS, nodata=0.0) as vrt:
         assert vrt.dst_crs == CRS.from_string(DST_CRS)
@@ -125,6 +140,7 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
         masks = vrt.read_masks()
         assert masks[0, 0, 0] == 0
         assert masks[0].mean() > 0
+        assert len(vrt.colorinterp) == 3
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
