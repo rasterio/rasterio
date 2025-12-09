@@ -695,7 +695,7 @@ def test_nonintersecting_window_index():
 def test_subdivide_offsets():
     src = Window(10, 12, 3, 5)
     subs = subdivide(src, 3, 2)
-    
+
     expected = {Window(col_off=10, row_off=12, width=2, height=3),
                 Window(col_off=12, row_off=12, width=1, height=3),
                 Window(col_off=10, row_off=15, width=2, height=2),

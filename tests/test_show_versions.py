@@ -31,7 +31,6 @@ def test_get_deps_info():
     assert "attrs" in deps_info
     assert "certifi" in deps_info
     assert "click" in deps_info
-    assert "click-plugins" in deps_info
     assert "cligj" in deps_info
     assert "cython" in deps_info
     assert "numpy" in deps_info

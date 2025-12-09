@@ -16,7 +16,7 @@ class RevolvingDoorTest(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
-    
+
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
@@ -27,7 +27,7 @@ class RevolvingDoorTest(unittest.TestCase):
             meta = src.meta
 
         tiffname = os.path.join(self.tempdir, 'foo.tif')
-        
+
         with rasterio.open(tiffname, 'w', **meta) as dst:
             dst.write(shade, indexes=1)
 

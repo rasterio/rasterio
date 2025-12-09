@@ -7,14 +7,14 @@ from rasterio._env import driver_count
 def test_drivers():
     with rasterio.Env() as m:
         assert driver_count() > 0
-        assert type(m) == rasterio.Env
+        assert type(m) is rasterio.Env
     assert driver_count() > 0
 
 
 def test_drivers_bwd_compat():
     with rasterio.Env() as m:
         assert driver_count() > 0
-        assert type(m) == rasterio.Env
+        assert type(m) is rasterio.Env
     assert driver_count() > 0
 
 

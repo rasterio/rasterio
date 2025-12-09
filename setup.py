@@ -10,7 +10,6 @@
 # binary wheels.
 
 import copy
-import itertools
 import logging
 import os
 import platform
@@ -38,18 +37,6 @@ def copy_data_tree(datadir, destdir):
 # python -W all setup.py ...
 if "all" in sys.warnoptions:
     log.level = logging.DEBUG
-
-# Parse the version from the rasterio module.
-with open("rasterio/__init__.py") as f:
-    for line in f:
-        if line.find("__version__") >= 0:
-            version = line.split("=")[1].strip()
-            version = version.strip('"')
-            version = version.strip("'")
-            continue
-
-with open("VERSION.txt", "w") as f:
-    f.write(version)
 
 # Use Cython if available.
 try:
@@ -133,8 +120,8 @@ if "clean" not in sys.argv:
         int, re.findall("[0-9]+", gdalversion)[:3]
     )
 
-    if (gdal_major_version, gdal_minor_version) < (3, 5):
-        raise SystemExit("ERROR: GDAL >= 3.5 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (3, 6):
+        raise SystemExit("ERROR: GDAL >= 3.6 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -241,88 +228,13 @@ if "clean" not in sys.argv:
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options
     )
 
-
-with open("README.rst", encoding="utf-8") as f:
-    readme = f.read()
-
-# Runtime requirements.
-inst_reqs = [
-    "affine",
-    "attrs",
-    "certifi",
-    # Avoid pallets/click#2939.
-    "click>=4.0,!=8.2.*",
-    "cligj>=0.5",
-    "importlib-metadata ; python_version < '3.10'",
-    "numpy>=1.24",
-    "click-plugins",
-    "pyparsing",
-]
-
-extra_reqs = {
-    "docs": [
-        "ghp-import",
-        "numpydoc",
-        "sphinx",
-        "sphinx-click",
-        "sphinx-rtd-theme",
-    ],
-    "ipython": ["ipython>=2.0"],
-    "plot": ["matplotlib"],
-    "s3": ["boto3>=1.2.4"],
-    "test": [
-        "boto3>=1.2.4",
-        "fsspec",
-        "hypothesis",
-        "packaging",
-        "pytest-cov>=2.2.0",
-        "pytest>=2.8.2",
-        "shapely",
-    ],
-}
-
-# Add all extra requirements
-extra_reqs["all"] = list(set(itertools.chain(*extra_reqs.values())))
-
-setup_args = dict(
-    name="rasterio",
-    version=version,
-    description="Fast and direct raster I/O for use with Numpy and SciPy",
-    long_description=readme,
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: BSD License",
-        "Programming Language :: C",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Programming Language :: Python :: 3.14",
-        "Programming Language :: Python :: 3",
-        "Topic :: Multimedia :: Graphics :: Graphics Conversion",
-        "Topic :: Scientific/Engineering :: GIS",
-    ],
-    keywords="raster gdal",
-    author="Sean Gillies",
-    author_email="sean@mapbox.com",
-    url="https://github.com/rasterio/rasterio",
-    license="BSD",
-    package_dir={"": "."},
-    packages=["rasterio", "rasterio._vendor", "rasterio.rio"],
-    include_package_data=True,
-    ext_modules=ext_modules,
-    zip_safe=False,
-    install_requires=inst_reqs,
-    extras_require=extra_reqs,
-    python_requires=">=3.9",
-)
-
+setup_args = {}
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}
 
-setup(**setup_args)
+# See pyproject.toml for project metadata
+setup(
+    name="rasterio",  # need by GitHub dependency graph
+    ext_modules=ext_modules,
+    **setup_args,
+)

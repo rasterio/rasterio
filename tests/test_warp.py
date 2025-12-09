@@ -130,7 +130,7 @@ class RangeRequestErrorHandler(rangehttpserver.RangeRequestHandler):
             return super().send_head()
         try:
             self.range = rangehttpserver.parse_byte_range(self.headers["Range"])
-        except ValueError as e:
+        except ValueError:
             self.send_error(400, "Invalid byte range")
             return None
         first, last = self.range
@@ -2487,8 +2487,7 @@ def test_geoloc_warp_dataset(data, tmp_path):
 # MEM:::DATAPOINTER=137539856,PIXELS=791,LINES=718,BANDS=3,DATATYPE=Byte.
 # There is no affine transformation and no GCPs. Specify transformation
 # option SRC_METHOD=NO_GEOTRANSFORM to bypass this check.
-@pytest.mark.skipif(not gdal_version.at_least("3.6"), reason="Requires GDAL 3.6")
-def test_geoloc_warp_array(path_rgb_byte_tif, tmp_path):
+def test_geoloc_warp_array(path_rgb_byte_tif):
     """Warp an array using external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
         xs, ys = src.transform * np.meshgrid(
