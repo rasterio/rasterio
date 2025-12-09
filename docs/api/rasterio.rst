@@ -14,6 +14,8 @@ Submodules
 
 .. toctree::
 
+   rasterio.abc
+   rasterio.cache
    rasterio.control
    rasterio.coords
    rasterio.crs
@@ -27,13 +29,13 @@ Submodules
    rasterio.io
    rasterio.mask
    rasterio.merge
-   rasterio.path
    rasterio.plot
    rasterio.profiles
    rasterio.rpc
    rasterio.sample
    rasterio.session
    rasterio.shutil
+   rasterio.stack
    rasterio.tools
    rasterio.transform
    rasterio.vrt
