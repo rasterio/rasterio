@@ -275,8 +275,10 @@ dimensions_opt = click.option(
 dtype_opt = click.option(
     '-t', '--dtype',
     type=click.Choice([
-        'ubyte', 'uint8', 'uint16', 'int16', 'uint32', 'int32',
-        'float32', 'float64']),
+        'ubyte', 'uint8', 'uint16', 'uint32', 'uint64',
+        'int8', 'int16', 'uint32', 'int32', 'int64',
+        'float16', 'float32', 'float64'
+    ]),
     default=None,
     help="Output data type.")
 

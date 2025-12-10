@@ -41,6 +41,7 @@ from rasterio.dtypes import (
     int32,
     int64,
     uint64,
+    float16,
     float32,
     float64,
     complex_,

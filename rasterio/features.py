@@ -13,7 +13,7 @@ from rasterio import warp
 from rasterio._base import DatasetBase
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.enums import MergeAlg
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import ShapeSkipWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
@@ -268,7 +268,7 @@ def rasterize(
     -----
     Valid data types for `fill`, `default_value`, `out`, `dtype` and
     shape values are "int16", "int32", "uint8", "uint16", "uint32",
-    "float32", and "float64".
+    "float16", "float32", and "float64".
 
     This function requires significant memory resources. The shapes
     iterator will be materialized to a Python list and another C copy of
@@ -290,6 +290,8 @@ def rasterize(
     valid_dtypes = (
         "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"
     )
+    if GDALVersion.runtime().at_least("3.11"):
+        valid_dtypes += ("float16",)
 
     # The output data type is primarily determined by the output array
     # or dtype parameter. But if neither of these are specified, it will

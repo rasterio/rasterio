@@ -2,6 +2,10 @@
 
 import numpy
 
+from rasterio.env import GDALVersion
+
+_GDAL_AT_LEAST_3_11 = GDALVersion.runtime().at_least("3.11")
+
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
 sbyte = int8 = 'int8'
@@ -11,6 +15,7 @@ uint32 = 'uint32'
 int32 = 'int32'
 uint64 = 'uint64'
 int64 = 'int64'
+float16 = 'float16'
 float32 = 'float32'
 float64 = 'float64'
 complex_ = 'complex'
@@ -36,11 +41,16 @@ dtype_fwd = {
     14: sbyte,  # GDT_Int8
 }
 
+if _GDAL_AT_LEAST_3_11:
+    dtype_fwd[15] = float16  # GDT_Float16
+    dtype_fwd[16] = complex64  # GDT_CFloat16
+
 dtype_rev = {v: k for k, v in dtype_fwd.items()}
 
-dtype_rev["uint8"] = 1
-dtype_rev["complex"] = 11
-dtype_rev["complex_int16"] = 8
+dtype_rev[uint8] = 1
+dtype_rev[complex_] = 11
+dtype_rev[complex64] = 10
+dtype_rev[complex_int16] = 8
 
 
 def _get_gdal_dtype(type_name):
@@ -70,8 +80,13 @@ typename_fwd = {
     14: 'Int8',
 }
 
+if _GDAL_AT_LEAST_3_11:
+    typename_fwd[15] = "Float16"
+    typename_fwd[16] = "CFloat16"
+
 typename_rev = {v: k for k, v in typename_fwd.items()}
 
+f16i = numpy.finfo("float16")
 f32i = numpy.finfo("float32")
 f64i = numpy.finfo("float64")
 
@@ -82,6 +97,7 @@ dtype_ranges = {
     "int16": (-32768, 32767),
     "uint32": (0, 4294967295),
     "int32": (-2147483648, 2147483647),
+    "float16": (float(f16i.min), float(f16i.max)),
     "float32": (float(f32i.min), float(f32i.max)),
     "float64": (float(f64i.min), float(f64i.max)),
     "int64": (-9223372036854775808, 9223372036854775807),
@@ -156,10 +172,11 @@ def get_minimum_dtype(values):
         elif min_value >= -2147483648 and max_value <= 2147483647:
             return int32
         return int64
-    else:
-        if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
-            return float32
-        return float64
+    if _GDAL_AT_LEAST_3_11 and min_value >= f16i.min and max_value <= f16i.max:
+        return float16
+    if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
+        return float32
+    return float64
 
 
 def is_ndarray(array):
