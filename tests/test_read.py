@@ -329,7 +329,7 @@ def test_read_out_mask(path_rgb_byte_tif):
 @pytest.mark.parametrize(
     "out", [np.empty((20, 10), np.ubyte), np.empty((2, 20, 10), np.ubyte)]
 )
-def test_read_out_mask(path_rgb_byte_tif, out):
+def test_read_out_mask_wrong_shape(path_rgb_byte_tif, out):
     """Raise when out keyword arg has wrong shape."""
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(ValueError):

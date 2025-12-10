@@ -22,7 +22,7 @@ def test_sampling_masked_beyond_bounds():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         data = next(src.sample([(0.0, 0.0)], masked=True))
         assert numpy.ma.is_masked(data)
-        assert all(data.mask == True)
+        assert all(data.mask)
 
 
 def test_sampling_no_nodata_masked_beyond_bounds(data):
@@ -35,14 +35,14 @@ def test_sampling_no_nodata_masked_beyond_bounds(data):
     with rasterio.open(filename) as src:
         data = next(src.sample([(0.0, 0.0)], masked=True))
         assert numpy.ma.is_masked(data)
-        assert all(data.mask == True)
+        assert all(data.mask)
 
 
 def test_sampling_beyond_bounds_no_nodata_masked():
     """Masked sampling beyond bounds yields an entirely masked array."""
     with rasterio.open('tests/data/RGB2.byte.tif') as src:
         data = next(src.sample([(0.0, 0.0)], masked=True))
-        assert all(data.mask == True)
+        assert all(data.mask)
 
 
 def test_sampling_beyond_bounds_masked():

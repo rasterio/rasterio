@@ -3,7 +3,6 @@
 from affine import Affine
 import numpy as np
 import pytest
-from affine import Affine
 
 import rasterio
 from rasterio.enums import Resampling

@@ -169,7 +169,7 @@ def test_mask(basic_image_2x2, basic_image_file, basic_geometry):
         masked, transform = mask(src, geometries)
 
     assert np.array_equal(masked[0], basic_image_2x2)
-    assert (type(masked) == np.ndarray)
+    assert type(masked) is np.ndarray
 
 
 def test_mask_indexes(basic_image_2x2, basic_image_file, basic_geometry):
@@ -182,7 +182,7 @@ def test_mask_indexes(basic_image_2x2, basic_image_file, basic_geometry):
 
     assert np.ndim(masked) == 2
     assert np.array_equal(masked, basic_image_2x2)
-    assert (type(masked) == np.ndarray)
+    assert type(masked) is np.ndarray
 
 
 def test_mask_invert(basic_image, basic_image_file, basic_geometry):
@@ -308,6 +308,6 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
 
     image = np.ma.MaskedArray(basic_image, mask=basic_image_2x2==0)
 
-    assert (type(masked) == np.ma.MaskedArray)
+    assert type(masked) is np.ma.MaskedArray
     assert np.array_equal(masked[0].mask, image.mask)
     assert np.array_equal(masked[0], image)

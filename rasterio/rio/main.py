@@ -33,18 +33,14 @@ so that other ``rio`` users may find it.
 import itertools
 import logging
 import sys
+from importlib.metadata import entry_points
 
-from click_plugins import with_plugins
 import click
 import cligj
 
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
-
 import rasterio
 from rasterio.session import AWSSession
+from rasterio._vendor.click_plugins import with_plugins
 
 
 def configure_logging(verbosity):

@@ -1539,8 +1539,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     GDALCreate(drv, fname, width, height, count, gdal_dtype, options)
                 )
 
+            except CPLE_IllegalArgError as exc:
+                if "must be a multiple of 16" in str(exc):  # For GDAL 3.12+.
+                    raise RasterBlockError(
+                        "The height and width of TIFF dataset blocks must be multiples of 16"
+                    )
+                else:
+                    raise RasterioIOError(str(exc))
             except CPLE_AppDefinedError as exc:
-                if "Bad value" in str(exc):
+                if "Bad value" in str(exc):  # For GDAL < 3.12.
                     raise RasterBlockError(
                         "The height and width of TIFF dataset blocks must be multiples of 16"
                     )

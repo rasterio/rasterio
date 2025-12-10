@@ -116,7 +116,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
     The maximum amount of memory used to perform calculations defaults to
     64 MB. This number can be increased to improve speed of calculation.
 
-    """
+    """  # noqa: W605
     dst = None
     sources = []
 

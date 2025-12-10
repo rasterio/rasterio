@@ -27,7 +27,8 @@ def copy_byte_range(infile, outfile, start=None, stop=None, bufsize=16*1024):
 
     Both start and stop are inclusive.
     '''
-    if start is not None: infile.seek(start)
+    if start is not None:
+        infile.seek(start)
     while 1:
         to_read = min(bufsize, stop + 1 - infile.tell() if stop else bufsize)
         buf = infile.read(to_read)
@@ -68,7 +69,7 @@ class RangeRequestHandler(SimpleHTTPRequestHandler):
             return SimpleHTTPRequestHandler.send_head(self)
         try:
             self.range = parse_byte_range(self.headers['Range'])
-        except ValueError as e:
+        except ValueError:
             self.send_error(400, 'Invalid byte range')
             return None
         first, last = self.range

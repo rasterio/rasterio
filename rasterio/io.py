@@ -154,7 +154,7 @@ class MemoryFile(MemoryFileBase):
                 sharing=sharing,
                 **kwargs
             )
-        
+
         # Push the new dataset's context exit onto the MemoryFile's ExitStack.
         # This ensures that when this MemoryFile is closed, any derived dataset
         # is also closed automatically.
