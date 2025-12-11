@@ -39,7 +39,6 @@ See :func:`with_plugins`.
 
 import importlib.metadata
 import os
-import sys
 import traceback
 
 import click
@@ -108,15 +107,8 @@ def with_plugins(entry_points):
 
         # Load 'EntryPoint()' objects.
         if isinstance(entry_points, str):
-
-            # Older versions of Python do not support filtering.
-            if sys.version_info >= (3, 10):
-                all_entry_points = importlib.metadata.entry_points(
-                    group=entry_points)
-
-            else:
-                all_entry_points = importlib.metadata.entry_points()
-                all_entry_points = all_entry_points[entry_points]
+            all_entry_points = importlib.metadata.entry_points(
+                group=entry_points)
 
         # A single 'importlib.metadata.EntryPoint()'
         elif isinstance(entry_points, importlib.metadata.EntryPoint):
@@ -176,7 +168,7 @@ class BrokenCommand(click.Command):
         self.help = (
             "{ls}ERROR: entry point '{module}:{name}' could not be loaded."
             " Contact its author for help.{ls}{ls}{tb}").format(
-            module=_module(entry_point),
+            module=entry_point.module,
             name=entry_point.name,
             ls=os.linesep,
             tb=''.join(tbe.format())
@@ -220,28 +212,3 @@ class BrokenCommand(click.Command):
         # and provide the user with a bit of debugging information.
 
         return args
-
-
-def _module(ep):
-
-    """Module name for a given entry point.
-
-    Parameters
-    ----------
-    ep : importlib.metadata.EntryPoint
-        Determine parent module for this entry point.
-
-    Returns
-    -------
-    str
-    """
-
-    if sys.version_info >= (3, 10):
-        module = ep.module
-
-    else:
-        # From 'importlib.metadata.EntryPoint.module'.
-        match = ep.pattern.match(ep.value)
-        module = match.group('module')
-
-    return module

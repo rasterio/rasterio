@@ -12,7 +12,7 @@ jobs:
   test_rasterio:
     name: Test rasterio ${{ inputs.rasterio_ref }} in PROJ container with GDAL ${{ inputs.gdal_ref }}
     runs-on: ubuntu-latest
-    container: ghcr.io/osgeo/proj:9.2.0
+    container: ghcr.io/osgeo/proj:9.7.1
     env:
       GDAL_DIR: ${{ github.workspace }}/gdal_install
       GDAL_DATA: ${{ github.workspace }}/gdal_install/share/gdal
@@ -31,9 +31,9 @@ jobs:
       - name: Set up Python
         run: |
           apt-get install -y --no-install-recommends \
-            python3.10 \
-            python3.10-dev \
-            python3.10-venv \
+            python3.12 \
+            python3.12-dev \
+            python3.12-venv \
             python3-pip \
             g++
 
@@ -65,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="${GDAL_DIR}/bin/:${PATH}"
-          python3.10 -m venv testenv
+          python3.12 -m venv testenv
           . testenv/bin/activate
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
