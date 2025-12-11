@@ -443,6 +443,7 @@ def geometry_window(
     rotated=None,
     pixel_precision=None,
     boundless=False,
+    transform=None
 ):
     """Calculate the window within the raster that fits the bounds of
     the geometry plus optional padding.  The window is the outermost
@@ -453,7 +454,7 @@ def geometry_window(
 
     Parameters
     ----------
-    dataset : dataset object opened in 'r' mode
+    dataset : ndarray or dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes : iterable over geometries.
         A geometry is a GeoJSON-like object or implements the geo
@@ -475,28 +476,31 @@ def geometry_window(
         evaluating bounds of shapes.
     boundless : bool, optional
         Whether to allow a boundless window or not.
+    transform : Affine, optional
+        Override transform of dataset. Required if dataset is an ndarray.
 
     Returns
     -------
     rasterio.windows.Window
 
     """
+    if transform is None:
+        try:
+            transform = dataset.transform
+        except AttributeError:
+            raise ValueError("Unable to read transform from dataset. Please provide a transform.")
 
-    all_bounds = [bounds(shape, transform=~dataset.transform) for shape in shapes]
+    height, width = dataset.shape[-2:]
 
-    cols = [
-        x
-        for (left, bottom, right, top) in all_bounds
-        for x in (left - pad_x, right + pad_x, right + pad_x, left - pad_x)
-    ]
-    rows = [
-        y
-        for (left, bottom, right, top) in all_bounds
-        for y in (top - pad_y, top - pad_y, bottom + pad_y, bottom + pad_y)
-    ]
+    cols = []
+    rows = []
+    for shape in shapes:
+        left, bottom, right, top = bounds(shape, transform=~transform)
+        cols.extend((left - pad_x, right + pad_x, right + pad_x, left - pad_x))
+        rows.extend((top - pad_y, top - pad_y, bottom + pad_y, bottom + pad_y))
 
-    row_start, row_stop = int(math.floor(min(rows))), int(math.ceil(max(rows)))
-    col_start, col_stop = int(math.floor(min(cols))), int(math.ceil(max(cols)))
+    row_start, row_stop = math.floor(min(rows)), math.ceil(max(rows))
+    col_start, col_stop = math.floor(min(cols)), math.ceil(max(cols))
 
     window = Window(
         col_off=col_start,
@@ -506,7 +510,7 @@ def geometry_window(
     )
 
     # Make sure that window overlaps raster
-    raster_window = Window(0, 0, dataset.width, dataset.height)
+    raster_window = Window(0, 0, width, height)
     if not boundless:
         window = window.intersection(raster_window)
 

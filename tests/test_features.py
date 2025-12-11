@@ -167,6 +167,18 @@ def test_geometry_window_no_pad(basic_image_file, basic_geometry):
         assert window.flatten() == (2, 2, 3, 3)
 
 
+def test_geometry_window_array(basic_geometry):
+    arr = np.zeros((10, 15))
+    window = geometry_window(arr, [basic_geometry], transform=Affine.identity())
+    assert window.flatten() == (2, 2, 3, 3)
+
+
+def test_geometry_window_no_transform(basic_geometry):
+    arr = np.zeros((10, 15))
+    with pytest.raises(ValueError):
+        window = geometry_window(arr, [basic_geometry])
+
+
 def test_geometry_window_geo_interface(basic_image_file, basic_geometry):
     with rasterio.open(basic_image_file) as src:
         window = geometry_window(src, [MockGeoInterface(basic_geometry)])
