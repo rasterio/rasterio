@@ -243,60 +243,6 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     return retval
 
 
-cdef _delete_dataset_if_exists(path, driver=None):
-    """Delete a dataset if it already exists.
-
-    This operates at a lower level than a:
-
-        if rasterio.shutil.exists(path):
-            rasterio.shutil.delete(path)
-
-    and can take some shortcuts.
-
-    Parameters
-    ----------
-    path : str
-        Dataset path.
-    driver : str, optional
-        A short format driver name (e.g. "GTiff" or "JPEG") or a list of
-        such names (see GDAL docs at
-        http://www.gdal.org/formats_list.html).
-
-    Returns
-    -------
-    None
-
-    """
-    cdef GDALDatasetH dataset = NULL
-    cdef GDALDriverH drv = NULL
-    cdef const char *path_c = NULL
-
-    try:
-        with catch_errors():
-            if driver:
-                dataset = open_dataset(path, 0x40, [driver], None, None)
-            else:
-                dataset = open_dataset(path, 0x40, None, None, None)
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError) as exc:
-        log.debug("Skipped delete for overwrite, dataset does not exist: %r", path)
-    else:
-        drv = GDALGetDatasetDriver(dataset)
-        GDALClose(dataset)
-        dataset = NULL
-
-        if drv != NULL:
-            path_b = path.encode("utf-8")
-            path_c = path_b
-
-            with nogil:
-                 err = GDALDeleteDataset(drv, path_c)
-
-            exc_wrap_int(err)
-    finally:
-        if dataset != NULL:
-            GDALClose(dataset)
-
-
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -1469,14 +1415,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if mode in ('w', 'w+'):
             options = convert_options(kwargs)
-
-            # Delete this. GDALCreate has been doing the cleanup since
-            # version 3.2.0.
-            if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
-                log.debug("No deletion, subdataset will be added: path=%r", path)
-            else:
-                _delete_dataset_if_exists(vsi_path, driver)
-
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
 
@@ -2439,10 +2377,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         name_b = self.name.encode('utf-8')
         fname = name_b
-
-        # Delete existing file, create.
-        _delete_dataset_if_exists(self.name, self.driver)
-
         driver_b = self.driver.encode('utf-8')
         drv_name = driver_b
         drv = GDALGetDriverByName(drv_name)
