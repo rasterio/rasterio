@@ -31,7 +31,7 @@ def _fillnodata(
         image_band = image_dataset.band(1)
 
         if mask is not None:
-            mask_cast = mask.astype('uint8')
+            mask_cast = mask.astype(np.uint8)
             mask_dataset = exit_stack.enter_context(MemoryDataset(mask_cast))
             mask_band = mask_dataset.band(1)
 

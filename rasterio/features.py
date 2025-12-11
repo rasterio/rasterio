@@ -12,6 +12,19 @@ import rasterio
 from rasterio import warp
 from rasterio._base import DatasetBase
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio.dtypes import (
+    int8,
+    int16,
+    int32,
+    int64,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    float16,
+    float32,
+    float64,
+)
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
@@ -73,7 +86,8 @@ def geometry_mask(
         all_touched=all_touched,
         fill=fill,
         default_value=mask_value,
-        dtype='uint8').view('bool')
+        dtype=uint8
+    ).view(bool)
 
 
 @ensure_env
@@ -183,7 +197,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
         source = rasterio.band(source, source.indexes)
 
     if out is None:
-        out = np.zeros(source.shape, source.dtype)
+        out = np.zeros(source.shape, dtype=source.dtype)
 
     return _sieve(source, size, out, mask, connectivity)
 
@@ -288,10 +302,10 @@ def rasterize(
 
     """
     valid_dtypes = (
-        "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"
+        int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64
     )
     if GDALVersion.runtime().at_least("3.11"):
-        valid_dtypes += ("float16",)
+        valid_dtypes += (float16,)
 
     # The output data type is primarily determined by the output array
     # or dtype parameter. But if neither of these are specified, it will
@@ -690,14 +704,13 @@ def dataset_features(
             msk_shape = shape
             if bidx is None:
                 msk = np.zeros(
-                    (src.count,) + msk_shape, 'uint8')
+                    (src.count,) + msk_shape, dtype=np.uint8)
             else:
-                msk = np.zeros(msk_shape, 'uint8')
+                msk = np.zeros(msk_shape, dtype=np.uint8)
             msk = src.read_masks(bidx, msk)
 
         if bidx is None:
-            msk = np.logical_or.reduce(msk).astype('uint8')
-
+            msk = np.logical_or.reduce(msk).astype(np.uint8)
         # Possibly overridden below.
         img = msk
 
@@ -716,7 +729,7 @@ def dataset_features(
     # categories to 2 and likely reduces the number of
     # shapes.
     if as_mask:
-        tmp = np.ones_like(img, 'uint8') * 255
+        tmp = np.ones_like(img, np.uint8) * 255
         tmp[img == 0] = 0
         img = tmp
         if not with_nodata:

@@ -22,6 +22,15 @@ from rasterio.rpc import RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
+from rasterio.dtypes import (
+    complex64,
+    complex128,
+    complex_int16,
+    float32,
+    float64,
+    int16,
+)
+
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import env_ctx_if_needed
@@ -532,12 +541,12 @@ cdef class DatasetBase:
                 dtype = _band_dtype(band)
 
                 # To address the issue in #1747.
-                if dtype == "complex128":
-                    dtype = "float64"
-                elif dtype == "complex64":
-                    dtype = "float32"
-                elif dtype == "complex_int16":
-                    dtype = "int16"
+                if dtype == complex128:
+                    dtype = float64
+                elif dtype == complex64:
+                    dtype = float32
+                elif dtype == complex_int16:
+                    dtype = int16
 
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval

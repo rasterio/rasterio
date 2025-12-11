@@ -7,7 +7,21 @@ from contextlib import ExitStack
 import numpy as np
 
 from rasterio import dtypes
-from rasterio.dtypes import _getnpdtype
+from rasterio.dtypes import (
+    _getnpdtype,
+    bool_,
+    int8,
+    int16,
+    int32,
+    int64,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    float16,
+    float32,
+    float64,
+)
 from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
@@ -63,25 +77,25 @@ def _shapes(image, mask, connectivity, transform):
     cdef int fieldtp
     cdef bint is_float = _getnpdtype(image.dtype).kind == "f"
     cdef dict oft_dtypes = {
-       "int8": OFTInteger,
-       "int16": OFTInteger,
-       "int32": OFTInteger,
-       "int64": OFTInteger64,
-       "uint8": OFTInteger,
-       "uint16": OFTInteger,
-       "uint32": OFTInteger64,
-       "uint64": OFTInteger64,
-       "float32": OFTReal,
-       "float64": OFTReal,
+       int8: OFTInteger,
+       int16: OFTInteger,
+       int32: OFTInteger,
+       int64: OFTInteger64,
+       uint8: OFTInteger,
+       uint16: OFTInteger,
+       uint32: OFTInteger64,
+       uint64: OFTInteger64,
+       float32: OFTReal,
+       float64: OFTReal,
     }
     if GDALVersion.runtime().at_least("3.11"):
-        oft_dtypes["float16"] = OFTReal
+        oft_dtypes[float16] = OFTReal
 
     cdef str dtype_name = _getnpdtype(image.dtype).name
     if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
         raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
 
-    if dtype_name in ("float64", "uint64"):
+    if dtype_name in (float64, uint64):
         internal_dtype = "float32" if is_float else "int64"
         warnings.warn(
             f"The low-level implementation uses a {internal_dtype} buffer. "
@@ -105,7 +119,7 @@ def _shapes(image, mask, connectivity, transform):
             if mask.shape != image.shape:
                 raise ValueError("Mask must have same shape as image")
 
-            if _getnpdtype(mask.dtype).name not in ('bool', 'uint8'):
+            if _getnpdtype(mask.dtype).name not in (bool_, uint8):
                 raise ValueError(
                     "Mask must be dtype rasterio.bool_ or rasterio.uint8"
                 )
@@ -113,7 +127,7 @@ def _shapes(image, mask, connectivity, transform):
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
                 mask_ds = exit_stack.enter_context(
-                    MemoryDataset(mask.astype('uint8'), transform=transform)
+                    MemoryDataset(mask.astype(np.uint8), transform=transform)
                 )
                 maskband = mask_ds.band(1)
             elif isinstance(mask, tuple):
@@ -195,7 +209,7 @@ def _sieve(image, size, out, mask, connectivity):
     cdef GDALRasterBandH out_band = NULL
     cdef GDALRasterBandH mask_band = NULL
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
+    valid_dtypes = (int16, int32, uint8, uint16)
 
     if _getnpdtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t in valid_dtypes))
@@ -256,13 +270,13 @@ def _sieve(image, size, out, mask, connectivity):
             if mask.shape != image.shape[-2:]:
                 raise ValueError("Mask must have same shape as image")
 
-            if _getnpdtype(mask.dtype) not in ('bool', 'uint8'):
+            if _getnpdtype(mask.dtype) not in (bool_, uint8):
                 raise ValueError("Mask must be dtype rasterio.bool_ or "
                                 "rasterio.uint8")
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_mem_ds = exit_stack.enter_context(MemoryDataset(mask.astype('uint8')))
+                mask_mem_ds = exit_stack.enter_context(MemoryDataset(mask.astype(np.uint8)))
                 mask_band = mask_mem_ds.band(1)
 
             elif isinstance(mask, tuple):

@@ -6,21 +6,21 @@ from rasterio.env import GDALVersion
 
 _GDAL_AT_LEAST_3_11 = GDALVersion.runtime().at_least("3.11")
 
-bool_ = 'bool'
-ubyte = uint8 = 'uint8'
-sbyte = int8 = 'int8'
-uint16 = 'uint16'
-int16 = 'int16'
-uint32 = 'uint32'
-int32 = 'int32'
-uint64 = 'uint64'
-int64 = 'int64'
-float16 = 'float16'
-float32 = 'float32'
-float64 = 'float64'
-complex_ = 'complex'
-complex64 = 'complex64'
-complex128 = 'complex128'
+bool_ = numpy.dtype(bool).name
+ubyte = uint8 = numpy.uint8().dtype.name
+sbyte = int8 = numpy.int8().dtype.name
+uint16 = numpy.uint16().dtype.name
+int16 = numpy.int16().dtype.name
+uint32 = numpy.uint32().dtype.name
+int32 = numpy.int32().dtype.name
+uint64 = numpy.uint64().dtype.name
+int64 = numpy.int64().dtype.name
+float16 = numpy.float16().dtype.name
+float32 = numpy.float32().dtype.name
+float64 = numpy.float64().dtype.name
+complex_ = "complex"  # alias for python built-in complex which maps to numpy.complex128
+complex64 = numpy.complex64().dtype.name
+complex128 = numpy.complex128().dtype.name
 complex_int16 = "complex_int16"
 
 dtype_fwd = {
@@ -63,21 +63,21 @@ def _get_gdal_dtype(type_name):
         )
 
 typename_fwd = {
-    0: 'Unknown',
-    1: 'Byte',
-    2: 'UInt16',
-    3: 'Int16',
-    4: 'UInt32',
-    5: 'Int32',
-    6: 'Float32',
-    7: 'Float64',
-    8: 'CInt16',
-    9: 'CInt32',
-    10: 'CFloat32',
-    11: 'CFloat64',
-    12: 'UInt64',
-    13: 'Int64',
-    14: 'Int8',
+    0: "Unknown",
+    1: "Byte",
+    2: "UInt16",
+    3: "Int16",
+    4: "UInt32",
+    5: "Int32",
+    6: "Float32",
+    7: "Float64",
+    8: "CInt16",
+    9: "CInt32",
+    10: "CFloat32",
+    11: "CFloat64",
+    12: "UInt64",
+    13: "Int64",
+    14: "Int8",
 }
 
 if _GDAL_AT_LEAST_3_11:
@@ -86,22 +86,22 @@ if _GDAL_AT_LEAST_3_11:
 
 typename_rev = {v: k for k, v in typename_fwd.items()}
 
-f16i = numpy.finfo("float16")
-f32i = numpy.finfo("float32")
-f64i = numpy.finfo("float64")
+f16i = numpy.finfo(numpy.float16)
+f32i = numpy.finfo(numpy.float32)
+f64i = numpy.finfo(numpy.float64)
 
 dtype_ranges = {
-    "int8": (-128, 127),
-    "uint8": (0, 255),
-    "uint16": (0, 65535),
-    "int16": (-32768, 32767),
-    "uint32": (0, 4294967295),
-    "int32": (-2147483648, 2147483647),
-    "float16": (float(f16i.min), float(f16i.max)),
-    "float32": (float(f32i.min), float(f32i.max)),
-    "float64": (float(f64i.min), float(f64i.max)),
-    "int64": (-9223372036854775808, 9223372036854775807),
-    "uint64": (0, 18446744073709551615),
+    int8: (-128, 127),
+    uint8: (0, 255),
+    uint16: (0, 65535),
+    int16: (-32768, 32767),
+    uint32: (0, 4294967295),
+    int32: (-2147483648, 2147483647),
+    float16: (float(f16i.min), float(f16i.max)),
+    float32: (float(f32i.min), float(f32i.max)),
+    float64: (float(f64i.min), float(f64i.max)),
+    int64: (-9223372036854775808, 9223372036854775807),
+    uint64: (0, 18446744073709551615),
 }
 
 dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
@@ -236,6 +236,5 @@ def _is_complex_int(dtype):
 
 def _getnpdtype(dtype):
     if _is_complex_int(dtype):
-        return numpy.dtype("complex64")
-    else:
-        return numpy.dtype(dtype)
+        return numpy.complex64().dtype
+    return numpy.dtype(dtype)

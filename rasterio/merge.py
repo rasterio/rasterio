@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the first available pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_not(new_mask, out=mask)
     np.logical_and(merged_mask, mask, out=mask)
     np.copyto(merged_data, new_data, where=mask, casting="unsafe")
@@ -36,14 +36,14 @@ def copy_first(merged_data, new_data, merged_mask, new_mask, **kwargs):
 
 def copy_last(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the last available pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_not(new_mask, out=mask)
     np.copyto(merged_data, new_data, where=mask, casting="unsafe")
 
 
 def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the minimum value pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
     np.minimum(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
@@ -54,7 +54,7 @@ def copy_min(merged_data, new_data, merged_mask, new_mask, **kwargs):
 
 def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the maximum value pixel."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
     np.maximum(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
@@ -65,7 +65,7 @@ def copy_max(merged_data, new_data, merged_mask, new_mask, **kwargs):
 
 def copy_sum(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the sum of all pixel values."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
     np.add(merged_data, new_data, out=merged_data, where=mask, casting="unsafe")
@@ -76,7 +76,7 @@ def copy_sum(merged_data, new_data, merged_mask, new_mask, **kwargs):
 
 def copy_count(merged_data, new_data, merged_mask, new_mask, **kwargs):
     """Returns the count of valid pixels."""
-    mask = np.empty_like(merged_mask, dtype="bool")
+    mask = np.empty_like(merged_mask, dtype=bool)
     np.logical_or(merged_mask, new_mask, out=mask)
     np.logical_not(mask, out=mask)
     np.add(merged_data, mask, out=merged_data, where=mask, casting="unsafe")
