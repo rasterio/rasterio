@@ -17,7 +17,7 @@ from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import (
     CRSError,
-    GDALVersionError,
+    RasterioDeprecationWarning,
     TransformError,
     RPCError,
     WarpOperationError,
@@ -1185,34 +1185,38 @@ def polygon_3373():
 
 def test_transform_geom_polygon_cutting(polygon_3373):
     geom = polygon_3373
-    result = transform_geom("EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True)
+    with pytest.warns(RasterioDeprecationWarning):
+        result = transform_geom("EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True)
     assert result["type"] == "MultiPolygon"
     assert len(result["coordinates"]) == 2
 
 
 def test_transform_geom_polygon_offset(polygon_3373):
     geom = polygon_3373
-    result = transform_geom(
-        "EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True, antimeridian_offset=0
-    )
+    with pytest.warns(RasterioDeprecationWarning):
+        result = transform_geom(
+            "EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True, antimeridian_offset=0
+        )
     assert result["type"] == "MultiPolygon"
     assert len(result["coordinates"]) == 2
 
 
 def test_transform_geom_polygon_precision(polygon_3373):
     geom = polygon_3373
-    result = transform_geom(
-        "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
-    )
+    with pytest.warns(RasterioDeprecationWarning):
+        result = transform_geom(
+            "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
+        )
     assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
 
 
 def test_transform_geom_linestring_precision(polygon_3373):
     ring = polygon_3373["coordinates"][0]
     geom = {"type": "LineString", "coordinates": ring}
-    result = transform_geom(
-        "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
-    )
+    with pytest.warns(RasterioDeprecationWarning):
+        result = transform_geom(
+            "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
+        )
     assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
 
 
@@ -1226,9 +1230,10 @@ def test_transform_geom_linestring_precision_iso(polygon_3373):
 def test_transform_geom_linearring_precision(polygon_3373):
     ring = polygon_3373["coordinates"][0]
     geom = {"type": "LinearRing", "coordinates": ring}
-    result = transform_geom(
-        "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
-    )
+    with pytest.warns(RasterioDeprecationWarning):
+        result = transform_geom(
+            "EPSG:3373", "EPSG:4326", geom, precision=1, antimeridian_cutting=True
+        )
     assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
 
 
@@ -1881,7 +1886,7 @@ def test_transform_geom_gdal22():
     unexpected geometries, so an exception is raised.
     """
     geom = {"type": "Point", "coordinates": [0, 0]}
-    with pytest.raises(GDALVersionError):
+    with pytest.warns(RasterioDeprecationWarning):
         transform_geom("EPSG:4326", "EPSG:3857", geom, antimeridian_cutting=False)
 
 
