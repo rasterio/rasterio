@@ -20,7 +20,7 @@ Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
-Rasterio 1.4.4+ works with Python >= 3.10, Numpy >= 1.24, and GDAL >= 3.6. Official
+Rasterio 1.4.4+ works with Python >= 3.10, Numpy >= 2, and GDAL >= 3.6. Official
 binary packages for Linux, macOS, and Windows with most built-in format drivers
 plus HDF5, netCDF, and OpenJPEG2000 are available on PyPI.
 

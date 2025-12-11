@@ -45,7 +45,7 @@ dependencies = [
     "click>=4.0,!=8.2.*",
     "click-plugins",
     "cligj>=0.5",
-    "numpy>=1.24",
+    "numpy>=2",
     "pyparsing",
 ]
 
