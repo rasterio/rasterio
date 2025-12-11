@@ -195,24 +195,22 @@ def rasterize(
 
         else:
             if like is not None:
-                template_ds = rasterio.open(like)
+                with rasterio.open(like) as template_ds:
 
-                if has_src_crs and src_crs != template_ds.crs:
-                    raise click.BadParameter('GeoJSON does not match crs of '
+                  if has_src_crs and src_crs != template_ds.crs:
+                      raise click.BadParameter('GeoJSON does not match crs of '
                                              '--like raster',
                                              param='input', param_hint='input')
 
-                if disjoint_bounds(geojson_bounds, template_ds.bounds):
-                    click.echo("GeoJSON outside bounds of --like raster. "
+                  if disjoint_bounds(geojson_bounds, template_ds.bounds):
+                      click.echo("GeoJSON outside bounds of --like raster. "
                                "Are they in different coordinate reference "
                                "systems?",
                                err=True)
 
-                kwargs = template_ds.profile
-                kwargs['count'] = 1
-                kwargs['transform'] = template_ds.transform
-
-                template_ds.close()
+                  kwargs = template_ds.profile
+                  kwargs['count'] = 1
+                  kwargs['transform'] = template_ds.transform
 
             else:
                 bounds = bounds or geojson_bounds

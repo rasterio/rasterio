@@ -1,7 +1,7 @@
-rasterio.\_env module
+rasterio.stack module
 =====================
 
-.. automodule:: rasterio._env
+.. automodule:: rasterio.stack
     :members:
     :undoc-members:
     :show-inheritance:

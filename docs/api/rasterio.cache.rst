@@ -1,7 +1,7 @@
-rasterio.\_err module
+rasterio.cache module
 =====================
 
-.. automodule:: rasterio._err
+.. automodule:: rasterio.cache
     :members:
     :undoc-members:
     :show-inheritance:

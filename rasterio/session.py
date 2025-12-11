@@ -103,7 +103,7 @@ class Session:
 
         elif (
             path.scheme == "s3" or "amazonaws.com" in path.path
-        ) and not "X-Amz-Signature" in path.path:
+        ) and "X-Amz-Signature" not in path.path:
             if boto3 is not None:
                 return AWSSession
             else:
@@ -190,7 +190,7 @@ class Session:
         try:
             session = Session.aws_or_dummy(*args, **kwargs)
             session.credentials
-        except RuntimeError as exc:
+        except RuntimeError:
             log.warning("Credentials in environment have expired. Creating a DummySession.")
             session = DummySession(*args, **kwargs)
         return session
@@ -634,5 +634,5 @@ def parse_bool(v):
     if isinstance(v, bool):
         return v
     if isinstance(v, str):
-        return not(v.lower() in ("no", "false", "off", "0"))
+        return v.lower() not in ("no", "false", "off", "0")
     return bool(v)

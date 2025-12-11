@@ -1,4 +1,5 @@
 """Tests of r+ and w+ modes"""
+import os
 
 import numpy as np
 import pytest
@@ -39,8 +40,6 @@ def test_read_w_mode_warning(tmpdir):
 
 with rasterio.Env() as env:
     HAVE_GPKG = "GPKG" in env.drivers().keys()
-
-import os
 
 
 @pytest.mark.skipif(not HAVE_GPKG, reason="GDAL not compiled with GPKG driver.")

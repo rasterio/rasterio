@@ -221,6 +221,7 @@ def _reproject(
         src_alpha=0,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
+        tolerance=0.125,
         num_threads=1,
         warp_mem_limit=0,
         working_data_type=0,
@@ -294,6 +295,10 @@ def _reproject(
     init_dest_nodata : bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
+    tolerance : float, optional
+        The maximum error tolerance in input pixels when
+        approximating the warp transformation. Default: 0.125,
+        or one-eigth of a pixel.
     num_threads : int
         Number of worker threads.
     warp_mem_limit : int, optional
@@ -321,7 +326,6 @@ def _reproject(
     cdef char **warp_extras = NULL
     cdef const char* pszWarpThread = NULL
     cdef int i
-    cdef double tolerance = 0.125
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
@@ -378,7 +382,14 @@ def _reproject(
             src_bidx = range(1, src_count + 1)
 
             if hasattr(source, "mask"):
-                mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
+                if source.mask is np.ma.nomask:
+                    if source.ndim == 2:
+                        mask_shape = source.shape
+                    else:
+                        mask_shape = source.shape[1:]
+                    mask = np.full(mask_shape, np.uint8(255))
+                else:
+                    mask = ~np.logical_or.reduce(source.mask) * np.uint8(255)
                 source_arr = np.concatenate((source.data, [mask]))
                 src_alpha = src_alpha or source_arr.shape[0]
             else:
@@ -571,7 +582,8 @@ def _reproject(
     log.debug("Setting NUM_THREADS option: %d", num_threads)
 
     if init_dest_nodata:
-        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
+        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST",
+                                      "NO_DATA" if dst_nodata is not None else "0")
 
     # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
@@ -1008,7 +1020,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_transform = transform
         self.warp_extras = warp_extras.copy()
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
-            self.warp_extras['init_dest'] = 'NO_DATA'
+            self.warp_extras['init_dest'] = 'NO_DATA' if self.dst_nodata is not None else '0'
 
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL

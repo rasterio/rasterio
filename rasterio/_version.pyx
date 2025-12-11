@@ -15,7 +15,7 @@ def gdal_version():
 def get_gdal_version_info(str key not None):
     """
 
-    See: `GDALVersionInfo <https://gdal.org/api/raster_c_api.html#_CPPv415GDALVersionInfoPKc>`__
+    See: :c:func:`GDALVersionInfo`
 
     Available keys:
 

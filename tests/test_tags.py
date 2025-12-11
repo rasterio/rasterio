@@ -18,12 +18,12 @@ def test_tags_read():
 def test_tags_update(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(
-            tiffname, 
-            'w', 
-            driver='GTiff', 
-            count=1, 
-            dtype=rasterio.uint8, 
-            width=10, 
+            tiffname,
+            'w',
+            driver='GTiff',
+            count=1,
+            dtype=rasterio.uint8,
+            width=10,
             height=10) as dst:
 
         dst.update_tags(a='1', b='2')
@@ -33,7 +33,7 @@ def test_tags_update(tmpdir):
 
         assert dst.tags() == {'a': '1', 'b': '2'}
         assert dst.tags(1) == {'c': '3' }
-        
+
         # Assert that unicode tags work.
         # Russian text appropriated from pytest issue #319
         # https://bitbucket.org/hpk42/pytest/issue/319/utf-8-output-in-assertion-error-converted
