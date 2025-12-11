@@ -471,7 +471,7 @@ def geometry_window(
         This parameter is ignored since version 1.2.1. A deprecation
         warning will be emitted in 1.3.0.
     pixel_precision : int or float, optional
-        This parameter is ignored since version 1.4.4. A deprecation
+        This parameter is ignored since version 1.5. A deprecation
         warning will be emitted.
     boundless : bool, optional
         Whether to allow a boundless window or not.
