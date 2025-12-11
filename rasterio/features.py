@@ -14,12 +14,12 @@ from rasterio._base import DatasetBase
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, GDALVersion
-from rasterio.errors import ShapeSkipWarning
+from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
-from rasterio.windows import Window
+from rasterio import windows
 
 log = logging.getLogger(__name__)
 
@@ -471,8 +471,8 @@ def geometry_window(
         This parameter is ignored since version 1.2.1. A deprecation
         warning will be emitted in 1.3.0.
     pixel_precision : int or float, optional
-        Number of places of rounding precision or absolute precision for
-        evaluating bounds of shapes.
+        This parameter is ignored since version 1.5. A deprecation
+        warning will be emitted.
     boundless : bool, optional
         Whether to allow a boundless window or not.
 
@@ -481,36 +481,48 @@ def geometry_window(
     rasterio.windows.Window
 
     """
+    if north_up is not None:
+        warnings.warn("The north_up parameter is unused, deprecated, and will be removed in the future.",
+                       RasterioDeprecationWarning
+        )
+    if rotated is not None:
+        warnings.warn("The rotated parameter is unused, deprecated, and will be removed in the future.",
+                      RasterioDeprecationWarning
+        )
+    if pixel_precision is not None:
+        warnings.warn("The pixel_precision paramter is unused, deprecated, and will be removed in the future.",
+                      RasterioDeprecationWarning
+        )
 
-    all_bounds = [bounds(shape, transform=~dataset.transform) for shape in shapes]
+    shape_windows = []
+    for shape in shapes:
+        shape_bounds = bounds(shape)
+        try:
+            _window = windows.from_bounds(*shape_bounds, transform=dataset.transform)
+        except windows.WindowError:
+            shape_bounds = bounds(shape, north_up=False)
+            _window = windows.from_bounds(*shape_bounds, transform=dataset.transform)
 
-    cols = [
-        x
-        for (left, bottom, right, top) in all_bounds
-        for x in (left - pad_x, right + pad_x, right + pad_x, left - pad_x)
-    ]
-    rows = [
-        y
-        for (left, bottom, right, top) in all_bounds
-        for y in (top - pad_y, top - pad_y, bottom + pad_y, bottom + pad_y)
-    ]
+        # pad window
+        col_off = math.floor(_window.col_off - pad_x)
+        row_off = math.floor(_window.row_off - pad_y)
+        width = math.ceil(_window.col_off + _window.width + pad_x) - col_off
+        height = math.ceil(_window.row_off + _window.height + pad_y) - row_off
+        shape_windows.append(
+            windows.Window(col_off=col_off,
+                            row_off=row_off,
+                            width=width,
+                            height=height)
+        )
 
-    row_start, row_stop = int(math.floor(min(rows))), int(math.ceil(max(rows)))
-    col_start, col_stop = int(math.floor(min(cols))), int(math.ceil(max(cols)))
-
-    window = Window(
-        col_off=col_start,
-        row_off=row_start,
-        width=max(col_stop - col_start, 0.0),
-        height=max(row_stop - row_start, 0.0),
-    )
+    bounding_window = windows.union(*shape_windows)
 
     # Make sure that window overlaps raster
-    raster_window = Window(0, 0, dataset.width, dataset.height)
+    raster_window = windows.Window(0, 0, dataset.width, dataset.height)
     if not boundless:
-        window = window.intersection(raster_window)
+        bounding_window = bounding_window.intersection(raster_window)
 
-    return window
+    return bounding_window
 
 
 def is_valid_geom(geom):
