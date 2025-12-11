@@ -34,8 +34,6 @@ def mock_fhs(tmpdir):
 @pytest.fixture
 def mock_debian(tmpdir):
     """A fake Debian multi-install system"""
-    tmpdir.ensure("share/gdal/3.6/gdalvrt.xsd")
-    tmpdir.ensure("share/gdal/3.7/gdalvrt.xsd")
     tmpdir.ensure("share/gdal/3.8/gdalvrt.xsd")
     tmpdir.ensure("share/gdal/3.9/gdalvrt.xsd")
     tmpdir.ensure("share/gdal/3.10/gdalvrt.xsd")

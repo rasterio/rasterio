@@ -7,12 +7,11 @@ import affine
 import numpy as np
 import pytest
 
-from .conftest import gdal_version
 
 import rasterio
 from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
-from rasterio.env import Env, GDALVersion
+from rasterio.env import Env
 from rasterio.errors import RasterioIOError
 
 def test_validate_dtype_None(tmpdir):
@@ -117,10 +116,7 @@ def test_write_sbyte(tmpdir):
 
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
-    if gdal_version < GDALVersion(3, 7):
-        assert 'SIGNEDBYTE' in info
-    else:
-        assert 'Int8' in info
+    assert 'Int8' in info
 
 
 @pytest.mark.gdalbin

@@ -120,8 +120,8 @@ if "clean" not in sys.argv:
         int, re.findall("[0-9]+", gdalversion)[:3]
     )
 
-    if (gdal_major_version, gdal_minor_version) < (3, 6):
-        raise SystemExit("ERROR: GDAL >= 3.6 is required for rasterio. "
+    if (gdal_major_version, gdal_minor_version) < (3, 8):
+        raise SystemExit("ERROR: GDAL >= 3.8 is required for rasterio. "
                  "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with

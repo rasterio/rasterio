@@ -222,10 +222,7 @@ def test_transformer_options(path_rgb_byte_tif):
     ) as vrt:
         for key, value in transformer_options.items():
             assert vrt.warp_extras[key] == value
-        if gdal_version.at_least("3.2"):
             assert vrt.transform.almost_equals(transform)
-        else:
-            assert not vrt.transform.almost_equals(transform)
 
 
 def test_transformer_options__width_height(path_rgb_byte_tif):

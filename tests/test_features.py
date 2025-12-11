@@ -14,9 +14,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import (
-    MockGeoInterface, gdal_version, requires_gdal_lt_37, requires_gdal37
-)
+from .conftest import MockGeoInterface
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -795,12 +793,6 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     "dtype",
     [
         "float16",
-        pytest.param(
-            "int8",
-            marks=pytest.mark.skipif(
-                gdal_version.at_least("3.7"), reason="int8 supported at GDAL 3.7"
-            ),
-        ),
     ],
 )
 def test_rasterize_unsupported_dtype(basic_geometry, dtype):
@@ -1029,7 +1021,7 @@ def test_shapes_invalid_mask_dtype(basic_image):
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
-        pytest.param("int8", -127, marks=requires_gdal37),
+        ("int8", -127),
         ("int16", -32768),
         ("int32", -2147483648),
         ("int64", 20439845334323),
@@ -1060,7 +1052,6 @@ def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
-        pytest.param("int8", -127, marks=requires_gdal_lt_37),
         ("float16", -9343.232),
     ],
 )

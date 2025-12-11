@@ -78,6 +78,5 @@ def get_geos_version():
         int major = 0
         int minor = 0
         int patch = 0
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
-        OGRGetGEOSVersion(&major, &minor, &patch)
+    OGRGetGEOSVersion(&major, &minor, &patch)
     return major, minor, patch
