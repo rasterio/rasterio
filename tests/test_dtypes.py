@@ -12,6 +12,7 @@ from rasterio import (
     int16,
     int32,
     int64,
+    float16,
     float32,
     float64,
     complex_,
@@ -28,6 +29,7 @@ from rasterio.dtypes import (
     _getnpdtype,
     _get_gdal_dtype,
 )
+from tests.conftest import gdal_version, requires_gdal3_11
 
 
 def test_is_ndarray():
@@ -70,7 +72,7 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype([-1, 0, 1]) == int8
     assert get_minimum_dtype([-1, 0, 128]) == int16
     assert get_minimum_dtype([-1, 0, 100000]) == int32
-    assert get_minimum_dtype([-1.5, 0, 1.5]) == float32
+    assert get_minimum_dtype([-1.5e+5, 0, 1.5e+5]) == float32
     assert get_minimum_dtype([-1.5e+100, 0, 1.5e+100]) == float64
 
     assert get_minimum_dtype(np.array([0, 1], dtype=np.uint)) == uint8
@@ -79,10 +81,20 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([-1, 0, 1], dtype=int)) == int8
     assert get_minimum_dtype(np.array([-1, 0, 128], dtype=int)) == int16
     assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=int)) == int32
-    assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
 
-    # Mixed type list where min/max are same type
-    assert get_minimum_dtype([0, 1.5, 5]) == float32
+
+
+@pytest.mark.parametrize("values", [
+    [-9.1, 0, 9.1],
+    np.array([-1.5, 0, 1.5], dtype=np.float64),
+    [0, 1.5, 5], # Mixed type list where min/max are same type
+])
+def test_get_minimum_dtype__float16(values):
+    minium_dtype = get_minimum_dtype(values)
+    if gdal_version.at_least("3.11"):
+        assert minium_dtype == float16
+    else:
+        assert minium_dtype == float32
 
 
 def test_get_minimum_dtype__int64():
@@ -101,7 +113,14 @@ def test_can_cast_dtype():
     assert not can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.uint8)
 
 
-@pytest.mark.parametrize("dtype", ["float64", "float32"])
+@pytest.mark.parametrize("dtype", [
+    "float64",
+    "float32",
+    pytest.param(
+        "float16",
+        marks=requires_gdal3_11,
+    ),
+])
 def test_can_cast_dtype_nan(dtype):
     assert can_cast_dtype([np.nan], dtype)
 
@@ -114,7 +133,7 @@ def test_cant_cast_dtype_nan(dtype):
 def test_validate_dtype():
     assert validate_dtype([1, 2, 3], ('uint8', 'uint16'))
     assert validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16'))
-    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float32',))
+    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float16', 'float32',))
     assert not validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',))
 
 

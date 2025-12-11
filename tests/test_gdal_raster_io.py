@@ -7,6 +7,7 @@ import pytest
 
 import rasterio
 
+from tests.conftest import gdal_version
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -22,7 +23,11 @@ def image(height, width, dtype):
     return np.arange(0, height*width, dtype=dtype).reshape(height, width)
 
 
-dtypes = ['uint8', 'uint16', 'int16', 'uint32', 'int32', 'float32', 'float64']
+dtypes = ['uint8', 'uint16', 'int16', 'uint32', 'uint64', 'int32', 'int64', 'float32', 'float64']
+
+if gdal_version.at_least("3.11"):
+    dtypes.append('float16')
+
 
 @pytest.mark.parametrize("dtype", dtypes)
 @pytest.mark.parametrize("height,width", [(20, 30)])

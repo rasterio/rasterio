@@ -26,7 +26,7 @@ def _shapes(image, mask, connectivity, transform):
     ----------
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
+        rasterio.uint8, rasterio.uint16, rasterio.float16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -73,6 +73,8 @@ def _shapes(image, mask, connectivity, transform):
        "float32": OFTReal,
        "float64": OFTReal,
     }
+    if GDALVersion.runtime().at_least("3.11"):
+        oft_dtypes["float16"] = OFTReal
 
     cdef str dtype_name = _getnpdtype(image.dtype).name
     if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:

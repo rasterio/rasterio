@@ -14,7 +14,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface
+from .conftest import MockGeoInterface, requires_gdal3_11, requires_gdal_lt_3_11
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -641,13 +641,30 @@ def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
     assert np.array_equal(out, basic_image_2x2)
 
 
-def test_rasterize_out_image(basic_geometry, basic_image_2x2):
+@pytest.mark.parametrize("dtype", [
+        None,
+        "int8",
+        "uint8",
+        "uint16",
+        "int16",
+        "uint32",
+        "int32",
+        "int64",
+        pytest.param(
+            "float16",
+            marks=requires_gdal3_11,
+        ),
+        "float32",
+        "float64"
+])
+def test_rasterize_out_image(dtype, basic_geometry, basic_image_2x2):
     """Rasterize operation should succeed for an out image."""
-    out = np.zeros(DEFAULT_SHAPE)
+    out = np.zeros(DEFAULT_SHAPE, dtype=dtype)
     rasterize([basic_geometry], out=out)
     assert np.array_equal(basic_image_2x2, out)
 
 
+@requires_gdal_lt_3_11
 def test_rasterize_unsupported_dtype_single(basic_geometry):
     """A non-supported data type for out should raise an exception."""
     out = np.zeros(DEFAULT_SHAPE, dtype=np.float16)
@@ -792,7 +809,10 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
 @pytest.mark.parametrize(
     "dtype",
     [
-        "float16",
+        pytest.param(
+            "float16",
+            marks=requires_gdal_lt_3_11,
+        ),
     ],
 )
 def test_rasterize_unsupported_dtype(basic_geometry, dtype):
@@ -1019,22 +1039,23 @@ def test_shapes_invalid_mask_dtype(basic_image):
 
 
 @pytest.mark.parametrize(
-    "dtype, test_value",
+    "dtype, test_value, rtol",
     [
-        ("int8", -127),
-        ("int16", -32768),
-        ("int32", -2147483648),
-        ("int64", 20439845334323),
-        ("uint8", 255),
-        ("uint16", 65535),
-        ("uint32", 4294967295),
-        ("float32", 1.434532),
+        ("int8", -127, 0),
+        ("int16", -32768, 0),
+        ("int32", -2147483648, 0),
+        ("int64", 20439845334323, 0),
+        ("uint8", 255, 0),
+        ("uint16", 65535, 0),
+        ("uint32", 4294967295, 0),
+        pytest.param("float16", -9.1, 0.1, marks=requires_gdal3_11),
+        ("float32", 1.434532, 1e-6),
     ],
 )
-def test_shapes_supported_dtypes(basic_image, dtype, test_value):
+def test_shapes_supported_dtypes(basic_image, dtype, rtol, test_value):
     """Supported data types should return valid results."""
     shape, value = next(shapes(basic_image.astype(dtype) * test_value))
-    assert_allclose(value, test_value)
+    assert_allclose(value, test_value, rtol=rtol)
 
 
 @pytest.mark.parametrize(
@@ -1052,7 +1073,7 @@ def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
-        ("float16", -9343.232),
+        pytest.param("float16", -9.1, marks=requires_gdal_lt_3_11),
     ],
 )
 def test_shapes_unsupported_dtypes(basic_image, dtype, test_value):
