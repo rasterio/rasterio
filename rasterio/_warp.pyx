@@ -88,8 +88,11 @@ cdef object _transform_single_geom(
 
 
 def _transform_geom(
-        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
-        int precision):
+    src_crs,
+    dst_crs,
+    geom,
+    int precision,
+):
     """Return a transformed geometry."""
     cdef char **options = NULL
     cdef OGRCoordinateTransformationH transform = NULL
