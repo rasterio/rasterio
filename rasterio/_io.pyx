@@ -29,7 +29,16 @@ from rasterio.errors import (
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
     StatisticsError, RasterioDeprecationWarning
 )
-from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
+from rasterio.dtypes import (
+    is_ndarray,
+    _is_complex_int,
+    _getnpdtype,
+    _gdal_typename,
+    _get_gdal_dtype,
+    int8,
+    uint8,
+)
+
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio._path import _parse_path, _UnparsedPath
@@ -285,7 +294,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
             return io_band(band, write, 0.0, 0.0, width, height, data, resampling=resampling)
 
         elif ndims == 3:
-            indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
+            indexes = np.arange(1, data.shape[0] + 1, dtype=np.intp)
             return io_multi_band(band, write, 0.0, 0.0, width, height, data, indexes, resampling=resampling)
 
         else:
@@ -565,10 +574,10 @@ cdef class DatasetReaderBase(DatasetBase):
                 if all_valid:
                     mask = np.ma.nomask
                 else:
-                    mask = np.zeros(out.shape, 'uint8')
+                    mask = np.zeros(out.shape, dtype=np.uint8)
                     mask = ~self._read(
-                        indexes, mask, window, 'uint8', masks=True,
-                        resampling=resampling).astype('bool')
+                        indexes, mask, window, dtype=uint8, masks=True,
+                        resampling=resampling).astype(bool)
 
                 kwds = {'mask': mask}
                 # Set a fill value only if the read bands share a
@@ -622,16 +631,16 @@ cdef class DatasetReaderBase(DatasetBase):
                         )
 
                         with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                            mask = np.zeros(out.shape, 'uint8')
+                            mask = np.zeros(out.shape, dtype=np.uint8)
                             mask = ~mask_vrt._read(
-                                indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
+                                indexes, mask, Window(0, 0, window.width, window.height), None).astype(bool)
 
                     else:
-                        mask = np.zeros(out.shape, 'uint8')
+                        mask = np.zeros(out.shape, dtype=np.uint8)
                         window = Window(0, 0, window.width, window.height)
                         log.debug("Boundless read: window=%r", window)
                         mask = ~vrt._read(
-                            indexes, mask, window, None, masks=True).astype('bool')
+                            indexes, mask, window, None, masks=True).astype(bool)
 
                     kwds = {'mask': mask}
 
@@ -747,14 +756,14 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             win_shape += self.shape
 
-        dtype = 'uint8'
+        dtype = np.uint8
 
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
         elif out_shape is not None:
             if len(out_shape) == 2:
                 out_shape = (len(indexes),) + out_shape
-            out = np.zeros(out_shape, 'uint8')
+            out = np.zeros(out_shape, dtype=np.uint8)
 
         if out is not None:
             if out.dtype != _getnpdtype(dtype):
@@ -766,7 +775,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
         else:
-            out = np.zeros(win_shape, 'uint8')
+            out = np.zeros(win_shape, dtype=np.uint8)
 
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
@@ -788,9 +797,9 @@ cdef class DatasetReaderBase(DatasetBase):
                 with DatasetWriterBase(
                         blank_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,
-                        dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
+                        dtype=uint8, crs=self.crs, transform=transform) as blank_dataset:
                     blank_dataset.write(
-                        np.full((self.count, 3, 3), 255, dtype='uint8'))
+                        np.full((self.count, 3, 3), 255, dtype=np.uint8))
 
                 with DatasetReaderBase(blank_path) as blank_dataset:
                     mask_vrt_doc = _boundless_vrt_doc(
@@ -802,9 +811,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     )
 
                     with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                        out = np.zeros(out.shape, 'uint8')
+                        out = np.zeros(out.shape, dtype=np.uint8)
                         out = mask_vrt._read(
-                            indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
+                            indexes, out, Window(0, 0, window.width, window.height), None).astype(bool)
 
             else:
                 vrt_doc = _boundless_vrt_doc(
@@ -870,7 +879,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
-        indexes_arr = np.array(indexes, dtype='intp')
+        indexes_arr = np.array(indexes, dtype=np.intp)
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
@@ -1208,7 +1217,7 @@ cdef class MemoryFileBase:
         buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
 
         if buffer == NULL or buffer_len == 0:
-            buff_view = np.array([], dtype='uint8')
+            buff_view = np.array([], dtype=np.uint8)
         else:
             buff_view = <np.uint8_t[:buffer_len]>buffer
         return buff_view
@@ -1716,8 +1725,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         dtype = _getnpdtype(dtype)
 
-        if dtype.name == "int8":
-            arr = arr.astype("uint8")
+        if dtype.name == int8:
+            arr = arr.astype(np.uint8)
 
         # Require C-continguous arrays (see #108).
         arr = np.require(arr, dtype=dtype, requirements='C')
@@ -1736,7 +1745,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = <int>self.width
             height = <int>self.height
 
-        indexes_arr = np.array(indexes, dtype='intp')
+        indexes_arr = np.array(indexes, dtype=np.intp)
         indexes_count = <int>indexes_arr.shape[0]
 
         try:

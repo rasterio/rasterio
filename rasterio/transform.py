@@ -407,8 +407,8 @@ class TransformerBase:
             )
 
             if op is None:
-                new_rows = np.floor(new_rows).astype(dtype="int32")
-                new_cols = np.floor(new_cols).astype(dtype="int32")
+                new_rows = np.floor(new_rows).astype(dtype=np.int32)
+                new_cols = np.floor(new_cols).astype(dtype=np.int32)
             elif isinstance(op, np.ufunc):
                 op(new_rows, out=new_rows)
                 op(new_cols, out=new_cols)

@@ -470,7 +470,7 @@ def _reproject(
                 count, height, width = destination.shape
                 msk = np.logical_or.reduce(destination.mask)
                 if msk == np.ma.nomask:
-                    msk = np.zeros((height, width), dtype="bool")
+                    msk = np.zeros((height, width), dtype=bool)
                 msk = ~msk * np.uint8(255)
                 dest_arr = np.concatenate((destination.data, [msk]))
                 dst_alpha = dst_alpha or dest_arr.shape[0]

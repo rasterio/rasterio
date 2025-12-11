@@ -135,7 +135,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
                 arr = adjust_band(arr)
             elif arr.ndim >= 3:
                 # Adjust each band by the min/max so it will plot as RGB.
-                arr = reshape_as_raster(arr).astype("float64")
+                arr = reshape_as_raster(arr).astype(np.float64)
                 for ii, band in enumerate(arr):
                     arr[ii] = adjust_band(band)
                 arr = reshape_as_image(arr)

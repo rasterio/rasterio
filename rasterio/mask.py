@@ -89,7 +89,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                           'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
-        mask = np.ones(shape=dataset.shape[-2:], dtype="bool")
+        mask = np.ones(shape=dataset.shape[-2:], dtype=bool)
         if invert:
             mask = ~mask
         return mask, dataset.transform, None
