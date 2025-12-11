@@ -1477,6 +1477,19 @@ def test_reproject_masked_masked_output(test3d, count_nonzero, path_rgb_byte_tif
     assert np.count_nonzero(out[out != np.ma.masked]) == count_nonzero
 
 
+def test_reproject_to_masked_output(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        inp = src.read(1)
+    out, _ = reproject(
+        inp,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs="EPSG:3857",
+        masked=True,
+    )
+    assert isinstance(out, np.ma.MaskedArray)
+
+
 @pytest.mark.parametrize(
     "test3d,count_nonzero",
     [
