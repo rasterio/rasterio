@@ -670,6 +670,12 @@ requires_gdal3_11 = pytest.mark.skipif(
 requires_gdal_lt_3_11 = pytest.mark.skipif(
     gdal_version.at_least('3.11'), reason="Requires GDAL before 3.11"
 )
+requires_gdal3_12_1 = pytest.mark.skipif(
+    not GDALVersion.runtime(include_patch=True).at_least('3.12.1', include_patch=True), reason="Requires GDAL 3.12.1 or later"
+)
+requires_gdal_lt_3_12_1 = pytest.mark.skipif(
+    GDALVersion.runtime(include_patch=True).at_least('3.12.1', include_patch=True), reason="Requires GDAL before 3.12.1"
+)
 
 
 def assert_bounding_box_equal(expected, actual, tolerance=1e-4):
