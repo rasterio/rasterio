@@ -693,7 +693,6 @@ cdef extern from "gdalwarper.h" nogil:
         const GDALWarpOptions *psOptions, char** papszTransformerOptions)
 
 
-
 cdef extern from "gdal_alg.h" nogil:
     void *GDALCreateGCPTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
                           int nReqOrder, int bReversed)
@@ -761,6 +760,10 @@ cdef extern from "gdal_alg.h" nogil:
             GDALDatasetH hSrcDS, GDALTransformerFunc pfnRawTransformer,
             void * pTransformArg, double * padfGeoTransformOut, int * pnPixels,
             int * pnLines, double * padfExtent, int nOptions)
+
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 11):
+    cdef extern from "gdal_alg.h" nogil:
+        const char *GDALGetGenImgProjTranformerOptionList()
 
 
 cdef extern from "ogr_core.h" nogil:
