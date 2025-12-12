@@ -170,6 +170,8 @@ class Interleaving(Enum):
     pixel = 'PIXEL'
     line = 'LINE'
     band = 'BAND'
+    #: tile requires GDAL 3.11+
+    tile = 'TILE'
 
 
 class MaskFlags(IntEnum):
