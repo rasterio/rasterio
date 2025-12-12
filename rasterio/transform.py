@@ -502,7 +502,8 @@ class GDALTransformerBase(TransformerBase):
 
     def __exit__(self, *args):
         self.close()
-        self._env.close()
+        if self._env:
+            self._env.close()
 
 
 class AffineTransformer(TransformerBase):

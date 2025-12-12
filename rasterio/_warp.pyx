@@ -976,7 +976,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.mode = 'r'
         self.options = {}
         self._count = 0
-        self._closed = True
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
@@ -1252,7 +1251,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             self._nodatavals[dst_alpha - 1] = None
 
         self._env = ExitStack()
-        self._closed = False
 
     @property
     def crs(self):

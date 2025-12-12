@@ -7,7 +7,6 @@ import affine
 import numpy as np
 import pytest
 
-
 import rasterio
 from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
@@ -437,6 +436,25 @@ def test_write_cog(tmpdir, path_rgb_byte_tif):
         profile.update(driver="COG", extent=src.bounds, resampling=Resampling.bilinear)
         with rasterio.open(str(tmpdir.join("test.tif")), "w", **profile) as cog:
             cog.write(src.read())
+
+
+def test_write_cog__from_numpy(tmp_path):
+    data = np.zeros((100, 100))
+    profile = {
+        "width": data.shape[0],
+        "height": data.shape[1],
+        "count": 1,
+        "dtype": np.uint8,
+        "transform": affine.Affine(3.5, 0.0, 558838.0, 0.0, -3.5, 5927362.0),
+        "crs": 32630,
+        "nodata": 0,
+        "driver": "COG",
+        "compress": "DEFLATE",
+    }
+
+    with open(tmp_path / "bar.tiff", "wb") as f2:
+        with rasterio.open(f2, mode="w", **profile) as ds:
+            ds.write(data, 1)
 
 
 def test_write_masked(tmp_path):

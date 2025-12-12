@@ -1223,22 +1223,22 @@ cdef class MemoryFileBase:
         return buff_view
 
     def close(self):
-        if self._vsif != NULL:
-            VSIFCloseL(self._vsif)
-        self._vsif = NULL
+        if self._vsif == NULL:
+            return
+
+        VSIFCloseL(self._vsif)
         VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
+        self._vsif = NULL
 
     def seek(self, offset, whence=0):
         if self.closed:
             raise ValueError("I/O operation on closed MemoryFile")
-        else:
-            return VSIFSeekL(self._vsif, offset, whence)
+        return VSIFSeekL(self._vsif, offset, whence)
 
     def tell(self):
         if self.closed:
             raise ValueError("I/O operation on closed MemoryFile")
-        else:
-            return VSIFTellL(self._vsif)
+        return VSIFTellL(self._vsif)
 
     def read(self, size=-1):
         """Read bytes from MemoryFile.
@@ -1517,7 +1517,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._rpcs = None
         self._init_gcps = gcps
         self._init_rpcs = rpcs
-        self._closed = True
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
@@ -1547,7 +1546,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = self.read_crs()
         _ = self.meta
         self._env = ExitStack()
-        self._closed = False
 
     def __repr__(self):
         return "<%s RasterUpdater name='%s' mode='%s'>" % (
@@ -2301,7 +2299,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         self._init_gcps = gcps
         self._rpcs = None
         self._init_rpcs = rpcs
-        self._closed = True
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
@@ -2373,9 +2370,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         _ = self.meta
         self._env = ExitStack()
-        self._closed = False
 
     def stop(self):
+        if self._hds == NULL:
+            return
+
         cdef const char *drv_name = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL

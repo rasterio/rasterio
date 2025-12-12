@@ -51,11 +51,9 @@ cdef class RPCTransformerBase:
     Rational Polynomial Coefficients (RPC) transformer base class
     """
     cdef void *_transformer
-    cdef bint _closed
 
     def __cinit__(self):
         self._transformer = NULL
-        self._closed = True
 
     def __dealloc__(self):
         self.close()
@@ -123,7 +121,6 @@ cdef class RPCTransformerBase:
         try:
             GDALExtractRPCInfo(papszMD, &rpcinfo)
             self._transformer = exc_wrap_pointer(GDALCreateRPCTransformer(&rpcinfo, bReversed, dfPixErrThreshold, options))
-            self._closed = False
         finally:
             CSLDestroy(options)
             CSLDestroy(papszMD)
@@ -221,27 +218,26 @@ cdef class RPCTransformerBase:
         """
         Destroy transformer
         """
-        if self._transformer != NULL:
-            GDALDestroyRPCTransformer(self._transformer)
+        if self._transformer == NULL:
+            return
+
+        GDALDestroyRPCTransformer(self._transformer)
         self._transformer = NULL
-        self._closed = True
 
     @property
     def closed(self):
         """
         Returns if transformer is NULL
         """
-        return self._closed
+        return self._transformer == NULL
 
 
 cdef class GCPTransformerBase:
     cdef void *_transformer
-    cdef bint _closed
     cdef bint _tps
 
     def __cinit__(self):
         self._transformer = NULL
-        self._closed = True
 
     def __dealloc__(self):
         self.close()
@@ -284,7 +280,6 @@ cdef class GCPTransformerBase:
                 self._transformer = exc_wrap_pointer(GDALCreateTPSTransformer(nGCPCount, gcplist, bReversed))
             else:
                 self._transformer = exc_wrap_pointer(GDALCreateGCPTransformer(nGCPCount, gcplist, nReqOrder, bReversed))
-            self._closed = False
         finally:
             CPLFree(gcplist)
 
@@ -379,17 +374,17 @@ cdef class GCPTransformerBase:
         """
         Destroy transformer
         """
-        if self._transformer != NULL:
-            if self._tps:
-                GDALDestroyTPSTransformer(self._transformer)
-            else:
-                GDALDestroyGCPTransformer(self._transformer)
+        if self._transformer == NULL:
+            return
+        if self._tps:
+            GDALDestroyTPSTransformer(self._transformer)
+        else:
+            GDALDestroyGCPTransformer(self._transformer)
         self._transformer = NULL
-        self._closed = True
 
     @property
     def closed(self):
         """
         Returns if transformer is NULL
         """
-        return self._closed
+        return self._transformer == NULL

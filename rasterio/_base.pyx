@@ -328,7 +328,6 @@ cdef class DatasetBase:
 
         self._set_attrs_from_dataset_handle()
         self._env = ExitStack()
-        self._closed = False
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -426,10 +425,11 @@ cdef class DatasetBase:
 
     def stop(self):
         """Close the GDAL dataset handle"""
-        if self._hds != NULL:
-            refcount = GDALDereferenceDataset(self._hds)
-            if refcount == 0:
-                GDALClose(self._hds)
+        if self._hds == NULL:
+            return
+        refcount = GDALDereferenceDataset(self._hds)
+        if refcount == 0:
+            GDALClose(self._hds)
         self._hds = NULL
 
     def close(self):
@@ -437,19 +437,16 @@ cdef class DatasetBase:
         self.stop()
         if self._env:
             self._env.close()
-        self._closed = True
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *exc_details):
-        if not self._closed:
-            self.close()
+        self.close()
 
     def __dealloc__(self):
-        if self._hds != NULL:
-            GDALClose(self._hds)
+        self.stop()
 
     @property
     def closed(self):
@@ -459,7 +456,7 @@ cdef class DatasetBase:
         -------
         bool
         """
-        return self._closed
+        return self._hds == NULL
 
     @property
     def count(self):
