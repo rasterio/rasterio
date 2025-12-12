@@ -8,6 +8,7 @@ Dependencies:
 
 - Minimum supported versions: Python 3.10+ & GDAL 3.6+ (#3440)
 - Wheel: GDAL 3.10.3 & PROJ 9.7.1 (#3381, #3439)
+         For a full list of software versions, see: https://github.com/rasterio/rasterio/blob/1.4.4/ci/config.sh#L1-L25
 
 Enhancements:
 
@@ -31,7 +32,9 @@ Bug fixes:
 - CLI: Fix geojson_type click option implementation (#3391)
 - CLI: Remove importlib_metatada import (#3445)
 - Documnentation (#3348, #3407, #3409, #3350, #3352, #3368, #3351, #3384, #3318, #3344, #3337, #3343, #3342, #3340, #3347, #3349)
-- Tests (#3400, #3330, #3404, #3293, #3360, #3444)
+- Tests (#3400, #3330, #3404, #3293, #3360, #3444, #3462, #3463)
+
+Full changelog: https://github.com/rasterio/rasterio/compare/1.4.3...1.4.4
 
 1.4.3 (2024-12-02)
 ------------------
