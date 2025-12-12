@@ -249,5 +249,8 @@ cdef class FilePathBase:
         to the user.
 
         """
+        if self.closed:
+            return
+
         _ = _FILESYSTEM_INFO.pop(self._filepath_path)
         self.closed = True

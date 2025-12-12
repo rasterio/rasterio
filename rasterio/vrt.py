@@ -117,12 +117,10 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin, TransformMethodsMixin):
         return self
 
     def __exit__(self, *args, **kwargs):
-        if not self._closed:
-            self.close()
+        self.close()
 
     def __del__(self):
-        if not self._closed:
-            self.close()
+        self.close()
 
 
 def _boundless_vrt_doc(

@@ -165,7 +165,8 @@ class MemoryFile(MemoryFileBase):
         return self
 
     def __exit__(self, *args):
-        self._env.close()
+        if self._env:
+            self._env.close()
         self.close()
 
 

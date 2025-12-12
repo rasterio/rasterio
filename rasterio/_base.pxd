@@ -13,7 +13,6 @@ cdef class DatasetBase:
     cdef public object driver
     cdef public object _count
     cdef public object _dtypes
-    cdef public object _closed
     cdef public object _crs
     cdef public object _crs_wkt
     cdef public object _transform
