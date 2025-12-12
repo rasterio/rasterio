@@ -14,7 +14,7 @@ from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
 
-from .conftest import MockGeoInterface, requires_gdal3_11, requires_gdal_lt_3_11
+from .conftest import MockGeoInterface, requires_gdal3_11, requires_gdal_lt_3_11, requires_gdal3_12_1, requires_gdal_lt_3_12_1
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -1050,6 +1050,7 @@ def test_shapes_invalid_mask_dtype(basic_image):
         ("uint32", 4294967295, 0),
         pytest.param("float16", -9.1, 0.1, marks=requires_gdal3_11),
         ("float32", 1.434532, 1e-6),
+        pytest.param("float64", 2717538304, 0.1, marks=requires_gdal3_12_1),
     ],
 )
 def test_shapes_supported_dtypes(basic_image, dtype, rtol, test_value):
@@ -1062,7 +1063,7 @@ def test_shapes_supported_dtypes(basic_image, dtype, rtol, test_value):
     "dtype, test_value",
     [
         ("uint64", 20439845334323),
-        ("float64", 2717538304),
+        pytest.param("float64", 2717538304, marks=requires_gdal_lt_3_12_1),
     ],
 )
 def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):

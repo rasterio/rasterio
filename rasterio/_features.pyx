@@ -95,7 +95,11 @@ def _shapes(image, mask, connectivity, transform):
     if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
         raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
 
-    if dtype_name in (float64, uint64):
+    truncated_dtypes = (uint64,)
+    if not GDALVersion.runtime(include_patch=True).at_least("3.12.1", include_patch=True):
+        truncated_dtypes += (float64,)
+
+    if dtype_name in truncated_dtypes:
         internal_dtype = "float32" if is_float else "int64"
         warnings.warn(
             f"The low-level implementation uses a {internal_dtype} buffer. "
