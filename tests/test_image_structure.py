@@ -1,5 +1,6 @@
-import rasterio
+import pytest
 
+import rasterio
 from rasterio.enums import Compression, Interleaving
 
 
@@ -52,12 +53,14 @@ def test_compression_deflate():
         assert src.profile['compress'] == 'deflate'
 
 
-def test_enum_interleaving_BAND():
-    assert Interleaving('BAND').name == 'band'
-
-
-def test_enum_interleaving_PIXEL():
-    assert Interleaving('PIXEL').name == 'pixel'
+@pytest.mark.parametrize("interleaving_value, interleaving_name", [
+    ('PIXEL', 'pixel'),
+    ('BAND', 'band'),
+    ('LINE', 'line'),
+    ('TILE', 'tile'),
+])
+def test_enum_interleaving(interleaving_value, interleaving_name):
+    assert Interleaving(interleaving_value).name == interleaving_name
 
 
 def test_interleaving_pixel():
