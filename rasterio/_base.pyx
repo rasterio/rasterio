@@ -299,17 +299,17 @@ cdef class DatasetBase:
             path = _parse_path(path)
             filename = path.as_vsi()
 
-            # driver may be a string or list of strings. If the
-            # former, we put it into a list.
-            if isinstance(driver, str):
-                driver = [driver]
-
             # Read-only + Rasters + Sharing + Errors
             flags = 0x00 | 0x02 | sharing_flag | 0x40
 
-            # Threadsafe support added in GDAL 3.10 for Read-only rasters
-            if get_gdal_version_info("VERSION_NUM") >= "310":
-                flags |= 0x800
+            # driver may be a string or list of strings. If the
+            # former, we put it into a list.
+            if isinstance(driver, str):
+                if driver == "LIBERTIFF":
+                    # Threadsafe support added in GDAL 3.10 for Read-only rasters
+                    if get_gdal_version_info("VERSION_NUM") >= "310":
+                        flags |= 0x800
+                driver = [driver]
 
             try:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
