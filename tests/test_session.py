@@ -430,4 +430,4 @@ def test_azure_session_class_unsigned():
     assert sesh.get_credential_options()['AZURE_NO_SIGN_REQUEST'] == 'YES'
     assert sesh.get_credential_options()['AZURE_STORAGE_ACCOUNT'] == 'naipblobs'
     assert sesh.hascreds(sesh.get_credential_options())
-    
+

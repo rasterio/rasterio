@@ -590,7 +590,7 @@ class AzureSession(Session):
         self.sas_token = azure_storage_sas_token or os.getenv("AZURE_STORAGE_SAS_TOKEN")
         self.tenant_id = azure_tenant_id or os.getenv("AZURE_TENANT_ID")
         self.client_id = azure_client_id or os.getenv("AZURE_CLIENT_ID")
-        self.federated_token_file = azure_federated_token_file or os.getenv("AZURE_FEDERATED_TOKEN_FILE") 
+        self.federated_token_file = azure_federated_token_file or os.getenv("AZURE_FEDERATED_TOKEN_FILE")
         self.authority_host = azure_authority_host or os.getenv("AZURE_AUTHORITY_HOST")
 
         if self.storage_connection_string:
