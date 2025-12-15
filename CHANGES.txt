@@ -6,7 +6,7 @@ Changes
 
 Dependencies:
 
-- Minimum supported versions: Python 3.12+ & GDAL 3.8+, numpy 2+ (#3465, #3467, #3468)
+- Minimum supported versions: Python 3.12+, GDAL 3.8+, & numpy 2+ (#3465, #3467, #3468)
 - Vendor click-plugins (#3367)
 
 Enhancements:
