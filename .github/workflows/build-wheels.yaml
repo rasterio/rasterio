@@ -62,7 +62,7 @@ jobs:
            twine check dist/*
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -183,7 +183,7 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: export DYLD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rasterio_libs/lib:$DYLD_LIBRARY_PATH && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: export 'LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH' && auditwheel repair -w {dest_dir} {wheel}
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
