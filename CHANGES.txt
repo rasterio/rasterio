@@ -1,14 +1,50 @@
 Changes
 =======
 
-1.5a1 (TBD)
+1.5.0 (TBD)
 -----------
 
-New features:
+Dependencies:
 
-- The cache module and its invalidate() and invalidate_all() functions
-  allow invalidation of responses in Rasterio's HTTP cache (#3276).
-- The CRS class has a new, lazily computed, geodetic_crs property (#3218)
+- Minimum supported versions: Python 3.12+ & GDAL 3.8+, numpy 2+ (#3465, #3467, #3468)
+- Vendor click-plugins (#3367)
+
+Enhancements:
+
+- Add float16 dtype (#3469)
+- rasterio.cache: Add invalidate() and invalidate_all() for invalidation of responses in Rasterio's HTTP cache (#3276).
+- rasterio.crs: The CRS class has a new, lazily computed, geodetic_crs property (#3218)
+- rasterio.enum: Add Interleaving.tile (#3479)
+- rasterio.features.shapes: float64 fully supported GDAL 3.12.1 (#3477)
+- rasterio.features.shapes: Add uint32,uint64,int64 dtypes & warn for possible truncation (#3456)
+- rasterio.plot.show: Add indexes & percent_range parameters to handle rgb image missing color interpretation & enable histogram stretching (#3171)
+- rasterio.warp.reproject: Modify tolerance to be an argument in (#3325)
+- Move project metadata to pyproject.toml (PEP 621) (#3430)
+- Use Lapack solve to more accurately compute affine reverse transforms (#3315)
+
+Bug fixes:
+
+- Ensure dataset can be closed multiple times (#3480)
+- Remove duplicate dataset cleanup (#3473, #3366)
+- Use rasterio & numpy dtypes internally instead of strings (#3472)
+- Use context manager for MemoryDataset (#3461)
+- rasterio.warp: Don't fill masked output when reprojecting (#3471)
+- rasterio.warp: Filter GDALCreateGenImgProjTransformer2 options (#3460)
+- Documentation (#3459, 3458, #3455, #3346)
+- Tests (#3429)
+- Code linting (#3457)
+
+Deprecations:
+
+- rasterio.warp.transform_geom: Deprecate antimeridian_cutting & antimeridian_offset (#3474)
+
+Packaging notes:
+
+- Wheel: GDAL 3.11.5 (#3478)
+
+Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.0/ci/config.sh#L1-L25
+
+Full Changelog: https://github.com/rasterio/rasterio/compare/1.4.4...1.5.0
 
 1.4.4 (2025-12-12)
 ------------------
