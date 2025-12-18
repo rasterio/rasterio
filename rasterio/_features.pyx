@@ -26,7 +26,7 @@ from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
-from rasterio.env import GDALVersion
+from rasterio.env import _GDAL_AT_LEAST_3_11, _GDAL_AT_LEAST_3_12_1
 
 
 log = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ def _shapes(image, mask, connectivity, transform):
        float32: OFTReal,
        float64: OFTReal,
     }
-    if GDALVersion.runtime().at_least("3.11"):
+    if _GDAL_AT_LEAST_3_11:
         oft_dtypes[float16] = OFTReal
 
     cdef str dtype_name = _getnpdtype(image.dtype).name
@@ -96,7 +96,7 @@ def _shapes(image, mask, connectivity, transform):
         raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
 
     truncated_dtypes = (uint64,)
-    if not GDALVersion.runtime(include_patch=True).at_least("3.12.1", include_patch=True):
+    if not _GDAL_AT_LEAST_3_12_1:
         truncated_dtypes += (float64,)
 
     if dtype_name in truncated_dtypes:
