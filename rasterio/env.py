@@ -539,6 +539,11 @@ class GDALVersion:
         return self >= other
 
 
+_GDAL_RUNTIME_VERSION = GDALVersion.runtime()
+_GDAL_AT_LEAST_3_11 = _GDAL_RUNTIME_VERSION.at_least("3.11")
+_GDAL_AT_LEAST_3_12_1 = GDALVersion.runtime(include_patch=True).at_least("3.12.1", include_patch=True)
+
+
 def require_gdal_version(version, param=None, values=None, is_max_version=False,
                          reason=''):
     """A decorator that ensures the called function or parameters are supported
@@ -605,7 +610,7 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
                 'require_gdal_version: values must be a tuple, list, or set')
 
     version = GDALVersion.parse(version)
-    runtime = GDALVersion.runtime()
+    runtime = _GDAL_RUNTIME_VERSION
     inequality = ">=" if runtime < version else "<="
     reason = f"\n{reason}" if reason else reason
 

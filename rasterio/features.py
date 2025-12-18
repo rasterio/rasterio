@@ -26,7 +26,7 @@ from rasterio.dtypes import (
     float64,
 )
 from rasterio.enums import MergeAlg
-from rasterio.env import ensure_env, GDALVersion
+from rasterio.env import ensure_env, _GDAL_AT_LEAST_3_11
 from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
@@ -304,7 +304,7 @@ def rasterize(
     valid_dtypes = (
         int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64
     )
-    if GDALVersion.runtime().at_least("3.11"):
+    if _GDAL_AT_LEAST_3_11:
         valid_dtypes += (float16,)
 
     # The output data type is primarily determined by the output array
