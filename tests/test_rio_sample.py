@@ -8,63 +8,72 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_sample_err(runner):
-    result = runner.invoke(
-        main_group,
-        ['sample', 'bogus.tif'],
-        "[220650.0, 2719200.0]")
+    result = runner.invoke(main_group, ["sample", "bogus.tif"], "[220650.0, 2719200.0]")
     assert result.exit_code == 1
 
 
 def test_sample_stdin(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif'],
+        ["sample", "tests/data/RGB.byte.tif"],
         "[220650.0, 2719200.0]\n[220650.0, 2719200.0]",
-        catch_exceptions=False)
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[18, 25, 14]\n[18, 25, 14]'
+    assert result.output.strip() == "[18, 25, 14]\n[18, 25, 14]"
 
 
 def test_sample_arg(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', "[220650.0, 2719200.0]"],
-        catch_exceptions=False)
+        ["sample", "tests/data/RGB.byte.tif", "[220650.0, 2719200.0]"],
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[18, 25, 14]'
+    assert result.output.strip() == "[18, 25, 14]"
 
 
 def test_sample_bidx(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1,2', "[220650.0, 2719200.0]"],
-        catch_exceptions=False)
+        ["sample", "tests/data/RGB.byte.tif", "--bidx", "1,2", "[220650.0, 2719200.0]"],
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[18, 25]'
+    assert result.output.strip() == "[18, 25]"
 
 
 def test_sample_bidx2(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1..2', "[220650.0, 2719200.0]"],
-        catch_exceptions=False)
+        [
+            "sample",
+            "tests/data/RGB.byte.tif",
+            "--bidx",
+            "1..2",
+            "[220650.0, 2719200.0]",
+        ],
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[18, 25]'
+    assert result.output.strip() == "[18, 25]"
 
 
 def test_sample_bidx3(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '..2', "[220650.0, 2719200.0]"],
-        catch_exceptions=False)
+        ["sample", "tests/data/RGB.byte.tif", "--bidx", "..2", "[220650.0, 2719200.0]"],
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[18, 25]'
+    assert result.output.strip() == "[18, 25]"
 
 
 def test_sample_bidx4(runner):
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '3', "[220650.0, 2719200.0]"],
-        catch_exceptions=False)
+        ["sample", "tests/data/RGB.byte.tif", "--bidx", "3", "[220650.0, 2719200.0]"],
+        catch_exceptions=False,
+    )
     assert result.exit_code == 0
-    assert result.output.strip() == '[14]'
+    assert result.output.strip() == "[14]"

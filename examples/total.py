@@ -4,9 +4,8 @@ import rasterio
 import subprocess
 
 with rasterio.Env(CPL_DEBUG=True):
-
     # Read raster bands directly to Numpy arrays.
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         r, g, b = src.read()
 
     # Combine arrays using the 'iadd' ufunc. Expecting that the sum will
@@ -23,16 +22,12 @@ with rasterio.Env(CPL_DEBUG=True):
     # then change the band count to 1, set the dtype to uint8, and specify
     # LZW compression.
     kwargs = src.meta
-    kwargs.update(
-        dtype=rasterio.uint8,
-        count=1,
-        compress='lzw')
+    kwargs.update(dtype=rasterio.uint8, count=1, compress="lzw")
 
-    with rasterio.open('example-total.tif', 'w', **kwargs) as dst:
+    with rasterio.open("example-total.tif", "w", **kwargs) as dst:
         dst.write(total.astype(rasterio.uint8), indexes=1)
 
 # Dump out gdalinfo's report card and open the image.
-info = subprocess.check_output(
-    ['gdalinfo', '-stats', 'example-total.tif'])
+info = subprocess.check_output(["gdalinfo", "-stats", "example-total.tif"])
 print(info)
-subprocess.call(['open', 'example-total.tif'])
+subprocess.call(["open", "example-total.tif"])

@@ -1,12 +1,16 @@
 """Command access to dataset metadata, stats, and more."""
 
-
 import json
 
 import click
 from cligj import (
-    compact_opt, use_rs_opt, projection_geographic_opt,
-    projection_projected_opt, precision_opt, indent_opt)
+    compact_opt,
+    use_rs_opt,
+    projection_geographic_opt,
+    projection_projected_opt,
+    precision_opt,
+    indent_opt,
+)
 
 import rasterio
 import rasterio.crs
@@ -17,16 +21,17 @@ from rasterio.warp import transform_geom
 # Feature collection or feature sequence switch, defaulting to the
 # latter, the opposite of cligj's default.
 sequence_opt = click.option(
-    '--sequence/--no-sequence',
+    "--sequence/--no-sequence",
     default=True,
     help="Write a LF-delimited sequence of texts containing individual "
-         "objects or write a single JSON text containing a feature "
-         "collection object (the default).")
+    "objects or write a single JSON text containing a feature "
+    "collection object (the default).",
+)
 
 
 @click.command(short_help="Print ground control points as GeoJSON.")
 @options.file_in_arg
-@options.geojson_type_opt(allowed=('collection', 'feature'), default='feature')
+@options.geojson_type_opt(allowed=("collection", "feature"), default="feature")
 @projection_geographic_opt
 @projection_projected_opt
 @precision_opt
@@ -56,31 +61,32 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent, compac
     """
 
     # Handle the invalid combinations of args.
-    if geojson_type == 'feature' and indent and not use_rs:
+    if geojson_type == "feature" and indent and not use_rs:
         raise click.BadParameter(
-            "Pretty-printing a sequence of Features requires the --rs option")
+            "Pretty-printing a sequence of Features requires the --rs option"
+        )
 
-    with ctx.obj['env'], rasterio.open(input) as src:
+    with ctx.obj["env"], rasterio.open(input) as src:
         gcps, crs = src.gcps
         proj = crs.to_string()
-        proj = proj.split('=')[1].upper() if proj.startswith('+init=epsg') else proj
+        proj = proj.split("=")[1].upper() if proj.startswith("+init=epsg") else proj
 
         def update_props(data, **kwds):
-            data['properties'].update(**kwds)
+            data["properties"].update(**kwds)
             return data
 
         def transform(feat):
-            dst_crs = 'epsg:4326' if projection == 'geographic' else crs
-            geom = transform_geom(crs, dst_crs, feat['geometry'],
-                                  precision=precision)
-            feat['geometry'] = geom
+            dst_crs = "epsg:4326" if projection == "geographic" else crs
+            geom = transform_geom(crs, dst_crs, feat["geometry"], precision=precision)
+            feat["geometry"] = geom
             return feat
 
         # Specifying --collection overrides --sequence.
-        if geojson_type == 'collection':
-
-            if projection == 'geographic' or precision >= 0:
-                features = [transform(update_props(p.__geo_interface__, crs=proj)) for p in gcps]
+        if geojson_type == "collection":
+            if projection == "geographic" or precision >= 0:
+                features = [
+                    transform(update_props(p.__geo_interface__, crs=proj)) for p in gcps
+                ]
             else:
                 features = [update_props(p.__geo_interface__, crs=proj) for p in gcps]
 

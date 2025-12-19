@@ -9,9 +9,9 @@ class FakeDataset(windows.WindowMethodsMixin):
     """A test double to support testing of the mixin class"""
 
     def __init__(self, **kwargs):
-        self.transform = kwargs.get('transform')
-        self.height = kwargs.get('height')
-        self.width = kwargs.get('width')
+        self.transform = kwargs.get("transform")
+        self.height = kwargs.get("height")
+        self.width = kwargs.get("width")
 
     @property
     def bounds(self):
@@ -25,27 +25,47 @@ class FakeDataset(windows.WindowMethodsMixin):
 @composite
 def dataset_utm(draw):
     """Generate a fake UTM dataset with an origin, a resolution, and a finite size"""
-    x = draw(floats(min_value=-1e6, max_value=1e+6, allow_nan=False, allow_infinity=False))
-    y = draw(floats(min_value=-1e6, max_value=1e+6, allow_nan=False, allow_infinity=False))
-    res = draw(floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False))
+    x = draw(
+        floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False)
+    )
+    y = draw(
+        floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False)
+    )
+    res = draw(
+        floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False)
+    )
     h = draw(integers(min_value=1, max_value=1000))
     w = draw(integers(min_value=1, max_value=1000))
     return FakeDataset(
-        transform=windows.Affine.identity() * windows.Affine.translation(x, y) * windows.Affine.scale(res, -res),
-        height=h, width=w)
+        transform=windows.Affine.identity()
+        * windows.Affine.translation(x, y)
+        * windows.Affine.scale(res, -res),
+        height=h,
+        width=w,
+    )
 
 
 @composite
 def dataset_utm_north_down(draw):
     """Generate a fake UTM dataset with an origin, a resolution, and a finite size"""
-    x = draw(floats(min_value=-1e6, max_value=1e+6, allow_nan=False, allow_infinity=False))
-    y = draw(floats(min_value=-1e6, max_value=1e+6, allow_nan=False, allow_infinity=False))
-    res = draw(floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False))
+    x = draw(
+        floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False)
+    )
+    y = draw(
+        floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False)
+    )
+    res = draw(
+        floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False)
+    )
     h = draw(integers(min_value=1, max_value=1000))
     w = draw(integers(min_value=1, max_value=1000))
     return FakeDataset(
-        transform=windows.Affine.identity() * windows.Affine.translation(x, y) * windows.Affine.scale(res),
-        height=h, width=w)
+        transform=windows.Affine.identity()
+        * windows.Affine.translation(x, y)
+        * windows.Affine.scale(res),
+        height=h,
+        width=w,
+    )
 
 
 def assert_windows_almost_equal(a, b):
@@ -62,7 +82,8 @@ def test_window_rt(dataset):
     right, bottom = dataset.transform * (dataset.width, dataset.height)
     assert_windows_almost_equal(
         dataset.window(left, bottom, right, top),
-        windows.Window(0, 0, dataset.width, dataset.height))
+        windows.Window(0, 0, dataset.width, dataset.height),
+    )
 
 
 @given(dataset=dataset_utm_north_down())
@@ -72,24 +93,37 @@ def test_window_rt_north_down(dataset):
     right, bottom = dataset.transform * (dataset.width, dataset.height)
     assert_windows_almost_equal(
         dataset.window(left, bottom, right, top),
-        windows.Window(0, 0, dataset.width, dataset.height))
+        windows.Window(0, 0, dataset.width, dataset.height),
+    )
 
 
 @given(dataset=dataset_utm())
 def test_window_transform_rt(dataset):
-    assert dataset.window_transform(windows.Window(0, 0, dataset.width, dataset.height)) == dataset.transform
+    assert (
+        dataset.window_transform(windows.Window(0, 0, dataset.width, dataset.height))
+        == dataset.transform
+    )
 
 
 @given(dataset=dataset_utm_north_down())
 def test_window_transform_rt_north_down(dataset):
-    assert dataset.window_transform(windows.Window(0, 0, dataset.width, dataset.height)) == dataset.transform
+    assert (
+        dataset.window_transform(windows.Window(0, 0, dataset.width, dataset.height))
+        == dataset.transform
+    )
 
 
 @given(dataset=dataset_utm())
 def test_window_bounds_rt(dataset):
-    assert dataset.window_bounds(windows.Window(0, 0, dataset.width, dataset.height)) == dataset.bounds
+    assert (
+        dataset.window_bounds(windows.Window(0, 0, dataset.width, dataset.height))
+        == dataset.bounds
+    )
 
 
 @given(dataset=dataset_utm_north_down())
 def test_window_bounds_rt_north_down(dataset):
-    assert dataset.window_bounds(windows.Window(0, 0, dataset.width, dataset.height)) == dataset.bounds
+    assert (
+        dataset.window_bounds(windows.Window(0, 0, dataset.width, dataset.height))
+        == dataset.bounds
+    )

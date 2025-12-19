@@ -33,7 +33,8 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin, TransformMethodsMixin
 
     def __repr__(self):
         return "<{} DatasetReader name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin):
@@ -43,7 +44,8 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin
 
     def __repr__(self):
         return "<{} DatasetWriter name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class BufferedDatasetWriter(
@@ -58,7 +60,8 @@ class BufferedDatasetWriter(
 
     def __repr__(self):
         return "<{} BufferedDatasetWriter name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class MemoryFile(MemoryFileBase):
@@ -115,8 +118,19 @@ class MemoryFile(MemoryFileBase):
         )
 
     @ensure_env
-    def open(self, driver=None, width=None, height=None, count=None, crs=None,
-             transform=None, dtype=None, nodata=None, sharing=False, **kwargs):
+    def open(
+        self,
+        driver=None,
+        width=None,
+        height=None,
+        count=None,
+        crs=None,
+        transform=None,
+        dtype=None,
+        nodata=None,
+        sharing=False,
+        **kwargs,
+    ):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r'
@@ -152,7 +166,7 @@ class MemoryFile(MemoryFileBase):
                 dtype=dtype,
                 nodata=nodata,
                 sharing=sharing,
-                **kwargs
+                **kwargs,
             )
 
         # Push the new dataset's context exit onto the MemoryFile's ExitStack.
@@ -178,6 +192,7 @@ class _FilePath(FilePathBase):
        and will be removed in 2.0.0.
 
     """
+
     def __init__(self, filelike_obj, dirname=None, filename=None):
         """Create a new wrapper around the provided file-like object.
 
@@ -196,9 +211,7 @@ class _FilePath(FilePathBase):
             "FilePath is supplanted by open's new opener keyword argument, and will be removed in 2.0.0.",
             RasterioDeprecationWarning,
         )
-        super().__init__(
-            filelike_obj, dirname=dirname, filename=filename
-        )
+        super().__init__(filelike_obj, dirname=dirname, filename=filename)
 
     @ensure_env
     def open(self, driver=None, sharing=False, **kwargs):

@@ -6,8 +6,8 @@ import rasterio
 
 
 @click.command(short_help="Sample a dataset.")
-@click.argument('files', nargs=-1, required=True, metavar='FILE "[x, y]"')
-@click.option('-b', '--bidx', default=None, help="Indexes of input file bands.")
+@click.argument("files", nargs=-1, required=True, metavar='FILE "[x, y]"')
+@click.option("-b", "--bidx", default=None, help="Indexes of input file bands.")
 @click.pass_context
 def sample(ctx, files, bidx):
     """Sample a dataset at one or more points
@@ -53,7 +53,7 @@ def sample(ctx, files, bidx):
     """
     files = list(files)
     source_path = files.pop(0)
-    input = files.pop(0) if files else '-'
+    input = files.pop(0) if files else "-"
 
     # Handle the case of file, stream, or string input.
     try:

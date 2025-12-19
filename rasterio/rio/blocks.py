@@ -17,11 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class _Collection:
-
     """For use with `rasterio.rio.helpers.write_features()`."""
 
     def __init__(self, dataset, bidx, precision=6, geographic=True):
-
         """Export raster dataset windows to GeoJSON polygon features.
 
         Parameters
@@ -48,7 +46,7 @@ class _Collection:
 
     def _normalize_bounds(self, bounds):
         if self._geographic:
-            bounds = transform_bounds(self._src.crs, 'EPSG:4326', *bounds)
+            bounds = transform_bounds(self._src.crs, "EPSG:4326", *bounds)
         if self._precision >= 0:
             bounds = (round(v, self._precision) for v in bounds)
         return bounds
@@ -69,15 +67,12 @@ class _Collection:
                     "block": json.dumps(block),
                     "window": window.todict(),
                 },
-                'geometry': {
-                    'type': 'Polygon',
-                    'coordinates': [[
-                        (xmin, ymin),
-                        (xmin, ymax),
-                        (xmax, ymax),
-                        (xmax, ymin)
-                    ]]
-                }
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)]
+                    ],
+                },
             }
 
 
@@ -91,8 +86,11 @@ class _Collection:
 @cligj.sequence_opt
 @cligj.use_rs_opt
 @click.option(
-    '--bidx', type=click.INT, default=0,
-    help="Index of the band that is the source of shapes.")
+    "--bidx",
+    type=click.INT,
+    default=0,
+    help="Index of the band that is the source of shapes.",
+)
 @click.pass_context
 def blocks(
     ctx, input, output, precision, indent, compact, projection, sequence, use_rs, bidx
@@ -131,18 +129,16 @@ def blocks(
     see block_windows().
 
     """
-    dump_kwds = {'sort_keys': True}
+    dump_kwds = {"sort_keys": True}
 
     if indent:
-        dump_kwds['indent'] = indent
+        dump_kwds["indent"] = indent
     if compact:
-        dump_kwds['separators'] = (',', ':')
+        dump_kwds["separators"] = (",", ":")
 
-    stdout = click.open_file(
-        output, 'w') if output else click.get_text_stream('stdout')
+    stdout = click.open_file(output, "w") if output else click.get_text_stream("stdout")
 
-    with ctx.obj['env'], rasterio.open(input) as src:
-
+    with ctx.obj["env"], rasterio.open(input) as src:
         if bidx and bidx not in src.indexes:
             raise click.BadParameter("Not a valid band index")
 
@@ -158,5 +154,5 @@ def blocks(
             sequence=sequence,
             geojson_type="feature" if sequence else "collection",
             use_rs=use_rs,
-            **dump_kwds
+            **dump_kwds,
         )

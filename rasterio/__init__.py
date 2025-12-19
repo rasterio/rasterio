@@ -82,7 +82,7 @@ except ImportError:
 
     have_vsi_plugin = False
 
-__all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
+__all__ = ["band", "open", "pad", "Band", "Env", "CRS"]
 __version__ = "1.5a0"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
@@ -111,7 +111,7 @@ def open(
     nodata=None,
     sharing=False,
     opener=None,
-    **kwargs
+    **kwargs,
 ):
     """Open a dataset for reading or writing.
 
@@ -267,8 +267,9 @@ def open(
     # Check driver/mode blacklist.
     if driver and is_blacklisted(driver, mode):
         raise RasterioIOError(
-            "Blacklisted: file cannot be opened by "
-            "driver '{}' in '{}' mode".format(driver, mode)
+            "Blacklisted: file cannot be opened by driver '{}' in '{}' mode".format(
+                driver, mode
+            )
         )
 
     # This check should come first, since MemoryFile has read/write methods
@@ -290,7 +291,7 @@ def open(
                 dtype=dtype,
                 nodata=nodata,
                 sharing=sharing,
-                **kwargs
+                **kwargs,
             )
 
         return dataset
@@ -300,14 +301,14 @@ def open(
     # dataset object that we will return. When a dataset's close method
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
-    elif mode == 'r' and hasattr(fp, 'read'):
+    elif mode == "r" and hasattr(fp, "read"):
         memfile = MemoryFile(fp.read())
         fp.seek(0)
         dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
         dataset._env.enter_context(memfile)
         return dataset
 
-    elif mode in ('w', 'w+') and hasattr(fp, 'write'):
+    elif mode in ("w", "w+") and hasattr(fp, "write"):
         memfile = MemoryFile()
         dataset = memfile.open(
             driver=driver,
@@ -319,7 +320,7 @@ def open(
             dtype=dtype,
             nodata=nodata,
             sharing=sharing,
-            **kwargs
+            **kwargs,
         )
         dataset._env.enter_context(memfile)
 
@@ -381,7 +382,7 @@ def open(
                         dtype=dtype,
                         nodata=nodata,
                         sharing=sharing,
-                        **kwargs
+                        **kwargs,
                     )
                 else:
                     raise DriverCapabilityError(
@@ -389,7 +390,8 @@ def open(
                     )
             else:
                 raise DriverCapabilityError(
-                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode
+                )
         except Exception:
             stack.close()
             raise
@@ -398,7 +400,7 @@ def open(
         return dataset
 
 
-Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+Band = namedtuple("Band", ["ds", "bidx", "dtype", "shape"])
 Band.__doc__ = """
 Band(s) of a Dataset.
 
@@ -456,6 +458,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     See :func:`numpy.pad` for details on mode and other kwargs.
     """
     import numpy as np
+
     transform = guard_transform(transform)
     padded_array = np.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)

@@ -20,16 +20,16 @@ except ImportError:
     pytest.skip("FilePath is not available for GDAL <3.0", allow_module_level=True)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def rgb_lzw_file_object(path_rgb_lzw_byte_tif):
     """Get the open file of our RGB.bytes.tif file."""
-    return open(path_rgb_lzw_byte_tif, 'rb')
+    return open(path_rgb_lzw_byte_tif, "rb")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def rgb_file_object(path_rgb_byte_tif):
     """Get RGB.bytes.tif file opened in 'rb' mode"""
-    return open(path_rgb_byte_tif, 'rb')
+    return open(path_rgb_byte_tif, "rb")
 
 
 def test_initial_empty():
@@ -46,14 +46,14 @@ def test_initial_not_file_str():
 def test_initial_not_file_bytes():
     """Creating from not file-like fails."""
     with pytest.raises(TypeError):
-        FilePath(b'lolwut')
+        FilePath(b"lolwut")
 
 
 def test_initial_bytes(rgb_file_object):
     """FilePath contents can initialized from bytes and opened."""
     with FilePath(rgb_file_object) as vsifile:
         with vsifile.open() as src:
-            assert src.driver == 'GTiff'
+            assert src.driver == "GTiff"
             assert src.count == 3
             assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 718, 791)
@@ -82,7 +82,7 @@ def test_filepath_vrt(rgb_file_object):
         with rasterio.open(vrt_doc) as src:
             assert src.driver == "VRT"
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 718, 791)
 
 
@@ -90,9 +90,9 @@ def test_initial_lzw_bytes(rgb_lzw_file_object):
     """FilePath contents can initialized from bytes and opened."""
     with FilePath(rgb_lzw_file_object) as vsifile:
         with vsifile.open() as src:
-            assert src.driver == 'GTiff'
+            assert src.driver == "GTiff"
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 718, 791)
 
 
@@ -100,9 +100,9 @@ def test_initial_file_object(rgb_file_object):
     """FilePath contents can initialized from bytes and opened."""
     with FilePath(rgb_file_object) as vsifile:
         with vsifile.open() as src:
-            assert src.driver == 'GTiff'
+            assert src.driver == "GTiff"
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 718, 791)
 
 
@@ -117,27 +117,27 @@ def test_closed(rgb_file_object):
 def test_file_object_read(rgb_file_object):
     """An example of reading from a file object"""
     with rasterio.open(rgb_file_object) as src:
-        assert src.driver == 'GTiff'
+        assert src.driver == "GTiff"
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ("uint8", "uint8", "uint8")
         assert src.read().shape == (3, 718, 791)
 
 
 def test_file_object_read_variant(rgb_file_object):
     """An example of reading from a FilePath object"""
     with rasterio.open(FilePath(rgb_file_object)) as src:
-        assert src.driver == 'GTiff'
+        assert src.driver == "GTiff"
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ("uint8", "uint8", "uint8")
         assert src.read().shape == (3, 718, 791)
 
 
 def test_file_object_read_variant2(rgb_file_object):
     """An example of reading from a BytesIO object version of a file's contents."""
     with rasterio.open(BytesIO(rgb_file_object.read())) as src:
-        assert src.driver == 'GTiff'
+        assert src.driver == "GTiff"
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ("uint8", "uint8", "uint8")
         assert src.read().shape == (3, 718, 791)
 
 
@@ -153,9 +153,9 @@ def test_vrt_vsifile(data_dir, path_white_gemini_iv_vrt):
 
     with FilePath(source) as vsifile:
         with vsifile.open() as src:
-            assert src.driver == 'VRT'
+            assert src.driver == "VRT"
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ("uint8", "uint8", "uint8")
             assert src.read().shape == (3, 768, 1024)
 
 
@@ -175,27 +175,39 @@ def test_vsifile_copyfiles(path_rgb_msk_byte_tif):
 @pytest.mark.xfail(reason="FilePath does not implement '.files' property properly.")
 def test_multi_vsifile(path_rgb_msk_byte_tif):
     """Multiple files can be copied to a FilePath using copyfiles"""
-    with open(path_rgb_msk_byte_tif, "rb") as tif_fp, open(
-        path_rgb_msk_byte_tif + ".msk", "rb"
-    ) as msk_fp:
-        with FilePath(
-            tif_fp, dirname="bar", filename="foo.tif"
-        ) as tifvsifile, FilePath(msk_fp, dirname="bar", filename="foo.tif.msk"):
+    with (
+        open(path_rgb_msk_byte_tif, "rb") as tif_fp,
+        open(path_rgb_msk_byte_tif + ".msk", "rb") as msk_fp,
+    ):
+        with (
+            FilePath(tif_fp, dirname="bar", filename="foo.tif") as tifvsifile,
+            FilePath(msk_fp, dirname="bar", filename="foo.tif.msk"),
+        ):
             with tifvsifile.open() as src:
-                assert sorted(os.path.basename(fn) for fn in src.files) == sorted(['foo.tif', 'foo.tif.msk'])
+                assert sorted(os.path.basename(fn) for fn in src.files) == sorted(
+                    ["foo.tif", "foo.tif.msk"]
+                )
                 assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
 
 
 def _open_geotiff(file_path):
-    with open(file_path, 'rb') as file_obj:
+    with open(file_path, "rb") as file_obj:
         with rasterio.open(file_obj) as dataset:
             dataset.read()
 
 
-def test_concurrent(path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif):
+def test_concurrent(
+    path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif
+):
     """Test multiple threads opening multiple files at the same time."""
     from concurrent.futures import ThreadPoolExecutor
-    tifs = [path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif] * 4
+
+    tifs = [
+        path_rgb_byte_tif,
+        path_rgb_lzw_byte_tif,
+        path_cogeo_tif,
+        path_alpha_tif,
+    ] * 4
     with ThreadPoolExecutor(max_workers=8) as exe:
         list(exe.map(_open_geotiff, tifs, timeout=5))
 

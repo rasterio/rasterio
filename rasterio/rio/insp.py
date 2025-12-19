@@ -26,7 +26,7 @@ except RuntimeError as e:  # pragma: no cover
     plt = None
 
 
-Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
+Stats = collections.namedtuple("Stats", ["min", "max", "mean"])
 
 # Collect dictionary of functions for use in the interpreter in main()
 funcs = locals()
@@ -46,8 +46,9 @@ def main(banner, dataset, alt_interpreter=None):
     local = dict(funcs, src=dataset, np=np, rio=rasterio, plt=plt)
     if not alt_interpreter:
         code.interact(banner, local=local)
-    elif alt_interpreter == 'ipython':  # pragma: no cover
+    elif alt_interpreter == "ipython":  # pragma: no cover
         import IPython
+
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)
     else:
@@ -58,28 +59,31 @@ def main(banner, dataset, alt_interpreter=None):
 
 @click.command(short_help="Open a data file and start an interpreter.")
 @options.file_in_arg
-@click.option('--ipython', 'interpreter', flag_value='ipython',
-              help="Use IPython as interpreter.")
 @click.option(
-    '-m',
-    '--mode',
-    type=click.Choice(['r', 'r+']),
-    default='r',
-    help="File mode (default 'r').")
+    "--ipython", "interpreter", flag_value="ipython", help="Use IPython as interpreter."
+)
+@click.option(
+    "-m",
+    "--mode",
+    type=click.Choice(["r", "r+"]),
+    default="r",
+    help="File mode (default 'r').",
+)
 @click.pass_context
 def insp(ctx, input, mode, interpreter):
     """Open the input file in a Python interpreter."""
     logger = logging.getLogger()
     try:
-        with ctx.obj['env']:
+        with ctx.obj["env"]:
             with rasterio.open(input, mode) as src:
                 main(
-                    'Rasterio %s Interactive Inspector (Python %s)\n'
+                    "Rasterio %s Interactive Inspector (Python %s)\n"
                     'Type "src.meta", "src.read(1)", or "help(src)" '
-                    'for more information.' % (
-                        rasterio.__version__,
-                        '.'.join(map(str, sys.version_info[:3]))),
-                    src, interpreter)
+                    "for more information."
+                    % (rasterio.__version__, ".".join(map(str, sys.version_info[:3]))),
+                    src,
+                    interpreter,
+                )
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()

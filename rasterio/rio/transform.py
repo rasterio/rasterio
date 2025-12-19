@@ -7,11 +7,9 @@ from cligj import precision_opt
 
 
 @click.command(short_help="Transform coordinates.")
-@click.argument('INPUT', default='-', required=False)
-@click.option('--src-crs', '--src_crs', default='EPSG:4326',
-              help="Source CRS.")
-@click.option('--dst-crs', '--dst_crs', default='EPSG:4326',
-              help="Destination CRS.")
+@click.argument("INPUT", default="-", required=False)
+@click.option("--src-crs", "--src_crs", default="EPSG:4326", help="Source CRS.")
+@click.option("--dst-crs", "--dst_crs", default="EPSG:4326", help="Destination CRS.")
 @precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
@@ -40,7 +38,6 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         src = [input]
 
     with ctx.obj["env"]:
-
         if src_crs.startswith("EPSG"):
             src_crs = {"init": src_crs}
         elif rasterio.shutil.exists(src_crs):

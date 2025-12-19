@@ -14,21 +14,18 @@ import rasterio
 
 from rasterio._example import compute
 
+
 def main(infile, outfile, with_threads=False):
-
     with rasterio.Env():
-
         # Open the source dataset.
         with rasterio.open(infile) as src:
-
             # Create a destination dataset based on source params. The
             # destination will be tiled, and we'll "process" the tiles
             # concurrently.
 
             meta = src.meta
-            meta.update(blockxsize=256, blockysize=256, tiled='yes')
-            with rasterio.open(outfile, 'w', **meta) as dst:
-
+            meta.update(blockxsize=256, blockysize=256, tiled="yes")
+            with rasterio.open(outfile, "w", **meta) as dst:
                 loop = asyncio.get_event_loop()
 
                 # With the exception of the ``yield from`` statement,
@@ -43,7 +40,6 @@ def main(infile, outfile, with_threads=False):
 
                 @asyncio.coroutine
                 def process_window(window):
-
                     # Read a window of data.
                     data = src.read(window=window)
 
@@ -56,40 +52,32 @@ def main(infile, outfile, with_threads=False):
                     # concurrently.
                     result = np.zeros(data.shape, dtype=data.dtype)
                     if with_threads:
-                        yield from loop.run_in_executor(
-                                            None, compute, data, result)
+                        yield from loop.run_in_executor(None, compute, data, result)
                     else:
                         compute(data, result)
 
                     dst.write(result, window=window)
 
                 # Queue up the loop's tasks.
-                tasks = [asyncio.Task(process_window(window))
-                         for ij, window in dst.block_windows(1)]
+                tasks = [
+                    asyncio.Task(process_window(window))
+                    for ij, window in dst.block_windows(1)
+                ]
 
                 # Wait for all the tasks to finish, and close.
                 loop.run_until_complete(asyncio.wait(tasks))
                 loop.close()
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Concurrent raster processing demo")
+    parser = argparse.ArgumentParser(description="Concurrent raster processing demo")
+    parser.add_argument("input", metavar="INPUT", help="Input file name")
+    parser.add_argument("output", metavar="OUTPUT", help="Output file name")
     parser.add_argument(
-        'input',
-        metavar='INPUT',
-        help="Input file name")
-    parser.add_argument(
-        'output',
-        metavar='OUTPUT',
-        help="Output file name")
-    parser.add_argument(
-        '--with-workers',
-        action='store_true',
-        help="Run with a pool of worker threads")
+        "--with-workers", action="store_true", help="Run with a pool of worker threads"
+    )
     args = parser.parse_args()
 
     main(args.input, args.output, args.with_workers)
-
