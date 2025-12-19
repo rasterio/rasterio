@@ -16,8 +16,8 @@ import platform
 import pprint
 import re
 import shutil
-from subprocess import check_output
 import sys
+from subprocess import check_output
 
 from setuptools import setup
 from setuptools.extension import Extension

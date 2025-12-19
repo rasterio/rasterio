@@ -3,31 +3,31 @@ import pytest
 
 import rasterio
 from rasterio import (
+    complex_,
+    complex_int16,
+    float16,
+    float32,
+    float64,
+    int8,
+    int16,
+    int32,
+    int64,
     ubyte,
     uint8,
     uint16,
     uint32,
     uint64,
-    int8,
-    int16,
-    int32,
-    int64,
-    float16,
-    float32,
-    float64,
-    complex_,
-    complex_int16,
 )
 from rasterio.dtypes import (
     _gdal_typename,
-    is_ndarray,
+    _get_gdal_dtype,
+    _getnpdtype,
+    _is_complex_int,
+    can_cast_dtype,
     check_dtype,
     get_minimum_dtype,
-    can_cast_dtype,
+    is_ndarray,
     validate_dtype,
-    _is_complex_int,
-    _getnpdtype,
-    _get_gdal_dtype,
 )
 from tests.conftest import gdal_version, requires_gdal3_11
 

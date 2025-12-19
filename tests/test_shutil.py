@@ -1,15 +1,15 @@
 """Tests for ``rasterio.shutil```."""
 
 
-from contextlib import ExitStack
 import os
+from contextlib import ExitStack
 
 import numpy
 import pytest
-
-import rasterio
 import rasterio.shutil
 from rasterio._err import CPLE_NotSupportedError
+
+import rasterio
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 
 

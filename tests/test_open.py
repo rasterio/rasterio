@@ -1,6 +1,8 @@
-import pytest
-import rasterio
 from pathlib import Path
+
+import pytest
+
+import rasterio
 
 
 def test_open_bad_path():

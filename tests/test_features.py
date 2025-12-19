@@ -1,20 +1,32 @@
-from copy import deepcopy
 import math
+from copy import deepcopy
 from unittest import mock
 
-from affine import Affine
 import numpy as np
 import pytest
+from affine import Affine
 from numpy.testing import assert_allclose
 
 import rasterio
 from rasterio.enums import MergeAlg
-from rasterio.errors import WindowError, ShapeSkipWarning
+from rasterio.errors import ShapeSkipWarning, WindowError
 from rasterio.features import (
-    bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
-    shapes)
+    bounds,
+    geometry_mask,
+    geometry_window,
+    is_valid_geom,
+    rasterize,
+    shapes,
+    sieve,
+)
 
-from .conftest import MockGeoInterface, requires_gdal3_11, requires_gdal_lt_3_11, requires_gdal3_12_1, requires_gdal_lt_3_12_1
+from .conftest import (
+    MockGeoInterface,
+    requires_gdal3_11,
+    requires_gdal3_12_1,
+    requires_gdal_lt_3_11,
+    requires_gdal_lt_3_12_1,
+)
 
 DEFAULT_SHAPE = (10, 10)
 

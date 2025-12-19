@@ -8,9 +8,9 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.warp import SUPPORTED_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
+from rasterio.warp import SUPPORTED_RESAMPLING
 
 
 def test_dst_crs_error(runner, tmpdir):

@@ -12,8 +12,9 @@ import concurrent.futures
 import multiprocessing
 import threading
 
-import rasterio
 from rasterio._example import compute
+
+import rasterio
 
 
 def main(infile, outfile, num_workers=4):

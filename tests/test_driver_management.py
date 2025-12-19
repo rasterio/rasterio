@@ -1,7 +1,8 @@
 import logging
 
-import rasterio
 from rasterio._env import driver_count
+
+import rasterio
 
 
 def test_drivers():

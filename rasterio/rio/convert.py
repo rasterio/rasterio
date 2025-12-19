@@ -7,7 +7,7 @@ import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
-from rasterio.windows import subdivide, Window
+from rasterio.windows import Window, subdivide
 
 
 @click.command(short_help="Copy and convert raster dataset.")

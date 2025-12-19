@@ -53,22 +53,21 @@ import click
 
 import rasterio
 import rasterio.shutil
+from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.dtypes import (
+    float16,
+    float32,
+    float64,
+    int8,
+    int16,
+    int32,
+    int64,
     ubyte,
     uint8,
     uint16,
     uint32,
     uint64,
-    int8,
-    int16,
-    int32,
-    int64,
-    float16,
-    float32,
-    float64
 )
-from rasterio._path import _parse_path, _UnparsedPath
-
 
 logger = logging.getLogger(__name__)
 

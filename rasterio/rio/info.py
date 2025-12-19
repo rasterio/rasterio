@@ -3,8 +3,8 @@
 
 import json
 
-from attr import asdict
 import click
+from attr import asdict
 
 import rasterio
 from rasterio.rio import options

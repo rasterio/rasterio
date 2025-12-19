@@ -3,11 +3,12 @@ import logging
 
 import click
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
 import rasterio.shutil
 from rasterio.mask import mask as mask_tool
+
+from . import options
+from .helpers import resolve_inout
 
 logger = logging.getLogger(__name__)
 

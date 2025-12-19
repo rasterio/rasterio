@@ -1,23 +1,23 @@
 """Geospatial transforms"""
 
+import warnings
 from contextlib import ExitStack
 from functools import partial
-import numpy as np
-import warnings
 from numbers import Number
 
+import numpy as np
 from affine import Affine
 
-from rasterio.env import env_ctx_if_needed
 from rasterio._transform import (
-    _transform_from_gcps,
-    RPCTransformerBase,
     GCPTransformerBase,
+    RPCTransformerBase,
+    _transform_from_gcps,
 )
-from rasterio.enums import TransformDirection, TransformMethod
 from rasterio.control import GroundControlPoint
+from rasterio.enums import TransformDirection, TransformMethod
+from rasterio.env import env_ctx_if_needed
+from rasterio.errors import RasterioDeprecationWarning, TransformError
 from rasterio.rpc import RPC
-from rasterio.errors import TransformError, RasterioDeprecationWarning
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()

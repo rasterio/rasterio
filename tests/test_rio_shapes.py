@@ -10,7 +10,6 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-
 DEFAULT_SHAPE = (10, 10)
 
 

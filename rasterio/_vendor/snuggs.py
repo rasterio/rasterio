@@ -40,26 +40,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from collections import OrderedDict
 import functools
 import operator
 import re
+from collections import OrderedDict
 from typing import Mapping
 
 from pyparsing import (  # type: ignore
-    Keyword,
-    Word,
-    oneOf,
-    Literal,
-    QuotedString,
-    ParseException,
     Forward,
     Group,
+    Keyword,
+    Literal,
     OneOrMore,
+    ParseException,
     ParseResults,
+    QuotedString,
     Regex,
+    Word,
     ZeroOrMore,
     alphanums,
+    oneOf,
     pyparsing_common,
     replace_with,
 )

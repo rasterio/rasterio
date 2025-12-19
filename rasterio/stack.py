@@ -1,22 +1,22 @@
 """Raster stacking tool."""
 
+import cmath
+import logging
+import math
+import numbers
+import os
+import warnings
 from collections.abc import Iterable
 from contextlib import ExitStack, contextmanager
-import logging
-import os
-import math
-import cmath
-import warnings
-import numbers
 
 import numpy as np
 
 import rasterio
+from rasterio import windows
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
 from rasterio.errors import RasterioError, StackError
 from rasterio.io import DatasetWriter
-from rasterio import windows
 from rasterio.transform import Affine
 from rasterio.windows import subdivide
 

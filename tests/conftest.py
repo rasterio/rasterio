@@ -12,15 +12,15 @@ import affine
 import boto3
 import numpy as np
 import pytest
+from affine import Affine
 from click.testing import CliRunner
+from rasterio.crs import CRS
 
 import rasterio
 import rasterio.env
 from rasterio.coords import BoundingBox
-from rasterio.crs import CRS
 from rasterio.enums import ColorInterp
 from rasterio.env import GDALVersion
-from affine import Affine
 
 DEFAULT_SHAPE = (10, 10)
 

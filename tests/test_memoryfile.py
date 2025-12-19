@@ -1,18 +1,18 @@
 """MemoryFile tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 2.x"""
 
-from io import BytesIO
 import os.path
+from io import BytesIO
 from pathlib import Path
 
-from affine import Affine
 import numpy
 import pytest
+from affine import Affine
+from rasterio.shutil import copyfiles
 
 import rasterio
-from rasterio.io import MemoryFile, ZipMemoryFile
 from rasterio.enums import MaskFlags
-from rasterio.shutil import copyfiles
+from rasterio.io import MemoryFile, ZipMemoryFile
 
 
 @pytest.fixture(scope="session")

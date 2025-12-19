@@ -1,8 +1,10 @@
 import logging
-import pytest
 import subprocess
 import sys
+
 import numpy as np
+import pytest
+
 import rasterio
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)

@@ -1,8 +1,9 @@
 """The rio create command."""
 
-import click
 import json
 import os
+
+import click
 
 import rasterio
 from rasterio.crs import CRS

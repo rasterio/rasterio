@@ -4,8 +4,9 @@ import numpy
 import pytest
 
 import rasterio
-from rasterio.rio.main import main_group
 from rasterio import windows
+from rasterio.rio.main import main_group
+
 TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
 
 

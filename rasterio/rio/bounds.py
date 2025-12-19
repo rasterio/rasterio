@@ -3,15 +3,19 @@ import os
 
 import click
 from cligj import (
-    precision_opt, indent_opt, compact_opt, projection_geographic_opt,
-    projection_mercator_opt, projection_projected_opt,
+    compact_opt,
+    indent_opt,
+    precision_opt,
+    projection_geographic_opt,
+    projection_mercator_opt,
+    projection_projected_opt,
     use_rs_opt,
 )
 
-from .helpers import write_features, to_lower
 from rasterio.rio import options
 from rasterio.warp import transform_bounds
 
+from .helpers import to_lower, write_features
 
 logger = logging.getLogger(__name__)
 

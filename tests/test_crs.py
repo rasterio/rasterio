@@ -7,12 +7,12 @@ import pickle
 import subprocess
 
 import pytest
-
-import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS, epsg_treats_as_latlong, epsg_treats_as_northingeasting
+
+import rasterio
 from rasterio.enums import WktVersion
-from rasterio.env import env_ctx_if_needed, Env
+from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import CRSError
 
 # Items like "D_North_American_1983" characterize the Esri dialect

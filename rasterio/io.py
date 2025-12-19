@@ -6,18 +6,18 @@ Instances of these classes are called dataset objects.
 import logging
 import warnings
 
-from rasterio._base import get_dataset_driver, driver_can_create, driver_can_create_copy
+from rasterio._base import driver_can_create, driver_can_create_copy, get_dataset_driver
 from rasterio._io import (
+    BufferedDatasetWriterBase,
     DatasetReaderBase,
     DatasetWriterBase,
-    BufferedDatasetWriterBase,
     MemoryFileBase,
 )
-from rasterio.windows import WindowMethodsMixin
+from rasterio._path import _UnparsedPath
 from rasterio.env import ensure_env
 from rasterio.errors import RasterioDeprecationWarning
 from rasterio.transform import TransformMethodsMixin
-from rasterio._path import _UnparsedPath
+from rasterio.windows import WindowMethodsMixin
 
 try:
     from rasterio._filepath import FilePathBase

@@ -6,9 +6,9 @@ future version.
 
 import warnings
 
+from rasterio._path import _parse_path as parse_path
 from rasterio._path import _ParsedPath as ParsedPath
 from rasterio._path import _UnparsedPath as UnparsedPath
-from rasterio._path import _parse_path as parse_path
 from rasterio._path import _vsi_path as vsi_path
 from rasterio.errors import RasterioDeprecationWarning
 

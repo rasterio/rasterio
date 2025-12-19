@@ -1,11 +1,11 @@
 """Test of a dataset's statistics method."""
 
-from numpy.testing import assert_almost_equal
 import pytest
+from numpy.testing import assert_almost_equal
 
 import rasterio
 from rasterio import Statistics
-from rasterio.errors import RasterioError, RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning, RasterioError
 
 
 def test_statistics(path_rgb_byte_tif):

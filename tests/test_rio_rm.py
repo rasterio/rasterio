@@ -2,9 +2,9 @@
 
 
 import pytest
+import rasterio.shutil
 
 import rasterio
-import rasterio.shutil
 from rasterio.rio.main import main_group
 
 

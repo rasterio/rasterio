@@ -6,9 +6,9 @@ import click
 
 from rasterio.enums import Resampling
 from rasterio.errors import RasterioDeprecationWarning
+from rasterio.merge import MERGE_METHODS
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
-from rasterio.merge import MERGE_METHODS
 
 
 def deprecated_precision(ctx, param, value):

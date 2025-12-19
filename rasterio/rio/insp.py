@@ -1,16 +1,17 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 import code
+import collections
 import logging
 import sys
-import collections
 import warnings
 
-import numpy as np
 import click
+import numpy as np
+
+import rasterio
 
 from . import options
-import rasterio
 
 try:
     import matplotlib.pyplot as plt

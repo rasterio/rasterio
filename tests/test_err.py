@@ -1,10 +1,11 @@
 """Testing related to GDAL CPLError handling."""
 
 import logging
+
 import pytest
+from rasterio._err import CPLE_BaseError
 
 import rasterio
-from rasterio._err import CPLE_BaseError
 from rasterio.errors import RasterioIOError
 
 

@@ -6,7 +6,6 @@ import pytest
 from rasterio.rio.main import main_group as cli
 from rasterio.rio.overview import get_maximum_overview_level
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 

@@ -1,9 +1,9 @@
 """$ rio calc"""
 
-from collections import OrderedDict, UserDict
-from contextlib import ExitStack
 import math
+from collections import OrderedDict, UserDict
 from collections.abc import Mapping
+from contextlib import ExitStack
 
 import click
 import numpy

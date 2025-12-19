@@ -1,7 +1,8 @@
 """Tests of rio create."""
 
-import rasterio
 from rasterio.crs import CRS
+
+import rasterio
 from rasterio.io import MemoryFile
 from rasterio.rio.main import main_group
 

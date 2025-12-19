@@ -2,6 +2,7 @@
 
 from enum import Enum, IntEnum
 
+
 class TransformDirection(IntEnum):
     """Coordinate transform direction
 

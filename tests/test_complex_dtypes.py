@@ -35,6 +35,7 @@ def test_read_array(tempfile, dtype, height, width):
 def test_complex_nodata(tmpdir):
     """A complex dataset can be created with a real nodata value"""
     import numpy as np
+
     import rasterio
     from rasterio.transform import Affine
 
@@ -58,6 +59,7 @@ def test_complex_nodata(tmpdir):
 def test_complex_int16(tmpdir):
     """A cint16 dataset can be created"""
     import numpy as np
+
     import rasterio
     from rasterio.transform import Affine
 

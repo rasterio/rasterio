@@ -6,9 +6,9 @@ import subprocess
 import sys
 
 import fiona
+
 import rasterio
 from rasterio.features import shapes
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger('rasterio_polygonize')

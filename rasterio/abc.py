@@ -1,3 +1,6 @@
 """Abstract base classes."""
 
-from rasterio._vsiopener import FileContainer, MultiByteRangeResourceContainer  # noqa: F401
+from rasterio._vsiopener import (  # noqa: F401
+    FileContainer,
+    MultiByteRangeResourceContainer,
+)

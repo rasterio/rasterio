@@ -130,6 +130,7 @@ markers = [
 select = [
     "F",  # pyflakes
     "E", "W",  # pycodestyle
+    "I", # isort
 ]
 ignore = [
     "E501",  # Line too long

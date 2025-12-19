@@ -1,12 +1,12 @@
 """Rasterio"""
 
-from collections import namedtuple
-from contextlib import ExitStack
 import glob
 import logging
-from logging import NullHandler
 import os
 import platform
+from collections import namedtuple
+from contextlib import ExitStack
+from logging import NullHandler
 
 # On Windows we must explicitly register the directories that contain
 # the GDAL and supporting DLLs starting with Python 3.8. Presently, we
@@ -22,54 +22,53 @@ if platform.system() == "Windows":
                 if p and glob.glob(os.path.join(p, "gdal*.dll")):
                     os.add_dll_directory(os.path.abspath(p))
 
+# These modules are imported from the Cython extensions, but are also import
+# here to help tools like cx_Freeze find them automatically
+import rasterio._err
+import rasterio._path
+import rasterio.coords
+import rasterio.enums
 from rasterio._base import DatasetBase
 from rasterio._io import Statistics
-from rasterio._vsiopener import _opener_registration
+from rasterio._path import _parse_path, _UnparsedPath
 from rasterio._show_versions import show_versions
 from rasterio._version import gdal_version, get_geos_version, get_proj_version
+from rasterio._vsiopener import _opener_registration
 from rasterio.crs import CRS
 from rasterio.drivers import driver_from_extension, is_blacklisted
 from rasterio.dtypes import (
     bool_,
-    ubyte,
-    sbyte,
-    uint8,
-    int8,
-    uint16,
-    int16,
-    uint32,
-    int32,
-    int64,
-    uint64,
+    check_dtype,
+    complex_,
+    complex_int16,
     float16,
     float32,
     float64,
-    complex_,
-    check_dtype,
-    complex_int16,
+    int8,
+    int16,
+    int32,
+    int64,
+    sbyte,
+    ubyte,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
 )
-from rasterio.env import ensure_env_with_credentials, Env
+from rasterio.env import Env, ensure_env_with_credentials
 from rasterio.errors import (
-    RasterioIOError,
     DriverCapabilityError,
     RasterioDeprecationWarning,
+    RasterioIOError,
 )
 from rasterio.io import (
     DatasetReader,
-    get_writer_for_path,
-    get_writer_for_driver,
     MemoryFile,
+    get_writer_for_driver,
+    get_writer_for_path,
 )
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
-from rasterio._path import _parse_path, _UnparsedPath
-
-# These modules are imported from the Cython extensions, but are also import
-# here to help tools like cx_Freeze find them automatically
-import rasterio._err
-import rasterio.coords
-import rasterio.enums
-import rasterio._path
 
 try:
     from rasterio.io import FilePath

@@ -1,7 +1,7 @@
 from functools import partial
 
-from rasterio.features import dataset_features
 from rasterio import tools
+from rasterio.features import dataset_features
 
 
 def test_dataset_features_tool(tmpdir, path_rgb_byte_tif):

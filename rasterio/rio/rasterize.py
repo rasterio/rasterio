@@ -5,16 +5,15 @@ import json
 import logging
 from math import ceil
 
-from affine import Affine
 import click
+from affine import Affine
 
 import rasterio
-from rasterio.errors import CRSError
+import rasterio.shutil
 from rasterio.coords import disjoint_bounds
+from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
-import rasterio.shutil
-
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +117,8 @@ def rasterize(
     """
 
     from rasterio.crs import CRS
-    from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
+    from rasterio.features import rasterize
 
     output, files = resolve_inout(
         files=files, output=output, overwrite=overwrite)

@@ -5,33 +5,33 @@ import os
 import re
 import sys
 
-from affine import Affine
 import numpy as np
-from numpy.testing import assert_almost_equal
 import pytest
+from affine import Affine
+from numpy.testing import assert_almost_equal
+from rasterio._err import CPLE_AppDefinedError
+from rasterio.crs import CRS
 
 import rasterio
-from rasterio._err import CPLE_AppDefinedError
+from rasterio import windows
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import (
     CRSError,
     RasterioDeprecationWarning,
-    TransformError,
     RPCError,
+    TransformError,
     WarpOperationError,
 )
 from rasterio.warp import (
+    SUPPORTED_RESAMPLING,
+    aligned_target,
+    calculate_default_transform,
     reproject,
-    transform_geom,
     transform,
     transform_bounds,
-    calculate_default_transform,
-    aligned_target,
-    SUPPORTED_RESAMPLING,
+    transform_geom,
 )
-from rasterio import windows
 
 from . import rangehttpserver
 
@@ -2282,8 +2282,8 @@ def test_reproject_rpcs_approx_transformer(caplog):
 def http_error_server(data):
     """Serves files from the test data directory, poorly."""
     import functools
-    import multiprocessing
     import http.server
+    import multiprocessing
 
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
     httpd = http.server.HTTPServer(("", 0), Handler)

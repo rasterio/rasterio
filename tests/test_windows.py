@@ -5,16 +5,28 @@ import sys
 import numpy as np
 import pytest
 from affine import Affine
-from hypothesis import given, assume, settings, HealthCheck
+from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import floats, integers
 
 import rasterio
-from rasterio.transform import from_origin
 from rasterio.errors import WindowError
+from rasterio.transform import from_origin
 from rasterio.windows import (
-    crop, from_bounds, bounds, transform, evaluate, window_index, shape,
-    Window, intersect, intersection, get_data_window, union,
-    round_window_to_full_blocks, subdivide)
+    Window,
+    bounds,
+    crop,
+    evaluate,
+    from_bounds,
+    get_data_window,
+    intersect,
+    intersection,
+    round_window_to_full_blocks,
+    shape,
+    subdivide,
+    transform,
+    union,
+    window_index,
+)
 
 EPS = 1.0e-8
 

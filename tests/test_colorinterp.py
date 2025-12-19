@@ -8,6 +8,7 @@ from rasterio.env import GDALVersion
 
 from .conftest import gdal_version
 
+
 def test_cmyk_interp(tmpdir):
     """A CMYK TIFF has cyan, magenta, yellow, black bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:

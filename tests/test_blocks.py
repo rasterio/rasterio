@@ -1,9 +1,9 @@
-from functools import partial
 import os.path
 import shutil
 import subprocess
 import tempfile
 import unittest
+from functools import partial
 
 import numpy as np
 import pytest

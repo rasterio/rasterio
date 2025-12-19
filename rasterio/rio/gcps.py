@@ -5,14 +5,18 @@ import json
 
 import click
 from cligj import (
-    compact_opt, use_rs_opt, projection_geographic_opt,
-    projection_projected_opt, precision_opt, indent_opt)
+    compact_opt,
+    indent_opt,
+    precision_opt,
+    projection_geographic_opt,
+    projection_projected_opt,
+    use_rs_opt,
+)
 
 import rasterio
 import rasterio.crs
 from rasterio.rio import options
 from rasterio.warp import transform_geom
-
 
 # Feature collection or feature sequence switch, defaulting to the
 # latter, the opposite of cligj's default.

@@ -1,12 +1,13 @@
 """Test of boundless reads"""
 
-from affine import Affine
 import shutil
-from hypothesis import example, given
+
 import hypothesis.strategies as st
 import numpy
-from numpy.testing import assert_almost_equal
 import pytest
+from affine import Affine
+from hypothesis import example, given
+from numpy.testing import assert_almost_equal
 
 import rasterio
 from rasterio.io import MemoryFile

@@ -7,7 +7,6 @@ from rasterio.rio.main import main_group
 
 from .conftest import credentials
 
-
 with rasterio.Env() as env:
     HAVE_NETCDF = "netCDF" in env.drivers().keys()
 

@@ -5,8 +5,8 @@ import sys
 import pytest
 
 import rasterio
+from rasterio._path import _parse_path, _ParsedPath, _UnparsedPath, _vsi_path
 from rasterio.errors import PathError
-from rasterio._path import _parse_path, _vsi_path, _ParsedPath, _UnparsedPath
 
 
 def test_parsed_path_name():

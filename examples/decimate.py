@@ -2,8 +2,9 @@ import os.path
 import subprocess
 import tempfile
 
-import rasterio
 import rasterio.shutil
+
+import rasterio
 
 with rasterio.Env():
 

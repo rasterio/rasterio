@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.enums import OverviewResampling
-from rasterio.enums import Resampling
+from rasterio.enums import OverviewResampling, Resampling
 from rasterio.errors import OverviewCreationError
 
 

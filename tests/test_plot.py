@@ -8,9 +8,8 @@ import matplotlib
 import numpy as np
 
 import rasterio
-from rasterio.plot import show, show_hist, get_plt, plotting_extent, adjust_band
 from rasterio.enums import ColorInterp
-
+from rasterio.plot import adjust_band, get_plt, plotting_extent, show, show_hist
 
 matplotlib.use("agg")
 plt.show = lambda: None

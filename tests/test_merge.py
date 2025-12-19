@@ -1,20 +1,21 @@
 """Tests of rasterio.merge"""
 
-import boto3
-from hypothesis import given, settings
-from hypothesis.strategies import floats
-import numpy
-import pytest
 import warnings
 
 import affine
-import rasterio
-from rasterio.merge import merge
+import boto3
+import numpy
+import pytest
+from hypothesis import given, settings
+from hypothesis.strategies import floats
 from rasterio.crs import CRS
+
+import rasterio
+from rasterio import windows
 from rasterio.errors import MergeError, RasterioError
+from rasterio.merge import merge
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
-from rasterio import windows
 
 from .conftest import gdal_version
 
@@ -152,9 +153,10 @@ def test_unsafe_casting():
 )
 def test_issue2202(dx, dy):
     shapely = pytest.importorskip("shapely", reason="Test requires shapely.")
-    import rasterio.merge
     from shapely import wkt
     from shapely.affinity import translate
+
+    import rasterio.merge
 
     aoi = wkt.loads(
         r"POLYGON((11.09 47.94, 11.06 48.01, 11.12 48.11, 11.18 48.11, 11.18 47.94, 11.09 47.94))"

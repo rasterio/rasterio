@@ -1,12 +1,11 @@
 """Tests of _env util module"""
 
 import pytest
-
 from rasterio._env import (
     GDALDataFinder,
     PROJDataFinder,
-    get_proj_data_search_paths,
     get_gdal_data,
+    get_proj_data_search_paths,
 )
 
 from .conftest import gdal_version

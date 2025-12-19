@@ -9,9 +9,9 @@ import pytest
 from affine import Affine
 
 import rasterio
+from rasterio import transform
 from rasterio.control import GroundControlPoint
 from rasterio.errors import TransformError
-from rasterio import transform
 from rasterio.transform import (
     AffineTransformer,
     GCPTransformer,

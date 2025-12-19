@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 from rasterio._path import _parse_path, _UnparsedPath
 
-
 log = logging.getLogger(__name__)
 
 try:

@@ -3,7 +3,6 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-
 # Tests: format and type conversion, --format and --dtype
 
 

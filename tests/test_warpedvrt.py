@@ -6,19 +6,19 @@ import shutil
 import affine
 import numpy
 import pytest
+from rasterio.crs import CRS
 
 import rasterio
+from rasterio import shutil as rio_shutil
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
-from rasterio.enums import Resampling, MaskFlags
+from rasterio.enums import MaskFlags, Resampling
 from rasterio.errors import WarpOptionsError
 from rasterio.io import MemoryFile
-from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import gdal_version, credentials
+from .conftest import credentials, gdal_version
 
 log = logging.getLogger(__name__)
 

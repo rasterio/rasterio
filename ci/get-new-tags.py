@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
 import json
 import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 
 _, filename, nhours = sys.argv
 nhours = float(nhours)

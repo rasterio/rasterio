@@ -43,7 +43,6 @@ import traceback
 
 import click
 
-
 __version__ = '2.0'
 
 

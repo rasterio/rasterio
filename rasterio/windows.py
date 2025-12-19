@@ -18,17 +18,17 @@ require instances of Window to be used.
 """
 
 import collections
-from collections.abc import Iterable
 import functools
 import math
 import warnings
+from collections.abc import Iterable
 
-from affine import Affine
 import attr
 import numpy as np
+from affine import Affine
 
-from rasterio.errors import WindowError, RasterioDeprecationWarning
-from rasterio.transform import rowcol, guard_transform
+from rasterio.errors import RasterioDeprecationWarning, WindowError
+from rasterio.transform import guard_transform, rowcol
 
 
 class WindowMethodsMixin:

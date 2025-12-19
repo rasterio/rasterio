@@ -1,11 +1,11 @@
-from hashlib import md5
 import unittest
+from hashlib import md5
 
 import numpy as np
 import pytest
+from rasterio._err import CPLE_AppDefinedError
 
 import rasterio
-from rasterio._err import CPLE_AppDefinedError
 from rasterio.errors import DatasetIOShapeError, RasterioIOError
 
 # Find out if we've got HDF support (needed below).

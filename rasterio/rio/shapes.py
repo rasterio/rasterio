@@ -6,10 +6,10 @@ import logging
 
 import click
 import cligj
-import rasterio
 
-from rasterio.rio import options
+import rasterio
 from rasterio.features import dataset_features
+from rasterio.rio import options
 from rasterio.rio.helpers import write_features
 
 logger = logging.getLogger(__name__)

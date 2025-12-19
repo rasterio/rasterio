@@ -5,13 +5,13 @@ from unittest import mock
 import pytest
 
 from rasterio.session import (
-    DummySession,
     AWSSession,
-    Session,
-    OSSSession,
-    GSSession,
-    SwiftSession,
     AzureSession,
+    DummySession,
+    GSSession,
+    OSSSession,
+    Session,
+    SwiftSession,
     parse_bool,
 )
 

@@ -1,17 +1,17 @@
 """Tests of the warp module's coordinate transformation features."""
 
-import os
 import logging
+import os
 
 import numpy
 import pytest
 from numpy.testing import assert_almost_equal
+from rasterio._err import CPLE_AppDefinedError, CPLE_BaseError
+from rasterio._warp import _calculate_default_transform
+from rasterio.crs import CRS
 
 import rasterio
-from rasterio._err import CPLE_BaseError, CPLE_AppDefinedError
-from rasterio._warp import _calculate_default_transform
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, transform_bounds

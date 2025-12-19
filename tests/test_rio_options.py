@@ -9,12 +9,12 @@ import pytest
 
 from rasterio.enums import ColorInterp
 from rasterio.rio.options import (
+    _cb_key_val,
     bounds_handler,
+    edit_nodata_handler,
     file_in_handler,
     like_handler,
-    edit_nodata_handler,
     nodata_handler,
-    _cb_key_val,
 )
 
 

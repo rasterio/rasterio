@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.rio.main import main_group
 from rasterio.rio.insp import stats
+from rasterio.rio.main import main_group
 
 
 def test_insp(runner):

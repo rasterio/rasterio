@@ -1,26 +1,26 @@
 """Rasterio's GDAL/AWS environment"""
 
-from functools import wraps, total_ordering
-from inspect import getfullargspec as getargspec
 import logging
 import os
 import re
 import threading
 import warnings
+from functools import total_ordering, wraps
+from inspect import getfullargspec as getargspec
 
 import attr
 
 from rasterio._env import (
+    GDALDataFinder,
     GDALEnv,
+    PROJDataFinder,
     get_gdal_config,
     set_gdal_config,
-    GDALDataFinder,
-    PROJDataFinder,
     set_proj_data_search_path,
 )
 from rasterio._version import gdal_version
 from rasterio.errors import EnvError, GDALVersionError, RasterioDeprecationWarning
-from rasterio.session import Session, DummySession
+from rasterio.session import DummySession, Session
 
 
 class ThreadEnv(threading.local):

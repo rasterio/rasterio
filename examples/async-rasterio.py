@@ -10,9 +10,10 @@ performance.
 import asyncio
 
 import numpy as np
+from rasterio._example import compute
+
 import rasterio
 
-from rasterio._example import compute
 
 def main(infile, outfile, with_threads=False):
 

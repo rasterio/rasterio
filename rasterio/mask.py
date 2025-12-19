@@ -8,7 +8,6 @@ import numpy as np
 from rasterio.errors import WindowError
 from rasterio.features import geometry_mask, geometry_window
 
-
 logger = logging.getLogger(__name__)
 
 

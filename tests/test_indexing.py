@@ -6,9 +6,8 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.errors import WindowError
 from rasterio import windows
-
+from rasterio.errors import WindowError
 
 DATA_WINDOW = ((3, 5), (2, 6))
 
@@ -202,7 +201,7 @@ def test_3x3matrix():
 
       None of them should intersect or have an intersection
     """
-    from itertools import product, combinations
+    from itertools import combinations, product
 
     pairs = ((0, 2), (2, 4), (4, 6))
     arrangement = product(pairs, pairs)

@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 import rasterio
-
 from tests.conftest import gdal_version
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)

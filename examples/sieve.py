@@ -5,9 +5,9 @@
 import subprocess
 
 import numpy as np
-import rasterio
-from rasterio.features import sieve, shapes
 
+import rasterio
+from rasterio.features import shapes, sieve
 
 # Register GDAL and OGR drivers.
 with rasterio.Env():

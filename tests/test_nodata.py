@@ -1,10 +1,10 @@
 import logging
-import pytest
 import re
 import subprocess
 import sys
 
 import numpy
+import pytest
 
 import rasterio
 from rasterio.io import MemoryFile

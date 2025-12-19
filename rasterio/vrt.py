@@ -2,10 +2,10 @@
 
 import xml.etree.ElementTree as ET
 
+from rasterio._path import _parse_path
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags, Resampling
-from rasterio._path import _parse_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 

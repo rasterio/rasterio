@@ -1,7 +1,8 @@
+import pytest
+from affine import Affine
+
 import rasterio
 from rasterio.errors import NodataShadowWarning, NotGeoreferencedWarning
-from affine import Affine
-import pytest
 
 
 def gen_rpcs():

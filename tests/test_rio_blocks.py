@@ -1,14 +1,14 @@
 """Unittests for $ rio blocks"""
 
-from itertools import zip_longest
 import json
 import re
+from itertools import zip_longest
 
 import numpy as np
 
 import rasterio
-from rasterio.warp import transform_bounds
 from rasterio.rio.main import main_group
+from rasterio.warp import transform_bounds
 
 
 def check_features_block_windows(features, src, bidx):

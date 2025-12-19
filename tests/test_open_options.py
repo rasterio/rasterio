@@ -5,6 +5,7 @@ import pytest
 import rasterio
 from rasterio.transform import Affine
 
+
 def test_fail_with_missing_driver():
     """Fail to open a GeoTIFF without the GTiff driver"""
     with pytest.raises(rasterio.errors.RasterioIOError):

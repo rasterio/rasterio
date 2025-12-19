@@ -1,6 +1,6 @@
-from threading import Thread
 import time
 import unittest
+from threading import Thread
 
 import rasterio as rio
 from rasterio.env import get_gdal_config

@@ -1,11 +1,12 @@
 # Workaround for issue #378. A pure Python generator.
 
-import numpy as np
 from itertools import islice
 
+import numpy as np
+
 from rasterio.enums import MaskFlags
-from rasterio.windows import Window
 from rasterio.transform import rowcol
+from rasterio.windows import Window
 
 
 def _transform_xy(dataset, xy):

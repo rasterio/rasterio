@@ -1,7 +1,7 @@
 """Raster stack CLI command."""
 
-from itertools import zip_longest
 import logging
+from itertools import zip_longest
 
 import click
 

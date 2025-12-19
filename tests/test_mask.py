@@ -3,7 +3,7 @@ import pytest
 from affine import Affine
 
 import rasterio
-from rasterio.mask import raster_geometry_mask, mask
+from rasterio.mask import mask, raster_geometry_mask
 
 from .conftest import MockGeoInterface
 

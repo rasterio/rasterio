@@ -15,7 +15,6 @@ from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.transform import guard_transform
 
-
 # Handlers for info module options.
 
 

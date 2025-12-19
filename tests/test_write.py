@@ -1,7 +1,7 @@
 import logging
 import re
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 import affine
 import numpy as np
@@ -12,6 +12,7 @@ from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError
+
 
 def test_validate_dtype_None(tmpdir):
     """Raise TypeError if there is no dtype"""

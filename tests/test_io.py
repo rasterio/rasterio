@@ -4,7 +4,6 @@ import pytest
 
 from rasterio.io import DatasetReader, DatasetWriter
 
-
 httpstif = (
     "https://github.com/rasterio/rasterio/blob/main/tests/data/float32.tif?raw=true"
 )

@@ -1,9 +1,8 @@
-from affine import Affine
 import pytest
+from affine import Affine
 
 import rasterio
 from rasterio.windows import Window, WindowMethodsMixin
-
 
 EPS = 1.0e-8
 

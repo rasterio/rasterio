@@ -6,8 +6,8 @@ Primarily supports `$ rio insp`.
 """
 
 import builtins
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 
 import numpy as np
 

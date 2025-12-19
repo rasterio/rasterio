@@ -1,5 +1,4 @@
 import pytest
-
 from rasterio._version import get_gdal_version_info, get_geos_version, get_proj_version
 
 

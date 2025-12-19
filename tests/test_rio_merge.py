@@ -1,19 +1,19 @@
 """Unittests for $ rio merge"""
 
-from io import StringIO
 import os
 import textwrap
+from io import StringIO
 from pathlib import Path
 
 import affine
-from click.testing import CliRunner
 import numpy as np
-from pytest import fixture
 import pytest
+from click.testing import CliRunner
+from pytest import fixture
 
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.merge import merge, MERGE_METHODS
+from rasterio.merge import MERGE_METHODS, merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 

@@ -1,7 +1,7 @@
 import numpy as np
 
-from rasterio import plot
 import rasterio
+from rasterio import plot
 
 try:
     import matplotlib as mpl

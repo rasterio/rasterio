@@ -1,14 +1,13 @@
 """Dataset mask test."""
 
-from affine import Affine
 import numpy as np
 import pytest
+from affine import Affine
+from rasterio.crs import CRS
 
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.errors import NodataShadowWarning
-from rasterio.crs import CRS
-
 
 # Setup test arrays
 red = np.array([[0, 0, 0],

@@ -12,7 +12,6 @@ from rasterio.rio import options
 from rasterio.rio.helpers import write_features
 from rasterio.warp import transform_bounds
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -1,13 +1,14 @@
 """Manage overviews of a dataset."""
 
-from functools import reduce
 import operator
+from functools import reduce
 
 import click
 
-from . import options
 import rasterio
 from rasterio.enums import OverviewResampling
+
+from . import options
 
 
 def build_handler(ctx, param, value):

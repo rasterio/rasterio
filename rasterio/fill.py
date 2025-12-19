@@ -2,9 +2,9 @@
 
 from numpy.ma import MaskedArray
 
+from rasterio import dtypes
 from rasterio._fill import _fillnodata
 from rasterio.env import ensure_env
-from rasterio import dtypes
 
 
 @ensure_env

@@ -3,14 +3,14 @@
 import io
 import os
 import warnings
+import zipfile
 from pathlib import Path
 from threading import Thread
-import zipfile
 
-from affine import Affine
 import fsspec
 import numpy as np
 import pytest
+from affine import Affine
 
 import rasterio
 from rasterio.enums import MaskFlags

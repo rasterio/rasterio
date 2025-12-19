@@ -6,20 +6,19 @@ import json
 import click
 import numpy
 import pytest
+import rasterio.shutil
 
 import rasterio
 from rasterio import CRS
 from rasterio.enums import ColorInterp
 from rasterio.rio.edit_info import (
     all_handler,
+    colorinterp_handler,
     crs_handler,
     tags_handler,
     transform_handler,
-    colorinterp_handler,
 )
 from rasterio.rio.main import main_group
-import rasterio.shutil
-
 
 PARAM_HANDLER = {
     'crs': crs_handler,

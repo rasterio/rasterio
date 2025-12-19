@@ -4,13 +4,14 @@ import logging
 
 import click
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+from rasterio import windows
 from rasterio.coords import disjoint_bounds
 from rasterio.crs import CRS
 from rasterio.enums import MaskFlags
-from rasterio import windows
+
+from . import options
+from .helpers import resolve_inout
 
 logger = logging.getLogger(__name__)
 

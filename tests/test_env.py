@@ -8,18 +8,32 @@ from unittest import mock
 
 import boto3
 import pytest
+from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 
 import rasterio
 from rasterio import _env
-from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
-from rasterio.env import GDALVersion, require_gdal_version
+from rasterio.env import (
+    Env,
+    GDALVersion,
+    defenv,
+    delenv,
+    ensure_env,
+    ensure_env_credentialled,
+    getenv,
+    require_gdal_version,
+    setenv,
+)
 from rasterio.errors import EnvError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession, AzureSession
+from rasterio.session import (
+    AWSSession,
+    AzureSession,
+    DummySession,
+    OSSSession,
+    SwiftSession,
+)
 
 from .conftest import credentials
-
 
 L8TIF = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif"
 L8TIFB2 = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B02.tif"

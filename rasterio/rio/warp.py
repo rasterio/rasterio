@@ -16,8 +16,13 @@ from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
 from rasterio.transform import Affine, rowcol
 from rasterio.warp import (
-    reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
-    aligned_target, calculate_default_transform as calcdt)
+    SUPPORTED_RESAMPLING,
+    Resampling,
+    aligned_target,
+    reproject,
+    transform_bounds,
+)
+from rasterio.warp import calculate_default_transform as calcdt
 
 logger = logging.getLogger(__name__)
 
