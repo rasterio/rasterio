@@ -84,8 +84,7 @@ class GDALBehaviorChangeException(RuntimeError):
     .. code-block:: python
 
         # Raises an exception on GDAL >= 2.2.0
-        rasterio.warp.transform_geometry(
-            src_crs, dst_crs, antimeridian_cutting=False)
+        rasterio.warp.transform_geometry(src_crs, dst_crs, antimeridian_cutting=False)
     """
 
 

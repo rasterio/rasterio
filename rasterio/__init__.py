@@ -223,13 +223,12 @@ def open(
     discovery and no directives:
 
     >>> import rasterio
-    >>> with rasterio.open('example.tif') as dataset:
+    >>> with rasterio.open("example.tif") as dataset:
     ...     print(dataset.profile)
 
     To open a local JPEG2000 dataset using only the JP2OpenJPEG driver:
 
-    >>> with rasterio.open(
-    ...         'example.jp2', driver='JP2OpenJPEG') as dataset:
+    >>> with rasterio.open("example.jp2", driver="JP2OpenJPEG") as dataset:
     ...     print(dataset.profile)
 
     To create a new 8-band, 16-bit unsigned, tiled, and LZW-compressed
@@ -237,10 +236,19 @@ def open(
 
     >>> from rasterio.transform import from_origin
     >>> with rasterio.open(
-    ...         'example.tif', 'w', driver='GTiff', dtype='uint16',
-    ...         width=720, height=360, count=8, crs='EPSG:4326',
-    ...         transform=from_origin(-180.0, 90.0, 0.5, 0.5),
-    ...         nodata=0, tiled=True, compress='lzw') as dataset:
+    ...     "example.tif",
+    ...     "w",
+    ...     driver="GTiff",
+    ...     dtype="uint16",
+    ...     width=720,
+    ...     height=360,
+    ...     count=8,
+    ...     crs="EPSG:4326",
+    ...     transform=from_origin(-180.0, 90.0, 0.5, 0.5),
+    ...     nodata=0,
+    ...     tiled=True,
+    ...     compress="lzw",
+    ... ) as dataset:
     ...     dataset.write(...)
     """
     if not isinstance(fp, str):

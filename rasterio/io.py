@@ -79,10 +79,9 @@ class MemoryFile(MemoryFileBase):
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, MemoryFile(f) as memfile:
+    >>> with open("tests/data/RGB.byte.tif", "rb") as f, MemoryFile(f) as memfile:
     ...     with memfile.open() as src:
     ...         pprint.pprint(src.profile)
-    ...
     {'count': 3,
      'crs': CRS({'init': 'epsg:32618'}),
      'driver': 'GTiff',

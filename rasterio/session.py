@@ -512,8 +512,12 @@ class SwiftSession(Session):
         --------
         >>> import rasterio
         >>> from rasterio.session import SwiftSession
-        >>> fp = '/vsiswift/bucket/key.tif'
-        >>> conn = Connection(authurl='http://127.0.0.1:7777/auth/v1.0', user='test:tester', key='testing')
+        >>> fp = "/vsiswift/bucket/key.tif"
+        >>> conn = Connection(
+        ...     authurl="http://127.0.0.1:7777/auth/v1.0",
+        ...     user="test:tester",
+        ...     key="testing",
+        ... )
         >>> session = SwiftSession(conn)
         >>> with rasterio.Env(session):
         >>>     with rasterio.open(fp) as src:

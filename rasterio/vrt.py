@@ -102,8 +102,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin, TransformMethodsMixin):
     Examples
     --------
 
-    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
-    ...     with WarpedVRT(src, crs='EPSG:3857') as vrt:
+    >>> with rasterio.open("tests/data/RGB.byte.tif") as src:
+    ...     with WarpedVRT(src, crs="EPSG:3857") as vrt:
     ...         data = vrt.read()
 
     """
