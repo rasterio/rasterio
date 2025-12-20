@@ -353,7 +353,8 @@ fetch_untar ${TIFF_URL} ${TIFF_FNAME}.tar.gz
 
 XZ_URL="https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz"
 XZ_FNAME="xz-${XZ_VERSION}"
-fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz
+XZ_SHA256="507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543"
+fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
 
 ZLIB_URL="https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz"
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
