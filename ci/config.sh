@@ -357,7 +357,8 @@ fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz
 
 ZLIB_URL="https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz"
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
-fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz
+ZLIB_SHA256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz ${ZLIB_SHA256}
 
 ZSTD_URL="https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
 ZSTD_FNAME="zstd-${ZSTD_VERSION}"
