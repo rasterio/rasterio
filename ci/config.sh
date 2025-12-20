@@ -269,8 +269,7 @@ fi
 
 GDAL_URL="https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz"
 GDAL_FNAME="gdal-${GDAL_VERSION}"
-GDAL_SHA256="266cbadf8534d1de831db8834374afd95603e0a6af4f53d0547ae0d46bd3d2d1"
-fetch_untar ${GDAL_URL} ${GDAL_FNAME}.tar.gz ${GDAL_SHA256}
+fetch_untar ${GDAL_URL} ${GDAL_FNAME}.tar.gz
 
 GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
 GIFLIB_FNAME="giflib-${GIFLIB_VERSION}"
