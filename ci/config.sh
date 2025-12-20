@@ -147,7 +147,7 @@ function fetch_untar() {
           --connect-timeout=20 \
           --read-timeout=300 \
           --timeout=300 \
-          -t 8"
+          -t 5"
 
     if [[ "$#" -eq 1 ]]; then
         # Only URL
