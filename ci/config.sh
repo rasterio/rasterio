@@ -274,7 +274,8 @@ fetch_untar ${GDAL_URL} ${GDAL_FNAME}.tar.gz ${GDAL_SHA256}
 
 GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
 GIFLIB_FNAME="giflib-${GIFLIB_VERSION}"
-fetch_untar $GIFLIB_URL -O ${GIFLIB_FNAME}.tar.gz
+GIFLIB_SHA256="be7ffbd057cadebe2aa144542fd90c6838c6a083b5e8a9048b8ee3b66b29d5fb"
+fetch_untar ${GIFLIB_URL} -O ${GIFLIB_FNAME}.tar.gz ${GIFLIB_SHA256}
 
 GEOS_URL="http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
 GEOS_FNAME="geos-${GEOS_VERSION}"
