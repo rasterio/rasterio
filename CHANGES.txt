@@ -40,7 +40,7 @@ Deprecations:
 
 Packaging notes:
 
-- Wheel: GDAL 3.11.5 (#3478)
+- Wheel: GDAL 3.12.1 (#3491)
 
 Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.0/ci/config.sh#L1-L25
 

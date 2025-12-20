@@ -5,5 +5,5 @@
         { "name": "tiff", "features": [ "zstd", "lerc", "webp"] },
         { "name": "gdal", "features": [ "netcdf" ]}
     ],
-    "builtin-baseline": "17ff26d0566ba0fa05e35c9209e92664adb304e3"
+    "builtin-baseline": "e535aaceed8ce77d085ba4895cb6d3eae130722a"
 }
