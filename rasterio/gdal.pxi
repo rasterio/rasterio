@@ -218,6 +218,12 @@ cdef extern from "ogr_srs_api.h" nogil:
 
 cdef extern from "gdal.h" nogil:
 
+    cdef const int GDAL_OF_READONLY
+    cdef const int GDAL_OF_UPDATE
+    cdef const int GDAL_OF_RASTER
+    cdef const int GDAL_OF_SHARED
+    cdef const int GDAL_OF_VERBOSE_ERROR
+
     ctypedef void * GDALMajorObjectH
     ctypedef void * GDALDatasetH
     ctypedef void * GDALRasterBandH

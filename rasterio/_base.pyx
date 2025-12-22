@@ -35,9 +35,15 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
+    BandOverviewError,
+    CRSError,
     DatasetAttributeError,
-    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    DriverRegistrationError,
+    GDALOptionNotImplementedError,
+    NotGeoreferencedWarning,
+    RasterBlockError,
+    RasterioIOError,
+)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio._path import _parse_path
@@ -174,8 +180,13 @@ cdef _band_dtype(GDALRasterBandH band):
 
 
 cdef GDALDatasetH open_dataset(
-        object filename, int flags, object allowed_drivers,
-        object open_options, object siblings) except NULL:
+    object filename,
+    int flags,
+    object allowed_drivers,
+    object open_options,
+    bint sharing,
+    object siblings,
+) except NULL:
     """Open a dataset and return a handle"""
 
     cdef GDALDatasetH hds = NULL
@@ -210,8 +221,10 @@ cdef GDALDatasetH open_dataset(
         raise NotImplementedError(
             "Sibling files are not implemented")
 
-    # Ensure raster flags
-    flags = flags | 0x02
+    # Ensure default flags added
+    flags = flags | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR
+    if sharing:
+        flags |= GDAL_OF_SHARED
 
     with nogil:
         hds = GDALOpenEx(fname, flags, <const char **>drivers, <const char **>options, NULL)
@@ -284,13 +297,8 @@ cdef class DatasetBase:
         -------
         dataset
         """
-        cdef GDALDatasetH hds = NULL
-        cdef int flags = 0
-        cdef int sharing_flag = (0x20 if sharing else 0x0)
-
-        log.debug("Sharing flag: %r", sharing_flag)
-
         self._hds = NULL
+        cdef GDALDatasetH hds = NULL
 
         if path is not None:
             path = _parse_path(path)
@@ -301,11 +309,15 @@ cdef class DatasetBase:
             if isinstance(driver, str):
                 driver = [driver]
 
-            # Read-only + Rasters + Sharing + Errors
-            flags = 0x00 | 0x02 | sharing_flag | 0x40
-
             try:
-                self._hds = open_dataset(filename, flags, driver, kwargs, None)
+                self._hds = open_dataset(
+                    filename=filename,
+                    flags=GDAL_OF_READONLY,
+                    allowed_drivers=driver,
+                    open_options=kwargs,
+                    sharing=sharing,
+                    siblings=None,
+                )
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
 
