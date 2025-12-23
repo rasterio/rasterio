@@ -1,11 +1,13 @@
 """Tests of the Python opener VSI plugin."""
 
+import concurrent.futures
 import io
 import os
 import warnings
+import zipfile
+from contextlib import nullcontext
 from pathlib import Path
 from threading import Thread
-import zipfile
 
 from affine import Affine
 import fsspec
@@ -14,6 +16,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.errors import OpenerRegistrationError
 from rasterio.warp import reproject
 
@@ -275,6 +278,21 @@ def test_opener_fsspec_fs_tiff_threads_2():
             assert profile["driver"] == "GTiff"
             assert profile["count"] == 3
             assert src.read().shape == (3, 718, 791)
+
+
+def test_opener_fsspec_thread_safe_option():
+    fs = fsspec.filesystem("file")
+    with (
+        pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
+        rasterio.Env(GDAL_NUM_THREADS=2),
+        rasterio.open("tests/data/rgb_lzw.tif", thread_safe=True, opener=fs) as src
+    ):
+        def process(window):
+            src.read(window=window).sum()
+
+        windows = [window for ij, window in src.block_windows()]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process, windows)
 
 
 def test_opener_multi_range_read():

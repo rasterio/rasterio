@@ -110,6 +110,7 @@ def open(
     dtype=None,
     nodata=None,
     sharing=False,
+    thread_safe=False,
     opener=None,
     **kwargs
 ):
@@ -179,6 +180,10 @@ def open(
         dataset handles. If True this function will use a shared
         handle if one is available. Multithreaded programs must avoid
         sharing and should set *sharing* to False.
+    thread_safe: bool, optional
+        Open GDAL dataset in `thread safe mode <https://gdal.org/en/stable/user/multithreading.html>`__.
+        For multithreaded read-only GDAL dataset operations (e.g. ``GDAL_NUM_THREADS``, `LIBERTIFF driver <https://gdal.org/en/stable/drivers/raster/libertiff.html#open-options>`__).
+        Requires rasterio 1.5+ & GDAL 3.10+.
     opener : callable, optional
         A custom dataset opener which can serve GDAL's virtual
         filesystem machinery via Python file-like objects. The
@@ -275,7 +280,7 @@ def open(
     # TODO: test for a shared base class or abstract type.
     elif isinstance(fp, (FilePath, MemoryFile)):
         if mode.startswith("r"):
-            dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
+            dataset = fp.open(driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
 
         # Note: FilePath does not support writing and an exception will
         # result from this.
@@ -359,7 +364,7 @@ def open(
                 path = _parse_path(raw_dataset_path)
 
             if mode == "r":
-                dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+                dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
             elif mode == "r+":
                 dataset = get_writer_for_path(path, driver=driver)(
                     path, mode, driver=driver, sharing=sharing, **kwargs
