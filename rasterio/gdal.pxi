@@ -218,11 +218,11 @@ cdef extern from "ogr_srs_api.h" nogil:
 
 cdef extern from "gdal.h" nogil:
 
-    cdef const int GDAL_OF_READONLY
-    cdef const int GDAL_OF_UPDATE
-    cdef const int GDAL_OF_RASTER
-    cdef const int GDAL_OF_SHARED
-    cdef const int GDAL_OF_VERBOSE_ERROR
+    const int GDAL_OF_READONLY
+    const int GDAL_OF_UPDATE
+    const int GDAL_OF_RASTER
+    const int GDAL_OF_SHARED
+    const int GDAL_OF_VERBOSE_ERROR
 
     ctypedef void * GDALMajorObjectH
     ctypedef void * GDALDatasetH
@@ -470,6 +470,11 @@ cdef extern from "gdal.h" nogil:
     int GDALReferenceDataset(GDALDatasetH hds)
     int GDALDereferenceDataset(GDALDatasetH hds)
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
+    cdef extern from "gdal.h" nogil:
+        const int GDAL_OF_THREAD_SAFE
+ELSE:
+    cdef int GDAL_OF_THREAD_SAFE = 0x800
 
 cdef extern from "ogr_api.h" nogil:
 

@@ -3,7 +3,9 @@ Tests in this file will ONLY run for GDAL >= 3.x"""
 
 # TODO: delete at version 2.0. FilePath is deprecated in version 1.4.
 
+from contextlib import nullcontext
 from io import BytesIO
+import concurrent.futures
 import logging
 import os.path
 
@@ -11,6 +13,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.shutil import copyfiles
 from rasterio.windows import Window
 
@@ -23,13 +26,15 @@ except ImportError:
 @pytest.fixture(scope='function')
 def rgb_lzw_file_object(path_rgb_lzw_byte_tif):
     """Get the open file of our RGB.bytes.tif file."""
-    return open(path_rgb_lzw_byte_tif, 'rb')
+    with open(path_rgb_lzw_byte_tif, 'rb') as fh:
+        yield fh
 
 
 @pytest.fixture(scope='function')
 def rgb_file_object(path_rgb_byte_tif):
     """Get RGB.bytes.tif file opened in 'rb' mode"""
-    return open(path_rgb_byte_tif, 'rb')
+    with open(path_rgb_byte_tif, 'rb') as fh:
+        yield fh
 
 
 def test_initial_empty():
@@ -194,9 +199,8 @@ def _open_geotiff(file_path):
 
 def test_concurrent(path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif):
     """Test multiple threads opening multiple files at the same time."""
-    from concurrent.futures import ThreadPoolExecutor
     tifs = [path_rgb_byte_tif, path_rgb_lzw_byte_tif, path_cogeo_tif, path_alpha_tif] * 4
-    with ThreadPoolExecutor(max_workers=8) as exe:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as exe:
         list(exe.map(_open_geotiff, tifs, timeout=5))
 
 
@@ -231,3 +235,17 @@ def test_quieter_vsi_plugin_notifications(caplog, path_rgb_byte_tif):
                 _ = src.profile
 
         assert "not found in virtual filesystem" not in caplog.text
+
+
+def test_filepath_thread_safe_option(rgb_file_object):
+    with (
+        pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
+        rasterio.Env(GDAL_NUM_THREADS=2),
+        rasterio.open(FilePath(rgb_file_object), thread_safe=True) as src
+    ):
+        def process(window):
+            src.read(window=window).sum()
+
+        windows = [window for ij, window in src.block_windows()]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process, windows)

@@ -116,7 +116,7 @@ class MemoryFile(MemoryFileBase):
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
-             transform=None, dtype=None, nodata=None, sharing=False, **kwargs):
+             transform=None, dtype=None, nodata=None, sharing=False, thread_safe=False, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r'
@@ -137,7 +137,7 @@ class MemoryFile(MemoryFileBase):
             raise ValueError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug(f"VSI path: {mempath.path}")
-            rd = DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+            rd = DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
             rd = writer(
@@ -201,7 +201,7 @@ class _FilePath(FilePathBase):
         )
 
     @ensure_env
-    def open(self, driver=None, sharing=False, **kwargs):
+    def open(self, driver=None, sharing=False, thread_safe=False, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
         The provided file-like object is assumed to be readable.
@@ -228,7 +228,7 @@ class _FilePath(FilePathBase):
         # Assume we were given a non-empty file-like object
         log.debug(f"VSI path: {mempath.path}")
 
-        return DatasetReader(mempath, driver=driver, sharing=sharing, **kwargs)
+        return DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
 
     def __enter__(self):
         return self
@@ -253,7 +253,7 @@ class ZipMemoryFile(MemoryFile):
         super().__init__(file_or_bytes, ext="zip")
 
     @ensure_env
-    def open(self, path, driver=None, sharing=False, **kwargs):
+    def open(self, path, driver=None, sharing=False, thread_safe=False, **kwargs):
         """Open a dataset within the zipped stream.
 
         Parameters
@@ -273,7 +273,7 @@ class ZipMemoryFile(MemoryFile):
 
         if self.closed:
             raise ValueError("I/O operation on closed file.")
-        return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
+        return DatasetReader(zippath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
 
 
 def get_writer_for_driver(driver):

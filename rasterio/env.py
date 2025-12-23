@@ -540,6 +540,7 @@ class GDALVersion:
 
 
 _GDAL_RUNTIME_VERSION = GDALVersion.runtime()
+_GDAL_AT_LEAST_3_10 = _GDAL_RUNTIME_VERSION.at_least("3.10")
 _GDAL_AT_LEAST_3_11 = _GDAL_RUNTIME_VERSION.at_least("3.11")
 _GDAL_AT_LEAST_3_12_1 = GDALVersion.runtime(include_patch=True).at_least("3.12.1", include_patch=True)
 

@@ -33,7 +33,7 @@ from rasterio.dtypes import (
 
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import env_ctx_if_needed
+from rasterio.env import env_ctx_if_needed, _GDAL_AT_LEAST_3_10
 from rasterio.errors import (
     BandOverviewError,
     CRSError,
@@ -277,8 +277,7 @@ cdef class DatasetBase:
     photometric : str
         Photometric interpretation's short name
     """
-
-    def __init__(self, path=None, driver=None, sharing=False, **kwargs):
+    def __init__(self, path=None, driver=None, sharing=False, thread_safe=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -290,6 +289,10 @@ cdef class DatasetBase:
             opening the dataset.
         sharing : bool, optional
             Whether to share underlying GDAL dataset handles (default: False).
+        thread_safe: bool, optional
+            Open GDAL dataset in `thread safe mode <https://gdal.org/en/stable/user/multithreading.html>`__.
+            For multithreaded read-only GDAL dataset operations (e.g. ``GDAL_NUM_THREADS``, `LIBERTIFF driver <https://gdal.org/en/stable/drivers/raster/libertiff.html#open-options>`__).
+            Requires rasterio 1.5+ & GDAL 3.10+.
         kwargs : dict
             GDAL dataset opening options.
 
@@ -298,7 +301,11 @@ cdef class DatasetBase:
         dataset
         """
         self._hds = NULL
-        cdef GDALDatasetH hds = NULL
+        cdef flags = GDAL_OF_READONLY
+        if thread_safe:
+            if not _GDAL_AT_LEAST_3_10:
+                raise GDALOptionNotImplementedError("'thread_safe' option requires GDAL 3.10+.")
+            flags |= GDAL_OF_THREAD_SAFE
 
         if path is not None:
             path = _parse_path(path)
@@ -312,7 +319,7 @@ cdef class DatasetBase:
             try:
                 self._hds = open_dataset(
                     filename=filename,
-                    flags=GDAL_OF_READONLY,
+                    flags=flags,
                     allowed_drivers=driver,
                     open_options=kwargs,
                     sharing=sharing,
