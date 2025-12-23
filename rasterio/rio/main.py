@@ -55,6 +55,7 @@ def gdal_version_cb(ctx, param, value):
     click.echo(f"{rasterio.__gdal_version__}", color=ctx.color)
     ctx.exit()
 
+
 def show_versions_cb(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
@@ -72,16 +73,20 @@ def show_versions_cb(ctx, param, value):
 @click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
-@click.option(
-    "--aws-profile", help="Select a profile from the AWS credentials file"
-)
+@click.option("--aws-profile", help="Select a profile from the AWS credentials file")
 @click.option("--aws-no-sign-requests", is_flag=True, help="Make requests anonymously")
 @click.option(
     "--aws-requester-pays", is_flag=True, help="Requester pays data transfer costs"
 )
 @click.version_option(version=rasterio.__version__, message="%(version)s")
 @click.option("--gdal-version", is_eager=True, is_flag=True, callback=gdal_version_cb)
-@click.option("--show-versions", help="Show dependency versions", is_eager=True, is_flag=True, callback=show_versions_cb)
+@click.option(
+    "--show-versions",
+    help="Show dependency versions",
+    is_eager=True,
+    is_flag=True,
+    callback=show_versions_cb,
+)
 @click.pass_context
 def main_group(
     ctx,
@@ -93,8 +98,7 @@ def main_group(
     gdal_version,
     show_versions,
 ):
-    """Rasterio command line interface.
-    """
+    """Rasterio command line interface."""
     verbosity = verbose - quiet
     configure_logging(verbosity)
     ctx.obj = {}
@@ -107,6 +111,8 @@ def main_group(
                 profile_name=aws_profile,
                 aws_unsigned=aws_no_sign_requests,
                 requester_pays=aws_requester_pays,
-            ), **envopts)
+            ),
+            **envopts,
+        )
     else:
         ctx.obj["env"] = rasterio.Env(**envopts)

@@ -1186,7 +1186,9 @@ def polygon_3373():
 def test_transform_geom_polygon_cutting(polygon_3373):
     geom = polygon_3373
     with pytest.warns(RasterioDeprecationWarning):
-        result = transform_geom("EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True)
+        result = transform_geom(
+            "EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True
+        )
     assert result["type"] == "MultiPolygon"
     assert len(result["coordinates"]) == 2
 
@@ -1195,7 +1197,11 @@ def test_transform_geom_polygon_offset(polygon_3373):
     geom = polygon_3373
     with pytest.warns(RasterioDeprecationWarning):
         result = transform_geom(
-            "EPSG:3373", "EPSG:4326", geom, antimeridian_cutting=True, antimeridian_offset=0
+            "EPSG:3373",
+            "EPSG:4326",
+            geom,
+            antimeridian_cutting=True,
+            antimeridian_offset=0,
         )
     assert result["type"] == "MultiPolygon"
     assert len(result["coordinates"]) == 2
@@ -2324,9 +2330,10 @@ def test_reproject_to_specified_output_bands():
 
     In this example, we concatenate a RGB raster with a mocked NIR image, while reprojecting and resampling both.
     """
-    with rasterio.open("tests/data/rgb1.tif") as src_rgb, rasterio.open(
-        "tests/data/rgb1_fake_nir_epsg3857.tif"
-    ) as src_nir:
+    with (
+        rasterio.open("tests/data/rgb1.tif") as src_rgb,
+        rasterio.open("tests/data/rgb1_fake_nir_epsg3857.tif") as src_nir,
+    ):
         output_crs = CRS.from_epsg(4326)
         output_transform, output_width, output_height = calculate_default_transform(
             src_rgb.crs, output_crs, src_rgb.width, src_rgb.height, *src_rgb.bounds

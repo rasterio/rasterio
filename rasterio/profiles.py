@@ -28,7 +28,7 @@ class Profile(UserDict):
 
     def __setitem__(self, key, val):
         """Like normal item setter but forbidding affine item."""
-        if key == 'affine':
+        if key == "affine":
             raise TypeError("affine key is prohibited")
         self.data[key] = val
 
@@ -37,14 +37,14 @@ class DefaultGTiffProfile(Profile):
     """Tiled, band-interleaved, LZW-compressed, 8-bit GTiff."""
 
     defaults = {
-        'driver': 'GTiff',
-        'interleave': 'band',
-        'tiled': True,
-        'blockxsize': 256,
-        'blockysize': 256,
-        'compress': 'lzw',
-        'nodata': 0,
-        'dtype': uint8
+        "driver": "GTiff",
+        "interleave": "band",
+        "tiled": True,
+        "blockxsize": 256,
+        "blockysize": 256,
+        "compress": "lzw",
+        "nodata": 0,
+        "dtype": uint8,
     }
 
 

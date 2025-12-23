@@ -119,12 +119,14 @@ def iter_args(function):
     """Decorator to allow function to take either ``*args`` or
     a single iterable which gets expanded to ``*args``.
     """
+
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         if len(args) == 1 and isinstance(args[0], Iterable):
             return function(*args[0])
         else:
             return function(*args)
+
     return wrapper
 
 
@@ -152,9 +154,8 @@ def get_data_window(arr, nodata=None):
     -------
     Window
     """
-    if not 0 < arr.ndim <=3 :
-        raise WindowError(
-            "get_data_window input array must have 1, 2, or 3 dimensions")
+    if not 0 < arr.ndim <= 3:
+        raise WindowError("get_data_window input array must have 1, 2, or 3 dimensions")
 
     # If nodata is defined, construct mask from that value
     # Otherwise retrieve mask from array (if it is masked)
@@ -194,8 +195,8 @@ def _compute_union(w1, w2):
     """Compute the union of two windows"""
     col_off = min(w1.col_off, w2.col_off)
     row_off = min(w1.row_off, w2.row_off)
-    width = max(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
-    height = max(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    width = max(w1.col_off + w1.width, w2.col_off + w2.width) - col_off
+    height = max(w1.row_off + w1.height, w2.row_off + w2.height) - row_off
     return col_off, row_off, width, height
 
 
@@ -240,16 +241,16 @@ def intersection(*windows):
 
 
 def _compute_intersection(w1, w2):
-    """ Compute intersection of window 1 and window 2"""
+    """Compute intersection of window 1 and window 2"""
     col_off = max(w1.col_off, w2.col_off)
     row_off = max(w1.row_off, w2.row_off)
-    width = min(w1.col_off+w1.width, w2.col_off+w2.width) - col_off
-    height = min(w1.row_off+w1.height, w2.row_off+w2.height) - row_off
+    width = min(w1.col_off + w1.width, w2.col_off + w2.width) - col_off
+    height = min(w1.row_off + w1.height, w2.row_off + w2.height) - row_off
     return col_off, row_off, width, height
 
 
 def _intersection(w1, w2):
-    """ Compute intersection of window 1 and window 2"""
+    """Compute intersection of window 1 and window 2"""
     coeffs = _compute_intersection(w1, w2)
     if coeffs[2] > 0 and coeffs[3] > 0:
         return Window(*coeffs)
@@ -358,8 +359,7 @@ def transform(window, transform):
     """
     window = evaluate(window, height=0, width=0)
     x, y = transform * (window.col_off or 0.0, window.row_off or 0.0)
-    return Affine.translation(
-        x - transform.c, y - transform.f) * transform
+    return Affine.translation(x - transform.c, y - transform.f) * transform
 
 
 def bounds(window, transform, height=0, width=0):
@@ -411,8 +411,7 @@ def crop(window, height, width):
     row_stop = max(0, min(window.row_off + window.height, height))
     col_stop = max(0, min(window.col_off + window.width, width))
 
-    return Window(col_start, row_start, col_stop - col_start,
-                  row_stop - row_start)
+    return Window(col_start, row_start, col_stop - col_start, row_stop - row_start)
 
 
 def evaluate(window, height, width, boundless=False):
@@ -438,8 +437,9 @@ def evaluate(window, height, width, boundless=False):
         return window
     else:
         rows, cols = window
-        return Window.from_slices(rows=rows, cols=cols, height=height,
-                                  width=width, boundless=boundless)
+        return Window.from_slices(
+            rows=rows, cols=cols, height=height, width=width, boundless=boundless
+        )
 
 
 def shape(window, height=-1, width=-1):
@@ -502,8 +502,7 @@ def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
     Window
     """
     if len(set(block_shapes)) != 1:  # pragma: no cover
-        raise WindowError(
-            "All bands must have the same block/stripe structure")
+        raise WindowError("All bands must have the same block/stripe structure")
 
     window = evaluate(window, height=height, width=width)
 
@@ -513,12 +512,14 @@ def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
     (row_start, row_stop), (col_start, col_stop) = window.toranges()
 
     row_min = int(row_start // height_shape) * height_shape
-    row_max = int(row_stop // height_shape) * height_shape + \
-        (height_shape if row_stop % height_shape != 0 else 0)
+    row_max = int(row_stop // height_shape) * height_shape + (
+        height_shape if row_stop % height_shape != 0 else 0
+    )
 
     col_min = int(col_start // width_shape) * width_shape
-    col_max = int(col_stop // width_shape) * width_shape + \
-        (width_shape if col_stop % width_shape != 0 else 0)
+    col_max = int(col_stop // width_shape) * width_shape + (
+        width_shape if col_stop % width_shape != 0 else 0
+    )
 
     return Window(col_min, row_min, col_max - col_min, row_max - row_min)
 
@@ -548,6 +549,7 @@ class Window:
     this is a bit confusing in the new float precision world and the
     attributes have been changed. The originals are deprecated.
     """
+
     col_off = attr.ib()
     row_off = attr.ib()
     width = attr.ib(validator=validate_length_value)
@@ -557,8 +559,8 @@ class Window:
         """Return a nicely formatted representation string"""
         return (
             "Window(col_off={self.col_off}, row_off={self.row_off}, "
-            "width={self.width}, height={self.height})").format(
-                self=self)
+            "width={self.width}, height={self.height})"
+        ).format(self=self)
 
     def flatten(self):
         """A flattened form of the window.
@@ -578,14 +580,18 @@ class Window:
         dict
         """
         return collections.OrderedDict(
-            col_off=self.col_off, row_off=self.row_off, width=self.width,
-            height=self.height)
+            col_off=self.col_off,
+            row_off=self.row_off,
+            width=self.width,
+            height=self.height,
+        )
 
     def toranges(self):
         """Makes an equivalent pair of range tuples"""
         return (
             (self.row_off, self.row_off + self.height),
-            (self.col_off, self.col_off + self.width))
+            (self.col_off, self.col_off + self.width),
+        )
 
     def toslices(self):
         """Slice objects for use as an ndarray indexer.
@@ -677,10 +683,11 @@ class Window:
         col_stop = width if cols.stop is None else cols.stop
 
         if not boundless:
-            if (row_off < 0 or row_stop < 0):
+            if row_off < 0 or row_stop < 0:
                 if height < 0:
-                    raise WindowError("height is required when providing "
-                                      "negative indexes")
+                    raise WindowError(
+                        "height is required when providing negative indexes"
+                    )
 
                 if row_off < 0:
                     row_off += height
@@ -688,10 +695,11 @@ class Window:
                 if row_stop < 0:
                     row_stop += height
 
-            if (col_off < 0 or col_stop < 0):
+            if col_off < 0 or col_stop < 0:
                 if width < 0:
-                    raise WindowError("width is required when providing "
-                                      "negative indexes")
+                    raise WindowError(
+                        "width is required when providing negative indexes"
+                    )
 
                 if col_off < 0:
                     col_off += width
@@ -702,8 +710,7 @@ class Window:
         num_cols = max(col_stop - col_off, 0.0)
         num_rows = max(row_stop - row_off, 0.0)
 
-        return cls(col_off=col_off, row_off=row_off, width=num_cols,
-                   height=num_rows)
+        return cls(col_off=col_off, row_off=row_off, width=num_cols, height=num_rows)
 
     def round_lengths(self, **kwds):
         """Return a copy with width and height rounded.

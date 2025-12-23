@@ -70,7 +70,7 @@ class RPC:
             "SAMP_DEN_COEFF": " ".join(map(str, self.samp_den_coeff)),
             "SAMP_NUM_COEFF": " ".join(map(str, self.samp_num_coeff)),
             "SAMP_OFF": str(self.samp_off),
-            "SAMP_SCALE": str(self.samp_scale)
+            "SAMP_SCALE": str(self.samp_scale),
         }
 
         if self.err_bias:
@@ -93,7 +93,12 @@ class RPC:
 
         for key, val in rpcs.items():
             # Four items have 20 floats in their values.
-            if key in {"LINE_NUM_COEFF", "LINE_DEN_COEFF", "SAMP_NUM_COEFF", "SAMP_DEN_COEFF"}:
+            if key in {
+                "LINE_NUM_COEFF",
+                "LINE_DEN_COEFF",
+                "SAMP_NUM_COEFF",
+                "SAMP_DEN_COEFF",
+            }:
                 out[key] = [float(v) for v in val.split(maxsplit=20)[:20]]
             # All other items have one float in their values but might also contain non-conforming extra text.
             else:

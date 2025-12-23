@@ -458,7 +458,6 @@ def merge(
 
             for idx, dataset in enumerate(sources):
                 with dataset_opener(dataset) as src:
-
                     # Intersect source bounds and tile bounds
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")

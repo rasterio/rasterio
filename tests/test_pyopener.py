@@ -42,7 +42,8 @@ def test_opener_zipfile_open():
 
 
 @pytest.mark.parametrize(
-    "urlpath", ["file://tests/data/RGB.byte.tif", "zip://RGB.byte.tif::tests/data/files.zip"]
+    "urlpath",
+    ["file://tests/data/RGB.byte.tif", "zip://RGB.byte.tif::tests/data/files.zip"],
 )
 def test_opener_fsspec_open(urlpath):
     """Use fsspec.open as opener."""
@@ -211,6 +212,7 @@ def test_delete_on_overwrite(data):
 def test_opener_registration(opener):
     """Opener is correctly registered."""
     from rasterio._vsiopener import _OPENER_REGISTRY, _opener_registration
+
     with _opener_registration("tests/data/RGB.byte.tif", opener) as registered_vsi_path:
         assert registered_vsi_path.startswith("/vsiriopener_")
         key = (Path("tests/data"), registered_vsi_path.split("/")[1].split("_")[1])
@@ -301,14 +303,19 @@ def test_opener_multi_range_read():
     class CustomResourceContainer:
         def open(self, path, mode="r", **kwds):
             return CustomResource(path, mode=mode, **kwds)
+
         def isfile(self, path):
             return True
+
         def isdir(self, path):
             return False
+
         def ls(self, path):
             return []
+
         def mtime(self, path):
             return 0
+
         def size(self, path):
             with CustomResource(path) as f:
                 return f.size()

@@ -24,7 +24,6 @@ def main(infile, outfile, num_workers=4):
     """
 
     with rasterio.open(infile) as src:
-
         # Create a destination dataset based on source params. The
         # destination will be tiled, and we'll process the tiles
         # concurrently.
@@ -60,7 +59,6 @@ def main(infile, outfile, num_workers=4):
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(description="Concurrent raster processing demo")

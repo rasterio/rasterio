@@ -2,6 +2,7 @@
 
 from enum import Enum, IntEnum
 
+
 class TransformDirection(IntEnum):
     """Coordinate transform direction
 
@@ -15,16 +16,20 @@ class TransformDirection(IntEnum):
     typically the opposite of what is previously described. For consistency
     all coordinate transforms methods use the same convention.
     """
+
     forward = 1
     reverse = 0
 
+
 class TransformMethod(Enum):
-    affine = 'transform'
-    gcps = 'gcps'
-    rpcs = 'rpcs'
+    affine = "transform"
+    gcps = "gcps"
+    rpcs = "rpcs"
+
 
 class ColorInterp(IntEnum):
     """Raster band color interpretation."""
+
     undefined = 0
     gray = 1
     grey = 1
@@ -87,6 +92,7 @@ class Resampling(IntEnum):
 
     Note: 'gauss' is not available to the functions in rio.warp.
     """
+
     nearest = 0
     """Nearest neighbor resampling (default, fastest algorithm, worst interpolation quality)."""
     bilinear = 1
@@ -132,6 +138,7 @@ class OverviewResampling(IntEnum):
     'rms' is only supported in GDAL >= 3.3.
 
     """
+
     nearest = 0
     bilinear = 1
     cubic = 2
@@ -149,29 +156,30 @@ class Compression(Enum):
     Note that compression options for EXR, MRF, etc are not included
     in this enum.
     """
-    jpeg = 'JPEG'
-    lzw = 'LZW'
-    packbits = 'PACKBITS'
-    deflate = 'DEFLATE'
-    ccittrle = 'CCITTRLE'
-    ccittfax3 = 'CCITTFAX3'
-    ccittfax4 = 'CCITTFAX4'
-    lzma = 'LZMA'
-    none = 'NONE'
-    zstd = 'ZSTD'
-    lerc = 'LERC'
-    lerc_deflate = 'LERC_DEFLATE'
-    lerc_zstd = 'LERC_ZSTD'
-    webp = 'WEBP'
-    jpeg2000 = 'JPEG2000'
+
+    jpeg = "JPEG"
+    lzw = "LZW"
+    packbits = "PACKBITS"
+    deflate = "DEFLATE"
+    ccittrle = "CCITTRLE"
+    ccittfax3 = "CCITTFAX3"
+    ccittfax4 = "CCITTFAX4"
+    lzma = "LZMA"
+    none = "NONE"
+    zstd = "ZSTD"
+    lerc = "LERC"
+    lerc_deflate = "LERC_DEFLATE"
+    lerc_zstd = "LERC_ZSTD"
+    webp = "WEBP"
+    jpeg2000 = "JPEG2000"
 
 
 class Interleaving(Enum):
-    pixel = 'PIXEL'
-    line = 'LINE'
-    band = 'BAND'
+    pixel = "PIXEL"
+    line = "LINE"
+    band = "BAND"
     #: tile requires GDAL 3.11+
-    tile = 'TILE'
+    tile = "TILE"
 
 
 class MaskFlags(IntEnum):
@@ -182,20 +190,21 @@ class MaskFlags(IntEnum):
 
 
 class PhotometricInterp(Enum):
-    black = 'MINISBLACK'
-    white = 'MINISWHITE'
-    rgb = 'RGB'
-    cmyk = 'CMYK'
-    ycbcr = 'YCbCr'
-    cielab = 'CIELAB'
-    icclab = 'ICCLAB'
-    itulab = 'ITULAB'
+    black = "MINISBLACK"
+    white = "MINISWHITE"
+    rgb = "RGB"
+    cmyk = "CMYK"
+    ycbcr = "YCbCr"
+    cielab = "CIELAB"
+    icclab = "ICCLAB"
+    itulab = "ITULAB"
 
 
 class MergeAlg(Enum):
     """Available rasterization algorithms"""
-    replace = 'REPLACE'
-    add = 'ADD'
+
+    replace = "REPLACE"
+    add = "ADD"
 
 
 class WktVersion(Enum):
@@ -217,7 +226,6 @@ class WktVersion(Enum):
     WKT1 = "WKT1"
     #: WKT Version 1 ESRI Style
     WKT1_ESRI = "WKT1_ESRI"
-
 
     @classmethod
     def _missing_(cls, value):

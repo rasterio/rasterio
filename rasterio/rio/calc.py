@@ -57,21 +57,41 @@ class FuncMapper(UserDict, Mapping):
 
 
 @click.command(short_help="Raster data calculator.")
-@click.argument('command')
+@click.argument("command")
 @options.files_inout_arg
 @options.output_opt
 @options.format_opt
-@click.option('--name', multiple=True,
-              help='Specify an input file with a unique short (alphas only) '
-                   'name for use in commands like '
-                   '"a=tests/data/RGB.byte.tif".')
+@click.option(
+    "--name",
+    multiple=True,
+    help="Specify an input file with a unique short (alphas only) "
+    "name for use in commands like "
+    '"a=tests/data/RGB.byte.tif".',
+)
 @options.dtype_opt
 @options.masked_opt
 @options.overwrite_opt
-@click.option("--mem-limit", type=int, default=64, help="Limit on memory used to perform calculations, in MB.")
+@click.option(
+    "--mem-limit",
+    type=int,
+    default=64,
+    help="Limit on memory used to perform calculations, in MB.",
+)
 @options.creation_options
 @click.pass_context
-def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, mem_limit, creation_options):
+def calc(
+    ctx,
+    command,
+    files,
+    output,
+    driver,
+    name,
+    dtype,
+    masked,
+    overwrite,
+    mem_limit,
+    creation_options,
+):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -180,13 +200,15 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
             if dst is None:
                 kwargs["count"] = results.shape[0]
                 dst = stack.enter_context(rasterio.open(output, "w", **kwargs))
-                max_pixels = mem_limit * 1.0e+6 / (numpy.dtype(dst.dtypes[0]).itemsize * dst.count)
+                max_pixels = (
+                    mem_limit
+                    * 1.0e6
+                    / (numpy.dtype(dst.dtypes[0]).itemsize * dst.count)
+                )
                 chunk_size = int(math.floor(math.sqrt(max_pixels)))
                 work_windows.extend(
                     subdivide(
-                        Window(0, 0, dst.width, dst.height),
-                        chunk_size,
-                        chunk_size
+                        Window(0, 0, dst.width, dst.height), chunk_size, chunk_size
                     )
                 )
 
