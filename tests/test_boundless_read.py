@@ -1,4 +1,5 @@
 """Test of boundless reads"""
+import sys
 
 from affine import Affine
 import shutil
@@ -17,6 +18,7 @@ from rasterio.windows import Window
        row_start=st.integers(min_value=-700, max_value=0),
        col_stop=st.integers(min_value=0, max_value=700),
        row_stop=st.integers(min_value=0, max_value=700))
+@pytest.mark.skipif(sys.platform != "linux", reason="https://github.com/rasterio/rasterio/issues/1696")
 def test_outer_boundless_pixel_fidelity(
         path_rgb_byte_tif, col_start, row_start, col_stop, row_stop):
     """An outer boundless read doesn't change pixels"""
