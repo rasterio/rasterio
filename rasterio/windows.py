@@ -528,7 +528,7 @@ def validate_length_value(instance, attribute, value):
         raise ValueError("Number of columns or rows must be non-negative")
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True, frozen=True, auto_attribs=True)
 class Window:
     """Windows are rectangular subsets of rasters.
 
@@ -548,10 +548,11 @@ class Window:
     this is a bit confusing in the new float precision world and the
     attributes have been changed. The originals are deprecated.
     """
-    col_off = attr.ib()
-    row_off = attr.ib()
-    width = attr.ib(validator=validate_length_value)
-    height = attr.ib(validator=validate_length_value)
+
+    col_off: float = attr.ib()
+    row_off: float = attr.ib()
+    width: float = attr.ib(validator=validate_length_value)
+    height: float = attr.ib(validator=validate_length_value)
 
     def __repr__(self):
         """Return a nicely formatted representation string"""
