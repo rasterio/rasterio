@@ -1,13 +1,22 @@
 """On Windows, this script runs `micromamba.exe` from LOCALAPPDATA to find its Library path and prints it to stdout."""
 
+import argparse
 import json
 import subprocess
 from pathlib import Path
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--name", "-n", help="Conda prefix/environment to examine", required=True
+    )
+    args = parser.parse_args()
+    prefix_name: str = args.name
+    assert isinstance(prefix_name, str)
+
     try:
         result = subprocess.run(
-            ["micromamba", "info", "--json"],
+            ["micromamba", "info", "-n", prefix_name, "--json"],
             check=True,
             text=True,
             stdout=subprocess.PIPE,

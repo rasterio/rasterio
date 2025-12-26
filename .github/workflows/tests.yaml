@@ -137,7 +137,7 @@ jobs:
         if: startsWith(matrix.os, 'windows-')
         shell: bash -l {0}
         run: |
-          echo "GDAL_INSTALL_PREFIX=$(micromamba run -n test python ci/get_micromamba_library_path.py)" >> "$GITHUB_ENV"
+          echo "GDAL_INSTALL_PREFIX=$(micromamba run -n test python ci/get_micromamba_library_path.py -n test)" >> "$GITHUB_ENV"
 
       - name: Install Env
         shell: bash -l {0}
@@ -167,4 +167,4 @@ jobs:
         if: startsWith(matrix.os, 'windows-')
         shell: pwsh
         run:
-          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+          micromamba run -n test python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
