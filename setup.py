@@ -62,6 +62,7 @@ gdalversion: str | None = None
 gdal_major_version: int = 0
 gdal_minor_version: int = 0
 gdal_patch_version: int = 0
+gdal_data_dir: str | None = None
 
 try:
     import numpy as np
@@ -77,7 +78,12 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
 
     Raise `RuntimeError` if the provided prefix does not seem to contain a GDAL install.
     """
-    global gdalversion, gdal_major_version, gdal_minor_version, gdal_patch_version
+    global \
+        gdal_data_dir, \
+        gdalversion, \
+        gdal_major_version, \
+        gdal_minor_version, \
+        gdal_patch_version
 
     if not os.path.isdir(gdal_install_prefix):
         raise FileNotFoundError(
@@ -102,6 +108,13 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
     found_include_dir = os.path.join(gdal_install_prefix, "include")
     if not os.path.isdir(found_include_dir):
         raise RuntimeError("Could not find include directory at %s", found_include_dir)
+
+    # Find GDAL_DATA directory
+    found_gdal_data_dir = os.path.join(gdal_install_prefix, "share", "gdal")
+    if not os.path.isdir(found_gdal_data_dir):
+        raise RuntimeError(
+            "Could not find GDAL_DATA directory at %s", found_gdal_data_dir
+        )
 
     # Extract GDAL version numbers
     found_version_header = os.path.join(found_include_dir, "gdal_version.h")
@@ -144,6 +157,7 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
     gdalversion = ".".join(map(str, gdal_version_numbers))
     gdal_major_version, gdal_minor_version, gdal_patch_version = gdal_version_numbers
     libraries.append(found_gdal_lib_name)
+    gdal_data_dir = found_gdal_data_dir
 
 
 if "clean" not in sys.argv:
@@ -216,23 +230,28 @@ if "clean" not in sys.argv:
 
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
-if os.environ.get('PACKAGE_DATA'):
-    destdir = 'rasterio/gdal_data'
+gdal_data_destination = "rasterio/gdal_data"
+if gdal_data_dir is not None:
+    log.info("Copying previously-found GDAL data from %s", gdal_data_dir)
+    copy_data_tree(gdal_data_dir, gdal_data_destination)
+elif os.environ.get("PACKAGE_DATA"):
     if gdal_output[2]:
         log.info("Copying gdal data from %s" % gdal_output[2])
-        copy_data_tree(gdal_output[2], destdir)
+        copy_data_tree(gdal_output[2], gdal_data_destination)
     else:
         # check to see if GDAL_DATA is defined
         gdal_data = os.environ.get('GDAL_DATA', None)
         if gdal_data:
             log.info("Copying gdal_data from %s" % gdal_data)
-            copy_data_tree(gdal_data, destdir)
+            copy_data_tree(gdal_data, gdal_data_destination)
 
     # Conditionally copy PROJ DATA.
     projdatadir = os.environ.get('PROJ_DATA', os.environ.get('PROJ_LIB', '/usr/local/share/proj'))
     if os.path.exists(projdatadir):
         log.info("Copying proj_data from %s" % projdatadir)
         copy_data_tree(projdatadir, 'rasterio/proj_data')
+else:
+    log.info("Not copying GDAL data to the final package")
 
 compile_time_env = {
     "CTE_GDAL_MAJOR_VERSION": gdal_major_version,
