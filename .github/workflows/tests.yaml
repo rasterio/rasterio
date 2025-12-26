@@ -113,6 +113,10 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: '*'
+          - os: windows-2025
+            python-version: '*'
+          - os: windows-2022
+            python-version: '*'
 
     steps:
       - uses: actions/checkout@v6
@@ -152,3 +156,9 @@ jobs:
         shell: bash -l {0}
         run: |
            micromamba run python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
+
+      - name: Test with Coverage (Windows)
+        if: startsWith("${{matrix.os}}", "windows-")
+        shell: pwsh
+        run:
+          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
