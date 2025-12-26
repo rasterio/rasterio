@@ -418,7 +418,7 @@ def test_session_factory_az_env_tenant(monkeypatch):
 def test_azure_no_sign_request(monkeypatch):
     """If AZURE_NO_SIGN_REQUEST is set do not default to azure_unsigned=False"""
     monkeypatch.setattr(os, "environ", {})
-    monkeypatch.setenv('AZURE_STORAGE_ACCOUNT', "foo") 
+    monkeypatch.setenv('AZURE_STORAGE_ACCOUNT', 'foo')
     monkeypatch.setenv('AZURE_NO_SIGN_REQUEST', 'YES')
     sesh = AzureSession()
     assert sesh.unsigned

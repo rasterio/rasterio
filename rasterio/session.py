@@ -623,27 +623,32 @@ class AzureSession(Session):
                 return creds
 
 
-        passed_args = dict(storage_connection_string=azure_storage_connection_string,
-                           storage_account=azure_storage_account,
-                           unsigned=azure_unsigned,
-                           storage_access_token=azure_storage_access_token,
-                           storage_access_key=azure_storage_access_key,
-                           sas_token=azure_storage_sas_token,
-                           tenant_id=azure_tenant_id,
-                           client_id=azure_client_id,
-                           federated_token_file=azure_federated_token_file,
-                           authority_host=azure_authority_host)
+        passed_args = {
+            "storage_connection_string": azure_storage_connection_string,
+            "storage_account": azure_storage_account,
+            "unsigned": azure_unsigned,
+            "storage_access_token": azure_storage_access_token,
+            "storage_access_key": azure_storage_access_key,
+            "sas_token": azure_storage_sas_token,
+            "tenant_id": azure_tenant_id,
+            "client_id": azure_client_id,
+            "federated_token_file": azure_federated_token_file,
+            "authority_host": azure_authority_host
+        }
 
-        env_vars = dict(storage_connection_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-                           storage_account=os.getenv("AZURE_STORAGE_ACCOUNT"),
-                           unsigned=parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST")),
-                           storage_access_token=os.getenv("AZURE_STORAGE_ACCESS_TOKEN"),
-                           storage_access_key=os.getenv("AZURE_STORAGE_ACCESS_KEY"),
-                           sas_token=os.getenv("AZURE_STORAGE_SAS_TOKEN"),
-                           tenant_id=os.getenv("AZURE_TENANT_ID"),
-                           client_id=os.getenv("AZURE_CLIENT_ID"),
-                           federated_token_file=os.getenv("AZURE_FEDERATED_TOKEN_FILE"),
-                           authority_host=os.getenv("AZURE_AUTHORITY_HOST"))
+        env_vars = {
+            "storage_connection_string": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
+            "storage_account": os.getenv("AZURE_STORAGE_ACCOUNT"),
+            "unsigned": parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST")),
+            "storage_access_token": os.getenv("AZURE_STORAGE_ACCESS_TOKEN"),
+            "storage_access_key": os.getenv("AZURE_STORAGE_ACCESS_KEY"),
+            "sas_token": os.getenv("AZURE_STORAGE_SAS_TOKEN"),
+            "tenant_id": os.getenv("AZURE_TENANT_ID"),
+            "client_id": os.getenv("AZURE_CLIENT_ID"),
+            "federated_token_file": os.getenv("AZURE_FEDERATED_TOKEN_FILE"),
+            "authority_host": os.getenv("AZURE_AUTHORITY_HOST")
+        }
+
         self._creds = _get_credentials(**passed_args)
         if not AzureSession.hascreds(self.get_credential_options()):
             self._creds = _get_credentials(**env_vars)
