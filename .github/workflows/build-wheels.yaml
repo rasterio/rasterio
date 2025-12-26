@@ -170,9 +170,9 @@ jobs:
             cmake --version
             bash ./ci/config.sh
           CIBW_BEFORE_ALL_MACOS: |
-            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg xz giflib rtmpdump brotli snappy libavif libzip
+            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg jpeg-turbo libpng xz giflib rtmpdump brotli snappy libavif libzip
             # brew remove -f --ignore-dependencies curl php
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils cmake wget
             bash ./ci/config.sh
           CIBW_BEFORE_BUILD_MACOS: |
             export GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
@@ -218,7 +218,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec requests
-          python -m pip install --pre --no-deps --find-links dist rasterio
+          python -m pip install --pre --no-deps --no-index --find-links dist rasterio
           python -m pip install rasterio
           python -m pip list
 
@@ -248,7 +248,7 @@ jobs:
   publish:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist, test_wheels]
     permissions:
       id-token: write
     environment:
