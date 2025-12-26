@@ -147,11 +147,10 @@ jobs:
           micromamba run -n test python -V
           micromamba info
 
-      - name: Test with Coverage (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Test with Coverage
         shell: bash -l {0}
         run: |
-          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
+          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
       - name: Test with Coverage (OSX)
         if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-14'
