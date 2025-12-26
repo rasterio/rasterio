@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Two environmental variables influence this script.
+# These following environmental variables influence this script:
 #
 # GDAL_CONFIG: the path to a gdal-config program that points to GDAL headers,
 # libraries, and data files.
@@ -9,8 +9,10 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 #
-# GDAL_INSTALL_PREFIX: if defined, we assume that GDAL is installed at this path, under `lib`, `include`, and `share`
-# subfolders.
+# PATH: if we don't find `gdal-config`, we instead search for the `gdalinfo`
+# executable using the `PATH` environment variable. We run it to get the GDAL
+# version, and we compute the include, library, share, etc. directory paths
+# from that executable's path.
 
 import copy
 import logging
@@ -71,13 +73,56 @@ try:
 except ImportError:
     raise SystemExit("ERROR: Numpy and its headers are required to run setup().")
 
-def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
+def find_gdal_install_with_executable(
+    executable_name: str = "gdalinfo",
+) -> tuple[str, tuple[int, int, int]] | None:
+    """Find the given GDAL executable on PATH and get the GDAL version and install directory from it.
+
+    executable_name should be the name of a GDAL executable, like `"gdalinfo"`, with or without extension.
+    It should be executable on the command line through this name.
+
+    Return the absolute path to GDAL's install path (above bin, include, share, and lib) and the major, minor, and patch
+    numbers of GDAL's version, if the executable was found. Otherwise, return None.
+
+    This does not check if the install is complete.
+    """
+
+    executable_path = shutil.which(executable_name)
+    if executable_path is None:
+        log.info("Did not find executable %s on PATH", executable_name)
+        return None
+    executable_path = os.path.abspath(executable_path)
+    log.info("Found executable %s at path %s", executable_name, executable_path)
+    # Run it to get the GDAL version
+    result = check_output([executable_name, "--version"], text=True).strip()
+    version_match = re.match(
+        r"^GDAL (\d+)\.(\d+)\.(\d+) .*$", result, flags=re.MULTILINE
+    )
+    if version_match:
+        gdal_version: tuple[int, int, int] = (
+            int(version_match.group(1)),
+            int(version_match.group(2)),
+            int(version_match.group(3)),
+        )
+    else:
+        raise RuntimeError(
+            "Could not parse GDAL version from output of `%s --version`",
+            executable_path,
+        )
+    # Move up two levels: parent of the `bin` folder
+    gdal_install_prefix = os.path.dirname(os.path.dirname(executable_path))
+    return gdal_install_prefix, gdal_version
+
+
+def fill_gdal_build_options_using_executable(executable_name: str) -> None:
     """Fill the global GDAL build options using information from the provided install path.
 
-    gdal_install_prefix should contain `lib`, `include`, and `share` subfolders containing a GDAL install.
+    executable_name should be the name of a GDAL executable, like `"gdalinfo"`, with or without extension.
+    It should be executable on the command line through this name.
 
-    Raise `RuntimeError` if the provided prefix does not seem to contain a GDAL install.
+    Raise `RuntimeError` if we don't find a GDAL install.
     """
+
     global \
         gdal_data_dir, \
         gdalversion, \
@@ -85,11 +130,16 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
         gdal_minor_version, \
         gdal_patch_version
 
-    if not os.path.isdir(gdal_install_prefix):
-        raise FileNotFoundError(
-            "GDAL install prefix does not seem to be a directory (value is %s)",
-            gdal_install_prefix,
+    prefix_search_result = find_gdal_install_with_executable(
+        executable_name=executable_name
+    )
+    if prefix_search_result is None:
+        raise RuntimeError(
+            'Could not find the GDAL install directory using executable "%s"',
+            executable_name,
         )
+
+    gdal_install_prefix, gdal_version_numbers = prefix_search_result
 
     # Find library directory
     found_library_dir = os.path.join(gdal_install_prefix, "lib")
@@ -108,6 +158,10 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
     found_include_dir = os.path.join(gdal_install_prefix, "include")
     if not os.path.isdir(found_include_dir):
         raise RuntimeError("Could not find include directory at %s", found_include_dir)
+    # Check that at least one header exists
+    found_gdal_header = os.path.join(found_include_dir, "gdal.h")
+    if not os.path.isfile(found_gdal_header):
+        raise RuntimeError("Could not find GDAL header at %s", found_gdal_header)
 
     # Find GDAL_DATA directory
     found_gdal_data_dir = os.path.join(gdal_install_prefix, "share", "gdal")
@@ -115,39 +169,6 @@ def fill_gdal_build_options_from_prefix(gdal_install_prefix: str) -> None:
         raise RuntimeError(
             "Could not find GDAL_DATA directory at %s", found_gdal_data_dir
         )
-
-    # Extract GDAL version numbers
-    found_version_header = os.path.join(found_include_dir, "gdal_version.h")
-    try:
-        with open(found_version_header, "rt") as version_header_stream:
-            version_header_text = version_header_stream.read()
-    except FileNotFoundError as error:
-        raise RuntimeError(
-            "Could not find GDAL version header at %s", found_version_header
-        ) from error
-    major_version_match = re.search(
-        r"^#\s*define\s+GDAL_VERSION_MAJOR\s+(\d+)\s*$",
-        version_header_text,
-        flags=re.MULTILINE,
-    )
-    minor_version_match = re.search(
-        r"^#\s*define\s+GDAL_VERSION_MINOR\s+(\d+)\s*$",
-        version_header_text,
-        flags=re.MULTILINE,
-    )
-    rev_version_match = re.search(
-        r"^#\s*define\s+GDAL_VERSION_REV\s+(\d+)\s*$",
-        version_header_text,
-        flags=re.MULTILINE,
-    )
-    if major_version_match and minor_version_match and rev_version_match:
-        gdal_version_numbers: tuple[int, int, int] = (
-            int(major_version_match.group(1)),
-            int(minor_version_match.group(1)),
-            int(rev_version_match.group(1)),
-        )
-    else:
-        raise RuntimeError("Could not read GDAL version numbers from gdal_version.h")
 
     log.info(
         "Found a GDAL install at %s that seems complete, using it", gdal_install_prefix
@@ -165,10 +186,10 @@ if "clean" not in sys.argv:
         provided_gdal_install_prefix = os.environ.get("GDAL_INSTALL_PREFIX", None)
         if provided_gdal_install_prefix:
             log.info(
-                "Getting GDAL build options from GDAL_INSTALL_PREFIX environment variable set to %s",
+                "Getting GDAL build options by searching for a GDAL executable",
                 provided_gdal_install_prefix,
             )
-            fill_gdal_build_options_from_prefix(provided_gdal_install_prefix)
+            fill_gdal_build_options_using_executable(executable_name="gdalinfo")
         else:
             log.info("Using gdal-config to get GDAL build options")
             gdal_config = os.environ.get("GDAL_CONFIG", "gdal-config")
