@@ -6,7 +6,7 @@ ZLIB_VERSION=1.3.1
 TIFF_VERSION=4.7.1
 NGHTTP2_VERSION=1.65.0
 LERC_VERSION=4.0.0
-JPEG_VERSION=9f
+#JPEG_VERSION=9f
 LIBWEBP_VERSION=1.6.0
 ZSTD_VERSION=1.5.7
 LIBPNG_VERSION=1.6.53
@@ -23,6 +23,7 @@ BLOSC_VERSION=1.21.6
 PCRE_VERSION=10.47
 EXPAT_VERSION=2.7.3
 LIBDEFLATE_VERSION=1.24
+JPEGTURBO_VERSION=3.1.3
 
 BUILD_PREFIX="${BUILD_PREFIX:-/usr/local}"
 
@@ -286,9 +287,13 @@ HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="e4defbac30f50d64e1556374aa49e574417c9e72c6b1de7a4ff88c4b1bea6e9b"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
-JPEG_URL="http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz"
-JPEG_FNAME="jpeg-${JPEG_VERSION}"
-fetch_untar $JPEG_URL -O ${JPEG_FNAME}.tar.gz
+#JPEG_URL="http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz"
+#JPEG_FNAME="jpeg-${JPEG_VERSION}"
+#fetch_untar ${JPEG_URL} -O ${JPEG_FNAME}.tar.gz
+
+JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
+JPEGTURBO_FNAME="libjpeg-turbo-${JPEGTURBO_VERSION}"
+fetch_untar ${JPEGTURBO_URL} ${JPEGTURBO_FNAME}.tar.gz
 
 JSONC_URL="https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz"
 JSONC_FNAME="json-c-${JSONC_VERSION}"
@@ -373,7 +378,7 @@ function build_hdf5 {
 	build_zlib
 	# libaec is a drop-in replacement for szip
 	build_libaec
-
+    echo "Running build_hdf5"
 	(cd ${HDF5_FNAME} &&
 		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
 		export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
@@ -387,7 +392,7 @@ function build_hdf5 {
 function build_blosc {
 	if [ -e blosc-stamp ]; then return; fi
 	local cmake=cmake
-
+    echo "Running build_blosc"
 	(cd ${BLOSC_FNAME} &&
 		$cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . &&
 		make install)
@@ -404,7 +409,7 @@ function build_geos {
 
 	if [ -e geos-stamp ]; then return; fi
 	local cmake=cmake
-
+    echo "Running build_geos"
 	(cd ${GEOS_FNAME} &&
 		mkdir build && cd build &&
 		$cmake .. \
@@ -425,7 +430,7 @@ function build_geos {
 function build_jsonc {
 	if [ -e jsonc-stamp ]; then return; fi
 	local cmake=cmake
-
+    echo "Running build_jsonc"
 	(cd ${JSONC_FNAME} &&
 		$cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . &&
 		make -j4 &&
@@ -445,7 +450,7 @@ function build_proj {
 	CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
 	CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
 	if [ -e proj-stamp ]; then return; fi
-
+    echo "Running build_proj"
 	local cmake=cmake
 	(cd ${PROJ_FNAME} &&
 		$cmake . \
@@ -473,7 +478,7 @@ function build_sqlite {
 	fi
 
 	if [ -e sqlite-stamp ]; then return; fi
-
+    echo "Running build_sqlite"
 	(cd ${SQLITE_FNAME} &&
 		./configure --enable-rtree --enable-threadsafe --prefix=$BUILD_PREFIX &&
 		make &&
@@ -486,7 +491,7 @@ function build_expat {
 	if [ -n "$IS_MACOS" ]; then
 		:
 	else
-
+        echo "Running build_expat"
 		(cd ${EXPAT_FNAME} &&
 			./configure --prefix=$BUILD_PREFIX &&
 			make -j4 &&
@@ -499,7 +504,7 @@ function build_lerc {
 
 	if [ -e lerc-stamp ]; then return; fi
 	local cmake=cmake
-
+    echo "Running build_lerc"
 	(cd ${LERC_FNAME} &&
 		mkdir cmake_build && cd cmake_build &&
 		$cmake .. \
@@ -520,12 +525,12 @@ function build_tiff {
 	if [ -e tiff-stamp ]; then return; fi
 	local cmake=cmake
 	build_lerc
-	build_jpeg
+	build_jpegturbo
 	build_libwebp
 	build_zlib
 	build_zstd
 	build_xz
-
+    echo "Running build_tiff"
 	(cd ${TIFF_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX --libdir=$BUILD_PREFIX/lib --enable-zstd --enable-webp --enable-lerc --with-jpeg-include-dir=$BUILD_PREFIX/include --with-jpeg-lib-dir=$BUILD_PREFIX/lib &&
 		make -j4 &&
@@ -540,7 +545,7 @@ function build_openjpeg {
 	build_zlib
 	build_tiff
 	build_lcms2
-
+    echo "Running build_openjpeg"
 	local cmake=cmake
 	(cd ${OPENJPEG_FNAME} &&
 		mkdir build &&
@@ -564,7 +569,7 @@ function build_libwebp {
 	build_giflib
 
 	if [ -e libwebp-stamp ]; then return; fi
-
+    echo "Running build_libwebp"
 	(cd ${LIBWEBP_FNAME} &&
 		./autogen.sh &&
 		./configure --prefix=$BUILD_PREFIX \
@@ -577,7 +582,7 @@ function build_libwebp {
 
 function build_nghttp2 {
 	if [ -e nghttp2-stamp ]; then return; fi
-
+    echo "Running build_nghttp2"
 	(cd ${NGHTTP2_FNAME} &&
 		./configure --enable-lib-only --prefix=$BUILD_PREFIX &&
 		make -j4 &&
@@ -587,7 +592,7 @@ function build_nghttp2 {
 
 function build_openssl  {
 	if [ -e openssl-stamp ]; then return; fi
-
+    echo "Running build_openssl"
 	(cd ${OPENSSL_FNAME} &&
 		./config $TARGET -fPIC --prefix=$BUILD_PREFIX &&
 		make -j4 &&
@@ -600,6 +605,7 @@ function build_curl {
 
 	suppress build_openssl
 	build_nghttp2
+	echo "Running build_curl"
 	local flags="--prefix=$BUILD_PREFIX --with-nghttp2=$BUILD_PREFIX --with-zlib=$BUILD_PREFIX --with-ssl=$BUILD_PREFIX --enable-shared --without-libidn2 --without-libpsl"
 
 	(cd ${CURL_FNAME} &&
@@ -619,6 +625,7 @@ function build_zstd {
 	else
 		sed_ere_opt="-r"
 	fi
+	echo "Running build_zstd"
 	local cmake=cmake
 	(cd ${ZSTD_FNAME}/build/cmake &&
 		$cmake . \
@@ -639,7 +646,7 @@ function build_zstd {
 
 function build_pcre2 {
 	if [ -e pcre-stamp ]; then return; fi
-
+    echo "Running build_pcre2"
 	(cd ${PCRE2_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make -j4 &&
@@ -649,7 +656,7 @@ function build_pcre2 {
 
 function build_zlib {
 	if [ -e zlib-stamp ]; then return; fi
-
+    echo "Running build_zlib"
 	(cd ${ZLIB_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make &&
@@ -668,9 +675,39 @@ function build_jpeg {
 	touch jpeg-stamp
 }
 
+function build_jpegturbo {
+
+    if [ -e jpeg-stamp ]; then
+        return
+    fi
+
+    echo "Running build_jpegturbo"
+
+    local cmake=cmake
+
+    (
+        cd ${JPEGTURBO_FNAME} &&
+        $cmake -G "Unix Makefiles" \
+            -DCMAKE_INSTALL_PREFIX="$BUILD_PREFIX" \
+            -DCMAKE_PREFIX_PATH="$BUILD_PREFIX" \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
+            -DCMAKE_OSX_ARCHITECTURES="$CMAKE_OSX_ARCHITECTURES" \
+            -DCMAKE_INSTALL_LIBDIR="$BUILD_PREFIX/lib" \
+            -DCMAKE_INSTALL_NAME_DIR="$BUILD_PREFIX/lib" \
+            -DWITH_JPEG8=1 \
+            . \
+        && make -j4 \
+        && make install
+    ) || return 1
+
+    touch jpeg-stamp
+}
+
+
 function build_giflib {
 	if [ -e giflib-stamp ]; then return; fi
-
+    echo "Running build_giflib"
 	(cd ${GIFLIB_FNAME} &&
 		make &&
 		make install PREFIX=$BUILD_PREFIX)
@@ -680,9 +717,9 @@ function build_giflib {
 function build_libpng {
 
 	if [ -e libpng-stamp ]; then return; fi
-
+ 
 	build_zlib
-
+    echo "Running build_libpng"
 	(cd ${LIBPNG_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make &&
@@ -692,7 +729,7 @@ function build_libpng {
 
 function build_xz {
 	if [ -e xz-stamp ]; then return; fi
-
+    echo "Running build_xz"
 	(cd ${XZ_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make &&
@@ -705,7 +742,7 @@ function build_lcms2 {
 	if [ -e lcms2-stamp ]; then return; fi
 
 	build_tiff
-
+    echo "Running build_lcms2"
 	(cd ${LCMS2_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make -j$(nproc) &&
@@ -717,7 +754,7 @@ function build_lcms2 {
 function build_libdeflate {
 
 	if [ -e libdeflate-stamp ]; then return; fi
-
+    echo "Running build_libdeflate"
 	local cmake=cmake
 	(cd ${LIBDEFLATE_FNAME} &&
 		mkdir build && cd build &&
@@ -737,7 +774,7 @@ function build_libdeflate {
 
 function build_libaec {
 	if [ -e libaec-stamp ]; then return; fi
-
+    echo "Running build_libaec"
 	(cd ${LIBAEC_FNAME} &&
 		./configure --prefix=$BUILD_PREFIX &&
 		make &&
@@ -750,7 +787,7 @@ function build_netcdf {
 	if [ -e netcdf-stamp ]; then return; fi
 	local cmake=cmake
 	build_hdf5
-
+    echo "Running build_netcdf"
 	(cd ${NETCDF_FNAME} &&
 		mkdir build && cd build &&
 		$cmake .. \
@@ -769,14 +806,14 @@ function build_netcdf {
 
 function build_gdal {
 	if [ -e gdal-stamp ]; then return; fi
-
+    echo "Running build_gdal"
 	CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
 	CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
 
 	build_blosc
 	build_curl
 	build_lerc
-	build_jpeg
+	build_jpegturbo
 	build_libpng
 	build_openjpeg
 	build_jsonc
@@ -886,7 +923,7 @@ suppress build_curl
 build_libwebp
 build_zstd
 build_libdeflate
-build_jpeg
+build_jpegturbo
 build_lerc
 build_tiff
 build_openjpeg
