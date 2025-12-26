@@ -133,6 +133,12 @@ jobs:
             cython=3
             numpy
 
+      - name: On Windows, set GDAL_INSTALL_PREFIX to the conda library folder
+        if: startsWith(matrix.os, 'windows-')
+        shell: bash -l {0}
+        run: |
+          echo "GDAL_INSTALL_PREFIX=$(micromamba run -n test python ci/get_micromamba_library_path.py)" >> "$GITHUB_ENV"
+
       - name: Install Env
         shell: bash -l {0}
         run: |
@@ -152,13 +158,13 @@ jobs:
           micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
-        if: "${{matrix.os}} == 'macos-15-intel' || ${{matrix.os}} == 'macos-14'"
+        if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
            micromamba run python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
 
       - name: Test with Coverage (Windows)
-        if: startsWith("${{matrix.os}}", "windows-")
+        if: startsWith(matrix.os, 'windows-')
         shell: pwsh
         run:
           micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
