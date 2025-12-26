@@ -132,7 +132,7 @@ jobs:
       - name: Install Env
         shell: bash -l {0}
         run: |
-          micromamba run -n test python -m pip install -e . --no-use-pep517 || micromamba run -n test python -m pip install -e .
+          micromamba run -n test python -m pip install -e . || micromamba run -n test python -m pip install -e .
           micromamba run -n test python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment
