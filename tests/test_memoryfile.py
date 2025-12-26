@@ -1,11 +1,11 @@
 """MemoryFile tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 2.x"""
-
+from contextlib import nullcontext
 from io import BytesIO
+from pathlib import Path
 import concurrent.futures
 import os.path
-from pathlib import Path
-from contextlib import nullcontext
+import platform
 
 from affine import Affine
 import numpy
@@ -261,6 +261,7 @@ def test_file_object_read_variant(rgb_file_bytes):
         assert src.read().shape == (3, 718, 791)
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="https://github.com/rasterio/rasterio/issues/3499")
 def test_memfile_thread_safe_option(rgb_file_object):
     with (
         pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
