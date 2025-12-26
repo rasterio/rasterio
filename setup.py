@@ -113,7 +113,6 @@ def find_gdal_install_with_executable(
     gdal_install_prefix = os.path.dirname(os.path.dirname(executable_path))
     return gdal_install_prefix, gdal_version
 
-
 def fill_gdal_build_options_using_executable(executable_name: str) -> None:
     """Fill the global GDAL build options using information from the provided install path.
 
@@ -180,48 +179,60 @@ def fill_gdal_build_options_using_executable(executable_name: str) -> None:
     libraries.append(found_gdal_lib_name)
     gdal_data_dir = found_gdal_data_dir
 
+def fill_gdal_build_options_using_gdal_config() -> None:
+    """Run gdal-config and fill the global build options using its output.
+
+    If gdal-config's path isn't found, raise `FileNotFoundError`.
+    If it fails, raise `CalledProcessError`.
+    """
+
+    global gdalversion
+
+    log.info("Using gdal-config to get GDAL build options")
+    gdal_config = os.environ.get("GDAL_CONFIG", "gdal-config")
+    for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
+        try:
+            gdal_output[i] = check_output([gdal_config, flag]).decode("utf-8").strip()
+        except FileNotFoundError as error:
+            raise FileNotFoundError(
+                'gdal-config not found under the name "%s"', gdal_config
+            ) from error
+
+    for item in gdal_output[0].split():
+        if item.startswith("-I"):
+            include_dirs.extend(item[2:].split(":"))
+    for item in gdal_output[1].split():
+        if item.startswith("-L"):
+            library_dirs.extend(item[2:].split(":"))
+        elif item.startswith("-l"):
+            libraries.append(item[2:])
+        else:
+            # e.g. -framework GDAL
+            extra_link_args.append(item)
+    # datadir, gdal_output[2] handled below
+
+    gdalversion = gdal_output[3]
+    if gdalversion:
+        log.info("GDAL API version obtained from gdal-config: %s", gdalversion)
 
 if "clean" not in sys.argv:
     try:
-        provided_gdal_install_prefix = os.environ.get("GDAL_INSTALL_PREFIX", None)
-        if provided_gdal_install_prefix:
-            log.info(
-                "Getting GDAL build options by searching for a GDAL executable",
-                provided_gdal_install_prefix,
-            )
-            fill_gdal_build_options_using_executable(executable_name="gdalinfo")
-        else:
-            log.info("Using gdal-config to get GDAL build options")
-            gdal_config = os.environ.get("GDAL_CONFIG", "gdal-config")
-            for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
-                gdal_output[i] = (
-                    check_output([gdal_config, flag]).decode("utf-8").strip()
-                )
-
-            for item in gdal_output[0].split():
-                if item.startswith("-I"):
-                    include_dirs.extend(item[2:].split(":"))
-            for item in gdal_output[1].split():
-                if item.startswith("-L"):
-                    library_dirs.extend(item[2:].split(":"))
-                elif item.startswith("-l"):
-                    libraries.append(item[2:])
-                else:
-                    # e.g. -framework GDAL
-                    extra_link_args.append(item)
-            # datadir, gdal_output[2] handled below
-
-            gdalversion = gdal_output[3]
-            if gdalversion:
-                log.info("GDAL API version obtained from gdal-config: %s", gdalversion)
-
+        fill_gdal_build_options_using_gdal_config()
     except Exception as e:
-        if os.name == "nt":
-            log.info("Building on Windows requires extra options to setup.py "
-                     "to locate needed GDAL files. More information is available "
-                     "in the README.")
-        else:
-            log.warning("Failed to get options via gdal-config: %s", str(e))
+        # Try to run gdalinfo and get information from that instead
+        log.info(
+            "Failed to use gdal-config, trying to run gdalinfo instead (gdal-config error of type %s: %s)",
+            type(e).__name__,
+            e,
+        )
+        try:
+            fill_gdal_build_options_using_executable(executable_name="gdalinfo")
+        except Exception as e:
+            log.warning(
+                "Failed to get options via both gdal-config and gdalinfo. (gdalinfo error of type %s: %s)",
+                type(e).__name__,
+                e,
+            )
 
     # Get GDAL API version from environment variable.
     if 'GDAL_VERSION' in os.environ:

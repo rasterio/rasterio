@@ -129,12 +129,6 @@ jobs:
             cython=3
             numpy
 
-      - name: On Windows, set GDAL_INSTALL_PREFIX to the conda library folder
-        if: startsWith(matrix.os, 'windows-')
-        shell: bash -l {0}
-        run: |
-          echo "GDAL_INSTALL_PREFIX=$(micromamba run -n test python ci/get_micromamba_library_path.py -n test)" >> "$GITHUB_ENV"
-
       - name: Install Env
         shell: bash -l {0}
         run: |
