@@ -6,7 +6,6 @@ ZLIB_VERSION=1.3.1
 TIFF_VERSION=4.7.1
 NGHTTP2_VERSION=1.65.0
 LERC_VERSION=4.0.0
-#JPEG_VERSION=9f
 LIBWEBP_VERSION=1.6.0
 ZSTD_VERSION=1.5.7
 LIBPNG_VERSION=1.6.53
@@ -286,10 +285,6 @@ HDF5_URL="https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${H
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="e4defbac30f50d64e1556374aa49e574417c9e72c6b1de7a4ff88c4b1bea6e9b"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
-
-#JPEG_URL="http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz"
-#JPEG_FNAME="jpeg-${JPEG_VERSION}"
-#fetch_untar ${JPEG_URL} -O ${JPEG_FNAME}.tar.gz
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
 JPEGTURBO_FNAME="libjpeg-turbo-${JPEGTURBO_VERSION}"
@@ -664,17 +659,6 @@ function build_zlib {
 	touch zlib-stamp
 }
 
-function build_jpeg {
-
-	if [ -e jpeg-stamp ]; then return; fi
-
-	(cd ${JPEG_FNAME} &&
-		./configure --prefix=$BUILD_PREFIX &&
-		make &&
-		make install)
-	touch jpeg-stamp
-}
-
 function build_jpegturbo {
 
     if [ -e jpeg-stamp ]; then
@@ -703,7 +687,6 @@ function build_jpegturbo {
 
     touch jpeg-stamp
 }
-
 
 function build_giflib {
 	if [ -e giflib-stamp ]; then return; fi
