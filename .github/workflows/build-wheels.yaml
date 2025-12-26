@@ -233,7 +233,7 @@ jobs:
         run: |
           rio --version
           rio env --formats
-          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_issue2353 and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
+          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
 
 
       - name: Check for conflicts with fiona wheel
