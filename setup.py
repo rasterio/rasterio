@@ -76,7 +76,9 @@ except ImportError:
 def find_gdal_install_with_executable(
     executable_name: str = "gdalinfo",
 ) -> tuple[str, tuple[int, int, int]] | None:
-    """Find the given GDAL executable on PATH and get the GDAL version and install directory from it.
+    """Find the given GDAL executable and get the GDAL version and install directory from it.
+
+    We first search on `sys.prefix`, then on `os.rnviron["PATH"]`.
 
     executable_name should be the name of a GDAL executable, like `"gdalinfo"`, with or without extension.
     It should be executable on the command line through this name.
@@ -87,12 +89,17 @@ def find_gdal_install_with_executable(
     This does not check if the install is complete.
     """
 
-    executable_path = shutil.which(executable_name)
+    log.info("Searching for executable %s on sys.prefix")
+    executable_path = shutil.which(executable_name, path=sys.prefix)
     if executable_path is None:
-        log.info("Did not find executable %s on PATH", executable_name)
+        log.info("Did not find executable %s on sys.prefix, searching on PATH")
+        executable_path = shutil.which(executable_name, path=os.environ["PATH"])
+    if executable_path is None:
+        log.info("Did not find executable %s on sys.prefix or on PATH", executable_name)
         return None
     executable_path = os.path.abspath(executable_path)
     log.info("Found executable %s at path %s", executable_name, executable_path)
+
     # Run it to get the GDAL version
     result = check_output([executable_name, "--version"], text=True).strip()
     version_match = re.match(
