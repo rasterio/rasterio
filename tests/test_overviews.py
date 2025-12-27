@@ -121,7 +121,9 @@ def test_decimated_no_use_overview(red_green):
     # green.tif.ovr.  We have a GDAL overview reading bug if green
     # pixels appear in a decimated read.
     green_ovr = red_green.join("green.tif.ovr")
-    green_ovr.move(red_green.join("red.tif.ovr"))
+    red_ovr = red_green.join("red.tif.ovr")
+    red_ovr.remove()
+    green_ovr.move(red_ovr)
     assert not green_ovr.exists()
 
     # Read the corrupted red overview.
