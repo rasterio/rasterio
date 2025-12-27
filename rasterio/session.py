@@ -552,9 +552,15 @@ class AzureSession(Session):
     """Configures access to secured resources stored in Microsoft Azure Blob Storage.
     """
     def __init__(self, azure_storage_connection_string=None,
-                 azure_storage_account=None, azure_storage_access_key=None,
-                 azure_unsigned=False):
+                 azure_storage_account=None, azure_storage_access_token=None,
+                 azure_storage_access_key=None, azure_storage_sas_token = None,
+                 azure_unsigned=False, azure_tenant_id=None,
+                 azure_client_id=None, azure_federated_token_file=None,
+                 azure_authority_host=None):
         """Create new Microsoft Azure Blob Storage session
+
+        Authentication defaults to parameters first. If parameters do not
+        result in a valid credentials object, environment variables are used.
 
         Parameters
         ----------
@@ -562,29 +568,90 @@ class AzureSession(Session):
             A connection string contains both an account name and a secret key.
         azure_storage_account: string
             An account name
+        azure_storage_access_token: string
+            An access token
         azure_storage_access_key: string
             A secret key
+        azure_storage_sas_token: string
+            A sas token
         azure_unsigned : bool, optional (default: False)
             If True, requests will be unsigned.
+        azure_tenant_id: str, optional (default: None)
+            A tenant id
+        azure_client_id: str, optional (default: None)
+            A client id
+        azure_federated_token_file: str, optional (default: None)
+            The path to a token file.
+        azure_authority_host: str, optional (default: None)
+            The url of an authority host.
         """
 
-        self.unsigned = parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST", azure_unsigned))
-        self.storage_account = azure_storage_account or os.getenv("AZURE_STORAGE_ACCOUNT")
-        self.storage_access_key = azure_storage_access_key or os.getenv("AZURE_STORAGE_ACCESS_KEY")
+        def _get_credentials(
+           storage_connection_string,
+           storage_account,
+           unsigned,
+           storage_access_token,
+           storage_access_key,
+           sas_token,
+           tenant_id,
+           client_id,
+           federated_token_file,
+           authority_host,
+        ):
+            if storage_connection_string:
+                return {
+                    "azure_storage_connection_string": storage_connection_string
+                }
+            else:
+                creds = {
+                    "azure_storage_account": storage_account
+                }
+                if storage_access_token:
+                    creds["azure_storage_access_token"] = storage_access_token
+                elif storage_access_key:
+                    creds["azure_storage_access_key"] = storage_access_key
+                elif sas_token:
+                    creds["azure_storage_sas_token"] = sas_token
+                elif unsigned:
+                    creds["azure_no_sign_request"] = "YES"
+                    self.unsigned = True
+                elif tenant_id and client_id and federated_token_file and authority_host:
+                        creds["azure_tenant_id"] = tenant_id
+                        creds["azure_client_id"] = client_id
+                        creds["azure_federated_token_file"] = federated_token_file
+                        creds["azure_authority_host"] = authority_host
+                return creds
 
-        if azure_storage_connection_string:
-            self._creds = {
-                "azure_storage_connection_string": azure_storage_connection_string
-            }
-        elif not self.unsigned:
-            self._creds = {
-                "azure_storage_account": self.storage_account,
-                "azure_storage_access_key": self.storage_access_key
-            }
-        else:
-            self._creds = {
-                "azure_storage_account": self.storage_account
-            }
+
+        passed_args = {
+            "storage_connection_string": azure_storage_connection_string,
+            "storage_account": azure_storage_account,
+            "unsigned": azure_unsigned,
+            "storage_access_token": azure_storage_access_token,
+            "storage_access_key": azure_storage_access_key,
+            "sas_token": azure_storage_sas_token,
+            "tenant_id": azure_tenant_id,
+            "client_id": azure_client_id,
+            "federated_token_file": azure_federated_token_file,
+            "authority_host": azure_authority_host
+        }
+
+        env_vars = {
+            "storage_connection_string": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
+            "storage_account": os.getenv("AZURE_STORAGE_ACCOUNT"),
+            "unsigned": parse_bool(os.getenv("AZURE_NO_SIGN_REQUEST")),
+            "storage_access_token": os.getenv("AZURE_STORAGE_ACCESS_TOKEN"),
+            "storage_access_key": os.getenv("AZURE_STORAGE_ACCESS_KEY"),
+            "sas_token": os.getenv("AZURE_STORAGE_SAS_TOKEN"),
+            "tenant_id": os.getenv("AZURE_TENANT_ID"),
+            "client_id": os.getenv("AZURE_CLIENT_ID"),
+            "federated_token_file": os.getenv("AZURE_FEDERATED_TOKEN_FILE"),
+            "authority_host": os.getenv("AZURE_AUTHORITY_HOST")
+        }
+
+        self._creds = _get_credentials(**passed_args)
+        if not AzureSession.hascreds(self.get_credential_options()):
+            self._creds = _get_credentials(**env_vars)
 
     @classmethod
     def hascreds(cls, config):
@@ -604,8 +671,13 @@ class AzureSession(Session):
         """
         return (
             'AZURE_STORAGE_CONNECTION_STRING' in config
+            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_TOKEN' in config)
             or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_KEY' in config)
+            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_SAS_TOKEN' in config)
             or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_NO_SIGN_REQUEST' in config)
+            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_TENANT_ID' in config and
+                'AZURE_CLIENT_ID' in config and 'AZURE_FEDERATED_TOKEN_FILE' in config
+                and 'AZURE_AUTHORITY_HOST' in config)
         )
 
     @property
@@ -621,13 +693,7 @@ class AzureSession(Session):
         dict
 
         """
-        if self.unsigned:
-            return {
-                'AZURE_NO_SIGN_REQUEST': 'YES',
-                'AZURE_STORAGE_ACCOUNT': self.storage_account
-            }
-        else:
-            return {k.upper(): v for k, v in self.credentials.items()}
+        return {k.upper(): v for k, v in self.credentials.items()}
 
 def parse_bool(v):
     """CPLTestBool equivalent"""
