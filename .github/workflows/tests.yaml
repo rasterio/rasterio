@@ -108,7 +108,7 @@ jobs:
       matrix:
         # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
-        os: [macos-15-intel, macos-14]
+        os: [macos-15-intel, macos-14, windows-latest]
         python-version: ['3.12', '3.13', '3.14']
         include:
           - os: ubuntu-latest
@@ -132,7 +132,7 @@ jobs:
       - name: Install Env
         shell: bash -l {0}
         run: |
-          micromamba run -n test python -m pip install -e . --no-use-pep517 || micromamba run -n test python -m pip install -e .
+          micromamba run -n test python -m pip install -e . || micromamba run -n test python -m pip install -e .
           micromamba run -n test python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment

@@ -120,7 +120,10 @@ def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
 
 
 @mock.patch("rasterio._env.GDALDataFinder.find_file")
-def test_ensure_env_decorator_sets_gdal_data_prefix(find_file, gdalenv, monkeypatch, tmpdir):
+@mock.patch("rasterio._env.GDALDataFinder.search_wheel")
+def test_ensure_env_decorator_sets_gdal_data_prefix(
+    find_file, search_wheel, gdalenv, monkeypatch, tmpdir
+):
     """ensure_env finds GDAL data under a prefix"""
 
     @ensure_env
@@ -128,6 +131,8 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(find_file, gdalenv, monkeypa
         return getenv()['GDAL_DATA']
 
     find_file.return_value = None
+    # Neutralize search_wheel because we want to find GDAL data in the prefix
+    search_wheel.return_value = None
 
     tmpdir.ensure("share/gdal/gdalvrt.xsd")
     monkeypatch.delenv('GDAL_DATA', raising=False)
