@@ -22,6 +22,7 @@ Enhancements:
 - Move project metadata to pyproject.toml (PEP 621) (#3430)
 - Use Lapack solve to more accurately compute affine reverse transforms (#3315)
 - rasterio.open: Add thread_safe parameter (#3496)
+- rasterio.session: Add support for additional Azure credentials (#3482)
 
 Bug fixes:
 
@@ -35,7 +36,7 @@ Bug fixes:
 - Static GDAL runtime version check (#3487)
 - Use GDAL open flag constants (#3494)
 - Documentation (#3459, 3458, #3455, #3346)
-- Tests (#3429)
+- Tests (#3429, #3502, #3501, #3498)
 - Code linting (#3457)
 
 Deprecations:
@@ -44,7 +45,8 @@ Deprecations:
 
 Packaging notes:
 
-- Wheel: GDAL 3.12.1 (#3491, #3493)
+- Wheel: GDAL 3.12.1 (#3491, #3493, #3497)
+- Search for GDAL installation path on Windows (#3498)
 
 Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.0/ci/config.sh#L1-L25
 
