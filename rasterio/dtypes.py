@@ -2,9 +2,7 @@
 
 import numpy
 
-from rasterio.env import GDALVersion
-
-_GDAL_AT_LEAST_3_11 = GDALVersion.runtime().at_least("3.11")
+from rasterio.env import _GDAL_AT_LEAST_3_11
 
 bool_ = numpy.dtype(bool).name
 ubyte = uint8 = numpy.uint8().dtype.name
