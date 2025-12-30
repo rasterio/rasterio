@@ -45,7 +45,7 @@ from rasterio.errors import (
     RasterioIOError,
 )
 from rasterio.profiles import Profile
-from rasterio.transform import Affine, guard_transform, tastes_like_gdal
+from rasterio.transform import Affine, guard_transform, tastes_like_gdal, array_bounds
 from rasterio._path import _parse_path
 from rasterio import windows
 
@@ -950,13 +950,13 @@ cdef class DatasetBase:
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        a, b, c, d, e, f, _, _, _ = self.transform
         width = self.width
         height = self.height
-        if b == d == 0:
-            return BoundingBox(c, f + e * height, c + a * width, f)
+        if self.transform.is_rectilinear:
+            # Rotation is 0, 90, 180, or 270 degrees
+            return BoundingBox(*array_bounds(height, width, self.transform))
         else:
-            c0x, c0y = c, f
+            c0x, c0y = self.transform.xoff, self.transform.yoff
             c1x, c1y = self.transform * (0, height)
             c2x, c2y = self.transform * (width, height)
             c3x, c3y = self.transform * (width, 0)
