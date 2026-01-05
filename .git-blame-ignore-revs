@@ -1,0 +1,4 @@
+# LNT: Enable ruff-format #3489
+a69d07ab2e172f3fd084fda9f803d4083c20c684
+# Replace flake8 with ruff check "F", "E" and "W" rules (#3457)
+46e3da7d25b1583c4694c0327f718c53a44a9b70
