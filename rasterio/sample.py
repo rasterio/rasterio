@@ -18,7 +18,8 @@ def _transform_xy(dataset, xy):
         if not buf:
             break
         x, y = rowcol(dt, *zip(*buf))
-        yield from zip(x,y)
+        yield from zip(x, y)
+
 
 def sort_xy(xy):
     """Sort x, y coordinates by x then y
@@ -75,7 +76,7 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     elif isinstance(indexes, int):
         indexes = [indexes]
 
-    nodata = np.full(len(indexes), (dataset.nodata or 0),  dtype=dataset.dtypes[0])
+    nodata = np.full(len(indexes), (dataset.nodata or 0), dtype=dataset.dtypes[0])
     if masked:
         # Masks for masked arrays are inverted (False means valid)
         mask_flags = [set(dataset.mask_flag_enums[i - 1]) for i in indexes]

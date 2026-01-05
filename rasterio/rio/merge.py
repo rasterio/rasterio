@@ -26,14 +26,20 @@ def deprecated_precision(ctx, param, value):
 @options.format_opt
 @options.bounds_opt
 @options.resolution_opt
-@click.option('--resampling',
-              type=click.Choice([r.name for r in Resampling if r.value <= 7]),
-              default='nearest', help="Resampling method.",
-              show_default=True)
-@click.option('--method',
-              type=click.Choice(list(MERGE_METHODS)),
-              default='first', help="Merging strategy.",
-              show_default=True)
+@click.option(
+    "--resampling",
+    type=click.Choice([r.name for r in Resampling if r.value <= 7]),
+    default="nearest",
+    help="Resampling method.",
+    show_default=True,
+)
+@click.option(
+    "--method",
+    type=click.Choice(list(MERGE_METHODS)),
+    default="first",
+    help="Merging strategy.",
+    show_default=True,
+)
 @options.nodata_opt
 @options.dtype_opt
 @options.bidx_mult_opt
@@ -104,8 +110,7 @@ def merge(
     """
     from rasterio.merge import merge as merge_tool
 
-    output, files = resolve_inout(
-        files=files, output=output, overwrite=overwrite)
+    output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
 
     resampling = Resampling[resampling]
     if driver:

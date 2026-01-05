@@ -6,8 +6,7 @@ import uuid
 class GroundControlPoint:
     """A mapping of row, col image coordinates to x, y, z."""
 
-    def __init__(self, row=None, col=None, x=None, y=None, z=None,
-                 id=None, info=None):
+    def __init__(self, row=None, col=None, x=None, y=None, z=None, id=None, info=None):
         """Create a new ground control point
 
         Parameters
@@ -49,8 +48,15 @@ class GroundControlPoint:
 
     def asdict(self):
         """A dict representation of the GCP"""
-        return {'id': self.id, 'info': self.info, 'row': self.row,
-                'col': self.col, 'x': self.x, 'y': self.y, 'z': self.z}
+        return {
+            "id": self.id,
+            "info": self.info,
+            "row": self.row,
+            "col": self.col,
+            "x": self.x,
+            "y": self.y,
+            "z": self.z,
+        }
 
     @property
     def __geo_interface__(self):
@@ -58,6 +64,9 @@ class GroundControlPoint:
         coords = [self.x, self.y]
         if self.z is not None:
             coords.append(self.z)
-        return {'id': self.id, 'type': 'Feature',
-                'geometry': {'type': 'Point', 'coordinates': tuple(coords)},
-                'properties': self.asdict()}
+        return {
+            "id": self.id,
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": tuple(coords)},
+            "properties": self.asdict(),
+        }

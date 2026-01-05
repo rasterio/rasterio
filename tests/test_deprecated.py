@@ -1,6 +1,5 @@
 """Unittests for deprecated features"""
 
-
 import affine
 import pytest
 

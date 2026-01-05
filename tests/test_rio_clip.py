@@ -6,15 +6,16 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 from rasterio import windows
+
 TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
 
 
 def bbox(*args):
-    return ' '.join([str(x) for x in args])
+    return " ".join([str(x) for x in args])
 
 
 def test_clip(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
 
     with rasterio.open("tests/data/shade.tif") as src:
         # make sure width and height are > chunksize for clip (512)
@@ -23,7 +24,8 @@ def test_clip(runner, tmpdir):
         src_data = src.read(window=test_window)
 
     result = runner.invoke(
-        main_group, ["clip", "tests/data/shade.tif", output, "--bounds", bbox(*test_bounds)]
+        main_group,
+        ["clip", "tests/data/shade.tif", output, "--bounds", bbox(*test_bounds)],
     )
     assert result.exit_code == 0
     assert os.path.exists(output)
@@ -35,7 +37,7 @@ def test_clip(runner, tmpdir):
 
 @pytest.mark.parametrize("bounds", [bbox(*TEST_BBOX)])
 def test_clip_bounds(runner, tmpdir, bounds):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
         main_group, ["clip", "tests/data/shade.tif", output, "--bounds", bounds]
     )
@@ -70,11 +72,18 @@ def test_clip_bounds_with_complement(runner, tmpdir, bounds):
 
 
 def test_clip_bounds_geographic(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/RGB.byte.tif', output, '--geographic', '--bounds',
-         '-78.95864996545055 23.564991210854686 -76.57492370013823 25.550873767433984'])
+        [
+            "clip",
+            "tests/data/RGB.byte.tif",
+            output,
+            "--geographic",
+            "--bounds",
+            "-78.95864996545055 23.564991210854686 -76.57492370013823 25.550873767433984",
+        ],
+    )
     assert result.exit_code == 0
     assert os.path.exists(output)
 
@@ -108,66 +117,69 @@ def test_clip_to_datawindow(runner, tmpdir):
 
 
 def test_clip_like(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
-        main_group, [
-            'clip', 'tests/data/shade.tif', output, '--like',
-            'tests/data/shade.tif'])
+        main_group,
+        ["clip", "tests/data/shade.tif", output, "--like", "tests/data/shade.tif"],
+    )
     assert result.exit_code == 0
     assert os.path.exists(output)
 
-    with rasterio.open('tests/data/shade.tif') as template_ds:
+    with rasterio.open("tests/data/shade.tif") as template_ds:
         with rasterio.open(output) as out:
             assert out.shape == template_ds.shape
             assert numpy.allclose(out.bounds, template_ds.bounds)
 
 
 def test_clip_missing_params(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
-    result = runner.invoke(
-        main_group, ['clip', 'tests/data/shade.tif', output])
+    output = str(tmpdir.join("test.tif"))
+    result = runner.invoke(main_group, ["clip", "tests/data/shade.tif", output])
     assert result.exit_code == 2
     assert "-bounds, --like, or --to-data-window required" in result.output
 
 
 def test_clip_bounds_disjunct(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(0, 0, 10, 10)])
+        ["clip", "tests/data/shade.tif", output, "--bounds", bbox(0, 0, 10, 10)],
+    )
     assert result.exit_code == 2
-    assert '--bounds' in result.output
+    assert "--bounds" in result.output
 
 
 def test_clip_like_disjunct(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
-        main_group, [
-            'clip', 'tests/data/shade.tif', output, '--like',
-            'tests/data/RGB.byte.tif'])
+        main_group,
+        ["clip", "tests/data/shade.tif", output, "--like", "tests/data/RGB.byte.tif"],
+    )
     assert result.exit_code == 2
-    assert '--like' in result.output
+    assert "--like" in result.output
 
 
 def test_clip_overwrite_without_option(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+        ["clip", "tests/data/shade.tif", output, "--bounds", bbox(*TEST_BBOX)],
+    )
     assert result.exit_code == 0
 
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+        ["clip", "tests/data/shade.tif", output, "--bounds", bbox(*TEST_BBOX)],
+    )
     assert result.exit_code == 1
-    assert '--overwrite' in result.output
+    assert "--overwrite" in result.output
 
 
 def test_clip_overwrite_with_option(runner, tmpdir):
-    output = str(tmpdir.join('test.tif'))
+    output = str(tmpdir.join("test.tif"))
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+        ["clip", "tests/data/shade.tif", output, "--bounds", bbox(*TEST_BBOX)],
+    )
     assert result.exit_code == 0
 
     result = runner.invoke(
@@ -186,11 +198,10 @@ def test_clip_overwrite_with_option(runner, tmpdir):
 
 def test_clip_rotated(runner, tmpdir):
     """Rotated dataset cannot be clipped"""
-    output = str(tmpdir.join('test.tif'))
-    result = runner.invoke(
-        main_group, ['clip', 'tests/data/rotated.tif', output])
+    output = str(tmpdir.join("test.tif"))
+    result = runner.invoke(main_group, ["clip", "tests/data/rotated.tif", output])
     assert result.exit_code == 2
-    assert 'Non-rectilinear' in result.output
+    assert "Non-rectilinear" in result.output
 
 
 @pytest.mark.parametrize("bounds", [bbox(31.0, -1.0, 33.0, 1.0)])

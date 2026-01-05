@@ -13,12 +13,12 @@ from rasterio.enums import OverviewResampling
 def build_handler(ctx, param, value):
     if value:
         try:
-            if '^' in value:
-                base, exp_range = value.split('^')
-                exp_min, exp_max = (int(v) for v in exp_range.split('..'))
+            if "^" in value:
+                base, exp_range = value.split("^")
+                exp_min, exp_max = (int(v) for v in exp_range.split(".."))
                 value = [pow(int(base), k) for k in range(exp_min, exp_max + 1)]
-            elif ',' in value:
-                value = [int(v) for v in value.split(',')]
+            elif "," in value:
+                value = [int(v) for v in value.split(",")]
             elif value == "auto":
                 pass
             else:
@@ -57,7 +57,7 @@ def get_maximum_overview_level(width, height, minsize=256):
     return overview_level
 
 
-@click.command('overview', short_help="Construct overviews in an existing dataset.")
+@click.command("overview", short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
 @click.option(
     "--build",
@@ -111,40 +111,44 @@ def overview(ctx, input, build, ls, rebuild, resampling):
       rio overview --ls
 
     """
-    with ctx.obj['env']:
+    with ctx.obj["env"]:
         if ls:
-            with rasterio.open(input, 'r') as dst:
-                resampling_method = dst.tags(
-                    ns='rio_overview').get('resampling') or 'unknown'
+            with rasterio.open(input, "r") as dst:
+                resampling_method = (
+                    dst.tags(ns="rio_overview").get("resampling") or "unknown"
+                )
 
                 click.echo("Overview factors:")
                 for idx in dst.indexes:
-                    click.echo("  Band %d: %s (method: '%s')" % (
-                        idx, dst.overviews(idx) or 'None', resampling_method))
+                    click.echo(
+                        "  Band %d: %s (method: '%s')"
+                        % (idx, dst.overviews(idx) or "None", resampling_method)
+                    )
         elif rebuild:
-            with rasterio.open(input, 'r+') as dst:
+            with rasterio.open(input, "r+") as dst:
                 # Build the same overviews for all bands.
                 factors = reduce(
-                    operator.or_,
-                    [set(dst.overviews(i)) for i in dst.indexes])
+                    operator.or_, [set(dst.overviews(i)) for i in dst.indexes]
+                )
 
                 # Attempt to recover the resampling method from dataset tags.
-                resampling_method = dst.tags(
-                    ns='rio_overview').get('resampling') or resampling
+                resampling_method = (
+                    dst.tags(ns="rio_overview").get("resampling") or resampling
+                )
 
                 dst.build_overviews(
-                    list(factors), OverviewResampling[resampling_method])
+                    list(factors), OverviewResampling[resampling_method]
+                )
 
         elif build:
-            with rasterio.open(input, 'r+') as dst:
+            with rasterio.open(input, "r+") as dst:
                 if build == "auto":
                     overview_level = get_maximum_overview_level(dst.width, dst.height)
-                    build = [2 ** j for j in range(1, overview_level + 1)]
+                    build = [2**j for j in range(1, overview_level + 1)]
                 dst.build_overviews(build, OverviewResampling[resampling])
 
                 # Save the resampling method to a tag.
-                dst.update_tags(ns='rio_overview', resampling=resampling)
+                dst.update_tags(ns="rio_overview", resampling=resampling)
 
         else:
-            raise click.UsageError(
-                "Please specify --ls, --rebuild, or --build ...")
+            raise click.UsageError("Please specify --ls, --rebuild, or --build ...")

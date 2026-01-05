@@ -18,17 +18,17 @@ from rasterio.errors import PathError
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
 # TODO: extend for other cloud platforms.
 SCHEMES = {
-    'ftp': 'curl',
-    'gzip': 'gzip',
-    'http': 'curl',
-    'https': 'curl',
-    's3': 's3',
-    'tar': 'tar',
-    'zip': 'zip',
-    'file': 'file',
-    'oss': 'oss',
-    'gs': 'gs',
-    'az': 'az',
+    "ftp": "curl",
+    "gzip": "gzip",
+    "http": "curl",
+    "https": "curl",
+    "s3": "s3",
+    "tar": "tar",
+    "zip": "zip",
+    "file": "file",
+    "oss": "oss",
+    "gs": "gs",
+    "az": "az",
 }
 
 ARCHIVESCHEMES = set
@@ -70,6 +70,7 @@ class _ParsedPath(_Path):
     scheme : str
         URI scheme such as "https" or "zip+s3".
     """
+
     path = attr.ib()
     archive = attr.ib()
     scheme = attr.ib()
@@ -91,7 +92,7 @@ class _ParsedPath(_Path):
             path += "?" + parts.query
 
         if scheme and scheme.startswith(("gzip", "tar", "zip")):
-            path_parts = path.split('!')
+            path_parts = path.split("!")
             path = path_parts.pop() if path_parts else None
             archive = path_parts.pop() if path_parts else None
         else:
@@ -123,7 +124,9 @@ class _ParsedPath(_Path):
     @property
     def is_local(self):
         """Test if the path is a local URI"""
-        return not self.scheme or (self.scheme and self.scheme.split('+')[-1] not in REMOTESCHEMES)
+        return not self.scheme or (
+            self.scheme and self.scheme.split("+")[-1] not in REMOTESCHEMES
+        )
 
 
 @attr.s(slots=True)
@@ -135,6 +138,7 @@ class _UnparsedPath(_Path):
     path : str
         The legacy GDAL filename.
     """
+
     path = attr.ib()
 
     @property
@@ -168,7 +172,7 @@ def _parse_path(path):
     elif isinstance(path, str):
         if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", path):
             return _ParsedPath(path, None, None)
-        elif path.startswith('/vsi'):
+        elif path.startswith("/vsi"):
             return _UnparsedPath(path)
         else:
             parts = urlparse(path)
@@ -178,7 +182,7 @@ def _parse_path(path):
     # if the scheme is not one of Rasterio's supported schemes, we
     # return an UnparsedPath.
     if parts.scheme:
-        if all(p in SCHEMES for p in parts.scheme.split('+')):
+        if all(p in SCHEMES for p in parts.scheme.split("+")):
             return _ParsedPath.from_uri(path)
 
     return _UnparsedPath(path)
@@ -201,15 +205,14 @@ def _vsi_path(path):
         return path.path
 
     elif isinstance(path, _ParsedPath):
-
         if not path.scheme:
             return path.path
 
         else:
-            if path.scheme.split('+')[-1] in CURLSCHEMES:
-                suffix = '{}://'.format(path.scheme.split('+')[-1])
+            if path.scheme.split("+")[-1] in CURLSCHEMES:
+                suffix = "{}://".format(path.scheme.split("+")[-1])
             else:
-                suffix = ''
+                suffix = ""
 
             prefix = "/".join(
                 f"vsi{SCHEMES[p]}" for p in path.scheme.split("+") if p != "file"
@@ -217,7 +220,9 @@ def _vsi_path(path):
 
             if prefix:
                 if path.archive:
-                    result = '/{}/{}{}/{}'.format(prefix, suffix, path.archive, path.path.lstrip('/'))
+                    result = "/{}/{}{}/{}".format(
+                        prefix, suffix, path.archive, path.path.lstrip("/")
+                    )
                 else:
                     result = f"/{prefix}/{suffix}{path.path}"
             else:

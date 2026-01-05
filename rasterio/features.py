@@ -38,12 +38,7 @@ log = logging.getLogger(__name__)
 
 
 @ensure_env
-def geometry_mask(
-        geometries,
-        out_shape,
-        transform,
-        all_touched=False,
-        invert=False):
+def geometry_mask(geometries, out_shape, transform, all_touched=False, invert=False):
     """Create a mask from shapes.
 
     By default, mask is intended for use as a
@@ -86,7 +81,7 @@ def geometry_mask(
         all_touched=all_touched,
         fill=fill,
         default_value=mask_value,
-        dtype=uint8
+        dtype=uint8,
     ).view(bool)
 
 
@@ -140,7 +135,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     - :cpp:func:`GDALFPolygonize`
 
     """
-    if hasattr(source, 'mask') and mask is None:
+    if hasattr(source, "mask") and mask is None:
         mask = ~source.mask
         source = source.data
 
@@ -302,7 +297,16 @@ def rasterize(
 
     """
     valid_dtypes = (
-        int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64
+        int8,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
     )
     if _GDAL_AT_LEAST_3_11:
         valid_dtypes += (float16,)
@@ -336,25 +340,27 @@ def rasterize(
             geom = item
             value = default_value
 
-        geom = getattr(geom, '__geo_interface__', None) or geom
+        geom = getattr(geom, "__geo_interface__", None) or geom
 
         if is_valid_geom(geom):
             shape_values.append(value)
-            geom_type = geom['type']
+            geom_type = geom["type"]
 
-            if geom_type == 'GeometryCollection':
+            if geom_type == "GeometryCollection":
                 # GeometryCollections need to be handled as individual parts to
                 # avoid holes in output:
                 # https://github.com/rasterio/rasterio/issues/1253.
                 # Only 1-level deep since GeoJSON spec discourages nested
                 # GeometryCollections
-                for part in geom['geometries']:
+                for part in geom["geometries"]:
                     valid_shapes.append((part, value))
 
-            elif geom_type == 'MultiPolygon':
+            elif geom_type == "MultiPolygon":
                 # Same issue as above
-                for poly in geom['coordinates']:
-                    valid_shapes.append(({'type': 'Polygon', 'coordinates': poly}, value))
+                for poly in geom["coordinates"]:
+                    valid_shapes.append(
+                        ({"type": "Polygon", "coordinates": poly}, value)
+                    )
 
             else:
                 valid_shapes.append((geom, value))
@@ -394,12 +400,12 @@ def rasterize(
 
         elif out_shape is not None:
             if len(out_shape) != 2:
-                raise ValueError('Invalid out_shape, must be 2D')
+                raise ValueError("Invalid out_shape, must be 2D")
             out = np.empty(out_shape, dtype=dtype)
             out.fill(fill)
 
         else:
-            raise ValueError('Either an out_shape or image must be provided')
+            raise ValueError("Either an out_shape or image must be provided")
 
         if min(out.shape) == 0:
             raise ValueError("width and height must be > 0")
@@ -431,15 +437,15 @@ def bounds(geometry, north_up=True, transform=None):
         Bounding box: (left, bottom, right, top)
     """
 
-    geometry = getattr(geometry, '__geo_interface__', None) or geometry
+    geometry = getattr(geometry, "__geo_interface__", None) or geometry
 
-    if 'bbox' in geometry:
-        return tuple(geometry['bbox'])
+    if "bbox" in geometry:
+        return tuple(geometry["bbox"])
 
-    geom = geometry.get('geometry') or geometry
+    geom = geometry.get("geometry") or geometry
 
     # geometry must be a geometry, GeometryCollection, or FeatureCollection
-    if not ('coordinates' in geom or 'geometries' in geom or 'features' in geom):
+    if not ("coordinates" in geom or "geometries" in geom or "features" in geom):
         raise ValueError(
             "geometry must be a GeoJSON-like geometry, GeometryCollection, "
             "or FeatureCollection"
@@ -496,16 +502,19 @@ def geometry_window(
 
     """
     if north_up is not None:
-        warnings.warn("The north_up parameter is unused, deprecated, and will be removed in the future.",
-                       RasterioDeprecationWarning
+        warnings.warn(
+            "The north_up parameter is unused, deprecated, and will be removed in the future.",
+            RasterioDeprecationWarning,
         )
     if rotated is not None:
-        warnings.warn("The rotated parameter is unused, deprecated, and will be removed in the future.",
-                      RasterioDeprecationWarning
+        warnings.warn(
+            "The rotated parameter is unused, deprecated, and will be removed in the future.",
+            RasterioDeprecationWarning,
         )
     if pixel_precision is not None:
-        warnings.warn("The pixel_precision paramter is unused, deprecated, and will be removed in the future.",
-                      RasterioDeprecationWarning
+        warnings.warn(
+            "The pixel_precision paramter is unused, deprecated, and will be removed in the future.",
+            RasterioDeprecationWarning,
         )
 
     shape_windows = []
@@ -523,10 +532,7 @@ def geometry_window(
         width = math.ceil(_window.col_off + _window.width + pad_x) - col_off
         height = math.ceil(_window.row_off + _window.height + pad_y) - row_off
         shape_windows.append(
-            windows.Window(col_off=col_off,
-                            row_off=row_off,
-                            width=width,
-                            height=height)
+            windows.Window(col_off=col_off, row_off=row_off, width=width, height=height)
         )
 
     bounding_window = windows.union(*shape_windows)
@@ -558,69 +564,78 @@ def is_valid_geom(geom):
     bool: True if object is a valid GeoJSON geometry type
     """
 
-    geom_types = {'Point', 'MultiPoint', 'LineString', 'LinearRing',
-                  'MultiLineString', 'Polygon', 'MultiPolygon'}
+    geom_types = {
+        "Point",
+        "MultiPoint",
+        "LineString",
+        "LinearRing",
+        "MultiLineString",
+        "Polygon",
+        "MultiPolygon",
+    }
 
-    geom = getattr(geom, '__geo_interface__', None) or geom
+    geom = getattr(geom, "__geo_interface__", None) or geom
 
     try:
         geom_type = geom["type"]
-        if geom_type not in geom_types.union({'GeometryCollection'}):
+        if geom_type not in geom_types.union({"GeometryCollection"}):
             return False
 
     except (KeyError, TypeError):
         return False
 
     if geom_type in geom_types:
-        if 'coordinates' not in geom:
+        if "coordinates" not in geom:
             return False
 
-        coords = geom['coordinates']
+        coords = geom["coordinates"]
 
-        if geom_type == 'Point':
+        if geom_type == "Point":
             # Points must have at least x, y
             return len(coords) >= 2
 
-        if geom_type == 'MultiPoint':
+        if geom_type == "MultiPoint":
             # Multi points must have at least one point with at least x, y
             return len(coords) > 0 and len(coords[0]) >= 2
 
-        if geom_type == 'LineString':
+        if geom_type == "LineString":
             # Lines must have at least 2 coordinates and at least x, y for
             # a coordinate
             return len(coords) >= 2 and len(coords[0]) >= 2
 
-        if geom_type == 'LinearRing':
+        if geom_type == "LinearRing":
             # Rings must have at least 4 coordinates and at least x, y for
             # a coordinate
             return len(coords) >= 4 and len(coords[0]) >= 2
 
-        if geom_type == 'MultiLineString':
+        if geom_type == "MultiLineString":
             # Multi lines must have at least one LineString
-            return (len(coords) > 0 and len(coords[0]) >= 2 and
-                    len(coords[0][0]) >= 2)
+            return len(coords) > 0 and len(coords[0]) >= 2 and len(coords[0][0]) >= 2
 
-        if geom_type == 'Polygon':
+        if geom_type == "Polygon":
             # Polygons must have at least 1 ring, with at least 4 coordinates,
             # with at least x, y for a coordinate
-            return (len(coords) > 0 and len(coords[0]) >= 4 and
-                    len(coords[0][0]) >= 2)
+            return len(coords) > 0 and len(coords[0]) >= 4 and len(coords[0][0]) >= 2
 
-        if geom_type == 'MultiPolygon':
+        if geom_type == "MultiPolygon":
             # Multi polygons must have at least one Polygon
-            return (len(coords) > 0 and len(coords[0]) > 0 and
-                    len(coords[0][0]) >= 4 and len(coords[0][0][0]) >= 2)
+            return (
+                len(coords) > 0
+                and len(coords[0]) > 0
+                and len(coords[0][0]) >= 4
+                and len(coords[0][0][0]) >= 2
+            )
 
-    if geom_type == 'GeometryCollection':
-        if 'geometries' not in geom:
+    if geom_type == "GeometryCollection":
+        if "geometries" not in geom:
             return False
 
-        if not len(geom['geometries']) > 0:
+        if not len(geom["geometries"]) > 0:
             # While technically valid according to GeoJSON spec, an empty
             # GeometryCollection will cause issues if used in rasterio
             return False
 
-        for g in geom['geometries']:
+        for g in geom["geometries"]:
             if not is_valid_geom(g):
                 return False  # short-circuit and fail early
 
@@ -628,14 +643,15 @@ def is_valid_geom(geom):
 
 
 def dataset_features(
-        src,
-        bidx=None,
-        sampling=1,
-        band=True,
-        as_mask=False,
-        with_nodata=False,
-        geographic=True,
-        precision=-1):
+    src,
+    bidx=None,
+    sampling=1,
+    band=True,
+    as_mask=False,
+    with_nodata=False,
+    geographic=True,
+    precision=-1,
+):
     """Yield GeoJSON features for the dataset
 
     The geometries are polygons bounding contiguous regions of the same raster value.
@@ -670,7 +686,7 @@ def dataset_features(
     GeoJSON-like Feature dictionaries for shapes found in the given band
     """
     if bidx is not None and bidx > src.count:
-        raise ValueError('bidx is out of range for raster')
+        raise ValueError("bidx is out of range for raster")
 
     img = None
     msk = None
@@ -679,8 +695,10 @@ def dataset_features(
     transform = src.transform
     if sampling > 1:
         # Determine the target shape (to decimate)
-        shape = (int(math.ceil(src.height / sampling)),
-                 int(math.ceil(src.width / sampling)))
+        shape = (
+            int(math.ceil(src.height / sampling)),
+            int(math.ceil(src.width / sampling)),
+        )
 
         # Calculate independent sampling factors
         x_sampling = src.width / shape[1]
@@ -688,8 +706,7 @@ def dataset_features(
 
         # Decimation of the raster produces a georeferencing
         # shift that we correct with a translation.
-        transform *= Affine.translation(
-            src.width % x_sampling, src.height % y_sampling)
+        transform *= Affine.translation(src.width % x_sampling, src.height % y_sampling)
 
         # And follow by scaling.
         transform *= Affine.scale(x_sampling, y_sampling)
@@ -703,8 +720,7 @@ def dataset_features(
         else:
             msk_shape = shape
             if bidx is None:
-                msk = np.zeros(
-                    (src.count,) + msk_shape, dtype=np.uint8)
+                msk = np.zeros((src.count,) + msk_shape, dtype=np.uint8)
             else:
                 msk = np.zeros(msk_shape, dtype=np.uint8)
             msk = src.read_masks(bidx, msk)
@@ -719,9 +735,7 @@ def dataset_features(
         if sampling == 1:
             img = src.read(bidx, masked=False)
         else:
-            img = np.zeros(
-                shape,
-                dtype=src.dtypes[src.indexes.index(bidx)])
+            img = np.zeros(shape, dtype=src.dtypes[src.indexes.index(bidx)])
             img = src.read(bidx, img, masked=False)
 
     # If as_mask option was given, convert the image
@@ -736,19 +750,18 @@ def dataset_features(
             msk = tmp
 
     # Prepare keyword arguments for shapes().
-    kwargs = {'transform': transform}
+    kwargs = {"transform": transform}
     if not with_nodata:
-        kwargs['mask'] = msk
+        kwargs["mask"] = msk
 
     src_basename = os.path.basename(src.name)
 
     # Yield GeoJSON features.
-    for i, (g, val) in enumerate(
-            rasterio.features.shapes(img, **kwargs)):
+    for i, (g, val) in enumerate(rasterio.features.shapes(img, **kwargs)):
         if geographic:
             g = warp.transform_geom(
-                src.crs, 'EPSG:4326', g,
-                antimeridian_cutting=True, precision=precision)
+                src.crs, "EPSG:4326", g, antimeridian_cutting=True, precision=precision
+            )
         xs, ys = zip(*coords(g))
         yield {
             "type": "Feature",

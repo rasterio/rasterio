@@ -6,10 +6,10 @@ import pytest
 from rasterio.fill import fillnodata
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def hole_in_ones():
     """A 5x5 array with one nodata pixel dead center"""
-    a = np.ones((5, 5), dtype='uint8')
+    a = np.ones((5, 5), dtype="uint8")
     a[2][2] = 0
     return a
 

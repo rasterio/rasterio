@@ -21,8 +21,9 @@ def test_raster_geometrymask(basic_image_2x2, basic_image_file, basic_geometry):
     assert window is None
 
 
-def test_raster_geometrymask_geo_interface(basic_image_2x2, basic_image_file,
-                                           basic_geometry):
+def test_raster_geometrymask_geo_interface(
+    basic_image_2x2, basic_image_file, basic_geometry
+):
     """Pixels inside the geometry are False in the mask"""
 
     geometries = [MockGeoInterface(basic_geometry)]
@@ -41,37 +42,38 @@ def test_raster_geometrymask_invert(basic_image_2x2, basic_image_file, basic_geo
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            invert=True)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, invert=True
+        )
 
     assert np.array_equal(geometrymask, basic_image_2x2)
     assert transform == Affine.identity()
 
 
-def test_raster_geometrymask_all_touched(basic_image, basic_image_file,
-                                      basic_geometry):
+def test_raster_geometrymask_all_touched(basic_image, basic_image_file, basic_geometry):
     """Pixels inside the geometry are False in the mask"""
 
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            all_touched=True)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, all_touched=True
+        )
 
     assert np.array_equal(geometrymask, (basic_image == 0))
     assert transform == Affine.identity()
 
 
-def test_raster_geometrymask_crop(basic_image_2x2, basic_image_file,
-                               basic_geometry):
+def test_raster_geometrymask_crop(basic_image_2x2, basic_image_file, basic_geometry):
     """Mask returned will be cropped to extent of geometry, and transform
     is transposed 2 down and 2 over"""
 
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, crop=True
+        )
 
     image = basic_image_2x2[2:5, 2:5] == 0  # invert because invert=False
 
@@ -81,15 +83,17 @@ def test_raster_geometrymask_crop(basic_image_2x2, basic_image_file,
     assert window is not None and window.flatten() == (2, 2, 3, 3)
 
 
-def test_raster_geometrymask_crop_invert(basic_image_2x2, basic_image_file,
-                                        basic_geometry):
-    """ Test cropping and inverting """
+def test_raster_geometrymask_crop_invert(
+    basic_image_2x2, basic_image_file, basic_geometry
+):
+    """Test cropping and inverting"""
 
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True, invert=True)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, crop=True, invert=True
+        )
 
     image = basic_image_2x2[2:5, 2:5] == 1
 
@@ -99,18 +103,18 @@ def test_raster_geometrymask_crop_invert(basic_image_2x2, basic_image_file,
     assert window is not None and window.flatten() == (2, 2, 3, 3)
 
 
-
-def test_raster_geometrymask_crop_all_touched(basic_image, basic_image_file,
-                                           basic_geometry):
+def test_raster_geometrymask_crop_all_touched(
+    basic_image, basic_image_file, basic_geometry
+):
     """Mask returned will be cropped to extent of geometry, and transform
     is transposed 2 down and 2 over"""
 
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True,
-                                                            all_touched=True)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, crop=True, all_touched=True
+        )
 
     image = basic_image[2:5, 2:5] == 0  # invert because invert=False
 
@@ -120,16 +124,18 @@ def test_raster_geometrymask_crop_all_touched(basic_image, basic_image_file,
     assert window is not None and window.flatten() == (2, 2, 3, 3)
 
 
-def test_raster_geometrymask_crop_pad(basic_image_2x2, basic_image_file,
-                                   basic_geometry):
+def test_raster_geometrymask_crop_pad(
+    basic_image_2x2, basic_image_file, basic_geometry
+):
     """Mask returned will be cropped to extent of geometry plus 1/2 pixel on
     all sides, and transform is transposed 1 down and 1 over"""
 
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True, pad=0.5)
+        geometrymask, transform, window = raster_geometry_mask(
+            src, geometries, crop=True, pad=0.5
+        )
 
     image = basic_image_2x2[1:5, 1:5] == 0  # invert because invert=False
 
@@ -146,7 +152,7 @@ def test_raster_geometrymask_no_overlap(path_rgb_byte_tif, basic_geometry):
         with pytest.warns(UserWarning) as warning:
             raster_geometry_mask(src, [basic_geometry])
 
-            assert 'outside bounds of raster' in warning[0].message.args[0]
+            assert "outside bounds of raster" in warning[0].message.args[0]
 
 
 def test_raster_geometrymask_crop_no_overlap(path_rgb_byte_tif, basic_geometry):
@@ -156,8 +162,7 @@ def test_raster_geometrymask_crop_no_overlap(path_rgb_byte_tif, basic_geometry):
         with pytest.raises(ValueError) as excinfo:
             raster_geometry_mask(src, [basic_geometry], crop=True)
 
-            assert 'shapes do not overlap raster' in repr(excinfo)
-
+            assert "shapes do not overlap raster" in repr(excinfo)
 
 
 def test_mask(basic_image_2x2, basic_image_file, basic_geometry):
@@ -218,8 +223,9 @@ def test_mask_all_touched(basic_image, basic_image_file, basic_geometry):
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        masked, transform = mask(src, geometries, nodata=nodata,
-                                      invert=True, all_touched=True)
+        masked, transform = mask(
+            src, geometries, nodata=nodata, invert=True, all_touched=True
+        )
 
     assert np.array_equal(masked[0], basic_image * nodata)
 
@@ -250,8 +256,7 @@ def test_mask_crop_all_touched(basic_image, basic_image_file, basic_geometry):
     geometries = [basic_geometry]
 
     with rasterio.open(basic_image_file) as src:
-        masked, transform = mask(src, geometries, crop=True,
-                                      all_touched=True)
+        masked, transform = mask(src, geometries, crop=True, all_touched=True)
 
     assert masked.shape == (1, 3, 3)
     assert np.array_equal(masked[0], basic_image[2:5, 2:5])
@@ -278,6 +283,7 @@ def test_mask_with_extra_padding(basic_image_2x2, basic_image_file, basic_geomet
     assert masked.shape == (1, 7, 7)
     assert np.array_equal(masked[0], basic_image_2x2[0:7, 0:7])
 
+
 def test_mask_with_even_more_padding(basic_image_2x2, basic_image_file, basic_geometry):
     """Output should contain 4 extra pixels on each side"""
     geometries = [basic_geometry]
@@ -286,6 +292,7 @@ def test_mask_with_even_more_padding(basic_image_2x2, basic_image_file, basic_ge
 
     assert masked.shape == (1, 9, 9)
     assert np.array_equal(masked[0], basic_image_2x2[0:9, 0:9])
+
 
 def test_mask_with_maximum_padding(basic_image_2x2, basic_image_file, basic_geometry):
     """Output should not break if too much padding is requested"""
@@ -297,8 +304,7 @@ def test_mask_with_maximum_padding(basic_image_2x2, basic_image_file, basic_geom
     assert np.array_equal(masked[0], basic_image_2x2[0:10, 0:10])
 
 
-def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
-                     basic_geometry):
+def test_mask_filled(basic_image, basic_image_2x2, basic_image_file, basic_geometry):
     """Should be returned as numpy.ma.MaskedArray if filled is False"""
 
     geometries = [basic_geometry]
@@ -306,7 +312,7 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
     with rasterio.open(basic_image_file) as src:
         masked, transform = mask(src, geometries, filled=False)
 
-    image = np.ma.MaskedArray(basic_image, mask=basic_image_2x2==0)
+    image = np.ma.MaskedArray(basic_image, mask=basic_image_2x2 == 0)
 
     assert type(masked) is np.ma.MaskedArray
     assert np.array_equal(masked[0].mask, image.mask)

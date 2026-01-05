@@ -15,17 +15,34 @@ from rasterio.windows import subdivide, Window
 @options.output_opt
 @options.format_opt
 @options.dtype_opt
-@click.option('--scale-ratio', type=float, default=None,
-              help="Source to destination scaling ratio.")
-@click.option('--scale-offset', type=float, default=None,
-              help="Source to destination scaling offset.")
+@click.option(
+    "--scale-ratio",
+    type=float,
+    default=None,
+    help="Source to destination scaling ratio.",
+)
+@click.option(
+    "--scale-offset",
+    type=float,
+    default=None,
+    help="Source to destination scaling offset.",
+)
 @options.rgb_opt
 @options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def convert(
-        ctx, files, output, driver, dtype, scale_ratio, scale_offset,
-        photometric, overwrite, creation_options):
+    ctx,
+    files,
+    output,
+    driver,
+    dtype,
+    scale_ratio,
+    scale_offset,
+    photometric,
+    overwrite,
+    creation_options,
+):
     """Copy and convert raster datasets to other data types and formats.
 
     Data values may be linearly scaled when copying by using the
@@ -49,57 +66,52 @@ def convert(
       --co compress=LZW
 
     """
-    with ctx.obj['env']:
-
+    with ctx.obj["env"]:
         outputfile, files = resolve_inout(
             files=files, output=output, overwrite=overwrite, num_inputs=1
         )
         inputfile = files[0]
 
         with rasterio.open(inputfile) as src:
-
             # Use the input file's profile, updated by CLI
             # options, as the profile for the output file.
             profile = src.profile
 
-            profile.pop('driver', None)
+            profile.pop("driver", None)
             if driver:
-                profile['driver'] = driver
+                profile["driver"] = driver
             if dtype:
-                profile['dtype'] = dtype
-            dst_dtype = profile['dtype']
+                profile["dtype"] = dtype
+            dst_dtype = profile["dtype"]
 
             if photometric:
-                creation_options['photometric'] = photometric
+                creation_options["photometric"] = photometric
 
             profile.update(**creation_options)
 
             bxsize = bysize = 1024
-            if profile.get('tiled', False):
-                bxsize = int(profile.get('blockxsize', bxsize))
-                bysize = int(profile.get('blockysize', bysize))
+            if profile.get("tiled", False):
+                bxsize = int(profile.get("blockxsize", bxsize))
+                bysize = int(profile.get("blockysize", bysize))
             srcds = Window(0, 0, src.width, src.height)
 
-            with rasterio.open(outputfile, 'w', **profile) as dst:
-
+            with rasterio.open(outputfile, "w", **profile) as dst:
                 for chunk in subdivide(srcds, bxsize, bysize):
                     data = src.read(window=chunk, masked=True)
 
                     if scale_ratio:
                         # Cast to float64 before multiplying.
-                        data = data.astype('float64', casting='unsafe', copy=False)
-                        np.multiply(
-                            data, scale_ratio, out=data, casting='unsafe')
+                        data = data.astype("float64", casting="unsafe", copy=False)
+                        np.multiply(data, scale_ratio, out=data, casting="unsafe")
 
                     if scale_offset:
                         # My understanding of copy=False is that this is a
                         # no-op if the array was cast for multiplication.
-                        data = data.astype('float64', casting='unsafe', copy=False)
-                        np.add(
-                            data, scale_offset, out=data, casting='unsafe')
+                        data = data.astype("float64", casting="unsafe", copy=False)
+                        np.add(data, scale_offset, out=data, casting="unsafe")
 
                     # Cast to the output dtype and write.
-                    result = data.astype(dst_dtype, casting='unsafe', copy=False)
+                    result = data.astype(dst_dtype, casting="unsafe", copy=False)
                     dst.write(result, window=chunk)
 
                     if MaskFlags.per_dataset in src.mask_flag_enums[0]:

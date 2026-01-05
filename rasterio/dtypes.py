@@ -35,7 +35,7 @@ dtype_fwd = {
     10: complex64,  # GDT_CFloat32
     11: complex128,  # GDT_CFloat64
     12: uint64,  # GDT_UInt64
-    13: int64, # GDT_Int64
+    13: int64,  # GDT_Int64
     14: sbyte,  # GDT_Int8
 }
 
@@ -56,9 +56,9 @@ def _get_gdal_dtype(type_name):
         return dtype_rev[type_name]
     except KeyError:
         raise TypeError(
-            f"Unsupported data type {type_name}. "
-            f"Allowed data types: {list(dtype_rev)}."
+            f"Unsupported data type {type_name}. Allowed data types: {list(dtype_rev)}."
         )
+
 
 typename_fwd = {
     0: "Unknown",
@@ -102,7 +102,12 @@ dtype_ranges = {
     uint64: (0, 18446744073709551615),
 }
 
-dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
+dtype_info_registry = {
+    "c": numpy.finfo,
+    "f": numpy.finfo,
+    "i": numpy.iinfo,
+    "u": numpy.iinfo,
+}
 
 
 def in_dtype_range(value, dtype):
@@ -154,7 +159,7 @@ def get_minimum_dtype(values):
     min_value = values.min()
     max_value = values.max()
 
-    if values.dtype.kind in {'i', 'u'}:
+    if values.dtype.kind in {"i", "u"}:
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
@@ -172,7 +177,7 @@ def get_minimum_dtype(values):
         return int64
     if _GDAL_AT_LEAST_3_11 and min_value >= f16i.min and max_value <= f16i.max:
         return float16
-    if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
+    if min_value >= -3.4028235e38 and max_value <= 3.4028235e38:
         return float32
     return float64
 
@@ -180,7 +185,7 @@ def get_minimum_dtype(values):
 def is_ndarray(array):
     """Check if array is a ndarray."""
 
-    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
+    return isinstance(array, numpy.ndarray) or hasattr(array, "__array__")
 
 
 def can_cast_dtype(values, dtype):
@@ -201,7 +206,7 @@ def can_cast_dtype(values, dtype):
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
-    elif values.dtype.kind == 'f':
+    elif values.dtype.kind == "f":
         return numpy.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
@@ -224,8 +229,9 @@ def validate_dtype(values, valid_dtypes):
     """
     values = numpy.asanyarray(values)
 
-    return (values.dtype.name in valid_dtypes or
-            get_minimum_dtype(values) in valid_dtypes)
+    return (
+        values.dtype.name in valid_dtypes or get_minimum_dtype(values) in valid_dtypes
+    )
 
 
 def _is_complex_int(dtype):

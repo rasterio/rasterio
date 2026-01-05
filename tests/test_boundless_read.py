@@ -1,4 +1,5 @@
 """Test of boundless reads"""
+
 import sys
 
 from affine import Affine
@@ -14,13 +15,18 @@ from rasterio.io import MemoryFile
 from rasterio.windows import Window
 
 
-@given(col_start=st.integers(min_value=-700, max_value=0),
-       row_start=st.integers(min_value=-700, max_value=0),
-       col_stop=st.integers(min_value=0, max_value=700),
-       row_stop=st.integers(min_value=0, max_value=700))
-@pytest.mark.skipif(sys.platform != "linux", reason="https://github.com/rasterio/rasterio/issues/1696")
+@given(
+    col_start=st.integers(min_value=-700, max_value=0),
+    row_start=st.integers(min_value=-700, max_value=0),
+    col_stop=st.integers(min_value=0, max_value=700),
+    row_stop=st.integers(min_value=0, max_value=700),
+)
+@pytest.mark.skipif(
+    sys.platform != "linux", reason="https://github.com/rasterio/rasterio/issues/1696"
+)
 def test_outer_boundless_pixel_fidelity(
-        path_rgb_byte_tif, col_start, row_start, col_stop, row_stop):
+    path_rgb_byte_tif, col_start, row_start, col_stop, row_stop
+):
     """An outer boundless read doesn't change pixels"""
     with rasterio.open(path_rgb_byte_tif) as dataset:
         width = dataset.width + col_stop - col_start
@@ -45,7 +51,7 @@ def test_issue2382(height):
 
     with MemoryFile() as memfile:
         with memfile.open(
-            driver='GTiff',
+            driver="GTiff",
             count=1,
             height=height,
             width=1,
@@ -54,7 +60,7 @@ def test_issue2382(height):
         ) as dataset:
             dataset.write(data_array[numpy.newaxis, ...])
 
-        with memfile.open(driver='GTiff') as dataset:
+        with memfile.open(driver="GTiff") as dataset:
             # read first column, rows 0-388
             a = dataset.read(
                 1,
@@ -102,7 +108,10 @@ def test_image(red_green):
     """Read a red image with black background"""
     with rasterio.Env():
         with rasterio.open(str(red_green.join("red.tif"))) as src:
-            data = src.read(boundless=True, window=Window(-src.width, -src.height, src.width * 3, src.height * 3))
+            data = src.read(
+                boundless=True,
+                window=Window(-src.width, -src.height, src.width * 3, src.height * 3),
+            )
             image = numpy.moveaxis(data, 0, -1)
             assert image[63, 63, 0] == 0
             assert image[64, 64, 0] == 204
@@ -142,7 +151,9 @@ def test_boundless_mask_not_all_valid():
 def test_boundless_fill_value():
     """Confirm resolution of issue #1471"""
     with rasterio.open("tests/data/red.tif") as src:
-        filled = src.read(1, boundless=True, fill_value=5, window=Window(-1, -1, 66, 66))
+        filled = src.read(
+            1, boundless=True, fill_value=5, window=Window(-1, -1, 66, 66)
+        )
     assert (filled[:, 0] == 5).all()
     assert (filled[:, -1] == 5).all()
     assert (filled[0, :] == 5).all()
@@ -172,14 +183,27 @@ def test_boundless_mask_special():
 def test_boundless_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:
-        data = src.read(1, boundless=True, window=Window(-300, -335, 1000, 1000), fill_value=5, out_shape=(512, 512))
+        data = src.read(
+            1,
+            boundless=True,
+            window=Window(-300, -335, 1000, 1000),
+            fill_value=5,
+            out_shape=(512, 512),
+        )
     assert (data[:, 0] == 5).all()
 
 
 def test_boundless_masked_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:
-        data = src.read(1, masked=True, boundless=True, window=Window(-300, -335, 1000, 1000), fill_value=5, out_shape=(512, 512))
+        data = src.read(
+            1,
+            masked=True,
+            boundless=True,
+            window=Window(-300, -335, 1000, 1000),
+            fill_value=5,
+            out_shape=(512, 512),
+        )
     assert data.fill_value == 5
     assert data.mask[:, 0].all()
 
@@ -198,7 +222,8 @@ def test_issue3245(data):
     with rasterio.open(data / "RGB.byte.tif", "r+") as dst:
         dst.nodata = None
         assert not dst.read(masked=True).mask.any()
-        data = dst.read(boundless=True, masked=True, window=Window(0, 0, dst.width, dst.height))
+        data = dst.read(
+            boundless=True, masked=True, window=Window(0, 0, dst.width, dst.height)
+        )
         assert not data.mask.any()
         assert (data >= 0).all()
-

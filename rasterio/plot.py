@@ -24,6 +24,7 @@ def get_plt():
     """
     try:
         import matplotlib.pyplot as plt
+
         return plt
     except (ImportError, RuntimeError):  # pragma: no cover
         msg = "Could not import matplotlib\n"
@@ -31,8 +32,19 @@ def get_plt():
         raise ImportError(msg)
 
 
-def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None,
-         ax=None, title=None, transform=None, percent_range=None, adjust=True, **kwargs):
+def show(
+    source,
+    with_bounds=True,
+    contour=False,
+    contour_label_kws=None,
+    indexes=None,
+    ax=None,
+    title=None,
+    transform=None,
+    percent_range=None,
+    adjust=True,
+    **kwargs,
+):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -83,18 +95,20 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         if len(arr.shape) >= 3:
             arr = reshape_as_image(arr)
         if with_bounds:
-            kwargs['extent'] = plotting_extent(source[0])
+            kwargs["extent"] = plotting_extent(source[0])
 
     elif isinstance(source, DatasetReader):
         if with_bounds:
-            kwargs['extent'] = plotting_extent(source)
+            kwargs["extent"] = plotting_extent(source)
         if source.count <= 2:
             arr = source.read(1, masked=True)
         else:
             try:
                 # Lookup table for the color space in the source file.
                 # This will allow us to re-order it to RGB if needed
-                source_colorinterp = OrderedDict(zip(source.colorinterp, source.indexes))
+                source_colorinterp = OrderedDict(
+                    zip(source.colorinterp, source.indexes)
+                )
                 colorinterp = rasterio.enums.ColorInterp
 
                 # Gather the indexes of the RGB channels in that order
@@ -125,7 +139,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
             arr = source
 
         if transform and with_bounds:
-            kwargs['extent'] = plotting_extent(arr, transform)
+            kwargs["extent"] = plotting_extent(arr, transform)
 
     if adjust:
         if percent_range:
@@ -147,13 +161,13 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         ax = plt.gca()
 
     if contour:
-        if 'cmap' not in kwargs:
-            kwargs['colors'] = kwargs.get('colors', 'red')
+        if "cmap" not in kwargs:
+            kwargs["colors"] = kwargs.get("colors", "red")
 
-        kwargs['linewidths'] = kwargs.get('linewidths', 1.5)
-        kwargs['alpha'] = kwargs.get('alpha', 0.8)
+        kwargs["linewidths"] = kwargs.get("linewidths", 1.5)
+        kwargs["alpha"] = kwargs.get("alpha", 0.8)
 
-        C = ax.contour(arr, origin='upper', **kwargs)
+        C = ax.contour(arr, origin="upper", **kwargs)
 
         if contour_label_kws is None:
             # no explicit label kws passed use defaults
@@ -165,7 +179,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexe
         ax.imshow(arr, **kwargs)
 
     if title:
-        ax.set_title(title, fontweight='bold')
+        ax.set_title(title, fontweight="bold")
 
     if show:
         plt.show()
@@ -191,12 +205,15 @@ def plotting_extent(source, transform=None):
     tuple of float
         left, right, bottom, top
     """
-    if hasattr(source, 'bounds'):
-        extent = (source.bounds.left, source.bounds.right,
-                  source.bounds.bottom, source.bounds.top)
+    if hasattr(source, "bounds"):
+        extent = (
+            source.bounds.left,
+            source.bounds.right,
+            source.bounds.bottom,
+            source.bounds.top,
+        )
     elif not transform:
-        raise ValueError(
-            "transform is required if source is an array")
+        raise ValueError("transform is required if source is an array")
     else:
         transform = guard_transform(transform)
         rows, cols = source.shape[0:2]
@@ -247,7 +264,7 @@ def show_hist(
     ax=None,
     label=None,
     range=None,
-    **kwargs
+    **kwargs,
 ):
     """Easily display a histogram with matplotlib.
 
@@ -291,19 +308,19 @@ def show_hist(
 
     if len(arr.shape) == 2:
         arr = np.expand_dims(arr.flatten(), 0).T
-        colors = ['gold']
+        colors = ["gold"]
     else:
         arr = arr.reshape(arr.shape[0], -1).T
-        colors = ['red', 'green', 'blue', 'violet', 'gold', 'saddlebrown']
+        colors = ["red", "green", "blue", "violet", "gold", "saddlebrown"]
 
     # The goal is to provide a curated set of colors for working with
     # smaller datasets and let matplotlib define additional colors when
     # working with larger datasets.
     if arr.shape[-1] > len(colors):
         n = arr.shape[-1] - len(colors)
-        colors.extend(np.ndarray.tolist(plt.get_cmap('Accent')(np.linspace(0, 1, n))))
+        colors.extend(np.ndarray.tolist(plt.get_cmap("Accent")(np.linspace(0, 1, n))))
     else:
-        colors = colors[:arr.shape[-1]]
+        colors = colors[: arr.shape[-1]]
 
     # if the user used the label argument, pass them drectly to matplotlib
     if label:
@@ -328,10 +345,10 @@ def show_hist(
     ax.hist(arr, bins=bins, color=colors, label=labels, range=range, **kwargs)
 
     ax.legend(loc="upper right")
-    ax.set_title(title, fontweight='bold')
+    ax.set_title(title, fontweight="bold")
     ax.grid(True)
-    ax.set_xlabel('DN')
-    ax.set_ylabel('Frequency')
+    ax.set_xlabel("DN")
+    ax.set_ylabel("Frequency")
     if show:
         plt.show()
 
@@ -350,7 +367,7 @@ def contrast_strech(arr, percent_range=(2.0, 98.0)):
         default percent_range is set to (2, 98).
     """
     arr_hist = np.nanpercentile(np.array(arr), (percent_range[0], percent_range[1]))
-    arr = (arr - arr_hist[0])/(arr_hist[1]-arr_hist[0])
+    arr = (arr - arr_hist[0]) / (arr_hist[1] - arr_hist[0])
     arr = np.clip(arr, 0, 1)
     return arr
 
@@ -373,4 +390,3 @@ def adjust_band(band, kind=None):
     imin = np.float64(np.nanmin(band))
     imax = np.float64(np.nanmax(band))
     return (band - imin) / (imax - imin)
-

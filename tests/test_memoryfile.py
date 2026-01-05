@@ -1,5 +1,6 @@
 """MemoryFile tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 2.x"""
+
 from contextlib import nullcontext
 from io import BytesIO
 from pathlib import Path
@@ -267,10 +268,13 @@ def test_file_object_read_variant(rgb_file_bytes):
 )
 def test_memfile_thread_safe_option(rgb_file_object):
     with (
-        pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
+        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
+        if not _GDAL_AT_LEAST_3_10
+        else nullcontext(),
         rasterio.Env(GDAL_NUM_THREADS=2),
-        rasterio.open(MemoryFile(rgb_file_object), thread_safe=True) as src
+        rasterio.open(MemoryFile(rgb_file_object), thread_safe=True) as src,
     ):
+
         def process(window):
             src.read(window=window).sum()
 
@@ -420,9 +424,10 @@ def test_multi_memfile(path_rgb_msk_byte_tif):
     with open(path_rgb_msk_byte_tif + ".msk", "rb") as msk_fp:
         msk_bytes = msk_fp.read()
 
-    with MemoryFile(
-        tif_bytes, dirname="bar", filename="foo.tif"
-    ) as tifmemfile, MemoryFile(msk_bytes, dirname="bar", filename="foo.tif.msk"):
+    with (
+        MemoryFile(tif_bytes, dirname="bar", filename="foo.tif") as tifmemfile,
+        MemoryFile(msk_bytes, dirname="bar", filename="foo.tif.msk"),
+    ):
         with tifmemfile.open() as src:
             assert sorted(os.path.basename(fn) for fn in src.files) == sorted(
                 ["foo.tif", "foo.tif.msk"]

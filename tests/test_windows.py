@@ -12,19 +12,31 @@ import rasterio
 from rasterio.transform import from_origin
 from rasterio.errors import WindowError
 from rasterio.windows import (
-    crop, from_bounds, bounds, transform, evaluate, window_index, shape,
-    Window, intersect, intersection, get_data_window, union,
-    round_window_to_full_blocks, subdivide)
+    crop,
+    from_bounds,
+    bounds,
+    transform,
+    evaluate,
+    window_index,
+    shape,
+    Window,
+    intersect,
+    intersection,
+    get_data_window,
+    union,
+    round_window_to_full_blocks,
+    subdivide,
+)
 
 EPS = 1.0e-8
 
 # hypothesis inputs: col_off, row_off
-F_OFF = floats(min_value=-1.0e+7, max_value=1.0e+7)
+F_OFF = floats(min_value=-1.0e7, max_value=1.0e7)
 I_OFF = floats(min_value=-10000000, max_value=10000000)
 
 # hypothesis inputs: width, height
-F_LEN = floats(min_value=0, max_value=1.0e+7)
-I_LEN = integers(min_value=0, max_value=1.0e+7)
+F_LEN = floats(min_value=0, max_value=1.0e7)
+I_LEN = integers(min_value=0, max_value=1.0e7)
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -35,7 +47,9 @@ def assert_window_almost_equals(a, b):
 
 
 def test_window_repr():
-    assert str(Window(0, 1, 4, 2)) == ('Window(col_off=0, row_off=1, width=4, height=2)')
+    assert str(Window(0, 1, 4, 2)) == (
+        "Window(col_off=0, row_off=1, width=4, height=2)"
+    )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -69,7 +83,8 @@ def test_window_flatten(col_off, row_off, width, height):
 
     assert np.allclose(
         Window(col_off, row_off, width, height).flatten(),
-        (col_off, row_off, width, height))
+        (col_off, row_off, width, height),
+    )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -80,8 +95,9 @@ def test_window_todict(col_off, row_off, width, height):
     d = Window(col_off, row_off, width, height).todict()
 
     assert np.allclose(
-        (d['col_off'], d['row_off'], d['width'], d['height']),
-        (col_off, row_off, width, height))
+        (d["col_off"], d["row_off"], d["width"], d["height"]),
+        (col_off, row_off, width, height),
+    )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -91,7 +107,8 @@ def test_window_toranges(col_off, row_off, width, height):
 
     assert np.allclose(
         Window(col_off, row_off, width, height).toranges(),
-        ((row_off, row_off + height), (col_off, col_off + width)))
+        ((row_off, row_off + height), (col_off, col_off + width)),
+    )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
@@ -131,18 +148,13 @@ def test_window_fromslices(col_off, row_off, col_stop, row_stop):
     expected = (col_off, row_off, col_stop - col_off, row_stop - row_off)
 
     assert np.allclose(
-        Window.from_slices(rows=slice(*rows), cols=slice(*cols)).flatten(),
-        expected
+        Window.from_slices(rows=slice(*rows), cols=slice(*cols)).flatten(), expected
     )
 
-    assert np.allclose(
-        Window.from_slices(rows=rows, cols=cols).flatten(),
-        expected
-    )
+    assert np.allclose(Window.from_slices(rows=rows, cols=cols).flatten(), expected)
 
     assert np.allclose(
-        Window.from_slices(rows=list(rows), cols=list(cols)).flatten(),
-        expected
+        Window.from_slices(rows=list(rows), cols=list(cols)).flatten(), expected
     )
 
 
@@ -152,8 +164,8 @@ def test_window_fromslices_invalid_rows_cols():
 
     invalids = (
         np.array([0, 4]),  # wrong type, but close
-        '04',  # clearly the wrong type but right length
-        (1, 2, 3)  # wrong length
+        "04",  # clearly the wrong type but right length
+        (1, 2, 3),  # wrong length
     )
 
     for invalid in invalids:
@@ -169,21 +181,19 @@ def test_window_fromslices_stops_lt_starts():
     indexes"""
 
     assert np.allclose(
-        Window.from_slices(rows=(4, 2), cols=(0, 4)).flatten(),
-        (0, 4, 4, 0)
+        Window.from_slices(rows=(4, 2), cols=(0, 4)).flatten(), (0, 4, 4, 0)
     )
 
     assert np.allclose(
-        Window.from_slices(rows=(0, 4), cols=(4, 2)).flatten(),
-        (4, 0, 0, 4)
+        Window.from_slices(rows=(0, 4), cols=(4, 2)).flatten(), (4, 0, 0, 4)
     )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(abs_off=F_LEN, imp_off=F_LEN, stop=F_LEN, dim=F_LEN)
 def test_window_fromslices_implicit(abs_off, imp_off, stop, dim):
-    """ providing None for start index will default to 0
-    and providing None for stop index will default to width or height """
+    """providing None for start index will default to 0
+    and providing None for stop index will default to width or height"""
 
     assume(stop >= abs_off)
     assume(dim >= imp_off)
@@ -196,38 +206,36 @@ def test_window_fromslices_implicit(abs_off, imp_off, stop, dim):
     # Implicit start indexes resolve to 0
     assert np.allclose(
         Window.from_slices(rows=implicit_start, cols=absolute).flatten(),
-        (abs_off, 0, stop - abs_off, stop)
+        (abs_off, 0, stop - abs_off, stop),
     )
 
     assert np.allclose(
         Window.from_slices(rows=absolute, cols=implicit_start).flatten(),
-        (0, abs_off, stop, stop - abs_off)
+        (0, abs_off, stop, stop - abs_off),
     )
 
     # Implicit stop indexes resolve to dim (height or width)
     assert np.allclose(
-        Window.from_slices(
-            rows=implicit_stop, cols=absolute, height=dim).flatten(),
-        (abs_off, imp_off, stop - abs_off, dim - imp_off)
+        Window.from_slices(rows=implicit_stop, cols=absolute, height=dim).flatten(),
+        (abs_off, imp_off, stop - abs_off, dim - imp_off),
     )
 
     assert np.allclose(
-        Window.from_slices(
-            rows=absolute, cols=implicit_stop, width=dim).flatten(),
-        (imp_off, abs_off, dim - imp_off, stop - abs_off)
+        Window.from_slices(rows=absolute, cols=implicit_stop, width=dim).flatten(),
+        (imp_off, abs_off, dim - imp_off, stop - abs_off),
     )
 
     # Both can be implicit
     assert np.allclose(
         Window.from_slices(
-            rows=implicit_both, cols=implicit_both,
-            width=dim, height=dim).flatten(),
-        (0, 0, dim, dim)
+            rows=implicit_both, cols=implicit_both, width=dim, height=dim
+        ).flatten(),
+        (0, 0, dim, dim),
     )
 
 
 def test_window_fromslices_implicit_err():
-    """ height and width are required if stop index is None; failing to
+    """height and width are required if stop index is None; failing to
     provide them will result in error"""
 
     with pytest.raises(WindowError):
@@ -241,18 +249,19 @@ def test_window_fromslices_negative_start():
     # TODO: if passing negative start, what are valid values for stop?
     assert np.allclose(
         Window.from_slices(rows=(-4, None), cols=(0, 4), height=10).flatten(),
-        (0, 6, 4, 4)
+        (0, 6, 4, 4),
     )
 
     assert np.allclose(
         Window.from_slices(rows=(0, 4), cols=(-4, None), width=10).flatten(),
-        (6, 0, 4, 4)
+        (6, 0, 4, 4),
     )
 
     assert np.allclose(
-        Window.from_slices(rows=(-6, None), cols=(-4, None),
-                           height=8, width=10).flatten(),
-        (6, 2, 4, 6)
+        Window.from_slices(
+            rows=(-6, None), cols=(-4, None), height=8, width=10
+        ).flatten(),
+        (6, 2, 4, 6),
     )
 
 
@@ -270,36 +279,39 @@ def test_window_fromslices_negative_stop():
     # TODO: Should negative stops even allowed??  Limited to boundless case?
     assert np.allclose(
         Window.from_slices(rows=(-4, -1), cols=(0, 4), height=10).flatten(),
-        (0, 6, 4, 3)
+        (0, 6, 4, 3),
     )
 
     assert np.allclose(
-        Window.from_slices(rows=(0, 4), cols=(-4, -1), width=10).flatten(),
-        (6, 0, 3, 4)
+        Window.from_slices(rows=(0, 4), cols=(-4, -1), width=10).flatten(), (6, 0, 3, 4)
     )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_LEN, row_off=F_LEN, col_stop=F_LEN, row_stop=F_LEN)
 def test_window_fromslices_boundless(col_off, row_off, col_stop, row_stop):
-
     # Constrain windows to >= 0 in each dimension
     assume(col_stop >= col_off)
     assume(row_stop >= row_off)
 
     assert np.allclose(
         Window.from_slices(
-            rows=(-row_off, row_stop), cols=(col_off, col_stop),
-            boundless=True).flatten(),
-        (col_off, -row_off, col_stop - col_off, row_stop + row_off)
+            rows=(-row_off, row_stop), cols=(col_off, col_stop), boundless=True
+        ).flatten(),
+        (col_off, -row_off, col_stop - col_off, row_stop + row_off),
     )
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much])
-@given(col_off=F_OFF, row_off=F_OFF, num_cols=F_LEN, num_rows=F_LEN,
-       height=I_LEN, width=I_LEN)
+@given(
+    col_off=F_OFF,
+    row_off=F_OFF,
+    num_cols=F_LEN,
+    num_rows=F_LEN,
+    height=I_LEN,
+    width=I_LEN,
+)
 def test_crop(col_off, row_off, num_cols, num_rows, height, width):
-
     window = Window(col_off, row_off, num_cols, num_rows)
     cropped_window = crop(window, height, width)
 
@@ -362,7 +374,9 @@ def test_window_bounds_south_up():
 
 
 def test_window_bounds_north_up():
-    transform = Affine.translation(0.0, 10.0) * Affine.scale(1.0, -1.0) * Affine.identity()
+    transform = (
+        Affine.translation(0.0, 10.0) * Affine.scale(1.0, -1.0) * Affine.identity()
+    )
     assert_window_almost_equals(
         from_bounds(0, 0, 10, 10, transform), Window(0, 0, 10, 10)
     )
@@ -372,17 +386,26 @@ def test_window_transform_function(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         assert transform(((0, None), (0, None)), src.transform) == src.transform
         assert transform(((None, None), (None, None)), src.transform) == src.transform
-        assert transform(
-            ((1, None), (1, None)), src.transform).c == src.bounds.left + src.res[0]
-        assert transform(
-            ((1, None), (1, None)), src.transform).f == src.bounds.top - src.res[1]
-        assert transform(
-            ((-1, None), (-1, None)), src.transform).c == src.bounds.left - src.res[0]
-        assert transform(
-            ((-1, None), (-1, None)), src.transform).f == src.bounds.top + src.res[1]
-        assert transform(
-            Window(-1, -1, src.width + 1, src.height + 1),
-            src.transform).f == src.bounds.top + src.res[1]
+        assert (
+            transform(((1, None), (1, None)), src.transform).c
+            == src.bounds.left + src.res[0]
+        )
+        assert (
+            transform(((1, None), (1, None)), src.transform).f
+            == src.bounds.top - src.res[1]
+        )
+        assert (
+            transform(((-1, None), (-1, None)), src.transform).c
+            == src.bounds.left - src.res[0]
+        )
+        assert (
+            transform(((-1, None), (-1, None)), src.transform).f
+            == src.bounds.top + src.res[1]
+        )
+        assert (
+            transform(Window(-1, -1, src.width + 1, src.height + 1), src.transform).f
+            == src.bounds.top + src.res[1]
+        )
 
 
 def test_window_bounds_function(path_rgb_byte_tif):
@@ -392,9 +415,7 @@ def test_window_bounds_function(path_rgb_byte_tif):
         assert bounds(((0, rows), (0, cols)), src.transform) == src.bounds
 
 
-bad_type_windows = [
-    (1, 2),
-    ((1, 0), 2)]
+bad_type_windows = [(1, 2), ((1, 0), 2)]
 
 
 @pytest.mark.parametrize("window", bad_type_windows)
@@ -575,8 +596,7 @@ def test_round_window_to_full_blocks(path_alpha_tif):
 
 def test_round_window_to_full_blocks_error():
     with pytest.raises(WindowError):
-        round_window_to_full_blocks(
-            Window(0, 0, 10, 10), block_shapes=[(1, 1), (2, 2)])
+        round_window_to_full_blocks(Window(0, 0, 10, 10), block_shapes=[(1, 1), (2, 2)])
 
 
 def test_round_window_already_at_edge(path_alpha_tif):
@@ -696,10 +716,12 @@ def test_subdivide_offsets():
     src = Window(10, 12, 3, 5)
     subs = subdivide(src, 3, 2)
 
-    expected = {Window(col_off=10, row_off=12, width=2, height=3),
-                Window(col_off=12, row_off=12, width=1, height=3),
-                Window(col_off=10, row_off=15, width=2, height=2),
-                Window(col_off=12, row_off=15, width=1, height=2)}
+    expected = {
+        Window(col_off=10, row_off=12, width=2, height=3),
+        Window(col_off=12, row_off=12, width=1, height=3),
+        Window(col_off=10, row_off=15, width=2, height=2),
+        Window(col_off=12, row_off=15, width=1, height=2),
+    }
     assert set(subs) == expected
 
 
@@ -707,8 +729,10 @@ def test_subdivide():
     src = Window(0, 0, 4, 4)
     subs = subdivide(src, 2, 2)
 
-    expected = {Window(col_off=0, row_off=0, width=2, height=2),
-                Window(col_off=2, row_off=0, width=2, height=2),
-                Window(col_off=0, row_off=2, width=2, height=2),
-                Window(col_off=2, row_off=2, width=2, height=2)}
+    expected = {
+        Window(col_off=0, row_off=0, width=2, height=2),
+        Window(col_off=2, row_off=0, width=2, height=2),
+        Window(col_off=0, row_off=2, width=2, height=2),
+        Window(col_off=2, row_off=2, width=2, height=2),
+    }
     assert set(subs) == expected
