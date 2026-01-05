@@ -1,0 +1,11 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 827 217" width="827" height="217">
+	<title>New Project</title>
+	<style>
+		.s0 { fill: #6da9a9 } 
+		.s1 { fill: #fd7e00 } 
+		.s2 { fill: #ff4040 } 
+	</style>
+	<path id="rasterio" class="s0" aria-label="rasterio"  d="m80.1 164h-19.1v-95.2h57.2v19h-38.1zm152.3-95.2v95.2h-95.2v-57.1h76.2v-19.1h-76.2v-19zm-76.2 57.1v19.1h57.2v-19.1zm190.4-19v57.1h-95.2v-19h76.2v-19.1h-76.2v-57.1h95.2v19h-76.2v19.1zm38.1-19.1v57.2h38.1v19h-57.1v-133.3h19v38.1h38.1v19zm76.2 38.1v19.1h76.2v19h-95.2v-95.2h95.2v57.1zm0-38.1v19.1h57.1v-19.1zm114.3 76.2h-19v-95.2h57.1v19h-38.1z"/>
+	<path id="rasterio" class="s1" aria-label="rasterio"  d="m651.5 164h-19.1v-95.2h19.1zm0-114.3h-19.1v-19.1h19.1z"/>
+	<path id="rasterio" class="s2" aria-label="rasterio"  d="m765.7 68.8v95.2h-95.2v-95.2zm-76.2 19v57.2h57.2v-57.2z"/>
+</svg>
