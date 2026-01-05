@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.5.1 (TBD)
+------------------
+
+Bug fixes:
+-
+
+Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.1/ci/config.sh#L1-L25
+
+Full Changelog: https://github.com/rasterio/rasterio/compare/1.5.0...1.5.1
+
+
 1.5.0 (2026-01-05)
 ------------------
 
