@@ -462,7 +462,7 @@ def _reproject(
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
 
-            dst_nodata = dst_nodata or src_nodata
+            dst_nodata = dst_nodata if dst_nodata is not None else src_nodata
 
             if hasattr(destination, "mask"):
                 destination = np.ma.asanyarray(destination)

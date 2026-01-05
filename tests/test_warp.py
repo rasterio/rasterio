@@ -22,6 +22,7 @@ from rasterio.errors import (
     RPCError,
     WarpOperationError,
 )
+from rasterio.transform import from_bounds
 from rasterio.warp import (
     reproject,
     transform_geom,
@@ -1064,6 +1065,22 @@ def test_reproject_multi():
         resampling=Resampling.nearest,
     )
     assert destin.any()
+
+
+def test_reproject__dst_nodata_zero():
+    in_shape = (2, 2)
+    src_nodata = -32768.
+    dst_nodata = 0.
+    in_data = np.full(in_shape, src_nodata, dtype=np.float32)
+    out_data, _ = reproject(
+        in_data,
+        dst_crs="EPSG:3035",
+        src_crs="EPSG:32632",
+        src_transform=from_bounds(0, 0, *in_shape, *in_shape),
+        src_nodata=src_nodata,
+        dst_nodata=dst_nodata
+    )
+    assert np.all(out_data == dst_nodata)
 
 
 def test_warp_from_file():
