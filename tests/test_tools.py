@@ -8,7 +8,9 @@ def test_dataset_features_tool(tmpdir, path_rgb_byte_tif):
     """Example tool works"""
     features_file = tmpdir.join("footprint.jsons")
 
-    tools.dataset_features_tool(path_rgb_byte_tif, str(features_file), func_kwargs=dict(bidx=1, as_mask=True))
+    tools.dataset_features_tool(
+        path_rgb_byte_tif, str(features_file), func_kwargs=dict(bidx=1, as_mask=True)
+    )
 
     assert features_file.read().count("Feature") == 9
 

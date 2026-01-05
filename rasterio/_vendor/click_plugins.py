@@ -36,7 +36,6 @@
 See :func:`with_plugins`.
 """
 
-
 import importlib.metadata
 import os
 import traceback
@@ -44,11 +43,10 @@ import traceback
 import click
 
 
-__version__ = '2.0'
+__version__ = "2.0"
 
 
 def with_plugins(entry_points):
-
     """Decorator for loading and attaching plugins to a ``click.Group()``.
 
     Plugins are loaded from an ``importlib.metadata.EntryPoint()``. Each entry
@@ -103,12 +101,12 @@ def with_plugins(entry_points):
         if not isinstance(group, click.Group):
             raise TypeError(
                 f"plugins can only be attached to an instance of"
-                f" 'click.Group()' not: {repr(group)}")
+                f" 'click.Group()' not: {repr(group)}"
+            )
 
         # Load 'EntryPoint()' objects.
         if isinstance(entry_points, str):
-            all_entry_points = importlib.metadata.entry_points(
-                group=entry_points)
+            all_entry_points = importlib.metadata.entry_points(group=entry_points)
 
         # A single 'importlib.metadata.EntryPoint()'
         elif isinstance(entry_points, importlib.metadata.EntryPoint):
@@ -119,7 +117,6 @@ def with_plugins(entry_points):
             all_entry_points = entry_points
 
         for ep in all_entry_points:
-
             try:
                 group.add_command(ep.load())
 
@@ -136,7 +133,6 @@ def with_plugins(entry_points):
 
 
 class BrokenCommand(click.Command):
-
     """Represents a plugin ``click.Command()`` that failed to load.
 
     Can be executed just like a ``click.Command()``, but prints information
@@ -144,7 +140,6 @@ class BrokenCommand(click.Command):
     """
 
     def __init__(self, entry_point, exception):
-
         """
         :param importlib.metadata.EntryPoint entry_point:
             Entry point that failed to load.
@@ -167,11 +162,12 @@ class BrokenCommand(click.Command):
         # interacting with. These are not necessarily the right developers.
         self.help = (
             "{ls}ERROR: entry point '{module}:{name}' could not be loaded."
-            " Contact its author for help.{ls}{ls}{tb}").format(
+            " Contact its author for help.{ls}{ls}{tb}"
+        ).format(
             module=entry_point.module,
             name=entry_point.name,
             ls=os.linesep,
-            tb=''.join(tbe.format())
+            tb="".join(tbe.format()),
         )
 
         # Replace the broken command's summary with a warning about how it
@@ -185,7 +181,6 @@ class BrokenCommand(click.Command):
         )
 
     def invoke(self, ctx):
-
         """Print traceback and debugging message.
 
         :param click.Context ctx:
@@ -196,7 +191,6 @@ class BrokenCommand(click.Command):
         ctx.exit(1)
 
     def parse_args(self, ctx, args):
-
         """Pass arguments along without parsing.
 
         :param click.Context ctx:

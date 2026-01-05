@@ -11,76 +11,92 @@ from rasterio.io import MemoryFile
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
+
 @pytest.mark.gdalbin
 def test_nodata(tmpdir):
-    dst_path = str(tmpdir.join('lol.tif'))
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        with rasterio.open(dst_path, 'w', **src.meta) as dst:
+    dst_path = str(tmpdir.join("lol.tif"))
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        with rasterio.open(dst_path, "w", **src.meta) as dst:
             assert dst.nodata == 0.0
-            assert dst.meta['nodata'] == 0.0
+            assert dst.meta["nodata"] == 0.0
             assert dst.nodatavals == (0.0, 0.0, 0.0)
-    info = subprocess.check_output([
-        'gdalinfo', dst_path])
-    pattern = b'Band 1.*?NoData Value=0'
+    info = subprocess.check_output(["gdalinfo", dst_path])
+    pattern = b"Band 1.*?NoData Value=0"
     assert re.search(pattern, info, re.DOTALL) is not None
-    pattern = b'Band 2.*?NoData Value=0'
+    pattern = b"Band 2.*?NoData Value=0"
     assert re.search(pattern, info, re.DOTALL) is not None
-    pattern = b'Band 2.*?NoData Value=0'
+    pattern = b"Band 2.*?NoData Value=0"
     assert re.search(pattern, info, re.DOTALL) is not None
+
 
 @pytest.mark.gdalbin
 def test_set_nodata(tmpdir):
-    dst_path = str(tmpdir.join('lol.tif'))
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    dst_path = str(tmpdir.join("lol.tif"))
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         meta = src.meta
-        meta['nodata'] = 42
-        with rasterio.open(dst_path, 'w', **meta) as dst:
+        meta["nodata"] = 42
+        with rasterio.open(dst_path, "w", **meta) as dst:
             assert dst.nodata == 42
-            assert dst.meta['nodata'] == 42
+            assert dst.meta["nodata"] == 42
             assert dst.nodatavals == (42, 42, 42)
-    info = subprocess.check_output([
-        'gdalinfo', dst_path])
-    pattern = b'Band 1.*?NoData Value=42'
+    info = subprocess.check_output(["gdalinfo", dst_path])
+    pattern = b"Band 1.*?NoData Value=42"
     assert re.search(pattern, info, re.DOTALL) is not None
-    pattern = b'Band 2.*?NoData Value=42'
+    pattern = b"Band 2.*?NoData Value=42"
     assert re.search(pattern, info, re.DOTALL) is not None
-    pattern = b'Band 2.*?NoData Value=42'
+    pattern = b"Band 2.*?NoData Value=42"
     assert re.search(pattern, info, re.DOTALL) is not None
 
 
 def test_set_mem_inf_nodata():
-    with MemoryFile() as mem, mem.open(
-        driver="GTiff", width=1, height=1, count=1, dtype='float32', nodata=float('inf')
-    ) as src:
-          assert numpy.isinf(src.nodata)
+    with (
+        MemoryFile() as mem,
+        mem.open(
+            driver="GTiff",
+            width=1,
+            height=1,
+            count=1,
+            dtype="float32",
+            nodata=float("inf"),
+        ) as src,
+    ):
+        assert numpy.isinf(src.nodata)
 
 
 def test_set_inf_nodata(tmpdir):
-    dst_path = str(tmpdir.join('lol.tif'))
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    dst_path = str(tmpdir.join("lol.tif"))
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         meta = src.meta
-        meta['dtype'] ='float32'
-        meta['nodata'] = float('inf')
-        with rasterio.open(dst_path, 'w', **meta) as dst:
+        meta["dtype"] = "float32"
+        meta["nodata"] = float("inf")
+        with rasterio.open(dst_path, "w", **meta) as dst:
             assert numpy.isinf(dst.nodata)
-            assert numpy.isinf(dst.meta['nodata'])
+            assert numpy.isinf(dst.meta["nodata"])
             assert numpy.isinf(dst.nodatavals).all()
 
 
 def test_set_mem_nan_nodata():
-    with MemoryFile() as mem, mem.open(
-        driver="GTiff", width=1, height=1, count=1, dtype='float32', nodata=float('nan')
-    ) as src:
-          assert numpy.isnan(src.nodata)
+    with (
+        MemoryFile() as mem,
+        mem.open(
+            driver="GTiff",
+            width=1,
+            height=1,
+            count=1,
+            dtype="float32",
+            nodata=float("nan"),
+        ) as src,
+    ):
+        assert numpy.isnan(src.nodata)
 
 
 def test_set_nan_nodata(tmpdir):
-    dst_path = str(tmpdir.join('lol.tif'))
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    dst_path = str(tmpdir.join("lol.tif"))
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         meta = src.meta
-        meta['dtype'] ='float32'
-        meta['nodata'] = float('nan')
-        with rasterio.open(dst_path, 'w', **meta) as dst:
+        meta["dtype"] = "float32"
+        meta["nodata"] = float("nan")
+        with rasterio.open(dst_path, "w", **meta) as dst:
             assert numpy.isnan(dst.nodata)
-            assert numpy.isnan(dst.meta['nodata'])
+            assert numpy.isnan(dst.meta["nodata"])
             assert numpy.isnan(dst.nodatavals).all()

@@ -91,8 +91,10 @@ def test_different_crs(test_data_dir_overlapping):
     # Create new raster with different crs
     with rasterio.open(test_data_dir_overlapping.joinpath(inputs[-1])) as ds_src:
         kwds = ds_src.profile
-        kwds['crs'] = CRS.from_epsg(3499)
-        with rasterio.open(test_data_dir_overlapping.joinpath("new.tif"), 'w', **kwds) as ds_out:
+        kwds["crs"] = CRS.from_epsg(3499)
+        with rasterio.open(
+            test_data_dir_overlapping.joinpath("new.tif"), "w", **kwds
+        ) as ds_out:
             ds_out.write(ds_src.read())
 
     with pytest.raises(RasterioError):
@@ -161,7 +163,9 @@ def test_issue2202(dx, dy):
     )
     aoi = translate(aoi, dx, dy)
 
-    with rasterio.Env(AWS_NO_SIGN_REQUEST=True,):
+    with rasterio.Env(
+        AWS_NO_SIGN_REQUEST=True,
+    ):
         ds = [
             rasterio.open(i)
             for i in [
@@ -231,10 +235,9 @@ def test_merge_destination_2(tmp_path):
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
 def test_complex_merge(test_data_complex):
-
     with warnings.catch_warnings():
-        warnings.simplefilter('error')
-        result, _ = merge([test_data_complex/"r2.tif"])
+        warnings.simplefilter("error")
+        result, _ = merge([test_data_complex / "r2.tif"])
         assert result.dtype == numpy.complex64
         assert numpy.all(result == 1)
 
@@ -243,19 +246,19 @@ def test_complex_nodata(test_data_complex):
     inputs = list(test_data_complex.iterdir())
 
     with warnings.catch_warnings():
-        warnings.simplefilter('error')
+        warnings.simplefilter("error")
 
         result, _ = merge(inputs, nodata=numpy.nan)
         assert numpy.all(numpy.isnan(result[:, 2]))
 
-        result, _ = merge(inputs, nodata=0-1j)
-        assert numpy.all(result[:, 2] == 0-1j)
+        result, _ = merge(inputs, nodata=0 - 1j)
+        assert numpy.all(result[:, 2] == 0 - 1j)
 
 
 def test_complex_outrange_nodata_():
     with rasterio.open("tests/data/float_raster_with_nodata.tif") as src:
         with pytest.warns(UserWarning, match="Ignoring nodata value"):
-            res, _ = merge([src], nodata=1+1j, dtype='float64')
+            res, _ = merge([src], nodata=1 + 1j, dtype="float64")
 
 
 @pytest.mark.parametrize(

@@ -11,88 +11,88 @@ from rasterio.crs import CRS
 
 
 # Setup test arrays
-red = np.array([[0, 0, 0],
-                [0, 1, 1],
-                [1, 0, 1]]).astype('uint8') * 255
+red = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1]]).astype("uint8") * 255
 
-grn = np.array([[0, 0, 0],
-                [1, 0, 1],
-                [1, 0, 1]]).astype('uint8') * 255
+grn = np.array([[0, 0, 0], [1, 0, 1], [1, 0, 1]]).astype("uint8") * 255
 
-blu = np.array([[0, 0, 0],
-                [1, 1, 0],
-                [1, 0, 1]]).astype('uint8') * 255
+blu = np.array([[0, 0, 0], [1, 1, 0], [1, 0, 1]]).astype("uint8") * 255
 
 # equivalent to alp = red | grn | blu
 # valid data anywhere there is at least one R, G or B value
-alp = np.array([[0, 0, 0],
-                [1, 1, 1],
-                [1, 0, 1]]).astype('uint8') * 255
+alp = np.array([[0, 0, 0], [1, 1, 1], [1, 0, 1]]).astype("uint8") * 255
 
 # mask might be constructed using different tools
 # and differ from a strict interpretation of rgb values
-msk = np.array([[0, 0, 0],
-                [1, 1, 1],
-                [1, 1, 1]]).astype('uint8') * 255
+msk = np.array([[0, 0, 0], [1, 1, 1], [1, 1, 1]]).astype("uint8") * 255
 
-alldata = np.array([[1, 1, 1],
-                    [1, 1, 1],
-                    [1, 1, 1]]).astype('uint8') * 255
+alldata = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]).astype("uint8") * 255
 
 # boundless window ((1, 4, (1, 4))
-alp_shift_lr = np.array([[1, 1, 0],
-                         [0, 1, 0],
-                         [0, 0, 0]]).astype('uint8') * 255
+alp_shift_lr = np.array([[1, 1, 0], [0, 1, 0], [0, 0, 0]]).astype("uint8") * 255
 
 # whole mask resampled to (1, 5, 5) array
-resampmask = np.array([[0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0],
-                       [1, 1, 1, 1, 1],
-                       [1, 1, 0, 1, 1],
-                       [1, 1, 0, 1, 1]]).astype('uint8') * 255
+resampmask = (
+    np.array(
+        [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1, 1, 0, 1, 1],
+            [1, 1, 0, 1, 1],
+        ]
+    ).astype("uint8")
+    * 255
+)
 
 # whole mask resampled to (1, 5, 5) array
-resampave = np.array([[0, 0, 0, 0, 0],
-                      [1, 1, 1, 1, 1],
-                      [1, 1, 1, 1, 1],
-                      [1, 1, 1, 1, 1],
-                      [1, 1, 0, 1, 1]]).astype('uint8') * 255
+resampave = (
+    np.array(
+        [
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 0, 1, 1],
+        ]
+    ).astype("uint8")
+    * 255
+)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tiffs(tmpdir):
-
     _profile = {
-        'transform': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
-        'crs': CRS({'init': 'epsg:4326'}),
-        'driver': 'GTiff',
-        'dtype': 'uint8',
-        'height': 3,
-        'width': 3}
+        "transform": Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
+        "crs": CRS({"init": "epsg:4326"}),
+        "driver": "GTiff",
+        "dtype": "uint8",
+        "height": 3,
+        "width": 3,
+    }
 
     # 1. RGB without nodata value
     prof = _profile.copy()
-    prof['count'] = 3
-    prof['nodata'] = None
-    with rasterio.open(str(tmpdir.join('rgb_no_ndv.tif')), 'w', **prof) as dst:
+    prof["count"] = 3
+    prof["nodata"] = None
+    with rasterio.open(str(tmpdir.join("rgb_no_ndv.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
 
     # 2. RGB with nodata value
     prof = _profile.copy()
-    prof['count'] = 3
-    prof['nodata'] = 0
-    with rasterio.open(str(tmpdir.join('rgb_ndv.tif')), 'w', **prof) as dst:
+    prof["count"] = 3
+    prof["nodata"] = 0
+    with rasterio.open(str(tmpdir.join("rgb_ndv.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
 
     # 3. RGBA without nodata value
     prof = _profile.copy()
-    prof['count'] = 4
-    prof['nodata'] = None
-    with rasterio.open(str(tmpdir.join('rgba_no_ndv.tif')), 'w', **prof) as dst:
+    prof["count"] = 4
+    prof["nodata"] = None
+    with rasterio.open(str(tmpdir.join("rgba_no_ndv.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
@@ -100,9 +100,9 @@ def tiffs(tmpdir):
 
     # 4. RGBA with nodata value
     prof = _profile.copy()
-    prof['count'] = 4
-    prof['nodata'] = 0
-    with rasterio.open(str(tmpdir.join('rgba_ndv.tif')), 'w', **prof) as dst:
+    prof["count"] = 4
+    prof["nodata"] = 0
+    with rasterio.open(str(tmpdir.join("rgba_ndv.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
@@ -110,8 +110,8 @@ def tiffs(tmpdir):
 
     # 5. RGB with msk
     prof = _profile.copy()
-    prof['count'] = 3
-    with rasterio.open(str(tmpdir.join('rgb_msk.tif')), 'w', **prof) as dst:
+    prof["count"] = 3
+    with rasterio.open(str(tmpdir.join("rgb_msk.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
@@ -119,10 +119,11 @@ def tiffs(tmpdir):
 
     # 6. RGB with msk (internal)
     prof = _profile.copy()
-    prof['count'] = 3
+    prof["count"] = 3
     with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
-        with rasterio.open(str(tmpdir.join('rgb_msk_internal.tif')),
-                           'w', **prof) as dst:
+        with rasterio.open(
+            str(tmpdir.join("rgb_msk_internal.tif")), "w", **prof
+        ) as dst:
             dst.write(red, 1)
             dst.write(grn, 2)
             dst.write(blu, 3)
@@ -130,8 +131,8 @@ def tiffs(tmpdir):
 
     # 7. RGBA with msk
     prof = _profile.copy()
-    prof['count'] = 4
-    with rasterio.open(str(tmpdir.join('rgba_msk.tif')), 'w', **prof) as dst:
+    prof["count"] = 4
+    with rasterio.open(str(tmpdir.join("rgba_msk.tif")), "w", **prof) as dst:
         dst.write(red, 1)
         dst.write(grn, 2)
         dst.write(blu, 3)
@@ -142,31 +143,31 @@ def tiffs(tmpdir):
 
 
 def test_no_ndv(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_no_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_no_ndv.tif"))) as src:
         assert np.array_equal(src.dataset_mask(), alldata)
 
 
 def test_rgb_ndv(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_ndv.tif"))) as src:
         res = src.dataset_mask()
         assert res.dtype.name == "uint8"
         assert np.array_equal(src.dataset_mask(), alp)
 
 
 def test_rgba_no_ndv(tiffs):
-    with rasterio.open(str(tiffs.join('rgba_no_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgba_no_ndv.tif"))) as src:
         assert np.array_equal(src.dataset_mask(), alp)
 
 
 def test_rgba_ndv(tiffs):
-    with rasterio.open(str(tiffs.join('rgba_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgba_ndv.tif"))) as src:
         with pytest.warns(NodataShadowWarning):
             res = src.dataset_mask()
         assert np.array_equal(res, alp)
 
 
 def test_rgb_msk(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_msk.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_msk.tif"))) as src:
         assert np.array_equal(src.dataset_mask(), msk)
         # each band's mask is also equal
         for bmask in src.read_masks():
@@ -174,31 +175,40 @@ def test_rgb_msk(tiffs):
 
 
 def test_rgb_msk_int(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_msk_internal.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_msk_internal.tif"))) as src:
         assert np.array_equal(src.dataset_mask(), msk)
 
 
 def test_rgba_msk(tiffs):
-    with rasterio.open(str(tiffs.join('rgba_msk.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgba_msk.tif"))) as src:
         # mask takes precedent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
 
 
-@pytest.mark.parametrize("kwds,expected", [(dict(window=((1, 4), (1, 4)), boundless=True), alp_shift_lr), (dict(out_shape=(1, 5, 5)), resampmask), (dict(out=np.zeros((1, 5, 5), dtype=np.uint8)), resampmask)])
+@pytest.mark.parametrize(
+    "kwds,expected",
+    [
+        (dict(window=((1, 4), (1, 4)), boundless=True), alp_shift_lr),
+        (dict(out_shape=(1, 5, 5)), resampmask),
+        (dict(out=np.zeros((1, 5, 5), dtype=np.uint8)), resampmask),
+    ],
+)
 def test_kwargs(tiffs, kwds, expected):
-    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_ndv.tif"))) as src:
         result = src.dataset_mask(**kwds)
         assert np.array_equal(expected, result)
 
 
 def test_indexes_not_supported(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+    with rasterio.open(str(tiffs.join("rgb_ndv.tif"))) as src:
         with pytest.raises(TypeError):
             src.dataset_mask(indexes=1)
 
 
 def test_kwargs_resampling(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
-        other = src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.bilinear) != 0
+    with rasterio.open(str(tiffs.join("rgb_ndv.tif"))) as src:
+        other = (
+            src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.bilinear) != 0
+        )
         other = other.astype(np.uint8) * 255
         assert np.array_equal(resampave, other)

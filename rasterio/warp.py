@@ -22,9 +22,9 @@ from rasterio._warp import (
     SUPPORTED_RESAMPLING,
 )
 
+
 @ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
-
     """Transform vectors from source to target coordinate reference system.
 
     Transform vectors of x, y and optionally z from source
@@ -108,14 +108,7 @@ def transform_geom(
     )
 
 
-def transform_bounds(
-        src_crs,
-        dst_crs,
-        left,
-        bottom,
-        right,
-        top,
-        densify_pts=21):
+def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21):
     """Transform bounds from src_crs to dst_crs.
 
     Optionally densifying the edges (to account for nonlinear transformations
@@ -176,7 +169,7 @@ def reproject(
     init_dest_nodata=True,
     warp_mem_limit=0,
     src_geoloc_array=None,
-    **kwargs
+    **kwargs,
 ):
     """Reproject a source raster to a destination raster.
 
@@ -308,7 +301,9 @@ def reproject(
         raise ValueError("Must provide destination if dst_transform is provided.")
 
     # calculate the destination transform if not provided
-    if dst_transform is None and (destination is None or isinstance(destination, np.ndarray)):
+    if dst_transform is None and (
+        destination is None or isinstance(destination, np.ndarray)
+    ):
         src_bounds = tuple([None] * 4)
         if isinstance(source, np.ndarray):
             if source.ndim == 3:
@@ -337,7 +332,9 @@ def reproject(
                 else:
                     src_crs_obj = src_crs
                 if src_crs is not None and src_crs_obj.to_epsg() != 4326:
-                    raise RPCError("Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326")
+                    raise RPCError(
+                        "Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326"
+                    )
 
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
@@ -400,7 +397,7 @@ def reproject(
         num_threads=num_threads,
         warp_mem_limit=warp_mem_limit,
         src_geoloc_array=src_geoloc_array,
-        **kwargs
+        **kwargs,
     )
 
     return dest, dst_transform
@@ -464,7 +461,7 @@ def calculate_default_transform(
     dst_width=None,
     dst_height=None,
     src_geoloc_array=None,
-    **kwargs
+    **kwargs,
 ):
     """Computes the default dimensions and transform for a reprojection.
 
@@ -540,8 +537,9 @@ def calculate_default_transform(
         )
 
     if (dst_width is None) != (dst_height is None):
-        raise ValueError("Either dst_width and dst_height must be specified "
-                         "or none of them.")
+        raise ValueError(
+            "Either dst_width and dst_height must be specified or none of them."
+        )
 
     if all(x is not None for x in (dst_width, dst_height)):
         dimensions = (dst_width, dst_height)
@@ -563,7 +561,7 @@ def calculate_default_transform(
         gcps=gcps,
         rpcs=rpcs,
         src_geoloc_array=src_geoloc_array,
-        **kwargs
+        **kwargs,
     )
 
     # If resolution is specified, Keep upper-left anchored
@@ -588,8 +586,9 @@ def calculate_default_transform(
         xratio = dst_affine.a / xres
         yratio = dst_affine.e / yres
 
-        dst_affine = Affine(xres, dst_affine.b, dst_affine.c,
-                            dst_affine.d, yres, dst_affine.f)
+        dst_affine = Affine(
+            xres, dst_affine.b, dst_affine.c, dst_affine.d, yres, dst_affine.f
+        )
 
         dst_width = ceil(dst_width * xratio)
         dst_height = ceil(dst_height * yratio)
@@ -601,7 +600,13 @@ def calculate_default_transform(
         dst_width = dimensions[0]
         dst_height = dimensions[1]
 
-        dst_affine = Affine(dst_affine.a * xratio, dst_affine.b, dst_affine.c,
-                            dst_affine.d, dst_affine.e * yratio, dst_affine.f)
+        dst_affine = Affine(
+            dst_affine.a * xratio,
+            dst_affine.b,
+            dst_affine.c,
+            dst_affine.d,
+            dst_affine.e * yratio,
+            dst_affine.f,
+        )
 
     return dst_affine, dst_width, dst_height

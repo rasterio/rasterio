@@ -33,7 +33,8 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin, TransformMethodsMixin
 
     def __repr__(self):
         return "<{} DatasetReader name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin):
@@ -43,7 +44,8 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin
 
     def __repr__(self):
         return "<{} DatasetWriter name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class BufferedDatasetWriter(
@@ -58,7 +60,8 @@ class BufferedDatasetWriter(
 
     def __repr__(self):
         return "<{} BufferedDatasetWriter name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
 
 class MemoryFile(MemoryFileBase):
@@ -76,10 +79,9 @@ class MemoryFile(MemoryFileBase):
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, MemoryFile(f) as memfile:
+    >>> with open("tests/data/RGB.byte.tif", "rb") as f, MemoryFile(f) as memfile:
     ...     with memfile.open() as src:
     ...         pprint.pprint(src.profile)
-    ...
     {'count': 3,
      'crs': CRS({'init': 'epsg:32618'}),
      'driver': 'GTiff',
@@ -115,8 +117,20 @@ class MemoryFile(MemoryFileBase):
         )
 
     @ensure_env
-    def open(self, driver=None, width=None, height=None, count=None, crs=None,
-             transform=None, dtype=None, nodata=None, sharing=False, thread_safe=False, **kwargs):
+    def open(
+        self,
+        driver=None,
+        width=None,
+        height=None,
+        count=None,
+        crs=None,
+        transform=None,
+        dtype=None,
+        nodata=None,
+        sharing=False,
+        thread_safe=False,
+        **kwargs,
+    ):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r'
@@ -137,7 +151,13 @@ class MemoryFile(MemoryFileBase):
             raise ValueError("I/O operation on closed file.")
         if len(self) > 0:
             log.debug(f"VSI path: {mempath.path}")
-            rd = DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+            rd = DatasetReader(
+                mempath,
+                driver=driver,
+                sharing=sharing,
+                thread_safe=thread_safe,
+                **kwargs,
+            )
         else:
             writer = get_writer_for_driver(driver)
             rd = writer(
@@ -152,7 +172,7 @@ class MemoryFile(MemoryFileBase):
                 dtype=dtype,
                 nodata=nodata,
                 sharing=sharing,
-                **kwargs
+                **kwargs,
             )
 
         # Push the new dataset's context exit onto the MemoryFile's ExitStack.
@@ -178,6 +198,7 @@ class _FilePath(FilePathBase):
        and will be removed in 2.0.0.
 
     """
+
     def __init__(self, filelike_obj, dirname=None, filename=None):
         """Create a new wrapper around the provided file-like object.
 
@@ -196,9 +217,7 @@ class _FilePath(FilePathBase):
             "FilePath is supplanted by open's new opener keyword argument, and will be removed in 2.0.0.",
             RasterioDeprecationWarning,
         )
-        super().__init__(
-            filelike_obj, dirname=dirname, filename=filename
-        )
+        super().__init__(filelike_obj, dirname=dirname, filename=filename)
 
     @ensure_env
     def open(self, driver=None, sharing=False, thread_safe=False, **kwargs):
@@ -228,7 +247,9 @@ class _FilePath(FilePathBase):
         # Assume we were given a non-empty file-like object
         log.debug(f"VSI path: {mempath.path}")
 
-        return DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+        return DatasetReader(
+            mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs
+        )
 
     def __enter__(self):
         return self
@@ -273,7 +294,9 @@ class ZipMemoryFile(MemoryFile):
 
         if self.closed:
             raise ValueError("I/O operation on closed file.")
-        return DatasetReader(zippath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+        return DatasetReader(
+            zippath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs
+        )
 
 
 def get_writer_for_driver(driver):

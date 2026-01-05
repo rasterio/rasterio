@@ -5,3 +5,4 @@ repos:
       # Run the linter
       - id: ruff-check
         args: [ --fix ]
+      - id: ruff-format

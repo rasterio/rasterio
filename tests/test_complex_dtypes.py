@@ -7,7 +7,7 @@ import pytest
 import rasterio
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempfile():
     """A temporary filename in the GDAL '/vsimem' filesystem"""
     return f"/vsimem/{uuid.uuid4()}"
@@ -16,8 +16,8 @@ def tempfile():
 def complex_image(height, width, dtype):
     """An array with sequential elements"""
     return np.array(
-        [complex(x, x) for x in range(height * width)],
-        dtype=dtype).reshape(height, width)
+        [complex(x, x) for x in range(height * width)], dtype=dtype
+    ).reshape(height, width)
 
 
 @pytest.mark.parametrize("dtype", ["complex", "complex64", "complex128"])
@@ -25,8 +25,9 @@ def complex_image(height, width, dtype):
 def test_read_array(tempfile, dtype, height, width):
     """_io functions read and write arrays correctly"""
     in_img = complex_image(height, width, dtype)
-    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
-                       height=height, width=width, count=1) as dataset:
+    with rasterio.open(
+        tempfile, "w+", driver="GTiff", dtype=dtype, height=height, width=width, count=1
+    ) as dataset:
         dataset.write(in_img, 1)
         out_img = dataset.read(1)
     assert (in_img == out_img).all()
@@ -44,10 +45,23 @@ def test_complex_nodata(tmpdir):
     Z1 = np.ones_like(X) + 1j
 
     res = (x[-1] - x[0]) / 240.0
-    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) * Affine.scale(res, -res)
+    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) * Affine.scale(
+        res, -res
+    )
 
     tempfile = str(tmpdir.join("test.tif"))
-    with rasterio.open(tempfile, 'w', driver='GTiff', height=Z1.shape[0], width=Z1.shape[1], nodata=0, count=1, dtype=Z1.dtype, crs='+proj=latlong', transform=transform1) as dst:
+    with rasterio.open(
+        tempfile,
+        "w",
+        driver="GTiff",
+        height=Z1.shape[0],
+        width=Z1.shape[1],
+        nodata=0,
+        count=1,
+        dtype=Z1.dtype,
+        crs="+proj=latlong",
+        transform=transform1,
+    ) as dst:
         dst.write(Z1, 1)
 
     with rasterio.open(tempfile) as dst:

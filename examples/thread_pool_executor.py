@@ -30,7 +30,6 @@ def main(infile, outfile, num_workers=4):
         driver="LIBERTIFF" if gdal_at_least_3_11 else None,
         thread_safe=gdal_at_least_3_11,
     ) as src:
-
         # Create a destination dataset based on source params. The
         # destination will be tiled, and we'll process the tiles
         # concurrently.
@@ -66,7 +65,6 @@ def main(infile, outfile, num_workers=4):
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(description="Concurrent raster processing demo")

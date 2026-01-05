@@ -191,7 +191,9 @@ class Session:
             session = Session.aws_or_dummy(*args, **kwargs)
             session.credentials
         except RuntimeError:
-            log.warning("Credentials in environment have expired. Creating a DummySession.")
+            log.warning(
+                "Credentials in environment have expired. Creating a DummySession."
+            )
             session = DummySession(*args, **kwargs)
         return session
 
@@ -240,14 +242,20 @@ class DummySession(Session):
 
 
 class AWSSession(Session):
-    """Configures access to secured resources stored in AWS S3.
-    """
+    """Configures access to secured resources stored in AWS S3."""
 
     def __init__(
-            self, session=None, aws_unsigned=None, aws_access_key_id=None,
-            aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None, endpoint_url=None,
-            requester_pays=False):
+        self,
+        session=None,
+        aws_unsigned=None,
+        aws_access_key_id=None,
+        aws_secret_access_key=None,
+        aws_session_token=None,
+        region_name=None,
+        profile_name=None,
+        endpoint_url=None,
+        requester_pays=False,
+    ):
         """Create a new AWS session
 
         Parameters
@@ -285,16 +293,13 @@ class AWSSession(Session):
                 aws_secret_access_key=aws_secret_access_key,
                 aws_session_token=aws_session_token,
                 region_name=region_name,
-                profile_name=profile_name)
+                profile_name=profile_name,
+            )
 
         self.requester_pays = requester_pays
         self.unsigned = aws_unsigned
         self.endpoint_url = endpoint_url
-        self._creds = (
-            self._session.get_credentials()
-            if not self.unsigned
-            else None
-        )
+        self._creds = self._session.get_credentials() if not self.unsigned else None
 
     @classmethod
     def hascreds(cls, config):
@@ -312,7 +317,9 @@ class AWSSession(Session):
         bool
 
         """
-        return ('AWS_ACCESS_KEY_ID' in config and 'AWS_SECRET_ACCESS_KEY' in config) or 'AWS_NO_SIGN_REQUEST' in config
+        return (
+            "AWS_ACCESS_KEY_ID" in config and "AWS_SECRET_ACCESS_KEY" in config
+        ) or "AWS_NO_SIGN_REQUEST" in config
 
     @property
     def credentials(self):
@@ -321,17 +328,17 @@ class AWSSession(Session):
         if self._creds:  # pragma: no branch
             frozen_creds = self._creds.get_frozen_credentials()
             if frozen_creds.access_key:  # pragma: no branch
-                res['aws_access_key_id'] = frozen_creds.access_key
+                res["aws_access_key_id"] = frozen_creds.access_key
             if frozen_creds.secret_key:  # pragma: no branch
-                res['aws_secret_access_key'] = frozen_creds.secret_key
+                res["aws_secret_access_key"] = frozen_creds.secret_key
             if frozen_creds.token:
-                res['aws_session_token'] = frozen_creds.token
+                res["aws_session_token"] = frozen_creds.token
         if self._session.region_name:
-            res['aws_region'] = self._session.region_name
+            res["aws_region"] = self._session.region_name
         if self.requester_pays:
-            res['aws_request_payer'] = 'requester'
+            res["aws_request_payer"] = "requester"
         if self.endpoint_url:
-            res['aws_s3_endpoint'] = self.endpoint_url
+            res["aws_s3_endpoint"] = self.endpoint_url
         return res
 
     def get_credential_options(self):
@@ -343,18 +350,25 @@ class AWSSession(Session):
 
         """
         if self.unsigned:
-            opts = {'AWS_NO_SIGN_REQUEST': 'YES'}
-            opts.update({k.upper(): v for k, v in self.credentials.items()
-                        if k in ('aws_region', 'aws_s3_endpoint')})
+            opts = {"AWS_NO_SIGN_REQUEST": "YES"}
+            opts.update(
+                {
+                    k.upper(): v
+                    for k, v in self.credentials.items()
+                    if k in ("aws_region", "aws_s3_endpoint")
+                }
+            )
             return opts
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
 
 
 class OSSSession(Session):
-    """Configures access to secured resources stored in Alibaba Cloud OSS.
-    """
-    def __init__(self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None):
+    """Configures access to secured resources stored in Alibaba Cloud OSS."""
+
+    def __init__(
+        self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None
+    ):
         """Create new Alibaba Cloud OSS session
 
         Parameters
@@ -370,7 +384,7 @@ class OSSSession(Session):
         self._creds = {
             "oss_access_key_id": oss_access_key_id,
             "oss_secret_access_key": oss_secret_access_key,
-            "oss_endpoint": oss_endpoint
+            "oss_endpoint": oss_endpoint,
         }
 
     @classmethod
@@ -389,7 +403,7 @@ class OSSSession(Session):
         bool
 
         """
-        return 'OSS_ACCESS_KEY_ID' in config and 'OSS_SECRET_ACCESS_KEY' in config
+        return "OSS_ACCESS_KEY_ID" in config and "OSS_SECRET_ACCESS_KEY" in config
 
     @property
     def credentials(self):
@@ -408,8 +422,8 @@ class OSSSession(Session):
 
 
 class GSSession(Session):
-    """Configures access to secured resources stored in Google Cloud Storage
-    """
+    """Configures access to secured resources stored in Google Cloud Storage"""
+
     def __init__(self, google_application_credentials=None):
         """Create new Google Cloud Storage session
 
@@ -420,7 +434,9 @@ class GSSession(Session):
         """
 
         if google_application_credentials is not None:
-            self._creds = {'google_application_credentials': google_application_credentials}
+            self._creds = {
+                "google_application_credentials": google_application_credentials
+            }
         else:
             self._creds = {}
 
@@ -440,7 +456,7 @@ class GSSession(Session):
         bool
 
         """
-        return 'GOOGLE_APPLICATION_CREDENTIALS' in config
+        return "GOOGLE_APPLICATION_CREDENTIALS" in config
 
     @property
     def credentials(self):
@@ -459,11 +475,17 @@ class GSSession(Session):
 
 
 class SwiftSession(Session):
-    """Configures access to secured resources stored in OpenStack Swift Object Storage.
-    """
-    def __init__(self, session=None,
-                swift_storage_url=None, swift_auth_token=None,
-                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+    """Configures access to secured resources stored in OpenStack Swift Object Storage."""
+
+    def __init__(
+        self,
+        session=None,
+        swift_storage_url=None,
+        swift_auth_token=None,
+        swift_auth_v1_url=None,
+        swift_user=None,
+        swift_key=None,
+    ):
         """Create new OpenStack Swift Object Storage Session.
 
         Three methods are possible:
@@ -490,8 +512,12 @@ class SwiftSession(Session):
         --------
         >>> import rasterio
         >>> from rasterio.session import SwiftSession
-        >>> fp = '/vsiswift/bucket/key.tif'
-        >>> conn = Connection(authurl='http://127.0.0.1:7777/auth/v1.0', user='test:tester', key='testing')
+        >>> fp = "/vsiswift/bucket/key.tif"
+        >>> conn = Connection(
+        ...     authurl="http://127.0.0.1:7777/auth/v1.0",
+        ...     user="test:tester",
+        ...     key="testing",
+        ... )
         >>> session = SwiftSession(conn)
         >>> with rasterio.Env(session):
         >>>     with rasterio.open(fp) as src:
@@ -501,7 +527,7 @@ class SwiftSession(Session):
         if swift_storage_url and swift_auth_token:
             self._creds = {
                 "swift_storage_url": swift_storage_url,
-                "swift_auth_token": swift_auth_token
+                "swift_auth_token": swift_auth_token,
             }
         else:
             from swiftclient.client import Connection
@@ -510,13 +536,11 @@ class SwiftSession(Session):
                 self._session = session
             else:
                 self._session = Connection(
-                    authurl=swift_auth_v1_url,
-                    user=swift_user,
-                    key=swift_key
+                    authurl=swift_auth_v1_url, user=swift_user, key=swift_key
                 )
             self._creds = {
                 "swift_storage_url": self._session.get_auth()[0],
-                "swift_auth_token": self._session.get_auth()[1]
+                "swift_auth_token": self._session.get_auth()[1],
             }
 
     @classmethod
@@ -532,7 +556,7 @@ class SwiftSession(Session):
         -------
         bool
         """
-        return 'SWIFT_STORAGE_URL' in config and 'SWIFT_AUTH_TOKEN' in config
+        return "SWIFT_STORAGE_URL" in config and "SWIFT_AUTH_TOKEN" in config
 
     @property
     def credentials(self):
@@ -549,14 +573,21 @@ class SwiftSession(Session):
 
 
 class AzureSession(Session):
-    """Configures access to secured resources stored in Microsoft Azure Blob Storage.
-    """
-    def __init__(self, azure_storage_connection_string=None,
-                 azure_storage_account=None, azure_storage_access_token=None,
-                 azure_storage_access_key=None, azure_storage_sas_token = None,
-                 azure_unsigned=False, azure_tenant_id=None,
-                 azure_client_id=None, azure_federated_token_file=None,
-                 azure_authority_host=None):
+    """Configures access to secured resources stored in Microsoft Azure Blob Storage."""
+
+    def __init__(
+        self,
+        azure_storage_connection_string=None,
+        azure_storage_account=None,
+        azure_storage_access_token=None,
+        azure_storage_access_key=None,
+        azure_storage_sas_token=None,
+        azure_unsigned=False,
+        azure_tenant_id=None,
+        azure_client_id=None,
+        azure_federated_token_file=None,
+        azure_authority_host=None,
+    ):
         """Create new Microsoft Azure Blob Storage session
 
         Authentication defaults to parameters first. If parameters do not
@@ -587,25 +618,21 @@ class AzureSession(Session):
         """
 
         def _get_credentials(
-           storage_connection_string,
-           storage_account,
-           unsigned,
-           storage_access_token,
-           storage_access_key,
-           sas_token,
-           tenant_id,
-           client_id,
-           federated_token_file,
-           authority_host,
+            storage_connection_string,
+            storage_account,
+            unsigned,
+            storage_access_token,
+            storage_access_key,
+            sas_token,
+            tenant_id,
+            client_id,
+            federated_token_file,
+            authority_host,
         ):
             if storage_connection_string:
-                return {
-                    "azure_storage_connection_string": storage_connection_string
-                }
+                return {"azure_storage_connection_string": storage_connection_string}
             else:
-                creds = {
-                    "azure_storage_account": storage_account
-                }
+                creds = {"azure_storage_account": storage_account}
                 if storage_access_token:
                     creds["azure_storage_access_token"] = storage_access_token
                 elif storage_access_key:
@@ -615,13 +642,14 @@ class AzureSession(Session):
                 elif unsigned:
                     creds["azure_no_sign_request"] = "YES"
                     self.unsigned = True
-                elif tenant_id and client_id and federated_token_file and authority_host:
-                        creds["azure_tenant_id"] = tenant_id
-                        creds["azure_client_id"] = client_id
-                        creds["azure_federated_token_file"] = federated_token_file
-                        creds["azure_authority_host"] = authority_host
+                elif (
+                    tenant_id and client_id and federated_token_file and authority_host
+                ):
+                    creds["azure_tenant_id"] = tenant_id
+                    creds["azure_client_id"] = client_id
+                    creds["azure_federated_token_file"] = federated_token_file
+                    creds["azure_authority_host"] = authority_host
                 return creds
-
 
         passed_args = {
             "storage_connection_string": azure_storage_connection_string,
@@ -633,7 +661,7 @@ class AzureSession(Session):
             "tenant_id": azure_tenant_id,
             "client_id": azure_client_id,
             "federated_token_file": azure_federated_token_file,
-            "authority_host": azure_authority_host
+            "authority_host": azure_authority_host,
         }
 
         env_vars = {
@@ -646,7 +674,7 @@ class AzureSession(Session):
             "tenant_id": os.getenv("AZURE_TENANT_ID"),
             "client_id": os.getenv("AZURE_CLIENT_ID"),
             "federated_token_file": os.getenv("AZURE_FEDERATED_TOKEN_FILE"),
-            "authority_host": os.getenv("AZURE_AUTHORITY_HOST")
+            "authority_host": os.getenv("AZURE_AUTHORITY_HOST"),
         }
 
         self._creds = _get_credentials(**passed_args)
@@ -670,14 +698,27 @@ class AzureSession(Session):
 
         """
         return (
-            'AZURE_STORAGE_CONNECTION_STRING' in config
-            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_TOKEN' in config)
-            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_ACCESS_KEY' in config)
-            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_STORAGE_SAS_TOKEN' in config)
-            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_NO_SIGN_REQUEST' in config)
-            or ('AZURE_STORAGE_ACCOUNT' in config and 'AZURE_TENANT_ID' in config and
-                'AZURE_CLIENT_ID' in config and 'AZURE_FEDERATED_TOKEN_FILE' in config
-                and 'AZURE_AUTHORITY_HOST' in config)
+            "AZURE_STORAGE_CONNECTION_STRING" in config
+            or (
+                "AZURE_STORAGE_ACCOUNT" in config
+                and "AZURE_STORAGE_ACCESS_TOKEN" in config
+            )
+            or (
+                "AZURE_STORAGE_ACCOUNT" in config
+                and "AZURE_STORAGE_ACCESS_KEY" in config
+            )
+            or (
+                "AZURE_STORAGE_ACCOUNT" in config
+                and "AZURE_STORAGE_SAS_TOKEN" in config
+            )
+            or ("AZURE_STORAGE_ACCOUNT" in config and "AZURE_NO_SIGN_REQUEST" in config)
+            or (
+                "AZURE_STORAGE_ACCOUNT" in config
+                and "AZURE_TENANT_ID" in config
+                and "AZURE_CLIENT_ID" in config
+                and "AZURE_FEDERATED_TOKEN_FILE" in config
+                and "AZURE_AUTHORITY_HOST" in config
+            )
         )
 
     @property
@@ -694,6 +735,7 @@ class AzureSession(Session):
 
         """
         return {k.upper(): v for k, v in self.credentials.items()}
+
 
 def parse_bool(v):
     """CPLTestBool equivalent"""

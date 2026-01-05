@@ -16,32 +16,46 @@ from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
 from rasterio.transform import Affine, rowcol
 from rasterio.warp import (
-    reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
-    aligned_target, calculate_default_transform as calcdt)
+    reproject,
+    Resampling,
+    SUPPORTED_RESAMPLING,
+    transform_bounds,
+    aligned_target,
+    calculate_default_transform as calcdt,
+)
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(short_help='Warp a raster dataset.')
+@click.command(short_help="Warp a raster dataset.")
 @options.files_inout_arg
 @options.output_opt
 @options.format_opt
 @click.option(
-    '--like',
+    "--like",
     type=click.Path(exists=True),
-    help='Raster dataset to use as a template for obtaining affine '
-         'transform (bounds and resolution), and crs.')
-@click.option('--dst-crs', default=None,
-              help='Target coordinate reference system.')
+    help="Raster dataset to use as a template for obtaining affine "
+    "transform (bounds and resolution), and crs.",
+)
+@click.option("--dst-crs", default=None, help="Target coordinate reference system.")
 @options.dimensions_opt
 @click.option(
-    '--src-bounds',
-    nargs=4, type=float, default=None,
+    "--src-bounds",
+    nargs=4,
+    type=float,
+    default=None,
     help="Determine output extent from source bounds: left bottom right top "
-         ". Cannot be used with destination --bounds")
+    ". Cannot be used with destination --bounds",
+)
 @click.option(
-    '--bounds', '--dst-bounds', 'dst_bounds', nargs=4, type=float, default=None,
-    help="Determine output extent from destination bounds: left bottom right top")
+    "--bounds",
+    "--dst-bounds",
+    "dst_bounds",
+    nargs=4,
+    type=float,
+    default=None,
+    help="Determine output extent from destination bounds: left bottom right top",
+)
 @options.resolution_opt
 @click.option(
     "--resampling",
@@ -154,8 +168,7 @@ def warp(
         > --bounds -78 22 -76 24 --res 0.1 --dst-crs EPSG:4326
 
     """
-    output, files = resolve_inout(
-        files=files, output=output, overwrite=overwrite)
+    output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
 
     resampling = Resampling[resampling]  # get integer code for method
 
@@ -169,7 +182,8 @@ def warp(
     if target_aligned_pixels:
         if not res:
             raise click.BadParameter(
-                '--target-aligned-pixels requires a specified resolution')
+                "--target-aligned-pixels requires a specified resolution"
+            )
 
     # Check invalid parameter combinations
     if like:
@@ -177,15 +191,17 @@ def warp(
         if any(p for p in invalid_combos if p is not None):
             raise click.BadParameter(
                 "--like cannot be used with any of --dimensions, --bounds, "
-                "--dst-crs, or --res")
+                "--dst-crs, or --res"
+            )
 
     elif dimensions:
         invalid_combos = (dst_bounds, res)
         if any(p for p in invalid_combos if p is not None):
             raise click.BadParameter(
-                "--dimensions cannot be used with --bounds or --res")
+                "--dimensions cannot be used with --bounds or --res"
+            )
 
-    with ctx.obj['env']:
+    with ctx.obj["env"]:
         setenv(CHECK_WITH_INVERT_PROJ=check_invert_proj)
 
         with rasterio.open(files[0]) as src:
@@ -200,7 +216,8 @@ def warp(
             if src_bounds and dst_bounds:
                 raise click.BadParameter(
                     "--src-bounds and destination --bounds may not be "
-                    "specified simultaneously.")
+                    "specified simultaneously."
+                )
 
             if like:
                 with rasterio.open(like) as template_ds:
@@ -214,7 +231,8 @@ def warp(
                     dst_crs = CRS.from_string(dst_crs)
                 except ValueError as err:
                     raise click.BadParameter(
-                        str(err), param='dst_crs', param_hint='dst_crs')
+                        str(err), param="dst_crs", param_hint="dst_crs"
+                    )
 
                 if dimensions:
                     # Calculate resolution appropriate for dimensions
@@ -223,31 +241,38 @@ def warp(
                     bounds = src_bounds or src.bounds
                     try:
                         xmin, ymin, xmax, ymax = transform_bounds(
-                            src.crs, dst_crs, *bounds)
+                            src.crs, dst_crs, *bounds
+                        )
                     except CRSError as err:
                         raise click.BadParameter(
-                            str(err), param='dst_crs', param_hint='dst_crs')
+                            str(err), param="dst_crs", param_hint="dst_crs"
+                        )
                     dst_transform = Affine(
                         (xmax - xmin) / float(dst_width),
-                        0, xmin, 0,
+                        0,
+                        xmin,
+                        0,
                         (ymin - ymax) / float(dst_height),
-                        ymax
+                        ymax,
                     )
 
                 elif src_bounds or dst_bounds:
                     if not res:
                         raise click.BadParameter(
                             "Required when using --bounds.",
-                            param='res', param_hint='res')
+                            param="res",
+                            param_hint="res",
+                        )
 
                     if src_bounds:
                         try:
                             xmin, ymin, xmax, ymax = transform_bounds(
-                                src.crs, dst_crs, *src_bounds)
+                                src.crs, dst_crs, *src_bounds
+                            )
                         except CRSError as err:
                             raise click.BadParameter(
-                                str(err), param='dst_crs',
-                                param_hint='dst_crs')
+                                str(err), param="dst_crs", param_hint="dst_crs"
+                            )
                     else:
                         xmin, ymin, xmax, ymax = dst_bounds
 
@@ -259,7 +284,7 @@ def warp(
                     try:
                         if src.transform.is_identity and src.gcps:
                             src_crs = src.gcps[1]
-                            kwargs = {'gcps': src.gcps[0]}
+                            kwargs = {"gcps": src.gcps[0]}
                         else:
                             src_crs = src.crs
                             kwargs = src.bounds._asdict()
@@ -270,11 +295,12 @@ def warp(
                             src.height,
                             resolution=res,
                             **kwargs,
-                            **warper_options
+                            **warper_options,
                         )
                     except CRSError as err:
                         raise click.BadParameter(
-                            str(err), param='dst_crs', param_hint='dst_crs')
+                            str(err), param="dst_crs", param_hint="dst_crs"
+                        )
 
             elif dimensions:
                 # Same projection, different dimensions, calculate resolution.
@@ -282,10 +308,7 @@ def warp(
                 dst_width, dst_height = dimensions
                 l, b, r, t = src_bounds or (left, bottom, right, top)
                 dst_transform = Affine(
-                    (r - l) / float(dst_width),
-                    0, l, 0,
-                    (b - t) / float(dst_height),
-                    t
+                    (r - l) / float(dst_width), 0, l, 0, (b - t) / float(dst_height), t
                 )
 
             elif src_bounds or dst_bounds:
@@ -295,7 +318,7 @@ def warp(
                     res = (src.transform.a, -src.transform.e)
 
                 dst_crs = src.crs
-                xmin, ymin, xmax, ymax = (src_bounds or dst_bounds)
+                xmin, ymin, xmax, ymax = src_bounds or dst_bounds
                 dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
                 dst_width = max(int(round((xmax - xmin) / res[0])), 1)
                 dst_height = max(int(round((ymax - ymin) / res[1])), 1)
@@ -337,18 +360,16 @@ def warp(
             # Validate a manually set destination NODATA value
             # against the input datatype.
             if dst_nodata is not None:
-                if src_nodata is None and src.meta['nodata'] is None:
+                if src_nodata is None and src.meta["nodata"] is None:
                     raise click.BadParameter(
-                        "--src-nodata must be provided because dst-nodata is not None")
+                        "--src-nodata must be provided because dst-nodata is not None"
+                    )
                 else:
                     # Update the dst nodata value
                     out_kwargs.update(nodata=dst_nodata)
 
             out_kwargs.update(
-                crs=dst_crs,
-                transform=dst_transform,
-                width=dst_width,
-                height=dst_height
+                crs=dst_crs, transform=dst_transform, width=dst_width, height=dst_height
             )
 
             # Adjust block size if necessary.
@@ -374,7 +395,7 @@ def warp(
                     if epsg:
                         out_kwargs["crs"] = f"EPSG:{epsg}"
                     else:
-                        out_kwargs['crs'] = src.crs.to_string()
+                        out_kwargs["crs"] = src.crs.to_string()
 
                 click.echo("Output dataset profile:")
                 click.echo(json.dumps(dict(**out_kwargs), indent=2))
@@ -391,5 +412,5 @@ def warp(
                         dst_nodata=dst_nodata,
                         resampling=resampling,
                         num_threads=threads,
-                        **warper_options
+                        **warper_options,
                     )

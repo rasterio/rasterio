@@ -48,8 +48,8 @@ try:
     from Cython.Build import cythonize
 except ImportError:
     raise SystemExit(
-        "ERROR: Cython.Build.cythonize not found. "
-        "Cython is required to build rasterio.")
+        "ERROR: Cython.Build.cythonize not found. Cython is required to build rasterio."
+    )
 
 # By default we'll try to get options via gdal-config. On systems without,
 # options will need to be set in setup.cfg, on the setup command line, or through
@@ -130,6 +130,7 @@ def find_gdal_install_with_executable(
     gdal_install_prefix = os.path.dirname(os.path.dirname(executable_path))
     return gdal_install_prefix, gdal_version
 
+
 def fill_gdal_build_options_using_executable(executable_name: str) -> None:
     """Fill the global GDAL build options using information from the provided install path.
 
@@ -196,6 +197,7 @@ def fill_gdal_build_options_using_executable(executable_name: str) -> None:
     libraries.append(found_gdal_lib_name)
     gdal_data_dir = found_gdal_data_dir
 
+
 def fill_gdal_build_options_using_gdal_config() -> None:
     """Run gdal-config and fill the global build options using its output.
 
@@ -232,6 +234,7 @@ def fill_gdal_build_options_using_gdal_config() -> None:
     if gdalversion:
         log.info("GDAL API version obtained from gdal-config: %s", gdalversion)
 
+
 if "clean" not in sys.argv:
     try:
         fill_gdal_build_options_using_gdal_config()
@@ -252,30 +255,32 @@ if "clean" not in sys.argv:
             )
 
     # Get GDAL API version from environment variable.
-    if 'GDAL_VERSION' in os.environ:
-        gdalversion = os.environ['GDAL_VERSION']
+    if "GDAL_VERSION" in os.environ:
+        gdalversion = os.environ["GDAL_VERSION"]
         log.info("GDAL API version obtained from environment: %s", gdalversion)
 
     # Get GDAL API version from the command line if specified there.
-    if '--gdalversion' in sys.argv:
-        index = sys.argv.index('--gdalversion')
+    if "--gdalversion" in sys.argv:
+        index = sys.argv.index("--gdalversion")
         sys.argv.pop(index)
         gdalversion = sys.argv.pop(index)
-        log.info("GDAL API version obtained from command line option: %s",
-                 gdalversion)
+        log.info("GDAL API version obtained from command line option: %s", gdalversion)
 
     if not gdalversion:
-        raise SystemExit("ERROR: A GDAL API version must be specified. Provide a path "
-                 "to gdal-config using a GDAL_CONFIG environment variable "
-                 "or use a GDAL_VERSION environment variable.")
+        raise SystemExit(
+            "ERROR: A GDAL API version must be specified. Provide a path "
+            "to gdal-config using a GDAL_CONFIG environment variable "
+            "or use a GDAL_VERSION environment variable."
+        )
 
     gdal_major_version, gdal_minor_version, gdal_patch_version = map(
         int, re.findall("[0-9]+", gdalversion)[:3]
     )
 
     if (gdal_major_version, gdal_minor_version) < (3, 8):
-        raise SystemExit("ERROR: GDAL >= 3.8 is required for rasterio. "
-                 "Please upgrade GDAL.")
+        raise SystemExit(
+            "ERROR: GDAL >= 3.8 is required for rasterio. Please upgrade GDAL."
+        )
 
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
@@ -283,23 +288,29 @@ if os.environ.get("PACKAGE_DATA"):
     gdal_data_destination = "rasterio/gdal_data"
     if gdal_data_dir is None:
         if gdal_output[2]:
-           gdal_data_dir = gdal_output[2]
+            gdal_data_dir = gdal_output[2]
         else:
             # check to see if GDAL_DATA is defined
-            gdal_data_dir = os.environ.get('GDAL_DATA')
+            gdal_data_dir = os.environ.get("GDAL_DATA")
     if gdal_data_dir is not None and os.path.exists(gdal_data_dir):
         log.info("Copying GDAL_DATA from %s" % gdal_data_dir)
         copy_data_tree(gdal_data_dir, gdal_data_destination)
     else:
-        raise SystemExit("GDAL_DATA directory not found. Unable to package data in wheels.")
+        raise SystemExit(
+            "GDAL_DATA directory not found. Unable to package data in wheels."
+        )
 
     # Conditionally copy PROJ DATA.
-    proj_data_dir = os.environ.get('PROJ_DATA', os.environ.get('PROJ_LIB', '/usr/local/share/proj'))
+    proj_data_dir = os.environ.get(
+        "PROJ_DATA", os.environ.get("PROJ_LIB", "/usr/local/share/proj")
+    )
     if os.path.exists(proj_data_dir):
         log.info("Copying PROJ_DATA from %s" % proj_data_dir)
-        copy_data_tree(proj_data_dir, 'rasterio/proj_data')
+        copy_data_tree(proj_data_dir, "rasterio/proj_data")
     else:
-        raise SystemExit("PROJ_DATA directory not found. Unable to package data in wheels.")
+        raise SystemExit(
+            "PROJ_DATA directory not found. Unable to package data in wheels."
+        )
 else:
     log.info("Not copying GDAL data to the final package")
 
@@ -310,57 +321,62 @@ compile_time_env = {
 }
 
 ext_options = {
-    'include_dirs': include_dirs,
-    'library_dirs': library_dirs,
-    'libraries': libraries,
-    'extra_link_args': extra_link_args,
-    'define_macros': [],
-    'cython_compile_time_env': compile_time_env
+    "include_dirs": include_dirs,
+    "library_dirs": library_dirs,
+    "libraries": libraries,
+    "extra_link_args": extra_link_args,
+    "define_macros": [],
+    "cython_compile_time_env": compile_time_env,
 }
 
 if not os.name == "nt":
     # These options fail on Windows if using Visual Studio
-    ext_options['extra_compile_args'] = ['-Wno-unused-parameter',
-                                         '-Wno-unused-function']
+    ext_options["extra_compile_args"] = [
+        "-Wno-unused-parameter",
+        "-Wno-unused-function",
+    ]
 
 # Copy extension options for cpp extension modules.
 cpp_ext_options = copy.deepcopy(ext_options)
 
 # Remove -std=c++11 from C extension options.
 try:
-    ext_options['extra_link_args'].remove('-std=c++11')
-    ext_options['extra_compile_args'].remove('-std=c++11')
+    ext_options["extra_link_args"].remove("-std=c++11")
+    ext_options["extra_compile_args"].remove("-std=c++11")
 except Exception:
     pass
 
-cpp11_flag = '-std=c++11'
+cpp11_flag = "-std=c++11"
 
 # 'extra_compile_args' may not be defined
-eca = cpp_ext_options.get('extra_compile_args', [])
+eca = cpp_ext_options.get("extra_compile_args", [])
 
-if platform.system() == 'Darwin':
-
+if platform.system() == "Darwin":
     if cpp11_flag not in eca:
         eca.append(cpp11_flag)
 
-    eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
+    eca += [cpp11_flag, "-mmacosx-version-min=10.9", "-stdlib=libc++"]
 
 # TODO: Windows
 
 elif cpp11_flag not in eca:
     eca.append(cpp11_flag)
 
-cpp_ext_options['extra_compile_args'] = eca
+cpp_ext_options["extra_compile_args"] = eca
 
 # Configure optional Cython coverage.
-cythonize_options = {"language_level": sys.version_info[0], "compiler_directives": {"freethreading_compatible": True}}
-if os.environ.get('CYTHON_COVERAGE'):
-    cythonize_options['compiler_directives'].update(linetrace=True)
-    cythonize_options['annotate'] = True
-    ext_options['define_macros'].extend(
-        [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')])
+cythonize_options = {
+    "language_level": sys.version_info[0],
+    "compiler_directives": {"freethreading_compatible": True},
+}
+if os.environ.get("CYTHON_COVERAGE"):
+    cythonize_options["compiler_directives"].update(linetrace=True)
+    cythonize_options["annotate"] = True
+    ext_options["define_macros"].extend(
+        [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
+    )
 
-log.debug('ext_options:\n%s', pprint.pformat(ext_options))
+log.debug("ext_options:\n%s", pprint.pformat(ext_options))
 
 ext_modules = None
 if "clean" not in sys.argv:
@@ -379,17 +395,15 @@ if "clean" not in sys.argv:
         Extension("rasterio.shutil", ["rasterio/shutil.pyx"], **ext_options),
         Extension("rasterio._transform", ["rasterio/_transform.pyx"], **ext_options),
         Extension("rasterio._filepath", ["rasterio/_filepath.pyx"], **cpp_ext_options),
-        Extension(
-            "rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **ext_options
-        ),
+        Extension("rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **ext_options),
     ]
     ext_modules = cythonize(
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options
     )
 
 setup_args = {}
-if os.environ.get('PACKAGE_DATA'):
-    setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}
+if os.environ.get("PACKAGE_DATA"):
+    setup_args["package_data"] = {"rasterio": ["gdal_data/*", "proj_data/*"]}
 
 # See pyproject.toml for project metadata
 setup(

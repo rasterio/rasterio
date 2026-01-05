@@ -12,11 +12,25 @@ import pytest
 import rasterio
 from rasterio import _env
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
+from rasterio.env import (
+    Env,
+    defenv,
+    delenv,
+    getenv,
+    setenv,
+    ensure_env,
+    ensure_env_credentialled,
+)
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession, AzureSession
+from rasterio.session import (
+    AWSSession,
+    DummySession,
+    OSSSession,
+    SwiftSession,
+    AzureSession,
+)
 
 from .conftest import credentials
 
@@ -28,22 +42,22 @@ httpstif = "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cog
 
 def test_gdal_config_accessers():
     """Low level GDAL config access."""
-    assert get_gdal_config('foo') is None
-    set_gdal_config('foo', 'bar')
-    assert get_gdal_config('foo') == 'bar'
-    del_gdal_config('foo')
-    assert get_gdal_config('foo') is None
+    assert get_gdal_config("foo") is None
+    set_gdal_config("foo", "bar")
+    assert get_gdal_config("foo") == "bar"
+    del_gdal_config("foo")
+    assert get_gdal_config("foo") is None
 
 
 def test_gdal_config_accessors_no_normalize():
     """Disables casting keys to upper case and normalizing values to boolean
     Python values.
     """
-    assert get_gdal_config('foo') is None
-    set_gdal_config('foo', 'ON', normalize=False)
-    assert get_gdal_config('foo', normalize=False) == 'ON'
-    del_gdal_config('foo')
-    assert get_gdal_config('foo') is None
+    assert get_gdal_config("foo") is None
+    set_gdal_config("foo", "ON", normalize=False)
+    assert get_gdal_config("foo", normalize=False) == "ON"
+    del_gdal_config("foo")
+    assert get_gdal_config("foo") is None
 
 
 def test_gdal_config_accessors_capitalization():
@@ -53,43 +67,44 @@ def test_gdal_config_accessors_capitalization():
     discovered environment variables when ``rasterio.Env()`` starts.
     GDAL does not alter config values.
     """
-    assert get_gdal_config('foo') is None
-    assert get_gdal_config('FOO') is None
+    assert get_gdal_config("foo") is None
+    assert get_gdal_config("FOO") is None
 
-    set_gdal_config('foo', 'bar')
+    set_gdal_config("foo", "bar")
 
-    assert get_gdal_config('foo') == 'bar'
-    assert get_gdal_config('FOO') == 'bar'
+    assert get_gdal_config("foo") == "bar"
+    assert get_gdal_config("FOO") == "bar"
 
-    del_gdal_config('foo')
-    assert get_gdal_config('foo') is None
-    assert get_gdal_config('FOO') is None
+    del_gdal_config("foo")
+    assert get_gdal_config("foo") is None
+    assert get_gdal_config("FOO") is None
 
-    set_gdal_config('upper', 'UPPER')
-    assert get_gdal_config('upper') == 'UPPER'
-    del_gdal_config('upper')
+    set_gdal_config("upper", "UPPER")
+    assert get_gdal_config("upper") == "UPPER"
+    del_gdal_config("upper")
 
 
 # The 'gdalenv' fixture ensures that gdal configuration is deleted
 # at the end of the test, making tests as isolates as GDAL allows.
 
+
 def test_env_accessors(gdalenv):
     """High level GDAL env access."""
     defenv()
-    setenv(foo='1', bar='2')
-    expected = {'foo': '1', 'bar': '2'}
+    setenv(foo="1", bar="2")
+    expected = {"foo": "1", "bar": "2"}
     items = getenv()
     assert items == rasterio.env.local._env.options
     # Comparison below requires removal of GDAL_DATA.
-    items.pop('GDAL_DATA', None)
+    items.pop("GDAL_DATA", None)
     assert items == expected
-    assert get_gdal_config('foo') == 1
-    assert get_gdal_config('bar') == 2
+    assert get_gdal_config("foo") == 1
+    assert get_gdal_config("bar") == 2
     delenv()
     with pytest.raises(EnvError):
         getenv()
-    assert get_gdal_config('foo') is None
-    assert get_gdal_config('bar') is None
+    assert get_gdal_config("foo") is None
+    assert get_gdal_config("bar") is None
 
 
 def test_env_accessors_no_env():
@@ -105,18 +120,20 @@ def test_env_accessors_no_env():
 def test_ensure_env_decorator(gdalenv):
     @ensure_env
     def f():
-        return getenv()['RASTERIO_ENV']
+        return getenv()["RASTERIO_ENV"]
+
     assert f() is True
 
 
 def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
     """ensure_env finds GDAL from environment"""
+
     @ensure_env
     def f():
-        return getenv()['GDAL_DATA']
+        return getenv()["GDAL_DATA"]
 
-    monkeypatch.setenv('GDAL_DATA', '/lol/wut')
-    assert f() == '/lol/wut'
+    monkeypatch.setenv("GDAL_DATA", "/lol/wut")
+    assert f() == "/lol/wut"
 
 
 @mock.patch("rasterio._env.GDALDataFinder.find_file")
@@ -128,40 +145,45 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(
 
     @ensure_env
     def f():
-        return getenv()['GDAL_DATA']
+        return getenv()["GDAL_DATA"]
 
     find_file.return_value = None
     # Neutralize search_wheel because we want to find GDAL data in the prefix
     search_wheel.return_value = None
 
     tmpdir.ensure("share/gdal/gdalvrt.xsd")
-    monkeypatch.delenv('GDAL_DATA', raising=False)
-    monkeypatch.setattr(sys, 'prefix', str(tmpdir))
+    monkeypatch.delenv("GDAL_DATA", raising=False)
+    monkeypatch.setattr(sys, "prefix", str(tmpdir))
 
     assert f() == str(tmpdir.join("share").join("gdal"))
 
 
 @mock.patch("rasterio._env.GDALDataFinder.find_file")
-def test_ensure_env_decorator_sets_gdal_data_wheel(find_file, gdalenv, monkeypatch, tmpdir):
+def test_ensure_env_decorator_sets_gdal_data_wheel(
+    find_file, gdalenv, monkeypatch, tmpdir
+):
     """ensure_env finds GDAL data in a wheel"""
+
     @ensure_env
     def f():
-        return getenv()['GDAL_DATA']
+        return getenv()["GDAL_DATA"]
 
     find_file.return_value = None
 
     tmpdir.ensure("gdal_data/gdalvrt.xsd")
-    monkeypatch.delenv('GDAL_DATA', raising=False)
-    monkeypatch.setattr(_env, '__file__', str(tmpdir.join(os.path.basename(_env.__file__))))
+    monkeypatch.delenv("GDAL_DATA", raising=False)
+    monkeypatch.setattr(
+        _env, "__file__", str(tmpdir.join(os.path.basename(_env.__file__)))
+    )
 
     assert f() == str(tmpdir.join("gdal_data"))
 
 
 def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
     """Credentialization is ensured by wrapper"""
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "token")
 
     @ensure_env_credentialled
     def f(fp):
@@ -174,11 +196,12 @@ def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
 
     monkeypatch.undo()
 
+
 def test_ensure_env_credentialled_decorator_fp_kwarg(monkeypatch, gdalenv):
     """Demonstrate resolution of #2267"""
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "token")
 
     @ensure_env_credentialled
     def f(fp):
@@ -190,83 +213,107 @@ def test_ensure_env_credentialled_decorator_fp_kwarg(monkeypatch, gdalenv):
     assert config["AWS_SESSION_TOKEN"] == "token"
 
     monkeypatch.undo()
+
+
 def test_no_aws_gdal_config(gdalenv):
     """Trying to set AWS-specific GDAL config options fails."""
     with pytest.raises(EnvError):
-        rasterio.Env(AWS_ACCESS_KEY_ID='x')
+        rasterio.Env(AWS_ACCESS_KEY_ID="x")
     with pytest.raises(EnvError):
-        rasterio.Env(AWS_SECRET_ACCESS_KEY='y')
+        rasterio.Env(AWS_SECRET_ACCESS_KEY="y")
 
 
 def test_env_empty(gdalenv):
     """Empty env has no defaults"""
-    env = rasterio.Env(foo='x')
-    assert env.options['foo'] == 'x'
+    env = rasterio.Env(foo="x")
+    assert env.options["foo"] == "x"
     assert not env.context_options
     with env:
-        assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is None
-        assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is None
+        assert get_gdal_config("CHECK_WITH_INVERT_PROJ") is None
+        assert get_gdal_config("GTIFF_IMPLICIT_JPEG_OVR") is None
         assert get_gdal_config("RASTERIO_ENV") is None
 
 
 def test_env_defaults(gdalenv):
     """Test env defaults."""
-    env = rasterio.Env.from_defaults(foo='x')
-    assert env.options['foo'] == 'x'
+    env = rasterio.Env.from_defaults(foo="x")
+    assert env.options["foo"] == "x"
     assert not env.context_options
     with env:
-        assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
+        assert get_gdal_config("GTIFF_IMPLICIT_JPEG_OVR") is False
         assert get_gdal_config("RASTERIO_ENV") is True
 
 
 def test_aws_session(gdalenv):
     """Create an Env with a boto3 session."""
     aws_session = boto3.Session(
-        aws_access_key_id='id', aws_secret_access_key='key',
-        aws_session_token='token', region_name='null-island-1')
+        aws_access_key_id="id",
+        aws_secret_access_key="key",
+        aws_session_token="token",
+        region_name="null-island-1",
+    )
     with rasterio.env.Env(session=aws_session) as s:
-        assert s.session._session.get_credentials().get_frozen_credentials().access_key == 'id'
-        assert s.session._session.get_credentials().get_frozen_credentials().secret_key == 'key'
-        assert s.session._session.get_credentials().get_frozen_credentials().token == 'token'
-        assert s.session._session.region_name == 'null-island-1'
+        assert (
+            s.session._session.get_credentials().get_frozen_credentials().access_key
+            == "id"
+        )
+        assert (
+            s.session._session.get_credentials().get_frozen_credentials().secret_key
+            == "key"
+        )
+        assert (
+            s.session._session.get_credentials().get_frozen_credentials().token
+            == "token"
+        )
+        assert s.session._session.region_name == "null-island-1"
 
 
 def test_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
     aws_session = boto3.Session(
-        aws_access_key_id='id', aws_secret_access_key='key',
-        aws_session_token='token', region_name='null-island-1')
+        aws_access_key_id="id",
+        aws_secret_access_key="key",
+        aws_session_token="token",
+        region_name="null-island-1",
+    )
     with rasterio.env.Env(session=aws_session):
-        assert getenv()['AWS_ACCESS_KEY_ID'] == 'id'
-        assert getenv()['AWS_REGION'] == 'null-island-1'
-        assert getenv()['AWS_SECRET_ACCESS_KEY'] == 'key'
-        assert getenv()['AWS_SESSION_TOKEN'] == 'token'
+        assert getenv()["AWS_ACCESS_KEY_ID"] == "id"
+        assert getenv()["AWS_REGION"] == "null-island-1"
+        assert getenv()["AWS_SECRET_ACCESS_KEY"] == "key"
+        assert getenv()["AWS_SESSION_TOKEN"] == "token"
 
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
     env = rasterio.Env(
-        aws_access_key_id='id', aws_secret_access_key='key',
-        aws_session_token='token', region_name='null-island-1')
+        aws_access_key_id="id",
+        aws_secret_access_key="key",
+        aws_session_token="token",
+        region_name="null-island-1",
+    )
     with env:
         expected = {
-            'AWS_ACCESS_KEY_ID': 'id', 'AWS_REGION': 'null-island-1',
-            'AWS_SECRET_ACCESS_KEY': 'key', 'AWS_SESSION_TOKEN': 'token'}
+            "AWS_ACCESS_KEY_ID": "id",
+            "AWS_REGION": "null-island-1",
+            "AWS_SECRET_ACCESS_KEY": "key",
+            "AWS_SESSION_TOKEN": "token",
+        }
         items = getenv()
         # Comparison below requires removal of GDAL_DATA.
-        items.pop('GDAL_DATA', None)
+        items.pop("GDAL_DATA", None)
         assert items == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):
     """Create an Env with AWS env vars."""
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "token")
     expected = {
-        'AWS_ACCESS_KEY_ID': 'id',
-        'AWS_SECRET_ACCESS_KEY': 'key',
-        'AWS_SESSION_TOKEN': 'token'}
+        "AWS_ACCESS_KEY_ID": "id",
+        "AWS_SECRET_ACCESS_KEY": "key",
+        "AWS_SESSION_TOKEN": "token",
+    }
     with rasterio.Env():
         assert getenv() == rasterio.env.local._env.options
         for k, v in expected.items():
@@ -279,13 +326,14 @@ def test_session_env_lazy_with_nested_env(monkeypatch, gdalenv):
     """for a single thread show how session resolves
     but with different resolution paths in nested manager
     """
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "token")
     expected = {
-        'AWS_ACCESS_KEY_ID': 'id',
-        'AWS_SECRET_ACCESS_KEY': 'key',
-        'AWS_SESSION_TOKEN': 'token'}
+        "AWS_ACCESS_KEY_ID": "id",
+        "AWS_SECRET_ACCESS_KEY": "key",
+        "AWS_SESSION_TOKEN": "token",
+    }
     with rasterio.Env() as env_outer:
         assert getenv() == rasterio.env.local._env.options
         for k, v in expected.items():
@@ -303,18 +351,21 @@ def test_session_nested_env_with_global_creds_no_interference(monkeypatch, gdale
     even though Session.from_environ __init__ will
     first create a session from global os environ variables
     """
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "global_id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "global_key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "global_token")
 
     session = rasterio.session.AWSSession(
-        aws_access_key_id='local_id', aws_secret_access_key='local_key',
-        aws_session_token='local_token', region_name='null-island-1'
+        aws_access_key_id="local_id",
+        aws_secret_access_key="local_key",
+        aws_session_token="local_token",
+        region_name="null-island-1",
     )
     expected = {
-        'AWS_ACCESS_KEY_ID': 'local_id',
-        'AWS_SECRET_ACCESS_KEY': 'local_key',
-        'AWS_SESSION_TOKEN': 'local_token'}
+        "AWS_ACCESS_KEY_ID": "local_id",
+        "AWS_SECRET_ACCESS_KEY": "local_key",
+        "AWS_SESSION_TOKEN": "local_token",
+    }
     with rasterio.Env(session=session) as env_outer:
         assert getenv() == rasterio.env.local._env.options
         for k, v in expected.items():
@@ -333,27 +384,33 @@ def test_session_nested_env_with_global_creds_inner_session(monkeypatch, gdalenv
     can use all sessions explicitly defined even if parent context
     manager has one already defined
     """
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "global_id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "global_key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "global_token")
 
     outer_session = rasterio.session.AWSSession(
-        aws_access_key_id='outer_id', aws_secret_access_key='outer_key',
-        aws_session_token='outer_token', region_name='null-island-1'
+        aws_access_key_id="outer_id",
+        aws_secret_access_key="outer_key",
+        aws_session_token="outer_token",
+        region_name="null-island-1",
     )
     outer_expected = {
-        'AWS_ACCESS_KEY_ID': 'outer_id',
-        'AWS_SECRET_ACCESS_KEY': 'outer_key',
-        'AWS_SESSION_TOKEN': 'outer_token'}
+        "AWS_ACCESS_KEY_ID": "outer_id",
+        "AWS_SECRET_ACCESS_KEY": "outer_key",
+        "AWS_SESSION_TOKEN": "outer_token",
+    }
 
     inner_session = rasterio.session.AWSSession(
-        aws_access_key_id='inner_id', aws_secret_access_key='inner_key',
-        aws_session_token='inner_token', region_name='null-island-1'
+        aws_access_key_id="inner_id",
+        aws_secret_access_key="inner_key",
+        aws_session_token="inner_token",
+        region_name="null-island-1",
     )
     inner_expected = {
-        'AWS_ACCESS_KEY_ID': 'inner_id',
-        'AWS_SECRET_ACCESS_KEY': 'inner_key',
-        'AWS_SESSION_TOKEN': 'inner_token'}
+        "AWS_ACCESS_KEY_ID": "inner_id",
+        "AWS_SECRET_ACCESS_KEY": "inner_key",
+        "AWS_SESSION_TOKEN": "inner_token",
+    }
     with rasterio.Env(session=outer_session) as env_outer:
         assert getenv() == rasterio.env.local._env.options
         for k, v in outer_expected.items():
@@ -375,22 +432,26 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
     behaves using `threading.local` b/c these multi-threaded
     tests don't exist yet
     """
-    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'global_id')
-    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'global_key')
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'global_token')
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "global_id")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "global_key")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "global_token")
     global_expected = {
-        'AWS_ACCESS_KEY_ID': 'global_id',
-        'AWS_SECRET_ACCESS_KEY': 'global_key',
-        'AWS_SESSION_TOKEN': 'global_token'}
+        "AWS_ACCESS_KEY_ID": "global_id",
+        "AWS_SECRET_ACCESS_KEY": "global_key",
+        "AWS_SESSION_TOKEN": "global_token",
+    }
 
     session = rasterio.session.AWSSession(
-        aws_access_key_id='local_id', aws_secret_access_key='local_key',
-        aws_session_token='local_token', region_name='null-island-1'
+        aws_access_key_id="local_id",
+        aws_secret_access_key="local_key",
+        aws_session_token="local_token",
+        region_name="null-island-1",
     )
     session_expected = {
-        'AWS_ACCESS_KEY_ID': 'local_id',
-        'AWS_SECRET_ACCESS_KEY': 'local_key',
-        'AWS_SESSION_TOKEN': 'local_token'}
+        "AWS_ACCESS_KEY_ID": "local_id",
+        "AWS_SECRET_ACCESS_KEY": "local_key",
+        "AWS_SESSION_TOKEN": "local_token",
+    }
     with rasterio.Env(session=session) as env_outer:
         assert getenv() == rasterio.env.local._env.options
         for k, v in session_expected.items():
@@ -398,17 +459,15 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
 
         def reader():
             with rasterio.Env() as env_inner:
-                return [{k: getenv()[k]} for k,v in global_expected.items()]
+                return [{k: getenv()[k]} for k, v in global_expected.items()]
 
         with futures.ThreadPoolExecutor(max_workers=2) as executor:
-             fpayloads = [
-                executor.submit(reader) for _ in range(2)
-             ]
-             results = [future.result() for future in futures.as_completed(fpayloads)]
+            fpayloads = [executor.submit(reader) for _ in range(2)]
+            results = [future.result() for future in futures.as_completed(fpayloads)]
 
         for result_list in results:
             for result in result_list:
-                for k,v in result.items():
+                for k, v in result.items():
                     assert global_expected[k] == v
 
     monkeypatch.undo()
@@ -417,32 +476,36 @@ def test_session_nested_env_with_global_multi_threaded(monkeypatch, gdalenv, cap
 def test_aws_unsigned(gdalenv):
     """Create an Env with no AWS signing."""
     with rasterio.env.Env(aws_unsigned=True):
-        assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
-        assert getenv().get('AWS_ACCESS_KEY_ID') is None
+        assert getenv()["AWS_NO_SIGN_REQUEST"] == "YES"
+        assert getenv().get("AWS_ACCESS_KEY_ID") is None
 
 
 @pytest.mark.xfail(
-    reason="Turning off signing in an inner env does not work in Rasterio 1.0")
+    reason="Turning off signing in an inner env does not work in Rasterio 1.0"
+)
 def test_aws_unsigned_subenv(gdalenv):
     """Create an Env with no AWS signing."""
     with rasterio.Env(
-            aws_access_key_id='id', aws_secret_access_key='key',
-            aws_session_token='token', region_name='null-island-1'):
+        aws_access_key_id="id",
+        aws_secret_access_key="key",
+        aws_session_token="token",
+        region_name="null-island-1",
+    ):
         with rasterio.env.Env(aws_unsigned=True):
-            assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
-            assert getenv().get('AWS_ACCESS_KEY_ID') is None
+            assert getenv()["AWS_NO_SIGN_REQUEST"] == "YES"
+            assert getenv().get("AWS_ACCESS_KEY_ID") is None
 
 
 def test_open_with_default_env(gdalenv):
     """Read from a dataset with a default env."""
-    with rasterio.open('tests/data/RGB.byte.tif') as dataset:
+    with rasterio.open("tests/data/RGB.byte.tif") as dataset:
         assert dataset.count == 3
 
 
 def test_open_with_env(gdalenv):
     """Read from a dataset with an explicit env."""
     with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as dataset:
+        with rasterio.open("tests/data/RGB.byte.tif") as dataset:
             assert dataset.count == 3
 
 
@@ -478,8 +541,9 @@ def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
 def test_env_open_s3(gdalenv):
     """Read using env as context."""
     creds = boto3.Session().get_credentials()
-    with rasterio.Env(aws_access_key_id=creds.access_key,
-                      aws_secret_access_key=creds.secret_key):
+    with rasterio.Env(
+        aws_access_key_id=creds.access_key, aws_secret_access_key=creds.secret_key
+    ):
         with rasterio.open(L8TIF) as dataset:
             assert dataset.count == 1
 
@@ -498,8 +562,7 @@ def test_env_open_s3_credentials(gdalenv):
 @pytest.mark.network
 def test_ensured_env_no_credentializing(gdalenv):
     """open's extra env doesn't override outer env"""
-    with rasterio.Env(aws_access_key_id='foo',
-                      aws_secret_access_key='bar'):
+    with rasterio.Env(aws_access_key_id="foo", aws_secret_access_key="bar"):
         with pytest.raises(Exception):
             rasterio.open(L8TIFB2)
 
@@ -514,11 +577,12 @@ def test_open_https_vsicurl(gdalenv):
 
 # CLI tests.
 
+
 @credentials
 @pytest.mark.network
 def test_s3_rio_info(runner):
     """S3 is supported by rio-info."""
-    result = runner.invoke(main_group, ['info', L8TIF])
+    result = runner.invoke(main_group, ["info", L8TIF])
     assert result.exit_code == 0
 
 
@@ -526,21 +590,24 @@ def test_s3_rio_info(runner):
 @pytest.mark.network
 def test_https_rio_info(runner):
     """HTTPS is supported by rio-info."""
-    result = runner.invoke(main_group, ['info', httpstif])
+    result = runner.invoke(main_group, ["info", httpstif])
     assert result.exit_code == 0
 
 
 def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
     """Confirm that --aws-profile option works."""
-    credentials_file = tmpdir.join('credentials')
-    credentials_file.write("[testing]\n"
-                           "aws_access_key_id = foo\n"
-                           "aws_secret_access_key = bar\n"
-                           "aws_session_token = baz")
-    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
-    monkeypatch.setenv('AWS_SESSION_TOKEN', 'ignore_me')
+    credentials_file = tmpdir.join("credentials")
+    credentials_file.write(
+        "[testing]\n"
+        "aws_access_key_id = foo\n"
+        "aws_secret_access_key = bar\n"
+        "aws_session_token = baz"
+    )
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(credentials_file))
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "ignore_me")
     result = runner.invoke(
-        main_group, ['--aws-profile', 'testing', 'env', '--credentials'])
+        main_group, ["--aws-profile", "testing", "env", "--credentials"]
+    )
     assert result.exit_code == 0
     assert '"aws_access_key_id": "foo"' in result.output
     assert '"aws_secret_access_key": "bar"' in result.output
@@ -549,7 +616,6 @@ def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
 
 
 def test_ensure_defaults_teardown(gdalenv):
-
     """This test guards against a regression.  Previously ``rasterio.Env()``
     would quietly reinstate any ``rasterio.env.default_options`` that was
     not modified by the environment.
@@ -569,11 +635,15 @@ def test_ensure_defaults_teardown(gdalenv):
     assert rasterio.env.local._env is None
 
 
-@pytest.mark.parametrize("key,val", [
-    ('key', 'ON'),
-    ('CHECK_WITH_INVERT_PROJ', 'ON'),
-    ('key', 'OFF'),
-    ('CHECK_WITH_INVERT_PROJ', 'OFF')])
+@pytest.mark.parametrize(
+    "key,val",
+    [
+        ("key", "ON"),
+        ("CHECK_WITH_INVERT_PROJ", "ON"),
+        ("key", "OFF"),
+        ("CHECK_WITH_INVERT_PROJ", "OFF"),
+    ],
+)
 def test_env_discovery(key, val):
     """When passing options to ``rasterio.Env()`` Rasterio first checks
     to see if they were set in the environment and reinstates on exit.
@@ -582,8 +652,9 @@ def test_env_discovery(key, val):
     environment default.
     """
 
-    assert rasterio.env.local._discovered_options is None, \
+    assert rasterio.env.local._discovered_options is None, (
         "Something has gone horribly wrong."
+    )
 
     try:
         # This should persist when all other environment managers exit.
@@ -623,44 +694,41 @@ def test_have_registered_drivers():
 
 def test_gdal_cachemax():
     """``GDAL_CACHEMAX`` is a special case."""
-    original_cachemax = get_gdal_config('GDAL_CACHEMAX')
+    original_cachemax = get_gdal_config("GDAL_CACHEMAX")
     assert original_cachemax != 4321
     # GDALSetCacheMax() has a limit of somewhere between 2 and 3 GB.
     # We use GDALSetCacheMax64(), so use a value that is outside the 32 bit
     # range to verify it is not being truncated.
-    set_gdal_config('GDAL_CACHEMAX', 4321)
-    assert get_gdal_config('GDAL_CACHEMAX', 4321) == 4321
+    set_gdal_config("GDAL_CACHEMAX", 4321)
+    assert get_gdal_config("GDAL_CACHEMAX", 4321) == 4321
 
     # On first read the number will be in bytes.  Drop to MB if necessary.
     try:
-        set_gdal_config('GDAL_CACHEMAX', original_cachemax)
+        set_gdal_config("GDAL_CACHEMAX", original_cachemax)
     except OverflowError:
-        set_gdal_config('GDAL_CACHEMAX', int(original_cachemax / 1000000))
+        set_gdal_config("GDAL_CACHEMAX", int(original_cachemax / 1000000))
 
 
-@pytest.mark.parametrize("version", [
-    (1, 9, 1),
-    (1, 9),
-    '1.9.1',
-    '1.9',
-    '1.9a'
-])
+@pytest.mark.parametrize("version", [(1, 9, 1), (1, 9), "1.9.1", "1.9", "1.9a"])
 def test_gdalversion_class_parse(version):
     v = GDALVersion.parse(version)
     assert v.major == 1 and v.minor == 9 and v.patch == 0
 
 
-@pytest.mark.parametrize("version", [
-    (1, 9, 1),
-    '1.9.1',
-])
+@pytest.mark.parametrize(
+    "version",
+    [
+        (1, 9, 1),
+        "1.9.1",
+    ],
+)
 def test_gdalversion_class_parse__include_patch(version):
     v = GDALVersion.parse(version, include_patch=True)
     assert v.major == 1 and v.minor == 9 and v.patch == 1
 
 
 def test_gdalversion_class_parse_err():
-    invalids = ('foo', 'foo.bar', '1', '1.', '1.a', '.1')
+    invalids = ("foo", "foo.bar", "1", "1.", "1.a", ".1")
 
     for invalid in invalids:
         with pytest.raises(ValueError):
@@ -676,7 +744,7 @@ def test_gdalversion_class_runtime():
 
 def test_gdalversion_class_runtime__patch():
     """Test the version of GDAL from this runtime"""
-    with mock.patch("rasterio.env.gdal_version", return_value='3.12.1'):
+    with mock.patch("rasterio.env.gdal_version", return_value="3.12.1"):
         version = GDALVersion.runtime(include_patch=True)
     assert version.major == 3
     assert version.minor == 12
@@ -690,31 +758,34 @@ def test_gdalversion_class_cmp():
     assert GDALVersion(1, 2) < GDALVersion(2, 2)
 
     # Because we don't care about patch component
-    assert GDALVersion.parse('1.0') == GDALVersion.parse('1.0.10')
+    assert GDALVersion.parse("1.0") == GDALVersion.parse("1.0.10")
 
-    assert GDALVersion.parse('1.9') < GDALVersion.parse('2.2.0')
-    assert GDALVersion.parse('2.0.0') > GDALVersion(1, 9)
+    assert GDALVersion.parse("1.9") < GDALVersion.parse("2.2.0")
+    assert GDALVersion.parse("2.0.0") > GDALVersion(1, 9)
+
 
 def test_gdalversion_class_cmp__include_patch():
-    assert GDALVersion.parse('3.12.1', include_patch=True) > GDALVersion.parse('3.12', include_patch=True)
+    assert GDALVersion.parse("3.12.1", include_patch=True) > GDALVersion.parse(
+        "3.12", include_patch=True
+    )
 
 
 def test_gdalversion_class_repr():
-    assert (GDALVersion(2, 1)).__repr__() == 'GDALVersion(major=2, minor=1, patch=0)'
+    assert (GDALVersion(2, 1)).__repr__() == "GDALVersion(major=2, minor=1, patch=0)"
 
 
 def test_gdalversion_class_str():
-    assert str(GDALVersion(2, 1)) == '2.1.0'
+    assert str(GDALVersion(2, 1)) == "2.1.0"
 
 
 def test_gdalversion_class_at_least():
     assert GDALVersion(2, 1).at_least(GDALVersion(1, 9))
     assert GDALVersion(2, 1).at_least((1, 9))
-    assert GDALVersion(2, 1).at_least('1.9')
+    assert GDALVersion(2, 1).at_least("1.9")
 
     assert not GDALVersion(2, 1).at_least(GDALVersion(2, 2))
     assert not GDALVersion(2, 1).at_least((2, 2))
-    assert not GDALVersion(2, 1).at_least('2.2')
+    assert not GDALVersion(2, 1).at_least("2.2")
 
 
 def test_gdalversion_class_at_least__include_patch():
@@ -723,7 +794,7 @@ def test_gdalversion_class_at_least__include_patch():
 
 
 def test_gdalversion_class_at_least_invalid_type():
-    invalids_types = ({}, {'major': 1, 'minor': 1}, [1, 2])
+    invalids_types = ({}, {"major": 1, "minor": 1}, [1, 2])
 
     for invalid in invalids_types:
         with pytest.raises(TypeError):
@@ -731,7 +802,7 @@ def test_gdalversion_class_at_least_invalid_type():
 
 
 def test_require_gdal_version():
-    @require_gdal_version('1.0')
+    @require_gdal_version("1.0")
     def a():
         return 1
 
@@ -740,7 +811,7 @@ def test_require_gdal_version():
 
 def test_require_gdal_version_too_low():
     """Functions that are too low raise a GDALVersionError"""
-    version = '10000000.0'
+    version = "10000000.0"
 
     @require_gdal_version(version)
     def b():
@@ -756,13 +827,14 @@ def test_require_gdal_version_too_low():
 def test_require_gdal_version_is_max_version():
     """Functions that are less than the required version are allowed, those that
     are too high raise a GDALVersionError"""
-    @require_gdal_version('10000000.0', is_max_version=True)
+
+    @require_gdal_version("10000000.0", is_max_version=True)
     def a():
         return 1
 
     assert a() == 1
 
-    @require_gdal_version('1.0', is_max_version=True)
+    @require_gdal_version("1.0", is_max_version=True)
     def b():
         return 2
 
@@ -771,9 +843,9 @@ def test_require_gdal_version_is_max_version():
 
 
 def test_require_gdal_version_reason():
-    reason = 'This totally awesome new feature is was introduced in GDAL 10000'
+    reason = "This totally awesome new feature is was introduced in GDAL 10000"
 
-    @require_gdal_version('10000.0', reason=reason)
+    @require_gdal_version("10000.0", reason=reason)
     def b():
         return 2
 
@@ -786,8 +858,9 @@ def test_require_gdal_version_reason():
 def test_require_gdal_version_err():
     """version is a required parameter and must be valid"""
 
-    for invalid_version in ['bogus', 'a.b', '1.a.b']:
+    for invalid_version in ["bogus", "a.b", "1.a.b"]:
         with pytest.raises(ValueError):
+
             @require_gdal_version(invalid_version)
             def a():
                 return 1
@@ -795,20 +868,21 @@ def test_require_gdal_version_err():
 
 def test_require_gdal_version_param():
     """Parameter is allowed for all versions >= 1.0"""
-    @require_gdal_version('1.0', param='foo')
+
+    @require_gdal_version("1.0", param="foo")
     def a(foo=None):
         return foo
 
     assert a() is None
-    assert a('bar') == 'bar'
+    assert a("bar") == "bar"
 
 
 def test_require_gdal_version_param_version_too_low():
     """Parameter is not allowed since runtime is too low a version"""
 
-    version = '10000000.0'
+    version = "10000000.0"
 
-    @require_gdal_version(version, param='foo')
+    @require_gdal_version(version, param="foo")
     def a(foo=None):
         return foo
 
@@ -820,7 +894,7 @@ def test_require_gdal_version_param_version_too_low():
         a("not None")  # parameter passed as a position argument and not default
 
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar')  # parameter passed as a keyword argument and not default
+        a(foo="bar")  # parameter passed as a keyword argument and not default
 
     message = f'usage of parameter "foo" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
@@ -829,9 +903,9 @@ def test_require_gdal_version_param_version_too_low():
 def test_require_gdal_version_param_version_too_high():
     """Parameter is not allowed since runtime is too low a version"""
 
-    version = '1.0'
+    version = "1.0"
 
-    @require_gdal_version(version, param='foo', is_max_version=True)
+    @require_gdal_version(version, param="foo", is_max_version=True)
     def a(foo=None):
         return foo
 
@@ -843,7 +917,7 @@ def test_require_gdal_version_param_version_too_high():
         a("not None")
 
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar')
+        a(foo="bar")
 
     message = f'usage of parameter "foo" requires GDAL <= {version}'
     assert message in exc_info.value.args[0]
@@ -852,45 +926,48 @@ def test_require_gdal_version_param_version_too_high():
 def test_require_gdal_version_param_values():
     """Parameter values are allowed for all versions >= 1.0"""
 
-    for values in [('bar',), ['bar'], {'bar'}]:
-        @require_gdal_version('1.0', param='foo', values=values)
+    for values in [("bar",), ["bar"], {"bar"}]:
+
+        @require_gdal_version("1.0", param="foo", values=values)
         def a(foo=None):
             return foo
 
         assert a() is None
-        assert a('bar') == 'bar'
-        assert a(foo='bar') == 'bar'
+        assert a("bar") == "bar"
+        assert a(foo="bar") == "bar"
 
 
 def test_require_gdal_version_param_values_err():
     """Parameter values must be tuple, list, or set, otherwise raises
     ValueError"""
 
-    for invalid_values in ['bar', 1, 1.5, {'a': 'b'}]:
+    for invalid_values in ["bar", 1, 1.5, {"a": "b"}]:
         with pytest.raises(ValueError):
-            @require_gdal_version('1.0', param='foo', values=invalid_values)
+
+            @require_gdal_version("1.0", param="foo", values=invalid_values)
             def func_a(foo=None):
                 return foo
 
         with pytest.raises(ValueError):
-            @require_gdal_version('1.0', values=invalid_values)
+
+            @require_gdal_version("1.0", values=invalid_values)
             def func_b(foo=None):
                 return foo
 
 
 def test_require_gdal_version_param_values_version_too_low():
     """Parameter values not allowed since runtime is too low a version"""
-    version = '10000000.0'
+    version = "10000000.0"
 
-    @require_gdal_version(version, param='foo', values=['bar'])
+    @require_gdal_version(version, param="foo", values=["bar"])
     def a(foo=None):
         return foo
 
-    assert a('ok') == 'ok'  # param value allowed if not in values
-    assert a(foo='ok') == 'ok'
+    assert a("ok") == "ok"  # param value allowed if not in values
+    assert a(foo="ok") == "ok"
 
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar')
+        a(foo="bar")
 
     message = f'parameter "foo=bar" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
@@ -898,46 +975,45 @@ def test_require_gdal_version_param_values_version_too_low():
 
 def test_require_gdal_version_param_values_version_too_high():
     """Parameter values not allowed since runtime is too low a version"""
-    version = '1.0'
+    version = "1.0"
 
-    @require_gdal_version(version, param='foo', values=['bar'],
-                          is_max_version=True)
+    @require_gdal_version(version, param="foo", values=["bar"], is_max_version=True)
     def a(foo=None):
         return foo
 
-    assert a(foo='ok') == 'ok'  # param value allowed if not in values
+    assert a(foo="ok") == "ok"  # param value allowed if not in values
 
     with pytest.raises(GDALVersionError):
-        a('bar')
+        a("bar")
 
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar')
+        a(foo="bar")
 
     message = f'parameter "foo=bar" requires GDAL <= {version}'
     assert message in exc_info.value.args[0]
 
 
 def test_require_gdal_version_chaining():
-    version = '10000000.0'
+    version = "10000000.0"
 
-    @require_gdal_version(version, param='foo', values=['bar'])
-    @require_gdal_version(version, param='something', values=['else'])
+    @require_gdal_version(version, param="foo", values=["bar"])
+    @require_gdal_version(version, param="something", values=["else"])
     def a(foo=None, something=None):
         return foo, something
 
     # param values allowed if not in values
-    assert a(foo='ok', something='not else') == ('ok', 'not else')
+    assert a(foo="ok", something="not else") == ("ok", "not else")
 
     # first decorator causes this to fail
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar', something='else')
+        a(foo="bar", something="else")
 
     message = f'parameter "foo=bar" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
 
     # second decorator causes this to fail
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='ok', something='else')
+        a(foo="ok", something="else")
 
     message = f'parameter "something=else" requires GDAL >= {version}'
     assert message in exc_info.value.args[0]
@@ -946,19 +1022,22 @@ def test_require_gdal_version_chaining():
 @pytest.mark.network
 def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
     """Confirm that we can get drivers without any credentials"""
-    credentials_file = tmpdir.join('credentials')
+    credentials_file = tmpdir.join("credentials")
     credentials_file.write("""
 [default]
 aws_secret_access_key = foo
 aws_access_key_id = bar
 """)
-    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
-    monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(credentials_file))
+    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
 
     # To verify that we're unauthenticated, we make a request for an known existing object that will return 404 Not Found.
     with pytest.raises(Exception) as exc_info:
         s3 = boto3.client("s3")
-        s3.head_object(Bucket="landsat-pds", Key="L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF")
+        s3.head_object(
+            Bucket="landsat-pds",
+            Key="L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF",
+        )
 
     assert exc_info.value.response["Error"]["Code"] == "403"
 
@@ -973,80 +1052,86 @@ def test_nested_credentials(monkeypatch):
     def fake_opener(path):
         return getenv()
 
-    with rasterio.Env(session=AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar')):
-        assert getenv()['AWS_ACCESS_KEY_ID'] == 'foo'
-        assert getenv()['AWS_SECRET_ACCESS_KEY'] == 'bar'
+    with rasterio.Env(
+        session=AWSSession(aws_access_key_id="foo", aws_secret_access_key="bar")
+    ):
+        assert getenv()["AWS_ACCESS_KEY_ID"] == "foo"
+        assert getenv()["AWS_SECRET_ACCESS_KEY"] == "bar"
 
-        monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'lol')
-        monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "lol")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "wut")
 
-        gdalenv = fake_opener('s3://foo/bar')
-        assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
-        assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'
+        gdalenv = fake_opener("s3://foo/bar")
+        assert gdalenv["AWS_ACCESS_KEY_ID"] == "foo"
+        assert gdalenv["AWS_SECRET_ACCESS_KEY"] == "bar"
 
 
 def test_oss_session_credentials(gdalenv):
     """Create an Env with a oss session."""
     oss_session = OSSSession(
-        oss_access_key_id='id',
-        oss_secret_access_key='key',
-        oss_endpoint='null-island-1')
+        oss_access_key_id="id",
+        oss_secret_access_key="key",
+        oss_endpoint="null-island-1",
+    )
     with rasterio.env.Env(session=oss_session):
-        assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
-        assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
-        assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
+        assert getenv()["OSS_ACCESS_KEY_ID"] == "id"
+        assert getenv()["OSS_SECRET_ACCESS_KEY"] == "key"
+        assert getenv()["OSS_ENDPOINT"] == "null-island-1"
 
 
 def test_swift_session_credentials(gdalenv):
     """Create an Env with a oss session."""
-    swift_session = SwiftSession(
-        swift_storage_url='foo',
-        swift_auth_token='bar')
+    swift_session = SwiftSession(swift_storage_url="foo", swift_auth_token="bar")
     with rasterio.env.Env(session=swift_session) as s:
         s.credentialize()
-        assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
-        assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'
+        assert getenv()["SWIFT_STORAGE_URL"] == "foo"
+        assert getenv()["SWIFT_AUTH_TOKEN"] == "bar"
 
 
 def test_azure_session_credentials(gdalenv):
     """Create an Env with azure session."""
     azure_session = AzureSession(
-        azure_storage_account='foo',
-        azure_storage_access_key='bar'
+        azure_storage_account="foo", azure_storage_access_key="bar"
     )
     with rasterio.env.Env(session=azure_session) as s:
         s.credentialize()
-        assert getenv()['AZURE_STORAGE_ACCOUNT'] == 'foo'
-        assert getenv()['AZURE_STORAGE_ACCESS_KEY'] == 'bar'
+        assert getenv()["AZURE_STORAGE_ACCOUNT"] == "foo"
+        assert getenv()["AZURE_STORAGE_ACCESS_KEY"] == "bar"
 
 
 def test_azure_session_credentials_connection_string(gdalenv):
     """Create an Env with azure session."""
     azure_session = AzureSession(
-        azure_storage_connection_string='AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY',
+        azure_storage_connection_string="AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY",
     )
     with rasterio.env.Env(session=azure_session) as s:
         s.credentialize()
-        assert getenv()['AZURE_STORAGE_CONNECTION_STRING'] == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
+        assert (
+            getenv()["AZURE_STORAGE_CONNECTION_STRING"]
+            == "AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY"
+        )
 
 
 def test_swift_session_by_user_key():
     def mock_init(
-            self, session=None,
-            swift_storage_url=None, swift_auth_token=None,
-            swift_auth_v1_url=None, swift_user=None, swift_key=None):
-        self._creds = {'SWIFT_STORAGE_URL': 'foo',
-                       'SWIFT_AUTH_TOKEN': 'bar'}
+        self,
+        session=None,
+        swift_storage_url=None,
+        swift_auth_token=None,
+        swift_auth_v1_url=None,
+        swift_user=None,
+        swift_key=None,
+    ):
+        self._creds = {"SWIFT_STORAGE_URL": "foo", "SWIFT_AUTH_TOKEN": "bar"}
 
-    with mock.patch('rasterio.session.SwiftSession.__init__', new=mock_init):
+    with mock.patch("rasterio.session.SwiftSession.__init__", new=mock_init):
         swift_session = SwiftSession(
-            swift_auth_v1_url='foo',
-            swift_user='bar',
-            swift_key='key')
+            swift_auth_v1_url="foo", swift_user="bar", swift_key="key"
+        )
         with rasterio.env.Env(session=swift_session) as s:
             s.credentialize()
-            assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
-            assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'
+            assert getenv()["SWIFT_STORAGE_URL"] == "foo"
+            assert getenv()["SWIFT_AUTH_TOKEN"] == "bar"
 
 
 def test_dummy_session_without_boto3(monkeypatch, caplog):
@@ -1054,8 +1139,8 @@ def test_dummy_session_without_boto3(monkeypatch, caplog):
     # Confirm fix of #1708.
     with monkeypatch.context() as mpctx:
         mpctx.setattr("rasterio.session.boto3", None)
-        mpctx.setenv('AWS_ACCESS_KEY_ID', 'lol')
-        mpctx.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
+        mpctx.setenv("AWS_ACCESS_KEY_ID", "lol")
+        mpctx.setenv("AWS_SECRET_ACCESS_KEY", "wut")
         assert isinstance(rasterio.env.Env().session, DummySession)
 
 
@@ -1064,7 +1149,10 @@ def test_dummy_session_with_boto3_expired_credentials(monkeypatch, caplog):
     with monkeypatch.context() as mpctx:
         mpctx.setenv("AWS_ACCESS_KEY_ID", "ASIAVGH5PWXB5KSL4ZUD")
         mpctx.setenv("AWS_SECRET_ACCESS_KEY", "tv3WkpUiW++91eAPTCDcOAIxKrk6N")
-        mpctx.setenv("AWS_SESSION_TOKEN", "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS")
+        mpctx.setenv(
+            "AWS_SESSION_TOKEN",
+            "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS",
+        )
         mpctx.setenv("AWS_CREDENTIAL_EXPIRATION", "2019-07-12T20:06:06.000Z")
         assert isinstance(rasterio.env.Env().session, DummySession)
 
@@ -1074,7 +1162,10 @@ def test_open_file_expired_aws_credentials(monkeypatch, caplog, path_rgb_byte_ti
     with monkeypatch.context() as mpctx:
         mpctx.setenv("AWS_ACCESS_KEY_ID", "ASIAVGH5PWXB5KSL4ZUD")
         mpctx.setenv("AWS_SECRET_ACCESS_KEY", "tv3WkpUiW++91eAPTCDcOAIxKrk6N")
-        mpctx.setenv("AWS_SESSION_TOKEN", "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS")
+        mpctx.setenv(
+            "AWS_SESSION_TOKEN",
+            "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS",
+        )
         mpctx.setenv("AWS_CREDENTIAL_EXPIRATION", "2019-07-12T20:06:06.000Z")
         with rasterio.env.Env():
             with rasterio.open(path_rgb_byte_tif) as dataset:

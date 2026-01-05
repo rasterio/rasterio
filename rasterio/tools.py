@@ -11,8 +11,7 @@ from rasterio.features import dataset_features
 
 
 class JSONSequenceTool:
-    """Extracts data from a dataset file and saves a JSON sequence
-    """
+    """Extracts data from a dataset file and saves a JSON sequence"""
 
     def __init__(self, func):
         """Initialize tool
@@ -25,7 +24,16 @@ class JSONSequenceTool:
         """
         self.func = func
 
-    def __call__(self, src_path, dst_path, src_kwargs=None, dst_kwargs=None, func_args=None, func_kwargs=None, config=None):
+    def __call__(
+        self,
+        src_path,
+        dst_path,
+        src_kwargs=None,
+        dst_kwargs=None,
+        func_args=None,
+        func_kwargs=None,
+        config=None,
+    ):
         """Execute the tool's primary function and perform file I/O
 
         Parameters
@@ -64,7 +72,10 @@ class JSONSequenceTool:
         config = config or {}
 
         with rasterio.Env(**config):
-            with open(dst_path, 'w') as fdst, rasterio.open(src_path, **src_kwargs) as dsrc:
+            with (
+                open(dst_path, "w") as fdst,
+                rasterio.open(src_path, **src_kwargs) as dsrc,
+            ):
                 for obj in self.func(dsrc, *func_args, **func_kwargs):
                     fdst.write(json.dumps(obj, **dst_kwargs))
 

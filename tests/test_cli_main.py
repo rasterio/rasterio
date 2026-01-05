@@ -5,7 +5,7 @@ from rasterio.rio.main import entry_points, main_group
 
 
 def test_version(runner):
-    result = runner.invoke(main_group, ['--version'])
+    result = runner.invoke(main_group, ["--version"])
     assert result.exit_code == 0
     assert rasterio.__version__ in result.output
 

@@ -16,17 +16,19 @@ logger = logging.getLogger(__name__)
 
 # Geographic (default), projected, or Mercator switch.
 projection_geographic_opt = click.option(
-    '--geographic',
-    'projection',
-    flag_value='geographic',
-    help="Bounds in geographic coordinates.")
+    "--geographic",
+    "projection",
+    flag_value="geographic",
+    help="Bounds in geographic coordinates.",
+)
 
 projection_projected_opt = click.option(
-    '--projected',
-    'projection',
-    flag_value='projected',
+    "--projected",
+    "projection",
+    flag_value="projected",
     default=True,
-    help="Bounds in input's own projected coordinates (the default).")
+    help="Bounds in input's own projected coordinates (the default).",
+)
 
 data_window_options = click.option(
     "--to-data-window",
@@ -34,22 +36,20 @@ data_window_options = click.option(
     help="Clip the raster to the region of valid data by removing areas of surrounding NoData values.",
 )
 
+
 # Clip command
-@click.command(short_help='Clip a raster to given bounds.')
+@click.command(short_help="Clip a raster to given bounds.")
 @click.argument(
-    'files',
-    nargs=-1,
-    type=click.Path(),
-    required=True,
-    metavar="INPUT OUTPUT")
+    "files", nargs=-1, type=click.Path(), required=True, metavar="INPUT OUTPUT"
+)
 @options.output_opt
 @options.bounds_opt
 @data_window_options
 @click.option(
-    '--like',
+    "--like",
     type=click.Path(exists=True),
-    help='Raster dataset to use as a template for bounds'
-    )
+    help="Raster dataset to use as a template for bounds",
+)
 @options.format_opt
 @options.nodata_opt
 @projection_geographic_opt
@@ -101,8 +101,7 @@ def clip(
     """
     from rasterio.warp import transform_bounds
 
-    with ctx.obj['env']:
-
+    with ctx.obj["env"]:
         output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
         input = files[0]
 
@@ -113,11 +112,11 @@ def clip(
                 )
 
             if bounds:
-                if projection == 'geographic':
+                if projection == "geographic":
                     bounds = transform_bounds(CRS.from_epsg(4326), src.crs, *bounds)
                 if disjoint_bounds(bounds, src.bounds):
                     raise click.BadParameter(
-                        "must overlap the extent of " "the input raster",
+                        "must overlap the extent of the input raster",
                         param="--bounds",
                         param_hint="--bounds",
                     )
@@ -126,12 +125,11 @@ def clip(
                 with rasterio.open(like) as template_ds:
                     bounds = template_ds.bounds
                     if template_ds.crs != src.crs:
-                        bounds = transform_bounds(template_ds.crs, src.crs,
-                                                  *bounds)
+                        bounds = transform_bounds(template_ds.crs, src.crs, *bounds)
 
                     if disjoint_bounds(bounds, src.bounds):
                         raise click.BadParameter(
-                            "must overlap the extent of " "the input raster",
+                            "must overlap the extent of the input raster",
                             param="--like",
                             param_hint="--like",
                         )
@@ -144,9 +142,12 @@ def clip(
                     dw = windows.get_data_window(src.read(1, masked=True, window=sw))
                     if dw.width * dw.height > 0:
                         # Adjust offsets
-                        dw = windows.Window(col_off=dw.col_off + sw.col_off,
-                                            row_off=dw.row_off + sw.row_off,
-                                            width=dw.width, height=dw.height)
+                        dw = windows.Window(
+                            col_off=dw.col_off + sw.col_off,
+                            row_off=dw.row_off + sw.row_off,
+                            width=dw.width,
+                            height=dw.height,
+                        )
                         data_wins.append(dw)
                 bounds_window = windows.union(data_wins)
 
@@ -173,10 +174,13 @@ def clip(
             if nodata is not None:
                 out_kwargs["nodata"] = nodata
 
-            out_kwargs.update({
-                'height': height,
-                'width': width,
-                'transform': src.window_transform(out_window)})
+            out_kwargs.update(
+                {
+                    "height": height,
+                    "width": width,
+                    "transform": src.window_transform(out_window),
+                }
+            )
 
             out_kwargs.update(**creation_options)
 
@@ -193,7 +197,10 @@ def clip(
 
             with rasterio.open(output, "w", **out_kwargs) as out:
                 dest_win = windows.Window(0, 0, width, height)
-                for dw, sw in zip(windows.subdivide(dest_win, 512, 512), windows.subdivide(out_window, 512, 512)):
+                for dw, sw in zip(
+                    windows.subdivide(dest_win, 512, 512),
+                    windows.subdivide(out_window, 512, 512),
+                ):
                     out_shape = (src.count, sw.height, sw.width)
                     out.write(
                         src.read(
@@ -202,7 +209,7 @@ def clip(
                             boundless=True,
                             masked=True,
                         ),
-                        window=dw
+                        window=dw,
                     )
 
                     if MaskFlags.per_dataset in src.mask_flag_enums[0]:
@@ -212,7 +219,7 @@ def clip(
                                 out_shape=out_shape,
                                 boundless=True,
                             )[0],
-                            window=dw
+                            window=dw,
                         )
 
                     # TODO: copy other properties (GCPs etc). Several other
