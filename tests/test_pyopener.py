@@ -87,7 +87,7 @@ def test_opener_fsspec_http_fs():
 def test_fsspec_s3_openfile():
     """Use fsspec s3 location via OpenFile object."""
     of = fsspec.open(
-        "s3://e84-earth-search-sentinel-data/sentinel-2-c1-l2a/1/C/CV/2018/3/S2B_T01CCV_20180308T210516_L2A/AOT.tif",
+        "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif",
         anon=True,
     )
     with rasterio.open(of) as src:
