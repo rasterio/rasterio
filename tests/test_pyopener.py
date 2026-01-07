@@ -87,6 +87,19 @@ def test_opener_fsspec_http_fs():
         assert profile["count"] == 1
 
 
+@pytest.mark.network
+def test_fsspec_s3_openfile():
+    """Use fsspec s3 location via OpenFile object."""
+    of = fsspec.open(
+        "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif",
+        anon=True,
+    )
+    with rasterio.open(of) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 1
+
+
 def test_opener_fsspec_fs_open_write(tmp_path):
     """Use fsspec filesystem open() as opener for writing."""
     data = np.ma.masked_less_equal(np.array([[0, 1, 2]], dtype="uint8"), 1)
