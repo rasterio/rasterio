@@ -378,6 +378,8 @@ def _opener_registration(urlpath, obj):
     # Before returning we do a quick check that the opener will
     # plausibly function.
     try:
+        # some fsspec filesystems (e.g. s3fs) fail with ValueError
+        # if the provided path does not match "bucket/key" format
         _ = opener.size("test/test")
     except (AttributeError, TypeError, ValueError) as err:
         raise OpenerRegistrationError(f"Opener is invalid.") from err
