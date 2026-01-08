@@ -348,11 +348,9 @@ def merge(
     if bounds:
         dst_w, dst_s, dst_e, dst_n = bounds
     else:
-        # scan input files
-        xs = []
-        ys = []
-
-        for dataset in sources:
+        # scan input files to determine the final bounds and resolution
+        _bounds = np.zeros((len(sources), 4))
+        for i, dataset in enumerate(sources):
             with dataset_opener(dataset) as src:
                 src_transform = src.transform
 
@@ -382,12 +380,11 @@ def merge(
                         'Rasters with negative pixel height ("upside down" rasters) cannot be merged.'
                     )
 
-                left, bottom, right, top = src.bounds
-
-            xs.extend([left, right])
-            ys.extend([bottom, top])
-
-        dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
+                _bounds[i] = src.bounds
+ 
+        dst_w, dst_s = _bounds[:, :2].min(axis=0)
+        dst_e, dst_n = _bounds[:, 2:].max(axis=0)
+        del _bounds
 
     # Resolution/pixel size
     if not res:
