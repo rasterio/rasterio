@@ -6,7 +6,10 @@ import math
 import numbers
 import os
 import warnings
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
+from itertools import product
+import functools
+import bisect
 
 import numpy as np
 
@@ -20,8 +23,7 @@ from rasterio.errors import (
     WindowError,
 )
 from rasterio.io import DatasetWriter
-from rasterio.transform import Affine
-from rasterio.windows import subdivide
+from rasterio.transform import Affine, rowcol
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +97,78 @@ MERGE_METHODS = {
 }
 
 
+def _intersect_bounds(bounds1, bounds2, transform):
+    """Based on gdal_merge.py."""
+    int_w = max(bounds1[0], bounds2[0])
+    int_e = min(bounds1[2], bounds2[2])
+
+    if int_w >= int_e:
+        raise ValueError
+
+    if transform.e < 0:
+        # north up
+        int_s = max(bounds1[1], bounds2[1])
+        int_n = min(bounds1[3], bounds2[3])
+        if int_s >= int_n:
+            raise ValueError
+    else:
+        int_s = min(bounds1[1], bounds2[1])
+        int_n = max(bounds1[3], bounds2[3])
+        if int_n >= int_s:
+            raise ValueError
+
+    return int_w, int_s, int_e, int_n
+
+
+def _align_window(window):
+    """Equivalent to rounding both offsets and lengths.
+
+    This method computes offsets, width, and height that are
+    useful for compositing arrays into larger arrays and
+    datasets without seams. It is used by Rasterio's merge
+    tool and is based on the logic in gdal_merge.py.
+
+    Returns
+    -------
+    Window
+    """
+    row_off = math.floor(window.row_off + 0.1)
+    col_off = math.floor(window.col_off + 0.1)
+    height = math.floor(window.height + 0.5)
+    width = math.floor(window.width + 0.5)
+    return windows.Window(col_off, row_off, width, height)
+
+
+def _compute_region_mask(nodataval, region, region_mask=None):
+    if cmath.isfinite(nodataval):
+        if np.issubdtype(region.dtype, np.integer):
+            return np.equal(region, nodataval, out=region_mask)        
+        else:
+            return np.isclose(region, nodataval)
+    elif cmath.isnan(nodataval):
+        return np.isnan(region, out=region_mask)
+    elif cmath.isinf(nodataval):
+        return np.isinf(region, out=region_mask)
+    else:
+        raise ValueError(f"Unable to compute mask with nodataval {nodataval}")
+    
+
+def _view_window(arr, window):
+    rows, cols = window.toslices()
+    if arr.ndim == 2:
+        return arr[rows, cols]
+    else:
+        return arr[:, rows, cols]
+    
+def _find_nearest_offset(offsets, px_start, px_end):
+    k = bisect.bisect_left(offsets, px_start)
+    if k == len(offsets) or px_start < offsets[k]:
+        k -= 1
+
+    j = bisect.bisect_right(offsets, px_end)
+    return k, j
+
+
 def merge(
     sources,
     bounds=None,
@@ -112,6 +186,7 @@ def merge(
     masked=False,
     dst_path=None,
     dst_kwds=None,
+    open_kwds=None
 ):
     """Copy valid pixels from input files to an output file.
 
@@ -200,6 +275,9 @@ def merge(
     dst_kwds : dict, optional
         Dictionary of creation options and other parameters that will be
         overlaid on the profile of the output dataset.
+    open_kwds : dict, optional
+        Dictionary of paramters that will be passed to rasterio.open when
+        opening each source raster.
 
     Returns
     -------
@@ -234,48 +312,48 @@ def merge(
             )
         )
 
-    dst = None
+    # Gather info from first raster
+    if isinstance(sources[0], (str, os.PathLike)):
+        if open_kwds is not None:
+            dataset_opener = functools.partial(rasterio.open, **open_kwds)
+        else:
+            dataset_opener = rasterio.open
+    else:
+        dataset_opener = nullcontext
 
-    with ExitStack() as exit_stack:
-        source_datasets = []
-        for s in sources:
-            if isinstance(s, (str, os.PathLike)):
-                source_datasets.append(exit_stack.enter_context(rasterio.open(s)))
-            else:
-                source_datasets.append(s)
-
-        first = source_datasets[0]
-        first_profile = first.profile
-        first_crs = first.crs
-        best_res = first.res
-        first_nodataval = first.nodatavals[0]
+    with dataset_opener(sources[0]) as FIRST:
+        first_profile = FIRST.profile
+        first_crs = FIRST.crs
+        best_res = FIRST.res
+        first_nodataval = FIRST.nodatavals[0]
         nodataval = first_nodataval
-        dt = first.dtypes[0]
+        dt = FIRST.dtypes[0]
 
         if indexes is None:
-            src_count = first.count
+            src_count = FIRST.count
         elif isinstance(indexes, int):
             src_count = indexes
         else:
             src_count = len(indexes)
 
-        try:
-            first_colormap = first.colormap(1)
-        except ValueError:
-            first_colormap = None
-
         if not output_count:
             output_count = src_count
 
-        # Extent from option or extent of all inputs
-        if bounds:
-            dst_w, dst_s, dst_e, dst_n = bounds
-        else:
-            # scan input files
-            xs = []
-            ys = []
+        try:
+            first_colormap = FIRST.colormap(1)
+        except ValueError:
+            first_colormap = None
 
-            for i, src in enumerate(source_datasets):
+    # Extent from option or extent of all inputs
+    if bounds:
+        dst_w, dst_s, dst_e, dst_n = bounds
+    else:
+        # scan input files
+        xs = []
+        ys = []
+
+        for dataset in sources:
+            with dataset_opener(dataset) as src:
                 src_transform = src.transform
 
                 if use_highest_res:
@@ -306,176 +384,135 @@ def merge(
 
                 left, bottom, right, top = src.bounds
 
-                xs.extend([left, right])
-                ys.extend([bottom, top])
+            xs.extend([left, right])
+            ys.extend([bottom, top])
 
-            dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
+        dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
 
-        # Resolution/pixel size
-        if not res:
-            res = best_res
-        elif isinstance(res, numbers.Number):
-            res = (res, res)
-        elif len(res) == 1:
-            res = (res[0], res[0])
+    # Resolution/pixel size
+    if not res:
+        res = best_res
+    elif isinstance(res, numbers.Number):
+        res = (res, res)
+    elif len(res) == 1:
+        res = (res[0], res[0])
 
-        if target_aligned_pixels:
-            dst_w = math.floor(dst_w / res[0]) * res[0]
-            dst_e = math.ceil(dst_e / res[0]) * res[0]
-            dst_s = math.floor(dst_s / res[1]) * res[1]
-            dst_n = math.ceil(dst_n / res[1]) * res[1]
+    if target_aligned_pixels:
+        dst_w = math.floor(dst_w / res[0]) * res[0]
+        dst_e = math.ceil(dst_e / res[0]) * res[0]
+        dst_s = math.floor(dst_s / res[1]) * res[1]
+        dst_n = math.ceil(dst_n / res[1]) * res[1]
 
-        # Compute output array shape. We guarantee it will cover the output
-        # bounds completely
-        output_width = int(round((dst_e - dst_w) / res[0]))
-        output_height = int(round((dst_n - dst_s) / res[1]))
+    # Compute output array shape. We guarantee it will cover the output
+    # bounds completely
+    output_width = int(round((dst_e - dst_w) / res[0]))
+    output_height = int(round((dst_n - dst_s) / res[1]))
 
-        output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
-            res[0], -res[1]
-        )
+    output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
+        res[0], -res[1]
+    )
 
-        if dtype is not None:
-            dt = dtype
-            logger.debug("Set dtype: %s", dt)
+    if dtype is not None:
+        dt = dtype
+        logger.debug("Set dtype: %s", dt)
 
-        if nodata is not None:
-            nodataval = nodata
-            logger.debug("Set nodataval: %r", nodataval)
+    if nodata is not None:
+        nodataval = nodata
+        logger.debug("Set nodataval: %r", nodataval)
 
-        inrange = False
-        if nodataval is not None:
-            # Only fill if the nodataval is within dtype's range
-            if np.issubdtype(dt, np.integer):
-                info = np.iinfo(dt)
+    inrange = False
+    if nodataval is not None:
+        # Only fill if the nodataval is within dtype's range
+        if np.issubdtype(dt, np.integer):
+            info = np.iinfo(dt)
+            inrange = info.min <= nodataval <= info.max
+        else:
+            if cmath.isfinite(nodataval):
+                info = np.finfo(dt)
                 inrange = info.min <= nodataval <= info.max
+                nodata_dt = np.min_scalar_type(nodataval)
+                inrange = inrange & np.can_cast(nodata_dt, dt)
             else:
-                if cmath.isfinite(nodataval):
-                    info = np.finfo(dt)
-                    inrange = info.min <= nodataval <= info.max
-                    nodata_dt = np.min_scalar_type(nodataval)
-                    inrange = inrange & np.can_cast(nodata_dt, dt)
-                else:
-                    inrange = True
+                inrange = True
 
-            if not inrange:
-                warnings.warn(
-                    f"Ignoring nodata value. The nodata value, {nodataval}, cannot safely be represented "
-                    f"in the chosen data type, {dt}. Consider overriding it "
-                    "using the --nodata option for better results. "
-                    "Falling back to first source's nodata value."
-                )
-                nodataval = first_nodataval
-        else:
-            logger.debug("Set nodataval to 0")
-            nodataval = 0
+        if not inrange:
+            warnings.warn(
+                f"Ignoring nodata value. The nodata value, {nodataval}, cannot safely be represented "
+                f"in the chosen data type, {dt}. Consider overriding it "
+                "using the --nodata option for better results. "
+                "Falling back to first source's nodata value."
+            )
+            nodataval = first_nodataval
+    else:
+        logger.debug("Set nodataval to 0")
+        nodataval = 0
 
-        # When dataset output is selected, we might need to create one
-        # and will also provide the option of merging by chunks.
-        dout_window = windows.Window(0, 0, output_width, output_height)
-        if dst_path is None:
-            chunks = [dout_window]
-        else:
-            if isinstance(dst_path, DatasetWriter):
-                dst = dst_path
-            else:
-                out_profile = first_profile
-                out_profile.update(**(dst_kwds or {}))
-                out_profile["transform"] = output_transform
-                out_profile["height"] = output_height
-                out_profile["width"] = output_width
-                out_profile["count"] = output_count
-                out_profile["dtype"] = dt
-                if nodata is not None:
-                    out_profile["nodata"] = nodata
-                dst = rasterio.open(dst_path, "w", **out_profile)
-                exit_stack.enter_context(dst)
-
-            # We allocate up to 5 arrays during merge
-            max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count * 5)
-
-            if output_width * output_height < max_pixels:
-                chunks = [dout_window]
-            else:
-                n = math.floor(math.sqrt(max_pixels))
-                chunks = subdivide(dout_window, n, n)
-
-        def _intersect_bounds(bounds1, bounds2, transform):
-            """Based on gdal_merge.py."""
-            int_w = max(bounds1[0], bounds2[0])
-            int_e = min(bounds1[2], bounds2[2])
-
-            if int_w >= int_e:
-                raise ValueError
-
-            if transform.e < 0:
-                # north up
-                int_s = max(bounds1[1], bounds2[1])
-                int_n = min(bounds1[3], bounds2[3])
-                if int_s >= int_n:
-                    raise ValueError
-            else:
-                int_s = min(bounds1[1], bounds2[1])
-                int_n = max(bounds1[3], bounds2[3])
-                if int_n >= int_s:
-                    raise ValueError
-
-            return int_w, int_s, int_e, int_n
+    # When dataset output is selected, we might need to create one
+    # and will also provide the option of merging by chunks.
+    exit_stack = ExitStack()
+    dout_window = windows.Window(0, 0, output_width, output_height)
+    if isinstance(dst_path, DatasetWriter):
+        dst = dst_path
+    else:
+        out_profile = first_profile
+        out_profile.update(**(dst_kwds or {}))
+        out_profile["transform"] = output_transform
+        out_profile["height"] = output_height
+        out_profile["width"] = output_width
+        out_profile["count"] = output_count
+        out_profile["dtype"] = dt
+        if nodata is not None:
+            out_profile["nodata"] = nodata
         
-        def _win_align(window):
-            """Equivalent to rounding both offsets and lengths.
+        if dst_path is not None:
+            dst = rasterio.open(dst_path, "w", **out_profile)
+            exit_stack.enter_context(dst)
+        else:
+            output_arr = np.full((output_count, output_height, output_width), nodataval, dtype=dt)
 
-            This method computes offsets, width, and height that are
-            useful for compositing arrays into larger arrays and
-            datasets without seams. It is used by Rasterio's merge
-            tool and is based on the logic in gdal_merge.py.
+    max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count * 8)
+    n = math.floor(math.sqrt(max_pixels))
+    if output_width * output_height < max_pixels:
+        chunks = [dout_window]
+        Rindex = Cindex = [0]
+    else:
+        chunks = windows.subdivide(dout_window, n, n)
+        Rindex = list(range(0, dout_window.height, n))
+        Cindex = list(range(0, dout_window.width, n))
 
-            Returns
-            -------
-            Window
-            """
-            row_off = math.floor(window.row_off + 0.1)
-            col_off = math.floor(window.col_off + 0.1)
-            height = math.floor(window.height + 0.5)
-            width = math.floor(window.width + 0.5)
-            return windows.Window(col_off, row_off, width, height)
+    tmp_mask = np.empty((output_count, n, n), dtype="bool")
+    cached_bounds = functools.cache(windows.bounds)
+    cached_transforms = functools.cache(windows.transform)
 
-        for chunk in chunks:
-            dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
-            dest = np.zeros((output_count, chunk.height, chunk.width), dtype=dt)
-            if inrange:
-                dest.fill(nodataval)
+    for idx, dataset in enumerate(sources):
+        with dataset_opener(dataset) as src:
+            # Intersect source bounds and tile bounds
+            if first_crs != src.crs:
+                raise RasterioError(f"CRS mismatch with source: {dataset}")
 
-            # From gh-2221
-            chunk_bounds = windows.bounds(chunk, output_transform)
-            chunk_transform = windows.transform(chunk, output_transform)
+            # find the bounds of source relative to output
+            src_bounds = src.bounds
+            src_transform = src.transform
 
-            for idx, src in enumerate(source_datasets):
-                # Intersect source bounds and tile bounds
-                if first_crs != src.crs:
-                    raise RasterioError(f"CRS mismatch with source: {src}")
+            _r, _c = rowcol(output_transform, [src_bounds.left, src_bounds.right], [src_bounds.top, src_bounds.bottom])
+            rstart, rend = _find_nearest_offset(Rindex, _r[0], _r[1])
+            cstart, cend = _find_nearest_offset(Cindex, _c[0], _c[1])
+            for _row, _col in product(range(rstart, rend), range(cstart, cend)):
+                chunk = chunks[_row * len(Cindex) + _col]
+                chunk_bound = cached_bounds(chunk, output_transform)
+                chunk_transform = cached_transforms(chunk, output_transform)
 
                 try:
                     ibounds = _intersect_bounds(
-                        src.bounds, chunk_bounds, chunk_transform
+                        src_bounds, chunk_bound, chunk_transform
                     )
-                    sw = windows.from_bounds(*ibounds, src.transform)
-                    cw = windows.from_bounds(*ibounds, chunk_transform)
+                    sw = windows.from_bounds(*ibounds, src_transform)
+                    cw = _align_window(windows.from_bounds(*ibounds, chunk_transform))
                 except (ValueError, WindowError):
                     logger.info(
                         "Skipping source: src=%r, bounds=%r", src, src.bounds
                     )
                     continue
-
-                cw = _win_align(cw)
-                rows, cols = cw.toslices()
-                region = dest[:, rows, cols]
-
-                if cmath.isnan(nodataval):
-                    region_mask = np.isnan(region)
-                elif not np.issubdtype(region.dtype, np.integer):
-                    region_mask = np.isclose(region, nodataval)
-                else:
-                    region_mask = region == nodataval
 
                 data = src.read(
                     out_shape=(src_count, cw.height, cw.width),
@@ -484,6 +521,15 @@ def merge(
                     window=sw,
                     resampling=resampling,
                 )
+
+                if dst_path is None:
+                    # This avoids allocations of new arrays when merging in-memory
+                    region = _view_window(output_arr, cw)
+                    region_mask = _view_window(tmp_mask, windows.Window(0, 0, width=cw.width, height=cw.height))
+                    region_mask = _compute_region_mask(nodataval, region, region_mask=region_mask)
+                else:
+                    region = dst.read(window=cw)
+                    region_mask = _compute_region_mask(nodataval, region)
 
                 copyto(
                     region,
@@ -495,20 +541,20 @@ def merge(
                     coff=cw.col_off,
                 )
 
-            if dst:
-                dw = windows.from_bounds(*chunk_bounds, output_transform)
-                dw = _win_align(dw)
-                dst.write(dest, window=dw)
+                if dst_path is not None:
+                    dst.write(region, window=cw)
 
-        if dst is None:
-            if masked:
-                if cmath.isfinite(nodataval):
-                    # Handles both integer and float nodataval
-                    dest = np.ma.masked_values(dest, nodataval, copy=False)
-                else:
-                    dest = np.ma.masked_invalid(dest, copy=False)
-            return dest, output_transform
-        else:
-            if first_colormap:
-                dst.write_colormap(1, first_colormap)
-            dst.close()
+
+    if dst_path is None:
+        dest = output_arr
+        if masked:
+            if cmath.isfinite(nodataval):
+                # Handles both integer and float nodataval
+                dest = np.ma.masked_values(dest, nodataval, copy=False)
+            else:
+                dest = np.ma.masked_invalid(dest, copy=False)
+        return dest, output_transform
+    else:
+        if first_colormap:
+            dst.write_colormap(1, first_colormap)
+        exit_stack.close()
