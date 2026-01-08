@@ -321,16 +321,16 @@ def merge(
     else:
         dataset_opener = nullcontext
 
-    with dataset_opener(sources[0]) as FIRST:
-        first_profile = FIRST.profile
-        first_crs = FIRST.crs
-        best_res = FIRST.res
-        first_nodataval = FIRST.nodatavals[0]
+    with dataset_opener(sources[0]) as first:
+        first_profile = first.profile
+        first_crs = first.crs
+        best_res = first.res
+        first_nodataval = first.nodatavals[0]
         nodataval = first_nodataval
-        dt = FIRST.dtypes[0]
+        dt = first.dtypes[0]
 
         if indexes is None:
-            src_count = FIRST.count
+            src_count = first.count
         elif isinstance(indexes, int):
             src_count = indexes
         else:
@@ -340,7 +340,7 @@ def merge(
             output_count = src_count
 
         try:
-            first_colormap = FIRST.colormap(1)
+            first_colormap = first.colormap(1)
         except ValueError:
             first_colormap = None
 
