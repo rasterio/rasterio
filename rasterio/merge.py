@@ -344,10 +344,7 @@ def merge(
         except ValueError:
             first_colormap = None
 
-    # Extent from option or extent of all inputs
-    if bounds:
-        dst_w, dst_s, dst_e, dst_n = bounds
-    else:
+    if bounds is None or use_highest_res:
         # scan input files to determine the final bounds and resolution
         _bounds = np.zeros((len(sources), 4))
         for i, dataset in enumerate(sources):
@@ -381,10 +378,16 @@ def merge(
                     )
 
                 _bounds[i] = src.bounds
- 
-        dst_w, dst_s = _bounds[:, :2].min(axis=0)
-        dst_e, dst_n = _bounds[:, 2:].max(axis=0)
+        if bounds:
+            # If bounds are provided, use that.
+            dst_w, dst_s, dst_e, dst_n = bounds
+        else:
+            # Compute enclosing bounds from source rasters.
+            dst_w, dst_s = _bounds[:, :2].min(axis=0)
+            dst_e, dst_n = _bounds[:, 2:].max(axis=0)
         del _bounds
+    elif bounds:
+        dst_w, dst_s, dst_e, dst_n = bounds
 
     # Resolution/pixel size
     if not res:
