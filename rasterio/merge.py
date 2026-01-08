@@ -558,3 +558,4 @@ def merge(
         if first_colormap:
             dst.write_colormap(1, first_colormap)
         exit_stack.close()
+        return dst_path
