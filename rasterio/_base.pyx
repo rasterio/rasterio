@@ -181,7 +181,7 @@ cdef _band_dtype(GDALRasterBandH band):
 
 cdef GDALDatasetH open_dataset(
     object filename,
-    int flags,
+    unsigned int flags,
     object allowed_drivers,
     object open_options,
     bint sharing,
@@ -301,7 +301,7 @@ cdef class DatasetBase:
         dataset
         """
         self._hds = NULL
-        cdef flags = GDAL_OF_READONLY
+        cdef unsigned int flags = GDAL_OF_READONLY
         if thread_safe:
             if not _GDAL_AT_LEAST_3_10:
                 raise GDALOptionNotImplementedError("'thread_safe' option requires GDAL 3.10+.")
