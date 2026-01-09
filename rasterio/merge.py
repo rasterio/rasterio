@@ -153,13 +153,6 @@ def _compute_region_mask(nodataval, region, region_mask=None):
         raise ValueError(f"Unable to compute mask with nodataval {nodataval}")
     
 
-def _view_window(arr, window):
-    rows, cols = window.toslices()
-    if arr.ndim == 2:
-        return arr[rows, cols]
-    else:
-        return arr[:, rows, cols]
-    
 def _find_nearest_offset(offsets, px_start, px_end):
     k = bisect.bisect_left(offsets, px_start)
     if k == len(offsets) or px_start < offsets[k]:
@@ -480,7 +473,6 @@ def merge(
         row_offsets = list(range(0, dout_window.height, n))
         col_offsets = list(range(0, dout_window.width, n))
 
-    tmp_mask = np.empty((output_count, n, n), dtype="bool")
     cached_bounds = functools.cache(windows.bounds)
     cached_transforms = functools.cache(windows.transform)
 
@@ -506,8 +498,9 @@ def merge(
                     ibounds = _intersect_bounds(
                         src_bounds, chunk_bound, chunk_transform
                     )
-                    sw = windows.from_bounds(*ibounds, src_transform)
-                    cw = _align_window(windows.from_bounds(*ibounds, chunk_transform))
+                    src_win= windows.from_bounds(*ibounds, src_transform)
+                    chunk_win = _align_window(windows.from_bounds(*ibounds, chunk_transform))
+                    dst_win = _align_window(windows.from_bounds(*ibounds, output_transform))
                 except (ValueError, WindowError):
                     logger.info(
                         "Skipping source: src=%r, bounds=%r", src, src.bounds
@@ -515,21 +508,15 @@ def merge(
                     continue
 
                 data = src.read(
-                    out_shape=(src_count, cw.height, cw.width),
+                    out_shape=(src_count, chunk_win.height, chunk_win.width),
                     indexes=indexes,
                     masked=True,
-                    window=sw,
+                    window=src_win,
                     resampling=resampling,
                 )
 
-                if dst_path is None:
-                    # This avoids allocations of new arrays when merging in-memory
-                    region = _view_window(output_arr, cw)
-                    region_mask = _view_window(tmp_mask, windows.Window(0, 0, width=cw.width, height=cw.height))
-                    region_mask = _compute_region_mask(nodataval, region, region_mask=region_mask)
-                else:
-                    region = dst.read(window=cw)
-                    region_mask = _compute_region_mask(nodataval, region)
+                region = dst.read(window=dst_win)
+                region_mask = _compute_region_mask(nodataval, region)
 
                 copyto(
                     region,
@@ -537,12 +524,11 @@ def merge(
                     region_mask,
                     data.mask,
                     index=idx,
-                    roff=cw.row_off,
-                    coff=cw.col_off,
+                    roff=dst_win.row_off,
+                    coff=dst_win.col_off,
                 )
 
-                if dst_path is not None:
-                    dst.write(region, window=cw)
+                dst.write(region, window=dst_win)
 
 
     if dst_path is None:
