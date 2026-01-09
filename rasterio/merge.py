@@ -474,11 +474,11 @@ def merge(
     n = math.floor(math.sqrt(max_pixels))
     if output_width * output_height < max_pixels:
         chunks = [dout_window]
-        Rindex = Cindex = [0]
+        row_offsets = col_offsets = [0]
     else:
         chunks = windows.subdivide(dout_window, n, n)
-        Rindex = list(range(0, dout_window.height, n))
-        Cindex = list(range(0, dout_window.width, n))
+        row_offsets = list(range(0, dout_window.height, n))
+        col_offsets = list(range(0, dout_window.width, n))
 
     tmp_mask = np.empty((output_count, n, n), dtype="bool")
     cached_bounds = functools.cache(windows.bounds)
@@ -495,10 +495,10 @@ def merge(
             src_transform = src.transform
 
             _r, _c = rowcol(output_transform, [src_bounds.left, src_bounds.right], [src_bounds.top, src_bounds.bottom])
-            rstart, rend = _find_nearest_offset(Rindex, _r[0], _r[1])
-            cstart, cend = _find_nearest_offset(Cindex, _c[0], _c[1])
+            rstart, rend = _find_nearest_offset(row_offsets, _r[0], _r[1])
+            cstart, cend = _find_nearest_offset(col_offsets, _c[0], _c[1])
             for _row, _col in product(range(rstart, rend), range(cstart, cend)):
-                chunk = chunks[_row * len(Cindex) + _col]
+                chunk = chunks[_row * len(col_offsets) + _col]
                 chunk_bound = cached_bounds(chunk, output_transform)
                 chunk_transform = cached_transforms(chunk, output_transform)
 
