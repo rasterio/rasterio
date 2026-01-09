@@ -530,7 +530,7 @@ def merge(
 
                 dst.write(region, window=dst_win)
 
-
+    exit_stack.close()
     if dst_path is None:
         dest = output_arr
         if masked:
@@ -543,5 +543,4 @@ def merge(
     else:
         if first_colormap:
             dst.write_colormap(1, first_colormap)
-        exit_stack.close()
         return dst_path
