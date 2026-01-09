@@ -499,7 +499,6 @@ def merge(
                         src_bounds, chunk_bound, chunk_transform
                     )
                     src_win= windows.from_bounds(*ibounds, src_transform)
-                    chunk_win = _align_window(windows.from_bounds(*ibounds, chunk_transform))
                     dst_win = _align_window(windows.from_bounds(*ibounds, output_transform))
                 except (ValueError, WindowError):
                     logger.info(
@@ -508,7 +507,7 @@ def merge(
                     continue
 
                 data = src.read(
-                    out_shape=(src_count, chunk_win.height, chunk_win.width),
+                    out_shape=(src_count, dst_win.height, dst_win.width),
                     indexes=indexes,
                     masked=True,
                     window=src_win,
