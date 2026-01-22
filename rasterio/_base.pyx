@@ -33,11 +33,17 @@ from rasterio.dtypes import (
 
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import env_ctx_if_needed
+from rasterio.env import env_ctx_if_needed, _GDAL_AT_LEAST_3_10
 from rasterio.errors import (
+    BandOverviewError,
+    CRSError,
     DatasetAttributeError,
-    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    DriverRegistrationError,
+    GDALOptionNotImplementedError,
+    NotGeoreferencedWarning,
+    RasterBlockError,
+    RasterioIOError,
+)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio._path import _parse_path
@@ -174,8 +180,13 @@ cdef _band_dtype(GDALRasterBandH band):
 
 
 cdef GDALDatasetH open_dataset(
-        object filename, int flags, object allowed_drivers,
-        object open_options, object siblings) except NULL:
+    object filename,
+    unsigned int flags,
+    object allowed_drivers,
+    object open_options,
+    bint sharing,
+    object siblings,
+) except NULL:
     """Open a dataset and return a handle"""
 
     cdef GDALDatasetH hds = NULL
@@ -210,8 +221,10 @@ cdef GDALDatasetH open_dataset(
         raise NotImplementedError(
             "Sibling files are not implemented")
 
-    # Ensure raster flags
-    flags = flags | 0x02
+    # Ensure default flags added
+    flags = flags | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR
+    if sharing:
+        flags |= GDAL_OF_SHARED
 
     with nogil:
         hds = GDALOpenEx(fname, flags, <const char **>drivers, <const char **>options, NULL)
@@ -264,8 +277,7 @@ cdef class DatasetBase:
     photometric : str
         Photometric interpretation's short name
     """
-
-    def __init__(self, path=None, driver=None, sharing=False, **kwargs):
+    def __init__(self, path=None, driver=None, sharing=False, thread_safe=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -277,6 +289,10 @@ cdef class DatasetBase:
             opening the dataset.
         sharing : bool, optional
             Whether to share underlying GDAL dataset handles (default: False).
+        thread_safe: bool, optional
+            Open GDAL dataset in `thread safe mode <https://gdal.org/en/stable/user/multithreading.html>`__.
+            For multithreaded read-only GDAL dataset operations (e.g. ``GDAL_NUM_THREADS``, `LIBERTIFF driver <https://gdal.org/en/stable/drivers/raster/libertiff.html#open-options>`__).
+            Requires rasterio 1.5+ & GDAL 3.10+.
         kwargs : dict
             GDAL dataset opening options.
 
@@ -284,13 +300,12 @@ cdef class DatasetBase:
         -------
         dataset
         """
-        cdef GDALDatasetH hds = NULL
-        cdef int flags = 0
-        cdef int sharing_flag = (0x20 if sharing else 0x0)
-
-        log.debug("Sharing flag: %r", sharing_flag)
-
         self._hds = NULL
+        cdef unsigned int flags = GDAL_OF_READONLY
+        if thread_safe:
+            if not _GDAL_AT_LEAST_3_10:
+                raise GDALOptionNotImplementedError("'thread_safe' option requires GDAL 3.10+.")
+            flags |= GDAL_OF_THREAD_SAFE
 
         if path is not None:
             path = _parse_path(path)
@@ -301,11 +316,15 @@ cdef class DatasetBase:
             if isinstance(driver, str):
                 driver = [driver]
 
-            # Read-only + Rasters + Sharing + Errors
-            flags = 0x00 | 0x02 | sharing_flag | 0x40
-
             try:
-                self._hds = open_dataset(filename, flags, driver, kwargs, None)
+                self._hds = open_dataset(
+                    filename=filename,
+                    flags=flags,
+                    allowed_drivers=driver,
+                    open_options=kwargs,
+                    sharing=sharing,
+                    siblings=None,
+                )
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
 

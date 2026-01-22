@@ -1,6 +1,5 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
-
 import json
 import warnings
 
@@ -21,9 +20,9 @@ from rasterio.transform import guard_transform
 
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
-    if ctx.obj and ctx.obj.get('like') and value is not None:
-        ctx.obj['all_like'] = value
-        value = ctx.obj.get('like')
+    if ctx.obj and ctx.obj.get("like") and value is not None:
+        ctx.obj["all_like"] = value
+        value = ctx.obj.get("like")
     return value
 
 
@@ -42,8 +41,8 @@ def crs_handler(ctx, param, value):
                 retval = CRS.from_string(retval)
         except CRSError:
             raise click.BadParameter(
-                "'%s' is not a recognized CRS." % retval,
-                param=param, param_hint='crs')
+                "'%s' is not a recognized CRS." % retval, param=param, param_hint="crs"
+            )
     return retval
 
 
@@ -52,11 +51,13 @@ def tags_handler(ctx, param, value):
     retval = options.from_like_context(ctx, param, value)
     if retval is None and value:
         try:
-            retval = dict(p.split('=') for p in value)
+            retval = dict(p.split("=") for p in value)
         except Exception:
             raise click.BadParameter(
                 "'%s' contains a malformed tag." % value,
-                param=param, param_hint='transform')
+                param=param,
+                param_hint="transform",
+            )
     return retval
 
 
@@ -73,12 +74,13 @@ def transform_handler(ctx, param, value):
         except Exception:
             raise click.BadParameter(
                 "'%s' is not recognized as an Affine array." % value,
-                param=param, param_hint='transform')
+                param=param,
+                param_hint="transform",
+            )
     return retval
 
 
 def colorinterp_handler(ctx, param, value):
-
     """Validate a string like ``red,green,blue,alpha`` and convert to
     a tuple.  Also handle ``RGB`` and ``RGBA``.
     """
@@ -86,54 +88,87 @@ def colorinterp_handler(ctx, param, value):
     if value is None:
         return value
     # Using '--like'
-    elif value.lower() == 'like':
+    elif value.lower() == "like":
         return options.from_like_context(ctx, param, value)
-    elif value.lower() == 'rgb':
+    elif value.lower() == "rgb":
         return ColorInterp.red, ColorInterp.green, ColorInterp.blue
-    elif value.lower() == 'rgba':
+    elif value.lower() == "rgba":
         return ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha
     else:
-        colorinterp = tuple(value.split(','))
+        colorinterp = tuple(value.split(","))
         for ci in colorinterp:
             if ci not in ColorInterp.__members__:
                 raise click.BadParameter(
                     "color interpretation '{ci}' is invalid.  Must be one of: "
-                    "{valid}".format(
-                        ci=ci, valid=', '.join(ColorInterp.__members__)))
+                    "{valid}".format(ci=ci, valid=", ".join(ColorInterp.__members__))
+                )
         return tuple(ColorInterp[ci] for ci in colorinterp)
 
 
-@click.command('edit-info', short_help="Edit dataset metadata.")
+@click.command("edit-info", short_help="Edit dataset metadata.")
 @options.file_in_arg
 @options.bidx_opt
 @options.edit_nodata_opt
-@click.option('--unset-nodata', default=False, is_flag=True,
-              help="Unset the dataset's nodata value.")
-@click.option('--crs', callback=crs_handler, default=None,
-              help="New coordinate reference system")
-@click.option('--unset-crs', default=False, is_flag=True,
-              help="Unset the dataset's CRS value.")
-@click.option('--transform', callback=transform_handler,
-              help="New affine transform matrix")
-@click.option('--units', help="Edit units of a band (requires --bidx)")
-@click.option('--description',
-              help="Edit description of a band (requires --bidx)")
-@click.option('--tag', 'tags', callback=tags_handler, multiple=True,
-              metavar='KEY=VAL', help="New tag.")
-@click.option('--all', 'allmd', callback=all_handler, flag_value='like',
-              is_eager=True,
-              help="Copy all metadata items from the template file.")
 @click.option(
-    '--colorinterp', callback=colorinterp_handler,
+    "--unset-nodata",
+    default=False,
+    is_flag=True,
+    help="Unset the dataset's nodata value.",
+)
+@click.option(
+    "--crs", callback=crs_handler, default=None, help="New coordinate reference system"
+)
+@click.option(
+    "--unset-crs", default=False, is_flag=True, help="Unset the dataset's CRS value."
+)
+@click.option(
+    "--transform", callback=transform_handler, help="New affine transform matrix"
+)
+@click.option("--units", help="Edit units of a band (requires --bidx)")
+@click.option("--description", help="Edit description of a band (requires --bidx)")
+@click.option(
+    "--tag",
+    "tags",
+    callback=tags_handler,
+    multiple=True,
+    metavar="KEY=VAL",
+    help="New tag.",
+)
+@click.option(
+    "--all",
+    "allmd",
+    callback=all_handler,
+    flag_value="like",
+    is_eager=True,
+    help="Copy all metadata items from the template file.",
+)
+@click.option(
+    "--colorinterp",
+    callback=colorinterp_handler,
     metavar="name[,name,...]|RGB|RGBA|like",
     help="Set color interpretation for all bands like 'red,green,blue,alpha'. "
-         "Can also use 'RGBA' as shorthand for 'red,green,blue,alpha' and "
-         "'RGB' for the same sans alpha band.  Use 'like' to inherit color "
-         "interpretation from '--like'.")
+    "Can also use 'RGBA' as shorthand for 'red,green,blue,alpha' and "
+    "'RGB' for the same sans alpha band.  Use 'like' to inherit color "
+    "interpretation from '--like'.",
+)
 @options.like_opt
 @click.pass_context
-def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
-         units, description, tags, allmd, like, colorinterp):
+def edit(
+    ctx,
+    input,
+    bidx,
+    nodata,
+    unset_nodata,
+    crs,
+    unset_crs,
+    transform,
+    units,
+    description,
+    tags,
+    allmd,
+    like,
+    colorinterp,
+):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -167,17 +202,16 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
     # If '--all' is given before '--like' on the commandline then 'allmd'
     # is the string 'like'.  This is caused by '--like' not having an
     # opportunity to populate metadata before '--all' is evaluated.
-    if allmd == 'like':
-        allmd = ctx.obj['like']
+    if allmd == "like":
+        allmd = ctx.obj["like"]
 
-    with ctx.obj['env'], rasterio.open(input, 'r+') as dst:
-
+    with ctx.obj["env"], rasterio.open(input, "r+") as dst:
         if allmd:
-            nodata = allmd['nodata']
-            crs = allmd['crs']
-            transform = allmd['transform']
-            tags = allmd['tags']
-            colorinterp = allmd['colorinterp']
+            nodata = allmd["nodata"]
+            crs = allmd["crs"]
+            transform = allmd["transform"]
+            tags = allmd["tags"]
+            colorinterp = allmd["colorinterp"]
 
         if unset_nodata and nodata is not None:
             raise click.BadParameter(
@@ -230,9 +264,8 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
                     "template and target images must have the same number "
                     "of bands.  Found {template} color interpretations for "
                     "template image and {target} bands in target "
-                    "image.".format(
-                        template=len(colorinterp),
-                        target=dst.count))
+                    "image.".format(template=len(colorinterp), target=dst.count)
+                )
             try:
                 dst.colorinterp = colorinterp
             except ValueError as e:
@@ -240,8 +273,9 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
 
     # Post check - ensure that crs was unset properly
     if unset_crs:
-        with ctx.obj['env'], rasterio.open(input, 'r') as src:
+        with ctx.obj["env"], rasterio.open(input, "r") as src:
             if src.crs:
                 warnings.warn(
-                    'CRS was not unset. Availability of his functionality '
-                    'differs depending on GDAL version and driver')
+                    "CRS was not unset. Availability of his functionality "
+                    "differs depending on GDAL version and driver"
+                )

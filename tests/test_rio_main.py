@@ -10,19 +10,19 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_version(runner):
-    result = runner.invoke(main_group, ['--version'])
+    result = runner.invoke(main_group, ["--version"])
     assert result.exit_code == 0
     assert parse(result.output.strip())
 
 
 def test_gdal_version(runner):
-    result = runner.invoke(main_group, ['--gdal-version'])
+    result = runner.invoke(main_group, ["--gdal-version"])
     assert result.exit_code == 0
     assert result.output.strip().startswith(("2", "3"))
 
 
 def test_show_versions(runner):
-    result = runner.invoke(main_group, ['--show-versions'])
+    result = runner.invoke(main_group, ["--show-versions"])
     assert result.exit_code == 0
     assert "System" in result.output
     assert "python" in result.output

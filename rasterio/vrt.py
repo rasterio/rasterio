@@ -102,15 +102,16 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin, TransformMethodsMixin):
     Examples
     --------
 
-    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
-    ...     with WarpedVRT(src, crs='EPSG:3857') as vrt:
+    >>> with rasterio.open("tests/data/RGB.byte.tif") as src:
+    ...     with WarpedVRT(src, crs="EPSG:3857") as vrt:
     ...         data = vrt.read()
 
     """
 
     def __repr__(self):
         return "<{} WarpedVRT name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
+            self.closed and "closed" or "open", self.name, self.mode
+        )
 
     def __enter__(self):
         self.start()
@@ -155,13 +156,13 @@ def _boundless_vrt_doc(
     height = height or src_dataset.height
     transform = transform or src_dataset.transform
 
-    vrtdataset = ET.Element('VRTDataset')
-    vrtdataset.attrib['rasterYSize'] = str(height)
-    vrtdataset.attrib['rasterXSize'] = str(width)
-    srs = ET.SubElement(vrtdataset, 'SRS')
+    vrtdataset = ET.Element("VRTDataset")
+    vrtdataset.attrib["rasterYSize"] = str(height)
+    vrtdataset.attrib["rasterXSize"] = str(width)
+    srs = ET.SubElement(vrtdataset, "SRS")
     srs.text = src_dataset.crs.wkt if src_dataset.crs else ""
-    geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
-    geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
+    geotransform = ET.SubElement(vrtdataset, "GeoTransform")
+    geotransform.text = ",".join([str(v) for v in transform.to_gdal()])
 
     for bidx, ci, block_shape, dtype in zip(
         src_dataset.indexes,
@@ -174,89 +175,101 @@ def _boundless_vrt_doc(
         vrtrasterband.attrib["band"] = str(bidx)
 
         if background is not None or nodata is not None:
-            nodatavalue = ET.SubElement(vrtrasterband, 'NoDataValue')
+            nodatavalue = ET.SubElement(vrtrasterband, "NoDataValue")
             nodatavalue.text = str(background or nodata)
 
             if hidenodata:
-                hidenodatavalue = ET.SubElement(vrtrasterband, 'HideNoDataValue')
+                hidenodatavalue = ET.SubElement(vrtrasterband, "HideNoDataValue")
                 hidenodatavalue.text = "1"
 
-        colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
+        colorinterp = ET.SubElement(vrtrasterband, "ColorInterp")
         colorinterp.text = ci.name.capitalize()
 
-        complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
+        complexsource = ET.SubElement(vrtrasterband, "ComplexSource")
         complexsource.attrib["resampling"] = resampling.name.replace("_", "")
-        sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
-        sourcefilename.attrib['relativeToVRT'] = "0"
+        sourcefilename = ET.SubElement(complexsource, "SourceFilename")
+        sourcefilename.attrib["relativeToVRT"] = "0"
         sourcefilename.attrib["shared"] = "0"
         sourcefilename.text = _parse_path(src_dataset.name).as_vsi()
-        sourceband = ET.SubElement(complexsource, 'SourceBand')
+        sourceband = ET.SubElement(complexsource, "SourceBand")
         sourceband.text = str(bidx)
-        sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
-        sourceproperties.attrib['RasterXSize'] = str(width)
-        sourceproperties.attrib['RasterYSize'] = str(height)
-        sourceproperties.attrib['dataType'] = _gdal_typename(dtype)
-        sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
-        sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
-        srcrect = ET.SubElement(complexsource, 'SrcRect')
-        srcrect.attrib['xOff'] = '0'
-        srcrect.attrib['yOff'] = '0'
-        srcrect.attrib['xSize'] = str(src_dataset.width)
-        srcrect.attrib['ySize'] = str(src_dataset.height)
-        dstrect = ET.SubElement(complexsource, 'DstRect')
-        dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
-        dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
-        dstrect.attrib['xSize'] = str(src_dataset.width * src_dataset.transform.a / transform.a)
-        dstrect.attrib['ySize'] = str(src_dataset.height * src_dataset.transform.e / transform.e)
+        sourceproperties = ET.SubElement(complexsource, "SourceProperties")
+        sourceproperties.attrib["RasterXSize"] = str(width)
+        sourceproperties.attrib["RasterYSize"] = str(height)
+        sourceproperties.attrib["dataType"] = _gdal_typename(dtype)
+        sourceproperties.attrib["BlockYSize"] = str(block_shape[0])
+        sourceproperties.attrib["BlockXSize"] = str(block_shape[1])
+        srcrect = ET.SubElement(complexsource, "SrcRect")
+        srcrect.attrib["xOff"] = "0"
+        srcrect.attrib["yOff"] = "0"
+        srcrect.attrib["xSize"] = str(src_dataset.width)
+        srcrect.attrib["ySize"] = str(src_dataset.height)
+        dstrect = ET.SubElement(complexsource, "DstRect")
+        dstrect.attrib["xOff"] = str(
+            (src_dataset.transform.xoff - transform.xoff) / transform.a
+        )
+        dstrect.attrib["yOff"] = str(
+            (src_dataset.transform.yoff - transform.yoff) / transform.e
+        )
+        dstrect.attrib["xSize"] = str(
+            src_dataset.width * src_dataset.transform.a / transform.a
+        )
+        dstrect.attrib["ySize"] = str(
+            src_dataset.height * src_dataset.transform.e / transform.e
+        )
 
         if nodata is not None:
-            nodata_elem = ET.SubElement(complexsource, 'NODATA')
+            nodata_elem = ET.SubElement(complexsource, "NODATA")
             nodata_elem.text = str(nodata)
 
         if src_dataset.options is not None:
-            openoptions = ET.SubElement(complexsource, 'OpenOptions')
+            openoptions = ET.SubElement(complexsource, "OpenOptions")
             for ookey, oovalue in src_dataset.options.items():
-                ooi = ET.SubElement(openoptions, 'OOI')
-                ooi.attrib['key'] = str(ookey)
+                ooi = ET.SubElement(openoptions, "OOI")
+                ooi.attrib["key"] = str(ookey)
                 ooi.text = str(oovalue)
 
         # Effectively replaces all values of the source dataset with
         # 255.  Due to GDAL optimizations, the source dataset will not
         # be read, so we get a performance improvement.
         if masked:
-            scaleratio = ET.SubElement(complexsource, 'ScaleRatio')
-            scaleratio.text = '0'
-            scaleoffset = ET.SubElement(complexsource, 'ScaleOffset')
-            scaleoffset.text = '255'
+            scaleratio = ET.SubElement(complexsource, "ScaleRatio")
+            scaleratio.text = "0"
+            scaleoffset = ET.SubElement(complexsource, "ScaleOffset")
+            scaleoffset.text = "255"
 
     if all(MaskFlags.per_dataset in flags for flags in src_dataset.mask_flag_enums):
-        maskband = ET.SubElement(vrtdataset, 'MaskBand')
-        vrtrasterband = ET.SubElement(maskband, 'VRTRasterBand')
-        vrtrasterband.attrib['dataType'] = 'Byte'
+        maskband = ET.SubElement(vrtdataset, "MaskBand")
+        vrtrasterband = ET.SubElement(maskband, "VRTRasterBand")
+        vrtrasterband.attrib["dataType"] = "Byte"
 
-        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
-        sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
-        sourcefilename.attrib['relativeToVRT'] = "0"
+        simplesource = ET.SubElement(vrtrasterband, "SimpleSource")
+        sourcefilename = ET.SubElement(simplesource, "SourceFilename")
+        sourcefilename.attrib["relativeToVRT"] = "0"
         sourcefilename.attrib["shared"] = "0"
         sourcefilename.text = _parse_path(src_dataset.name).as_vsi()
 
-        sourceband = ET.SubElement(simplesource, 'SourceBand')
-        sourceband.text = 'mask,1'
-        sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
-        sourceproperties.attrib['RasterXSize'] = str(width)
-        sourceproperties.attrib['RasterYSize'] = str(height)
-        sourceproperties.attrib['dataType'] = 'Byte'
-        sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
-        sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
-        srcrect = ET.SubElement(simplesource, 'SrcRect')
-        srcrect.attrib['xOff'] = '0'
-        srcrect.attrib['yOff'] = '0'
-        srcrect.attrib['xSize'] = str(src_dataset.width)
-        srcrect.attrib['ySize'] = str(src_dataset.height)
-        dstrect = ET.SubElement(simplesource, 'DstRect')
-        dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
-        dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
-        dstrect.attrib['xSize'] = str(src_dataset.width)
-        dstrect.attrib['ySize'] = str(src_dataset.height)
+        sourceband = ET.SubElement(simplesource, "SourceBand")
+        sourceband.text = "mask,1"
+        sourceproperties = ET.SubElement(simplesource, "SourceProperties")
+        sourceproperties.attrib["RasterXSize"] = str(width)
+        sourceproperties.attrib["RasterYSize"] = str(height)
+        sourceproperties.attrib["dataType"] = "Byte"
+        sourceproperties.attrib["BlockYSize"] = str(block_shape[0])
+        sourceproperties.attrib["BlockXSize"] = str(block_shape[1])
+        srcrect = ET.SubElement(simplesource, "SrcRect")
+        srcrect.attrib["xOff"] = "0"
+        srcrect.attrib["yOff"] = "0"
+        srcrect.attrib["xSize"] = str(src_dataset.width)
+        srcrect.attrib["ySize"] = str(src_dataset.height)
+        dstrect = ET.SubElement(simplesource, "DstRect")
+        dstrect.attrib["xOff"] = str(
+            (src_dataset.transform.xoff - transform.xoff) / transform.a
+        )
+        dstrect.attrib["yOff"] = str(
+            (src_dataset.transform.yoff - transform.yoff) / transform.e
+        )
+        dstrect.attrib["xSize"] = str(src_dataset.width)
+        dstrect.attrib["ySize"] = str(src_dataset.height)
 
-    return ET.tostring(vrtdataset).decode('ascii')
+    return ET.tostring(vrtdataset).decode("ascii")

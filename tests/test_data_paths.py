@@ -1,4 +1,5 @@
 """Tests of GDAL and PROJ data finding"""
+
 from rasterio._env import GDALDataFinder, PROJDataFinder
 
 

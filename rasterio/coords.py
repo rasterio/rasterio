@@ -2,11 +2,10 @@
 
 from collections import namedtuple
 
-BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
+BoundingBox = namedtuple("BoundingBox", ("left", "bottom", "right", "top"))
 
 # Required to properly document this namedtuple and its attributes
-BoundingBox.__doc__ = \
-    """Bounding box named tuple, defining extent in cartesian coordinates.
+BoundingBox.__doc__ = """Bounding box named tuple, defining extent in cartesian coordinates.
 
     .. code::
 
@@ -16,6 +15,7 @@ BoundingBox.left.__doc__ = "Left coordinate"
 BoundingBox.bottom.__doc__ = "Bottom coordinate"
 BoundingBox.right.__doc__ = "Right coordinate"
 BoundingBox.top.__doc__ = "Top coordinate"
+
 
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint.
@@ -42,8 +42,16 @@ def disjoint_bounds(bounds1, bounds2):
         raise ValueError("Bounds must both have the same orientation")
 
     if bounds1_north_up:
-        return (bounds1[0] > bounds2[2] or bounds2[0] > bounds1[2] or
-                bounds1[1] > bounds2[3] or bounds2[1] > bounds1[3])
+        return (
+            bounds1[0] > bounds2[2]
+            or bounds2[0] > bounds1[2]
+            or bounds1[1] > bounds2[3]
+            or bounds2[1] > bounds1[3]
+        )
     else:
-        return (bounds1[0] > bounds2[2] or bounds2[0] > bounds1[2] or
-                bounds1[3] > bounds2[1] or bounds2[3] > bounds1[1])
+        return (
+            bounds1[0] > bounds2[2]
+            or bounds2[0] > bounds1[2]
+            or bounds1[3] > bounds2[1]
+            or bounds2[3] > bounds1[1]
+        )

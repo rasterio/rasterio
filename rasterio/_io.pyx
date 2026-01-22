@@ -1372,8 +1372,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef const char *fname = NULL
-        cdef int flags = 0
-        cdef int sharing_flag = (0x20 if sharing else 0x0)
 
         # Validate write mode arguments.
         if mode in ('w', 'w+'):
@@ -1490,11 +1488,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if isinstance(driver, str):
                 driver = [driver]
 
-            # flags: Update + Raster + Errors
-            flags = 0x01 | sharing_flag | 0x40
-
             try:
-                self._hds = open_dataset(vsi_path, flags, driver, kwargs, None)
+                self._hds = open_dataset(
+                    filename=vsi_path,
+                    flags=GDAL_OF_UPDATE,
+                    allowed_drivers=driver,
+                    open_options=kwargs,
+                    sharing=sharing,
+                    siblings=None,
+                )
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 

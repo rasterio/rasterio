@@ -34,8 +34,17 @@ Advanced installation
 
 Once GDAL and its dependencies are installed on your computer (how to do this
 is documented at https://gdal.org) Rasterio can be built and installed using
-setuptools or pip. If your GDAL installation provides the ``gdal-config``
-program, the process is simpler.
+setuptools or pip.
+
+If your GDAL installation provides the ``gdal-config`` or ``gdalinfo`` programs, the process is simpler.
+
+How ``gdal-config`` and ``gdalinfo`` programs are searched for:
+
+- If the ``GDAL_CONFIG`` environment variable is set, its value is used as the path to the ``gdal-config`` program.
+  If the gdal-config program is on your executable path, then you don't need to set the environment variable.
+- It searches `sys.prefix` for the programs.
+- It searches the system PATH for the programs.
+
 
 Without pip:
 
@@ -51,10 +60,8 @@ With pip (version >= 22.3 is required):
     GDAL_CONFIG=/path/to/gdal-config python -m pip install --user --no-binary rasterio rasterio
 
 These are pretty much equivalent. Pip will use setuptools as the build backend.
-If the gdal-config program is on your executable path, then you don't need to
-set the environment variable.
 
-Without gdal-config you will need to configure header and library locations for
+Without ``gdal-config`` or ``gdalinfo`` you will need to configure header and library locations for
 the build in another way. One way to do this is to create a setup.cfg file in
 the source directory with content like this:
 

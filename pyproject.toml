@@ -41,7 +41,6 @@ dependencies = [
     "certifi",
     # Avoid https://github.com/pallets/click/issues/2939
     "click>=4.0,!=8.2.*",
-    "click-plugins",
     "cligj>=0.5",
     "numpy>=2",
     "pyparsing",
@@ -125,6 +124,9 @@ markers = [
     "wheel: marks test specific to wheel-building infra",
     "network: marks tests that require network access"
 ]
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint]
 select = [

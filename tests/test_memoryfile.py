@@ -1,9 +1,12 @@
 """MemoryFile tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 2.x"""
 
+from contextlib import nullcontext
 from io import BytesIO
-import os.path
 from pathlib import Path
+import concurrent.futures
+import os.path
+import platform
 
 from affine import Affine
 import numpy
@@ -12,25 +15,29 @@ import pytest
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
 from rasterio.enums import MaskFlags
+from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.shutil import copyfiles
 
 
 @pytest.fixture(scope="session")
 def rgb_file_bytes(path_rgb_byte_tif):
     """Get the bytes of our RGB.bytes.tif file"""
-    return open(path_rgb_byte_tif, "rb").read()
+    with open(path_rgb_byte_tif, "rb") as fh:
+        return fh.read()
 
 
 @pytest.fixture(scope="session")
 def rgb_lzw_file_bytes(path_rgb_lzw_byte_tif):
     """Get the bytes of our RGB.bytes.tif file"""
-    return open(path_rgb_lzw_byte_tif, "rb").read()
+    with open(path_rgb_lzw_byte_tif, "rb") as fh:
+        return fh.read()
 
 
 @pytest.fixture(scope="function")
 def rgb_file_object(path_rgb_byte_tif):
     """Get RGB.bytes.tif file opened in 'rb' mode"""
-    return open(path_rgb_byte_tif, "rb")
+    with open(path_rgb_byte_tif, "rb") as fh:
+        yield fh
 
 
 @pytest.fixture(scope="session")
@@ -255,6 +262,27 @@ def test_file_object_read_variant(rgb_file_bytes):
         assert src.read().shape == (3, 718, 791)
 
 
+@pytest.mark.skipif(
+    platform.system() in ["Windows", "Darwin"],
+    reason="https://github.com/rasterio/rasterio/issues/3499",
+)
+def test_memfile_thread_safe_option(rgb_file_object):
+    with (
+        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
+        if not _GDAL_AT_LEAST_3_10
+        else nullcontext(),
+        rasterio.Env(GDAL_NUM_THREADS=2),
+        rasterio.open(MemoryFile(rgb_file_object), thread_safe=True) as src,
+    ):
+
+        def process(window):
+            src.read(window=window).sum()
+
+        windows = [window for ij, window in src.block_windows()]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process, windows)
+
+
 def test_file_object_read_variant2(rgb_file_bytes):
     """An example of reading from a BytesIO object"""
     with rasterio.open(BytesIO(rgb_file_bytes)) as src:
@@ -396,9 +424,10 @@ def test_multi_memfile(path_rgb_msk_byte_tif):
     with open(path_rgb_msk_byte_tif + ".msk", "rb") as msk_fp:
         msk_bytes = msk_fp.read()
 
-    with MemoryFile(
-        tif_bytes, dirname="bar", filename="foo.tif"
-    ) as tifmemfile, MemoryFile(msk_bytes, dirname="bar", filename="foo.tif.msk"):
+    with (
+        MemoryFile(tif_bytes, dirname="bar", filename="foo.tif") as tifmemfile,
+        MemoryFile(msk_bytes, dirname="bar", filename="foo.tif.msk"),
+    ):
         with tifmemfile.open() as src:
             assert sorted(os.path.basename(fn) for fn in src.files) == sorted(
                 ["foo.tif", "foo.tif.msk"]

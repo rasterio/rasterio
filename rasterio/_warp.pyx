@@ -462,7 +462,7 @@ def _reproject(
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
 
-            dst_nodata = dst_nodata or src_nodata
+            dst_nodata = dst_nodata if dst_nodata is not None else src_nodata
 
             if hasattr(destination, "mask"):
                 destination = np.ma.asanyarray(destination)
@@ -752,7 +752,14 @@ def _calculate_default_transform(
         rpcs=rpcs,
     ).decode('utf-8')
 
-    hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+    hds = open_dataset(
+        filename=vrt_doc,
+        flags=GDAL_OF_READONLY,
+        allowed_drivers=['VRT'],
+        open_options={},
+        sharing=False,
+        siblings=None,
+    )
 
     with ExitStack() as exit_stack:
         try:

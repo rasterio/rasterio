@@ -218,6 +218,12 @@ cdef extern from "ogr_srs_api.h" nogil:
 
 cdef extern from "gdal.h" nogil:
 
+    const int GDAL_OF_READONLY
+    const int GDAL_OF_UPDATE
+    const int GDAL_OF_RASTER
+    const int GDAL_OF_SHARED
+    const int GDAL_OF_VERBOSE_ERROR
+
     ctypedef void * GDALMajorObjectH
     ctypedef void * GDALDatasetH
     ctypedef void * GDALRasterBandH
@@ -267,70 +273,46 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
-    cdef extern from "gdal.h" nogil:
-
-        ctypedef enum GDALColorInterp:
-            GCI_Undefined
-            GCI_GrayIndex
-            GCI_PaletteIndex
-            GCI_RedBand
-            GCI_GreenBand
-            GCI_BlueBand
-            GCI_AlphaBand
-            GCI_HueBand
-            GCI_SaturationBand
-            GCI_LightnessBand
-            GCI_CyanBand
-            GCI_YCbCr_YBand
-            GCI_YCbCr_CbBand
-            GCI_YCbCr_CrBand
-            GCI_PanBand
-            GCI_CoastalBand
-            GCI_RedEdgeBand
-            GCI_NIRBand
-            GCI_SWIRBand
-            GCI_MWIRBand
-            GCI_LWIRBand
-            GCI_TIRBand
-            GCI_OtherIRBand
-            GCI_IR_Reserved_1
-            GCI_IR_Reserved_2
-            GCI_IR_Reserved_3
-            GCI_IR_Reserved_4
-            GCI_SAR_Ka_Band
-            GCI_SAR_K_Band
-            GCI_SAR_Ku_Band
-            GCI_SAR_X_Band
-            GCI_SAR_C_Band
-            GCI_SAR_S_Band
-            GCI_SAR_L_Band
-            GCI_SAR_P_Band
-            GCI_SAR_Reserved_1
-            GCI_SAR_Reserved_2
-            GCI_Max
-ELSE:
-    cdef extern from "gdal.h" nogil:
-
-        ctypedef enum GDALColorInterp:
-            GCI_Undefined
-            GCI_GrayIndex
-            GCI_PaletteIndex
-            GCI_RedBand
-            GCI_GreenBand
-            GCI_BlueBand
-            GCI_AlphaBand
-            GCI_HueBand
-            GCI_SaturationBand
-            GCI_LightnessBand
-            GCI_CyanBand
-            GCI_YCbCr_YBand
-            GCI_YCbCr_CbBand
-            GCI_YCbCr_CrBand
-
-
-cdef extern from "gdal.h" nogil:
+    ctypedef enum GDALColorInterp:
+        GCI_Undefined
+        GCI_GrayIndex
+        GCI_PaletteIndex
+        GCI_RedBand
+        GCI_GreenBand
+        GCI_BlueBand
+        GCI_AlphaBand
+        GCI_HueBand
+        GCI_SaturationBand
+        GCI_LightnessBand
+        GCI_CyanBand
+        GCI_YCbCr_YBand
+        GCI_YCbCr_CbBand
+        GCI_YCbCr_CrBand
+        # below enums exist in GDAL 3.10+
+        GCI_PanBand
+        GCI_CoastalBand
+        GCI_RedEdgeBand
+        GCI_NIRBand
+        GCI_SWIRBand
+        GCI_MWIRBand
+        GCI_LWIRBand
+        GCI_TIRBand
+        GCI_OtherIRBand
+        GCI_IR_Reserved_1
+        GCI_IR_Reserved_2
+        GCI_IR_Reserved_3
+        GCI_IR_Reserved_4
+        GCI_SAR_Ka_Band
+        GCI_SAR_K_Band
+        GCI_SAR_Ku_Band
+        GCI_SAR_X_Band
+        GCI_SAR_C_Band
+        GCI_SAR_S_Band
+        GCI_SAR_L_Band
+        GCI_SAR_P_Band
+        GCI_SAR_Reserved_1
+        GCI_SAR_Reserved_2
+        GCI_Max
 
     ctypedef struct GDALColorEntry:
         short c1
@@ -381,7 +363,7 @@ cdef extern from "gdal.h" nogil:
     void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, GDALAccess access) # except -1
-    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, unsigned int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
     GDALDatasetH GDALOpenShared(const char *filename, GDALAccess access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
     void GDALClose(GDALDatasetH hds)
@@ -488,6 +470,11 @@ cdef extern from "gdal.h" nogil:
     int GDALReferenceDataset(GDALDatasetH hds)
     int GDALDereferenceDataset(GDALDatasetH hds)
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
+    cdef extern from "gdal.h" nogil:
+        const int GDAL_OF_THREAD_SAFE
+ELSE:
+    cdef int GDAL_OF_THREAD_SAFE = 0x800
 
 cdef extern from "ogr_api.h" nogil:
 

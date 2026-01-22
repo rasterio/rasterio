@@ -11,74 +11,92 @@ import rasterio
 from rasterio.enums import MergeAlg
 from rasterio.errors import WindowError, ShapeSkipWarning
 from rasterio.features import (
-    bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
-    shapes)
+    bounds,
+    geometry_mask,
+    geometry_window,
+    is_valid_geom,
+    rasterize,
+    sieve,
+    shapes,
+)
 
-from .conftest import MockGeoInterface, requires_gdal3_11, requires_gdal_lt_3_11, requires_gdal3_12_1, requires_gdal_lt_3_12_1
+from .conftest import (
+    MockGeoInterface,
+    requires_gdal3_11,
+    requires_gdal_lt_3_11,
+    requires_gdal3_12_1,
+    requires_gdal_lt_3_12_1,
+)
 
 DEFAULT_SHAPE = (10, 10)
 
 
 def test_bounds_point():
-    g = {'type': 'Point', 'coordinates': [10, 10]}
+    g = {"type": "Point", "coordinates": [10, 10]}
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
 
 def test_bounds_line():
-    g = {'type': 'LineString', 'coordinates': [[0, 0], [10, 10]]}
+    g = {"type": "LineString", "coordinates": [[0, 0], [10, 10]]}
     assert bounds(g) == (0, 0, 10, 10)
     assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
 
 def test_bounds_ring():
-    g = {'type': 'LinearRing', 'coordinates': [[0, 0], [10, 10], [10, 0]]}
+    g = {"type": "LinearRing", "coordinates": [[0, 0], [10, 10], [10, 0]]}
     assert bounds(g) == (0, 0, 10, 10)
     assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
 
 def test_bounds_polygon():
-    g = {'type': 'Polygon', 'coordinates': [[[0, 0], [10, 10], [10, 0]]]}
+    g = {"type": "Polygon", "coordinates": [[[0, 0], [10, 10], [10, 0]]]}
     assert bounds(g) == (0, 0, 10, 10)
     assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
 
 def test_bounds_z():
-    g = {'type': 'Point', 'coordinates': [10, 10, 10]}
+    g = {"type": "Point", "coordinates": [10, 10, 10]}
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
 
-@pytest.mark.parametrize('geometry', [
-    {'type': 'Polygon'},
-    {'type': 'Polygon', 'not_coordinates': []},
-    {'type': 'bogus', 'not_coordinates': []},
-    {
-        'type': 'GeometryCollection',
-        'geometries': [
-            {'type': 'Point', 'coordinates': [1, 1]},
-            {'type': 'LineString', 'not_coordinates': [[-10, -20], [10, 20]]},
-        ]
-    }
-])
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {"type": "Polygon"},
+        {"type": "Polygon", "not_coordinates": []},
+        {"type": "bogus", "not_coordinates": []},
+        {
+            "type": "GeometryCollection",
+            "geometries": [
+                {"type": "Point", "coordinates": [1, 1]},
+                {"type": "LineString", "not_coordinates": [[-10, -20], [10, 20]]},
+            ],
+        },
+    ],
+)
 def test_bounds_invalid_obj(geometry):
-    with pytest.raises(ValueError, match="geometry must be a GeoJSON-like geometry, GeometryCollection, or FeatureCollection"):
+    with pytest.raises(
+        ValueError,
+        match="geometry must be a GeoJSON-like geometry, GeometryCollection, or FeatureCollection",
+    ):
         bounds(geometry)
 
 
 def test_bounds_feature_collection(basic_featurecollection):
     fc = basic_featurecollection
-    assert bounds(fc) == bounds(fc['features'][0]) == (2, 2, 4.25, 4.25)
+    assert bounds(fc) == bounds(fc["features"][0]) == (2, 2, 4.25, 4.25)
 
 
 def test_bounds_geometry_collection():
     gc = {
-        'type': 'GeometryCollection',
-        'geometries': [
-            {'type': 'Point', 'coordinates': [1, 1]},
-            {'type': 'LineString', 'coordinates': [[-10, -20], [10, 20]]},
-            {'type': 'Polygon', 'coordinates': [[[5, 5], [25, 50], [25, 5]]]}
-        ]
+        "type": "GeometryCollection",
+        "geometries": [
+            {"type": "Point", "coordinates": [1, 1]},
+            {"type": "LineString", "coordinates": [[-10, -20], [10, 20]]},
+            {"type": "Polygon", "coordinates": [[[5, 5], [25, 50], [25, 5]]]},
+        ],
     }
 
     assert bounds(gc) == (-10, -20, 25, 50)
@@ -92,10 +110,10 @@ def test_bounds_existing_bbox(basic_featurecollection):
     for testing, bboxes are not valid as written.
     """
     fc = basic_featurecollection
-    fc['bbox'] = [0, 10, 10, 20]
-    fc['features'][0]['bbox'] = [0, 100, 10, 200]
+    fc["bbox"] = [0, 10, 10, 20]
+    fc["features"][0]["bbox"] = [0, 100, 10, 200]
 
-    assert bounds(fc['features'][0]) == (0, 100, 10, 200)
+    assert bounds(fc["features"][0]) == (0, 100, 10, 200)
     assert bounds(fc) == (0, 10, 10, 20)
 
 
@@ -103,10 +121,8 @@ def test_geometry_mask(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         basic_image_2x2 == 0,
         geometry_mask(
-            [basic_geometry],
-            out_shape=DEFAULT_SHAPE,
-            transform=Affine.identity()
-        )
+            [basic_geometry], out_shape=DEFAULT_SHAPE, transform=Affine.identity()
+        ),
     )
 
 
@@ -117,8 +133,8 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
             [basic_geometry],
             out_shape=DEFAULT_SHAPE,
             transform=Affine.identity(),
-            invert=True
-        )
+            invert=True,
+        ),
     )
 
 
@@ -130,9 +146,8 @@ def test_geometry_invalid_geom(geom):
     """An invalid geometry should fail"""
     with pytest.warns(ShapeSkipWarning):
         mask = geometry_mask(
-            [geom],
-            out_shape=DEFAULT_SHAPE,
-            transform=Affine.identity())
+            [geom], out_shape=DEFAULT_SHAPE, transform=Affine.identity()
+        )
 
     assert mask.shape == DEFAULT_SHAPE
     assert np.all(mask)
@@ -144,19 +159,15 @@ def test_geometry_mask_invalid_shape(basic_geometry):
     for shape in [(0, 0), (1, 0), (0, 1)]:
         with pytest.raises(ValueError) as exc_info:
             geometry_mask(
-                [basic_geometry],
-                out_shape=shape,
-                transform=Affine.identity())
+                [basic_geometry], out_shape=shape, transform=Affine.identity()
+            )
 
-        assert 'must be > 0' in exc_info.value.args[0]
+        assert "must be > 0" in exc_info.value.args[0]
 
 
 def test_geometry_mask_no_transform(basic_geometry):
     with pytest.raises(TypeError):
-        geometry_mask(
-            [basic_geometry],
-            out_shape=DEFAULT_SHAPE,
-            transform=None)
+        geometry_mask([basic_geometry], out_shape=DEFAULT_SHAPE, transform=None)
 
 
 def test_geometry_window_no_pad(basic_image_file, basic_geometry):
@@ -175,12 +186,16 @@ def test_geometry_window_pixel_precision(basic_image_file):
     """Window offsets should be floor, width and height ceiling"""
 
     geom2 = {
-        'type': 'Polygon',
-        'coordinates': [[
-            (1.99999, 2),
-            (1.99999, 4.0001), (4.0001, 4.0001), (4.0001, 2),
-            (1.99999, 2)
-        ]]
+        "type": "Polygon",
+        "coordinates": [
+            [
+                (1.99999, 2),
+                (1.99999, 4.0001),
+                (4.0001, 4.0001),
+                (4.0001, 2),
+                (1.99999, 2),
+            ]
+        ],
     }
 
     with rasterio.open(basic_image_file) as src:
@@ -190,14 +205,16 @@ def test_geometry_window_pixel_precision(basic_image_file):
 
 def test_geometry_window_north_up(path_rgb_byte_tif):
     geometry = {
-        'type': 'Polygon',
-        'coordinates': [[
-            (200000, 2700000),
-            (200000, 2750000),
-            (250000, 2750000),
-            (250000, 2700000),
-            (200000, 2700000)
-        ]]
+        "type": "Polygon",
+        "coordinates": [
+            [
+                (200000, 2700000),
+                (200000, 2750000),
+                (250000, 2750000),
+                (250000, 2700000),
+                (200000, 2700000),
+            ]
+        ],
     }
 
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -220,7 +237,13 @@ def test_geometry_window_rotated_boundless():
     geometry = {
         "type": "Polygon",
         "coordinates": [
-            [(-2.0, -2.0), (-2.0, 2.0), (2.0, 2.0), (2.0, -2.0), (-2.0, -2.0),]
+            [
+                (-2.0, -2.0),
+                (-2.0, 2.0),
+                (2.0, 2.0),
+                (2.0, -2.0),
+                (-2.0, -2.0),
+            ]
         ],
     }
 
@@ -249,14 +272,10 @@ def test_geometry_window_pad(basic_image_file, basic_geometry):
 
 def test_geometry_window_large_shapes(basic_image_file):
     geometry = {
-        'type': 'Polygon',
-        'coordinates': [[
-            (-2000, -2000),
-            (-2000, 2000),
-            (2000, 2000),
-            (2000, -2000),
-            (-2000, -2000)
-        ]]
+        "type": "Polygon",
+        "coordinates": [
+            [(-2000, -2000), (-2000, 2000), (2000, 2000), (2000, -2000), (-2000, -2000)]
+        ],
     }
 
     with rasterio.open(basic_image_file) as src:
@@ -282,7 +301,7 @@ def test_is_valid_geom_point(geojson_point):
     assert is_valid_geom(geojson_point)
 
     # Empty coordinates are invalid
-    geojson_point['coordinates'] = []
+    geojson_point["coordinates"] = []
     assert not is_valid_geom(geojson_point)
 
 
@@ -292,12 +311,12 @@ def test_is_valid_geom_multipoint(geojson_multipoint):
 
     # Empty iterable is invalid
     geom = deepcopy(geojson_multipoint)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_multipoint)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
 
 
 def test_is_valid_geom_line(geojson_line):
@@ -307,12 +326,12 @@ def test_is_valid_geom_line(geojson_line):
 
     # Empty iterable is invalid
     geom = deepcopy(geojson_line)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_line)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
 
 
 def test_is_valid_geom_multiline(geojson_line):
@@ -322,16 +341,16 @@ def test_is_valid_geom_multiline(geojson_line):
 
     # Empty iterables are invalid
     geom = deepcopy(geojson_line)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     geom = deepcopy(geojson_line)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
     assert not is_valid_geom(geom)
 
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_line)
-    geom['coordinates'] = [[[]]]
+    geom["coordinates"] = [[[]]]
     assert not is_valid_geom(geom)
 
 
@@ -342,34 +361,34 @@ def test_is_valid_geom_polygon(geojson_polygon):
 
     # Empty iterables are invalid
     geom = deepcopy(geojson_polygon)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     geom = deepcopy(geojson_polygon)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
     assert not is_valid_geom(geom)
 
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_polygon)
-    geom['coordinates'] = [[[]]]
+    geom["coordinates"] = [[[]]]
     assert not is_valid_geom(geom)
 
 
 def test_is_valid_geom_ring(geojson_polygon):
     """Properly formed GeoJSON LinearRing is valid"""
     geojson_ring = deepcopy(geojson_polygon)
-    geojson_ring['type'] = 'LinearRing'
+    geojson_ring["type"] = "LinearRing"
     # take first ring from polygon as sample
-    geojson_ring['coordinates'] = geojson_ring['coordinates'][0]
+    geojson_ring["coordinates"] = geojson_ring["coordinates"][0]
     assert is_valid_geom(geojson_ring)
 
     # Empty iterables are invalid
     geom = deepcopy(geojson_ring)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     geom = deepcopy(geojson_ring)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
     assert not is_valid_geom(geom)
 
 
@@ -380,20 +399,20 @@ def test_is_valid_geom_multipolygon(geojson_multipolygon):
 
     # Empty iterables are invalid
     geom = deepcopy(geojson_multipolygon)
-    geom['coordinates'] = []
+    geom["coordinates"] = []
     assert not is_valid_geom(geom)
 
     geom = deepcopy(geojson_multipolygon)
-    geom['coordinates'] = [[]]
+    geom["coordinates"] = [[]]
     assert not is_valid_geom(geom)
 
     geom = deepcopy(geojson_multipolygon)
-    geom['coordinates'] = [[[]]]
+    geom["coordinates"] = [[[]]]
     assert not is_valid_geom(geom)
 
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_multipolygon)
-    geom['coordinates'] = [[[[]]]]
+    geom["coordinates"] = [[[[]]]]
     assert not is_valid_geom(geom)
 
 
@@ -404,24 +423,23 @@ def test_is_valid_geom_geomcollection(geojson_geomcollection):
 
     # Empty GeometryCollection is invalid
     geom = deepcopy(geojson_geomcollection)
-    geom['geometries'] = []
+    geom["geometries"] = []
     assert not is_valid_geom(geom)
 
 
-@pytest.mark.parametrize("geom", [None, 1, "foo", "type", ["type"], {"type": "Invalid"}, {"type": "Point"}])
+@pytest.mark.parametrize(
+    "geom", [None, 1, "foo", "type", ["type"], {"type": "Invalid"}, {"type": "Point"}]
+)
 def test_is_valid_geom_invalid_inputs(geom):
     """Improperly formed GeoJSON objects should fail"""
     assert not is_valid_geom(geom)
 
 
 def test_rasterize_point(geojson_point):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[2, 2] = 1
 
-    assert np.array_equal(
-        rasterize([geojson_point], out_shape=DEFAULT_SHAPE),
-        expected
-    )
+    assert np.array_equal(rasterize([geojson_point], out_shape=DEFAULT_SHAPE), expected)
 
 
 def test_rasterize_to_dataset(tmp_path, geojson_point):
@@ -476,14 +494,11 @@ def test_rasterize_point_dtype_int(geojson_point):
     expected = np.zeros(shape=DEFAULT_SHAPE, dtype=int)
     expected[2, 2] = 1
 
-    assert np.array_equal(
-        rasterize([geojson_point], out_shape=DEFAULT_SHAPE),
-        expected
-    )
+    assert np.array_equal(rasterize([geojson_point], out_shape=DEFAULT_SHAPE), expected)
 
 
 def test_rasterize_multipoint(geojson_multipoint):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[2, 2] = 1
     expected[4, 4] = 1
 
@@ -504,63 +519,56 @@ def test_rasterize_multipoint_masked(geojson_multipoint):
 
 
 def test_rasterize_line(geojson_line):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[2, 2] = 1
     expected[3, 3] = 1
     expected[4, 4] = 1
 
-    assert np.array_equal(
-        rasterize([geojson_line], out_shape=DEFAULT_SHAPE),
-        expected
-    )
+    assert np.array_equal(rasterize([geojson_line], out_shape=DEFAULT_SHAPE), expected)
 
 
 def test_rasterize_multiline(geojson_multiline):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[2, 2] = 1
     expected[3, 3] = 1
     expected[4, 4] = 1
     expected[0, 0:5] = 1
 
     assert np.array_equal(
-        rasterize([geojson_multiline], out_shape=DEFAULT_SHAPE),
-        expected
+        rasterize([geojson_multiline], out_shape=DEFAULT_SHAPE), expected
     )
 
 
 def test_rasterize_polygon(geojson_polygon, basic_image_2x2):
     assert np.array_equal(
-        rasterize([geojson_polygon], out_shape=DEFAULT_SHAPE),
-        basic_image_2x2
+        rasterize([geojson_polygon], out_shape=DEFAULT_SHAPE), basic_image_2x2
     )
 
 
 def test_rasterize_multipolygon(geojson_multipolygon):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[0:1, 0:1] = 1
     expected[2:4, 2:4] = 1
 
     assert np.array_equal(
-        rasterize([geojson_multipolygon], out_shape=DEFAULT_SHAPE),
-        expected
+        rasterize([geojson_multipolygon], out_shape=DEFAULT_SHAPE), expected
     )
 
 
 def test_rasterize_geomcollection(geojson_geomcollection):
-    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[0:1, 0:1] = 1
     expected[2:4, 2:4] = 1
 
     assert np.array_equal(
-        rasterize([geojson_geomcollection], out_shape=DEFAULT_SHAPE),
-        expected
+        rasterize([geojson_geomcollection], out_shape=DEFAULT_SHAPE), expected
     )
 
 
 def test_rasterize_geo_interface(geojson_polygon, basic_image_2x2):
     assert np.array_equal(
         rasterize([MockGeoInterface(geojson_polygon)], out_shape=DEFAULT_SHAPE),
-        basic_image_2x2
+        basic_image_2x2,
     )
 
 
@@ -572,18 +580,24 @@ def test_rasterize_geomcollection_no_hole():
     and should result in no holes where parts overlap.
     """
 
-    geomcollection = {'type': 'GeometryCollection', 'geometries': [
-        {'type': 'Polygon',
-            'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
-        {'type': 'Polygon',
-            'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
-    ]}
+    geomcollection = {
+        "type": "GeometryCollection",
+        "geometries": [
+            {
+                "type": "Polygon",
+                "coordinates": (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),),
+            },
+            {
+                "type": "Polygon",
+                "coordinates": (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),),
+            },
+        ],
+    }
 
-    expected = rasterize(geomcollection['geometries'], out_shape=DEFAULT_SHAPE)
+    expected = rasterize(geomcollection["geometries"], out_shape=DEFAULT_SHAPE)
 
     assert np.array_equal(
-        rasterize([geomcollection], out_shape=DEFAULT_SHAPE),
-        expected
+        rasterize([geomcollection], out_shape=DEFAULT_SHAPE), expected
     )
 
 
@@ -598,17 +612,16 @@ def test_rasterize_multipolygon_no_hole():
     poly1 = (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)
     poly2 = (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)
 
-    polys = [{'type': 'Polygon', 'coordinates': poly1},
-             {'type': 'Polygon', 'coordinates': poly2}]
+    polys = [
+        {"type": "Polygon", "coordinates": poly1},
+        {"type": "Polygon", "coordinates": poly2},
+    ]
 
-    multipoly = {'type': 'MultiPolygon', 'coordinates': [poly1, poly2]}
+    multipoly = {"type": "MultiPolygon", "coordinates": [poly1, poly2]}
 
     expected = rasterize(polys, out_shape=DEFAULT_SHAPE)
 
-    assert np.array_equal(
-        rasterize([multipoly], out_shape=DEFAULT_SHAPE),
-        expected
-    )
+    assert np.array_equal(rasterize([multipoly], out_shape=DEFAULT_SHAPE), expected)
 
 
 @pytest.mark.parametrize(
@@ -641,7 +654,9 @@ def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
     assert np.array_equal(out, basic_image_2x2)
 
 
-@pytest.mark.parametrize("dtype", [
+@pytest.mark.parametrize(
+    "dtype",
+    [
         None,
         "int8",
         "uint8",
@@ -655,8 +670,9 @@ def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
             marks=requires_gdal3_11,
         ),
         "float32",
-        "float64"
-])
+        "float64",
+    ],
+)
 def test_rasterize_out_image(dtype, basic_geometry, basic_image_2x2):
     """Rasterize operation should succeed for an out image."""
     out = np.zeros(DEFAULT_SHAPE, dtype=dtype)
@@ -696,13 +712,13 @@ def test_rasterize_missing_shapes():
 def test_rasterize_invalid_shapes_skip():
     """Invalid shapes can be skipped with a warning, the default."""
     with pytest.warns(ShapeSkipWarning):
-        rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
+        rasterize([{"foo": "bar"}], out_shape=DEFAULT_SHAPE)
 
 
 def test_rasterize_invalid_shapes_no_skip():
     """Invalid shapes can raise an exception rather than be skipped."""
     with pytest.raises(ValueError):
-        rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE, skip_invalid=False)
+        rasterize([{"foo": "bar"}], out_shape=DEFAULT_SHAPE, skip_invalid=False)
 
 
 @pytest.mark.parametrize("shape", [(1, 10, 10), (10,)])
@@ -713,7 +729,7 @@ def test_rasterize_invalid_out_shape(basic_geometry, shape):
 
     with pytest.raises(ValueError) as ex:
         rasterize([basic_geometry], out_shape=(10,))
-    assert 'Invalid out_shape' in str(ex.value)
+    assert "Invalid out_shape" in str(ex.value)
 
 
 @pytest.mark.parametrize("shape", [(0, 0), (1, 0), (0, 1)])
@@ -731,9 +747,8 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         truth,
         rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE,
-            default_value=default_value
-        )
+            [basic_geometry], out_shape=DEFAULT_SHAPE, default_value=default_value
+        ),
     )
 
 
@@ -755,9 +770,11 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         basic_image_2x2 + 1,
         rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1,
-            default_value=default_value
-        )
+            [basic_geometry],
+            out_shape=DEFAULT_SHAPE,
+            fill=1,
+            default_value=default_value,
+        ),
     )
 
 
@@ -772,9 +789,7 @@ def test_rasterize_invalid_fill_value(basic_geometry):
 def test_rasterize_all_touched(basic_geometry, basic_image):
     assert np.array_equal(
         basic_image,
-        rasterize(
-            [basic_geometry], out_shape=DEFAULT_SHAPE, all_touched=True
-        )
+        rasterize([basic_geometry], out_shape=DEFAULT_SHAPE, all_touched=True),
     )
 
 
@@ -787,8 +802,10 @@ def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
         assert np.array_equal(
             basic_image_2x2x2,
             rasterize(
-                [basic_geometry, basic_geometry], merge_alg=MergeAlg.add,
-                out_shape=DEFAULT_SHAPE)
+                [basic_geometry, basic_geometry],
+                merge_alg=MergeAlg.add,
+                out_shape=DEFAULT_SHAPE,
+            ),
         )
 
 
@@ -800,9 +817,7 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     value = 5
     assert np.array_equal(
         basic_image_2x2 * value,
-        rasterize(
-            [(basic_geometry, value)], out_shape=DEFAULT_SHAPE
-        )
+        rasterize([(basic_geometry, value)], out_shape=DEFAULT_SHAPE),
     )
 
 
@@ -896,10 +911,8 @@ def test_shapes(basic_image):
 
     shape, value = results[0]
     assert shape == {
-        'coordinates': [
-            [(2, 2), (2, 5), (5, 5), (5, 2), (2, 2)]
-        ],
-        'type': 'Polygon'
+        "coordinates": [[(2, 2), (2, 5), (5, 5), (5, 2), (2, 2)]],
+        "type": "Polygon",
     }
     assert value == 1
 
@@ -921,10 +934,8 @@ def test_shapes_2509(basic_image):
 
     shape, value = results[0]
     assert shape == {
-        'coordinates': [
-            [(2, 2), (2, 5), (5, 5), (5, 2), (2, 2)]
-        ],
-        'type': 'Polygon'
+        "coordinates": [[(2, 2), (2, 5), (5, 5), (5, 2), (2, 2)]],
+        "type": "Polygon",
     }
     assert value == 1
 
@@ -978,10 +989,8 @@ def test_shapes_mask(basic_image):
 
     shape, value = results[0]
     assert shape == {
-        'coordinates': [
-            [(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]
-        ],
-        'type': 'Polygon'
+        "coordinates": [[(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]],
+        "type": "Polygon",
     }
     assert value == 1
 
@@ -997,10 +1006,8 @@ def test_shapes_masked_array(basic_image):
 
     shape, value = results[0]
     assert shape == {
-        'coordinates': [
-            [(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]
-        ],
-        'type': 'Polygon'
+        "coordinates": [[(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]],
+        "type": "Polygon",
     }
     assert value == 1
 
@@ -1008,34 +1015,32 @@ def test_shapes_masked_array(basic_image):
 def test_shapes_blank_mask(basic_image):
     """Mask is blank so results should mask shapes without mask."""
     assert np.array_equal(
-        list(shapes(
-            basic_image,
-            mask=np.ones(basic_image.shape, dtype=rasterio.bool_))
+        list(
+            shapes(basic_image, mask=np.ones(basic_image.shape, dtype=rasterio.bool_))
         ),
-        list(shapes(basic_image))
+        list(shapes(basic_image)),
     )
 
 
 def test_shapes_invalid_mask_shape(basic_image):
     """A mask that is the wrong shape should fail."""
     with pytest.raises(ValueError):
-        next(shapes(
-            basic_image,
-            mask=np.ones(
-                (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
-                dtype=rasterio.bool_
+        next(
+            shapes(
+                basic_image,
+                mask=np.ones(
+                    (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
+                    dtype=rasterio.bool_,
+                ),
             )
-        ))
+        )
 
 
 def test_shapes_invalid_mask_dtype(basic_image):
     """A mask that is the wrong dtype should fail."""
-    for dtype in ('int8', 'int16', 'int32'):
+    for dtype in ("int8", "int16", "int32"):
         with pytest.raises(ValueError):
-            next(shapes(
-                basic_image,
-                mask=np.ones(basic_image.shape, dtype=dtype)
-            ))
+            next(shapes(basic_image, mask=np.ones(basic_image.shape, dtype=dtype)))
 
 
 @pytest.mark.parametrize(
@@ -1071,6 +1076,7 @@ def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
         shape, value = next(shapes(basic_image.astype(dtype) * test_value))
         assert_allclose(value, test_value)
 
+
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
@@ -1085,7 +1091,7 @@ def test_shapes_unsupported_dtypes(basic_image, dtype, test_value):
 
 def test_shapes_internal_driver_manager(basic_image):
     """Shapes should work without explicitly calling driver manager."""
-    assert next(shapes(basic_image))[0]['type'] == 'Polygon'
+    assert next(shapes(basic_image))[0]["type"] == "Polygon"
 
 
 def test_sieve_small(basic_image, pixelated_image):
@@ -1093,10 +1099,7 @@ def test_sieve_small(basic_image, pixelated_image):
     Setting the size smaller than or equal to the size of the feature in the
     image should not change the image.
     """
-    assert np.array_equal(
-        basic_image,
-        sieve(pixelated_image, basic_image.sum())
-    )
+    assert np.array_equal(basic_image, sieve(pixelated_image, basic_image.sum()))
 
 
 def test_sieve_large(basic_image):
@@ -1114,16 +1117,13 @@ def test_sieve_invalid_size(basic_image):
 
 def test_sieve_connectivity_rook(diagonal_image):
     """Diagonals are not connected, so feature is removed."""
-    assert not np.any(
-        sieve(diagonal_image, diagonal_image.sum(), connectivity=4)
-    )
+    assert not np.any(sieve(diagonal_image, diagonal_image.sum(), connectivity=4))
 
 
 def test_sieve_connectivity_queen(diagonal_image):
     """Diagonals are connected, so feature is retained."""
     assert np.array_equal(
-        diagonal_image,
-        sieve(diagonal_image, diagonal_image.sum(), connectivity=8)
+        diagonal_image, sieve(diagonal_image, diagonal_image.sum(), connectivity=8)
     )
 
 
@@ -1145,17 +1145,19 @@ def test_sieve_invalid_out(basic_image):
     """Output with different dtype or shape should fail."""
     with pytest.raises(ValueError):
         sieve(
-            basic_image, basic_image.sum(),
-            out=np.zeros(basic_image.shape, dtype=rasterio.int32)
+            basic_image,
+            basic_image.sum(),
+            out=np.zeros(basic_image.shape, dtype=rasterio.int32),
         )
 
     with pytest.raises(ValueError):
         sieve(
-            basic_image, basic_image.sum(),
+            basic_image,
+            basic_image.sum(),
             out=np.zeros(
                 (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
-                dtype=rasterio.ubyte
-            )
+                dtype=rasterio.ubyte,
+            ),
         )
 
 
@@ -1171,24 +1173,15 @@ def test_sieve_mask(basic_image):
     sieved_image = sieve(basic_image, basic_image.sum(), mask=mask)
     assert sieved_image.sum() > 0
 
-    assert np.array_equal(
-        truth,
-        sieved_image
-    )
+    assert np.array_equal(truth, sieved_image)
 
-    assert np.array_equal(
-        truth.astype(rasterio.uint8),
-        sieved_image
-    )
+    assert np.array_equal(truth.astype(rasterio.uint8), sieved_image)
 
 
 def test_sieve_blank_mask(basic_image):
     """A blank mask should have no effect."""
     mask = np.ones(basic_image.shape, dtype=rasterio.bool_)
-    assert np.array_equal(
-        basic_image,
-        sieve(basic_image, basic_image.sum(), mask=mask)
-    )
+    assert np.array_equal(basic_image, sieve(basic_image, basic_image.sum(), mask=mask))
 
 
 @pytest.mark.xfail(reason="Upstream bug in GDAL, see #3074.")
@@ -1197,41 +1190,40 @@ def test_sieve_all_masked(basic_image):
     mask = np.full(basic_image.shape, False)
     # mask[-1, -1] = True
     sieved = sieve(basic_image, basic_image.sum(), mask=mask)
-    assert np.array_equal(
-        basic_image,
-        sieved
-    )
+    assert np.array_equal(basic_image, sieved)
 
 
 def test_sieve_invalid_mask_shape(basic_image):
     """A mask that is the wrong shape should fail."""
     with pytest.raises(ValueError):
         sieve(
-            basic_image, basic_image.sum(),
+            basic_image,
+            basic_image.sum(),
             mask=np.ones(
                 (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
-                dtype=rasterio.bool_
-            )
+                dtype=rasterio.bool_,
+            ),
         )
 
 
 def test_sieve_invalid_mask_dtype(basic_image):
     """A mask that is the wrong dtype should fail."""
-    for dtype in ('int8', 'int16', 'int32'):
+    for dtype in ("int8", "int16", "int32"):
         with pytest.raises(ValueError):
             sieve(
-                basic_image, basic_image.sum(),
-                mask=np.ones(basic_image.shape, dtype=dtype)
+                basic_image,
+                basic_image.sum(),
+                mask=np.ones(basic_image.shape, dtype=dtype),
             )
 
 
 def test_sieve_supported_dtypes(basic_image):
     """Supported data types should return valid results."""
     supported_types = (
-        ('int16', -32768),
-        ('int32', -2147483648),
-        ('uint8', 255),
-        ('uint16', 65535)
+        ("int16", -32768),
+        ("int32", -2147483648),
+        ("uint8", 255),
+        ("uint16", 65535),
     )
 
     for dtype, test_value in supported_types:
@@ -1244,20 +1236,17 @@ def test_sieve_supported_dtypes(basic_image):
 def test_sieve_unsupported_dtypes(basic_image):
     """Unsupported data types should raise exceptions."""
     unsupported_types = (
-        ('int8', -127),
-        ('uint32', 4294967295),
-        ('int64', 20439845334323),
-        ('float16', -9343.232),
-        ('float32', 1.434532),
-        ('float64', -98332.133422114)
+        ("int8", -127),
+        ("uint32", 4294967295),
+        ("int64", 20439845334323),
+        ("float16", -9343.232),
+        ("float32", 1.434532),
+        ("float64", -98332.133422114),
     )
 
     for dtype, test_value in unsupported_types:
         with pytest.raises(ValueError):
-            sieve(
-                (basic_image).astype(dtype) * test_value,
-                basic_image.sum()
-            )
+            sieve((basic_image).astype(dtype) * test_value, basic_image.sum())
 
 
 def test_sieve_band(pixelated_image, pixelated_image_file):
@@ -1270,18 +1259,12 @@ def test_sieve_band(pixelated_image, pixelated_image_file):
         assert np.array_equal(truth, sieve(band, 9))
 
         # Mask band should also work but will be a no-op
-        assert np.array_equal(
-            pixelated_image,
-            sieve(band, 9, mask=band)
-        )
+        assert np.array_equal(pixelated_image, sieve(band, 9, mask=band))
 
 
 def test_sieve_internal_driver_manager(capfd, basic_image, pixelated_image):
     """Sieve should work without explicitly calling driver manager."""
-    assert np.array_equal(
-        basic_image,
-        sieve(pixelated_image, basic_image.sum())
-    )
+    assert np.array_equal(basic_image, sieve(pixelated_image, basic_image.sum()))
 
 
 def test_zz_no_dataset_leaks(capfd):
@@ -1301,7 +1284,7 @@ def test_sieve_bands(pixelated_image, pixelated_image_file):
         # Mask band should also work but will be a no-op
         assert np.array_equal(
             pixelated_image,
-            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1))
+            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1)),
         )
 
 
@@ -1314,6 +1297,5 @@ def test_sieve_dataset(pixelated_image, pixelated_image_file):
 
         # Mask band should also work but will be a no-op
         assert np.array_equal(
-            pixelated_image,
-            sieve(src, 9, mask=rasterio.band(src, 1))
+            pixelated_image, sieve(src, 9, mask=rasterio.band(src, 1))
         )

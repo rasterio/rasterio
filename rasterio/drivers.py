@@ -9,6 +9,7 @@ NetCDF writing, for example, is presently blacklisted. Rasterio users
 should use netcdf4-python instead:
 http://unidata.github.io/netcdf4-python/.
 """
+
 import os
 
 from rasterio._base import _raster_driver_extensions
@@ -19,7 +20,8 @@ from rasterio.env import ensure_env
 blacklist = {
     # See https://github.com/rasterio/rasterio/issues/638 for discussion
     # about writing NetCDF files.
-    'netCDF': ('r+', 'w')}
+    "netCDF": ("r+", "w")
+}
 
 
 @ensure_env

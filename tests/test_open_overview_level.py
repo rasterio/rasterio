@@ -14,5 +14,7 @@ def test_overview_levels(path_cogeo_tif):
             assert src.shape == (256, 256)
 
             olevel = 2
-            with rasterio.open(path_cogeo_tif, sharing=False, overview_level=olevel) as src:
+            with rasterio.open(
+                path_cogeo_tif, sharing=False, overview_level=olevel
+            ) as src:
                 assert src.shape == (128, 128)

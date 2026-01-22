@@ -24,7 +24,6 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
- # contents: write
   actions: read
 
 env:
@@ -141,7 +140,7 @@ jobs:
         if: ${{ matrix.msvc_arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_ENABLE: cpython-freethreading
           CIBW_SKIP: '*pp* *musllinux*'
@@ -171,9 +170,9 @@ jobs:
             cmake --version
             bash ./ci/config.sh
           CIBW_BEFORE_ALL_MACOS: |
-            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg xz giflib rtmpdump brotli snappy libavif libzip
+            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg jpeg-turbo libpng xz giflib rtmpdump brotli snappy libavif libzip
             # brew remove -f --ignore-dependencies curl php
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils cmake wget
             bash ./ci/config.sh
           CIBW_BEFORE_BUILD_MACOS: |
             export GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
@@ -197,10 +196,7 @@ jobs:
       matrix:
         os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-15-intel"]
         python-version: ["3.14","3.14t", "3.13", "3.12"]
-        exclude:
-         - os: "windows-11-arm"
-           python-version: "3.12"
-
+        
     steps:
       - name: Checkout Rasterio
         uses: actions/checkout@v6
@@ -221,8 +217,8 @@ jobs:
       - name: Install dependencies and rasterio wheel
         shell: bash
         run: |
-          python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec requests
-          python -m pip install --pre --no-deps --find-links dist rasterio
+          python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec s3fs requests
+          python -m pip install --pre --no-deps --no-index --find-links dist rasterio
           python -m pip install rasterio
           python -m pip list
 
@@ -237,7 +233,7 @@ jobs:
         run: |
           rio --version
           rio env --formats
-          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_issue2353 and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
+          PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
 
 
       - name: Check for conflicts with fiona wheel
@@ -252,7 +248,7 @@ jobs:
   publish:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist, test_wheels]
     permissions:
       id-token: write
     environment:

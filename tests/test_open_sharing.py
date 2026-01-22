@@ -6,7 +6,6 @@ import rasterio
 def test_sharing_on(capfd, path_rgb_byte_tif):
     """Datasets are shared"""
     with rasterio.Env() as env:
-
         # Opens a new file.
         with rasterio.open(path_rgb_byte_tif) as srcx:
             env._dump_open_datasets()
@@ -25,7 +24,6 @@ def test_sharing_on(capfd, path_rgb_byte_tif):
 def test_sharing_off(capfd, path_rgb_byte_tif):
     """Datasets are not shared"""
     with rasterio.Env() as env:
-
         # Opens a new file.
         with rasterio.open(path_rgb_byte_tif, sharing=False) as srcx:
             env._dump_open_datasets()
