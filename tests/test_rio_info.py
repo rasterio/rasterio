@@ -390,8 +390,8 @@ def test_info_subdatasets(runner):
         main_group, ["info", "netcdf:tests/data/RGB.nc", "--subdatasets"]
     )
     assert result.exit_code == 0
-    assert len(result.output) == 93
-    assert result.output.startswith("netcdf:tests/data/RGB.nc:Band1")
+    assert len(result.output) == 99
+    assert result.output.startswith('netcdf:"tests/data/RGB.nc":Band1')
 
 
 def test_info_no_credentials(tmpdir, monkeypatch, runner):

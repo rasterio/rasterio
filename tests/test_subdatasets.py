@@ -1,4 +1,5 @@
 import pytest
+import shutil
 
 import rasterio
 
@@ -15,6 +16,19 @@ def test_subdatasets():
         assert len(subs) == 3
         for name in subs:
             assert name.startswith("netcdf")
+
+
+@pytest.mark.skipif(not HAVE_NETCDF, reason="GDAL not compiled with NetCDF driver.")
+def test_subdatasets__parsing_colons(tmp_path):
+    """Ensure paths with ':' can be opened as subdatasets"""
+    shutil.copy("tests/data/RGB.nc", tmp_path / "RGB_2026-01-01T00:00:00.nc")
+    with rasterio.open(f'netcdf:"{tmp_path}/RGB_2026-01-01T00:00:00.nc"') as src:
+        subs = src.subdatasets
+        assert len(subs) == 3
+        for path in subs:
+            assert path.startswith("netcdf")
+            with rasterio.open(path):
+                pass
 
 
 @pytest.mark.skipif(not HAVE_HDF5, reason="GDAL not compiled with HDF5 driver.")

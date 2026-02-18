@@ -1100,7 +1100,7 @@ cdef class DatasetBase:
                 fld = 'description'
             if fld == 'name':
                 val = val.replace('NETCDF', 'netcdf')
-            subs[idx][fld] = val.replace('"', '')
+            subs[idx][fld] = val
         return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
 
