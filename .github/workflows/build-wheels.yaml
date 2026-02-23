@@ -9,11 +9,11 @@ on:
         required: true
         default: '0'
   push:
-    branches: [ main, maint-1.4 ]
+    branches: [ main, maint-1.5 ]
   release:
     types: [ released, prereleased ]
   pull_request:  # also build on PRs touching this file
-    branches: [ main, maint-1.4 ]
+    branches: [ main, maint-1.5 ]
     paths:
       - ".github/workflows/build-wheels.yaml"
       - "ci/config.sh"
