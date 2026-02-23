@@ -34,6 +34,7 @@ import itertools
 import logging
 import sys
 from importlib.metadata import entry_points
+from importlib.metadata import entry_points
 
 import click
 import cligj

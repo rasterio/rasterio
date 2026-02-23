@@ -58,4 +58,8 @@ def _fillnodata(
             )
             return np.asarray(image_dataset)
         finally:
+            if image_dataset is not None:
+                image_dataset.close()
+            if mask_dataset is not None:
+                mask_dataset.close()
             CSLDestroy(alg_options)

@@ -123,6 +123,7 @@ Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
 Rasterio works with Python versions 3.10 through 3.14.
+Rasterio works with Python versions 3.10 through 3.14.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.

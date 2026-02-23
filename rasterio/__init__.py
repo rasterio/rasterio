@@ -23,6 +23,7 @@ if platform.system() == "Windows":
                     os.add_dll_directory(os.path.abspath(p))
 
 from rasterio._base import DatasetBase
+from rasterio._base import DatasetBase
 from rasterio._io import Statistics
 from rasterio._vsiopener import _opener_registration
 from rasterio._show_versions import show_versions
