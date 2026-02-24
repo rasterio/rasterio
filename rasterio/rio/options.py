@@ -421,69 +421,71 @@ format_opt = click.option(
 
 # cligj options
 verbose_opt = click.option(
-    '--verbose', '-v',
+    "--verbose",
+    "-v",
     count=True,
-    help="Increase verbosity."
+    help="Increase verbosity.",
 )
 
 quiet_opt = click.option(
-    '--quiet', '-q',
+    "--quiet",
+    "-q",
     count=True,
-    help="Decrease verbosity."
+    help="Decrease verbosity.",
 )
 
 # JSON formatting options.
 indent_opt = click.option(
-    '--indent',
+    "--indent",
     type=int,
     default=None,
-    help="Indentation level for JSON output"
+    help="Indentation level for JSON output",
 )
 
 compact_opt = click.option(
-    '--compact/--not-compact',
+    "--compact/--not-compact",
     default=False,
-    help="Use compact separators (',', ':')."
+    help="Use compact separators (',', ':').",
 )
 
 # Coordinate precision option.
 precision_opt = click.option(
-    '--precision',
+    "--precision",
     type=int,
     default=-1,
-    help="Decimal precision of coordinates."
+    help="Decimal precision of coordinates.",
 )
 
 # Geographic (default), projected, or Mercator switch.
 projection_geographic_opt = click.option(
-    '--geographic',
-    'projection',
-    flag_value='geographic',
+    "--geographic",
+    "projection",
+    flag_value="geographic",
     default=True,
-    help="Output in geographic coordinates (the default)."
+    help="Output in geographic coordinates (the default).",
 )
 
 projection_projected_opt = click.option(
-    '--projected',
-    'projection',
-    flag_value='projected',
-    help="Output in dataset's own, projected coordinates."
+    "--projected",
+    "projection",
+    flag_value="projected",
+    help="Output in dataset's own, projected coordinates.",
 )
 
 projection_mercator_opt = click.option(
-    '--mercator',
-    'projection',
-    flag_value='mercator',
-    help="Output in Web Mercator coordinates."
+    "--mercator",
+    "projection",
+    flag_value="mercator",
+    help="Output in Web Mercator coordinates.",
 )
 
 use_rs_opt = click.option(
-    '--rs/--no-rs',
-    'use_rs',
+    "--rs/--no-rs",
+    "use_rs",
     default=False,
     help="Use RS (0x1E) as a prefix for individual texts in a sequence "
     "as per http://tools.ietf.org/html/draft-ietf-json-text-sequence-13 "
-    "(default is False)."
+    "(default is False).",
 )
 
 
