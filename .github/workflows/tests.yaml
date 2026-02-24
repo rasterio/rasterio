@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ main, maint-1.4 ]
+    branches: [ main, maint-1.5 ]
     paths:
       - '.github/workflows/tests.yaml'
       - 'requirements*.txt'
@@ -14,7 +14,7 @@ on:
       - 'rasterio/**'
       - 'tests/**'
   pull_request:
-    branches: [ main, maint-1.4 ]
+    branches: [ main, maint-1.5 ]
     paths:
       - '.github/workflows/tests.yaml'
       - 'requirements*.txt'
