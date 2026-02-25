@@ -20,8 +20,7 @@ simultaneously can lead to further speedups.
     If you wish to do multiprocessing that is not trivially parallelizable
     across very large images that do not fit in memory, or if you wish to
     do multiprocessing across multiple machines. You might want to have a
-    look at `dask <https://dask.org/>`__ and in particular this
-    `example <https://web.archive.org/web/20220308125651/https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
+    look at `dask <https://dask.org/>`__.
 
 The Cython function below, included in Rasterio's ``_example`` module,
 simulates a GIL-releasing CPU-intensive raster processing function. You can
