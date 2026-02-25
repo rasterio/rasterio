@@ -375,6 +375,9 @@ function build_hdf5 {
 	build_libaec
     echo "Running build_hdf5"
 	(cd ${HDF5_FNAME} &&
+	    # Apply https://github.com/HDFGroup/hdf5/pull/5850
+	    wget https://raw.githubusercontent.com/HDFGroup/hdf5/19fc2fd232ad9bba20572612f01ea93766bf87b5/src/H5Cimage.c -O src/H5Cimage.c &&
+        wget https://raw.githubusercontent.com/HDFGroup/hdf5/19fc2fd232ad9bba20572612f01ea93766bf87b5/src/H5Ocont.c -O src/H5Ocont.c &&
 		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
 		export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
 		./configure --with-szlib=$BUILD_PREFIX --prefix=$BUILD_PREFIX \
