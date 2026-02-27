@@ -590,6 +590,7 @@ def test_unrotate(runner, tmp_path):
         assert src.transform.d == 0.0
 
 
+@pytest.mark.xfail(reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
 @pytest.mark.parametrize(
     "wotopt", ["--to", "--transformer-option", "--wo", "--warper-option"]
 )

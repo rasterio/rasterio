@@ -2380,6 +2380,7 @@ def test_rpcs_non_epsg4326():
             )
 
 
+@pytest.mark.xfail(reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
 def test_coordinate_pipeline(tmp_path):
     """Transformer COORDINATE_OPERATION option is activated."""
     pipeline = "proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
