@@ -14,9 +14,9 @@ GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
 XZ_VERSION=5.8.2
 LCMS2_VERSION=2.17
-HDF5_VERSION=1.14.6
+HDF5_VERSION=2.0.0
 LIBAEC_VERSION=1.1.3
-NETCDF_VERSION=4.9.3
+NETCDF_VERSION=4.10.0
 GEOS_VERSION=3.14.1
 BLOSC_VERSION=1.21.6
 PCRE_VERSION=10.47
@@ -283,7 +283,7 @@ fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"; HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
 HDF5_URL="https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz"
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
-HDF5_SHA256="e4defbac30f50d64e1556374aa49e574417c9e72c6b1de7a4ff88c4b1bea6e9b"
+HDF5_SHA256="f4c2edc5668fb846627182708dbe1e16c60c467e63177a75b0b9f12c19d7efed"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
@@ -374,13 +374,26 @@ function build_hdf5 {
 	# libaec is a drop-in replacement for szip
 	build_libaec
     echo "Running build_hdf5"
+	local cmake=cmake
 	(cd ${HDF5_FNAME} &&
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
-		export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib &&
-		./configure --with-szlib=$BUILD_PREFIX --prefix=$BUILD_PREFIX \
-			--enable-threadsafe --enable-unsupported --with-pthread=yes &&
-		make -j4 &&
-		make install)
+		mkdir build && cd build &&
+        $cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+        -DBUILD_SHARED_LIBS=ON \
+        -DHDF5_ENABLE_ZLIB_SUPPORT=ON \
+        -DZLIB_ROOT=${BUILD_PREFIX} \
+        -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
+        -Dlibaec_DIR=${BUILD_PREFIX} \
+        -DSZIP_LIBRARY:PATH=$BUILD_PREFIX/lib/libsz.$lib_ext \
+        -DSZIP_INCLUDE_DIR=$BUILD_PREFIX/include \
+        -DLIBAEC_ROOT=${BUILD_PREFIX} &&
+    $cmake --build . -j4 &&
+    $cmake --install .)
 	touch hdf5-stamp
 }
 
@@ -758,10 +771,20 @@ function build_libdeflate {
 function build_libaec {
 	if [ -e libaec-stamp ]; then return; fi
     echo "Running build_libaec"
-	(cd ${LIBAEC_FNAME} &&
-		./configure --prefix=$BUILD_PREFIX &&
-		make &&
-		make install)
+	local cmake=cmake
+    (cd ${LIBAEC_FNAME} &&
+    mkdir build && cd build &&
+    $cmake .. \
+        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_LIBDIR=lib &&
+    $cmake --build . -j4 &&
+    $cmake --install .)
 	touch libaec-stamp
 }
 
@@ -915,7 +938,7 @@ build_sqlite
 build_proj
 suppress build_expat
 suppress build_geos
-suppress build_hdf5
+build_hdf5
 suppress build_netcdf
 build_gdal
 
