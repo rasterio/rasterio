@@ -1434,7 +1434,10 @@ def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
             source = src.read(masked=True)
         else:
             source = src.read(1, masked=True)
-    out = np.empty(source.shape, dtype=np.uint8)
+    out = np.ma.masked_array(
+        np.full(source.shape, 0, dtype=source.dtype),
+        mask=np.full(source.shape, False, dtype=bool),
+    )
     reproject(
         source,
         out,
