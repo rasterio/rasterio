@@ -1,6 +1,6 @@
 import pytest
 import shutil
-
+import platform
 import rasterio
 
 with rasterio.Env() as env:
@@ -18,7 +18,10 @@ def test_subdatasets():
             assert name.startswith("netcdf")
 
 
-@pytest.mark.skipif(not HAVE_NETCDF, reason="GDAL not compiled with NetCDF driver.")
+@pytest.mark.skipif(
+    not HAVE_NETCDF or platform.system() == "Windows",
+    reason="GDAL not compiled with NetCDF driver or Windows machine.",
+)
 def test_subdatasets__parsing_colons(tmp_path):
     """Ensure paths with ':' can be opened as subdatasets"""
     test_file = tmp_path / "RGB_2026-01-01T00:00:00.nc"
