@@ -21,6 +21,7 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError, stack_errors)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
+from rasterio.dtypes import dtype_ranges
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import Env, GDALVersion
 from rasterio.crs import CRS
@@ -408,7 +409,7 @@ def _reproject(
             src_bidx = range(1, src_count + 1)
 
             if hasattr(source, "mask"):
-                if source.mask is np.ma.nomask:
+                if not source.mask.shape:
                     if source.ndim == 2:
                         mask_shape = source.shape
                     else:
@@ -484,10 +485,15 @@ def _reproject(
 
             if hasattr(destination, "mask"):
                 count, height, width = destination.shape
-                msk = np.logical_or.reduce(destination.mask)
-                if msk == np.ma.nomask:
+                # when a masked array is totally valid, the mask is set to np.ma.nomask or np.False_
+                # and has a null shape
+                if not destination.mask.shape:
                     msk = np.zeros((height, width), dtype=bool)
+                else:
+                    msk = np.logical_or.reduce(destination.mask)
+
                 msk = ~msk * np.uint8(255)
+
                 dest_arr = np.concatenate((destination.data, [msk]))
                 dst_alpha = dst_alpha or dest_arr.shape[0]
             else:
