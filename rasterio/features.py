@@ -517,32 +517,35 @@ def geometry_window(
             RasterioDeprecationWarning,
         )
 
-    shape_windows = []
-    for shape in shapes:
-        shape_bounds = bounds(shape)
-        try:
-            _window = windows.from_bounds(*shape_bounds, transform=dataset.transform)
-        except windows.WindowError:
-            shape_bounds = bounds(shape, north_up=False)
-            _window = windows.from_bounds(*shape_bounds, transform=dataset.transform)
+    all_bounds = [bounds(shape, transform=~dataset.transform) for shape in shapes]
 
-        # pad window
-        col_off = math.floor(_window.col_off - pad_x)
-        row_off = math.floor(_window.row_off - pad_y)
-        width = math.ceil(_window.col_off + _window.width + pad_x) - col_off
-        height = math.ceil(_window.row_off + _window.height + pad_y) - row_off
-        shape_windows.append(
-            windows.Window(col_off=col_off, row_off=row_off, width=width, height=height)
-        )
+    cols = [
+        x
+        for (left, bottom, right, top) in all_bounds
+        for x in (left - pad_x, right + pad_x, right + pad_x, left - pad_x)
+    ]
+    rows = [
+        y
+        for (left, bottom, right, top) in all_bounds
+        for y in (top - pad_y, top - pad_y, bottom + pad_y, bottom + pad_y)
+    ]
 
-    bounding_window = windows.union(*shape_windows)
+    row_start, row_stop = int(math.floor(min(rows))), int(math.ceil(max(rows)))
+    col_start, col_stop = int(math.floor(min(cols))), int(math.ceil(max(cols)))
+
+    window = windows.Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=max(col_stop - col_start, 0.0),
+        height=max(row_stop - row_start, 0.0),
+    )
 
     # Make sure that window overlaps raster
     raster_window = windows.Window(0, 0, dataset.width, dataset.height)
     if not boundless:
-        bounding_window = bounding_window.intersection(raster_window)
+        window = window.intersection(raster_window)
 
-    return bounding_window
+    return window
 
 
 def is_valid_geom(geom):
