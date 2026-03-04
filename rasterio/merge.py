@@ -12,6 +12,7 @@ import numpy as np
 
 import rasterio
 from rasterio import windows
+from rasterio._io import MemoryDataset
 from rasterio.enums import Resampling
 from rasterio.errors import (
     MergeError,
@@ -380,31 +381,37 @@ def merge(
         # When dataset output is selected, we might need to create one
         # and will also provide the option of merging by chunks.
         dout_window = windows.Window(0, 0, output_width, output_height)
-        if dst_path is not None:
-            if isinstance(dst_path, DatasetWriter):
-                dst = dst_path
-            else:
-                out_profile = first_profile
-                out_profile.update(**(dst_kwds or {}))
-                out_profile["transform"] = output_transform
-                out_profile["height"] = output_height
-                out_profile["width"] = output_width
-                out_profile["count"] = output_count
-                out_profile["dtype"] = dt
-                if nodata is not None:
-                    out_profile["nodata"] = nodata
+        if isinstance(dst_path, DatasetWriter):
+            dst = dst_path
+        else:
+            out_profile = first_profile
+            out_profile.update(**(dst_kwds or {}))
+            out_profile["transform"] = output_transform
+            out_profile["height"] = output_height
+            out_profile["width"] = output_width
+            out_profile["count"] = output_count
+            out_profile["dtype"] = dt
+            if nodata is not None:
+                out_profile["nodata"] = nodata
+
+            if dst_path is not None:
                 dst = rasterio.open(dst_path, "w", **out_profile)
                 exit_stack.enter_context(dst)
-
-            max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count)
-
-            if output_width * output_height < max_pixels:
-                chunks = [dout_window]
             else:
-                n = math.floor(math.sqrt(max_pixels))
-                chunks = subdivide(dout_window, n, n)
-        else:
+                dst = MemoryDataset(
+                    np.full((output_count, output_height, output_width), nodataval, dtype=dt),
+                    transform=output_transform,
+                    crs=first_crs,
+                )
+                exit_stack.enter_context(dst)
+
+        max_pixels = mem_limit * 1.0e6 / (np.dtype(dt).itemsize * output_count)
+
+        if output_width * output_height < max_pixels:
             chunks = [dout_window]
+        else:
+            n = math.floor(math.sqrt(max_pixels))
+            chunks = subdivide(dout_window, n, n)
 
         def _intersect_bounds(bounds1, bounds2, transform):
             """Based on gdal_merge.py."""
@@ -508,7 +515,8 @@ def merge(
                 dw = win_align(dw)
                 dst.write(dest, window=dw)
 
-        if dst is None:
+        if dst_path is None:
+            dest = dst.read()
             if masked:
                 dest = np.ma.masked_equal(dest, nodataval, copy=False)
             return dest, output_transform
