@@ -1,5 +1,5 @@
 PYTHON_VERSION ?= 3.12
-GDAL ?= ubuntu-small-3.8.5
+GDAL ?= ubuntu-small-3.12.2
 all: deps clean install test
 
 .PHONY: docs
