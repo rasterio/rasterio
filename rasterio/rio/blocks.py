@@ -5,7 +5,6 @@ import logging
 import os.path
 
 import click
-import cligj
 
 import rasterio
 from rasterio.rio import options
@@ -79,12 +78,18 @@ class _Collection:
 @click.command()
 @options.file_in_arg
 @options.output_opt
-@cligj.precision_opt
-@cligj.indent_opt
-@cligj.compact_opt
-@cligj.projection_projected_opt
-@cligj.sequence_opt
-@cligj.use_rs_opt
+@options.precision_opt
+@options.indent_opt
+@options.compact_opt
+@options.projection_projected_opt
+@click.option(
+    "--sequence/--collection",
+    default=False,
+    help="Write a single JSON text containing a feature collection object "
+    "(the default) or write a LF-delimited sequence of texts containing "
+    "individual objects.",
+)
+@options.use_rs_opt
 @click.option(
     "--bidx",
     type=click.INT,

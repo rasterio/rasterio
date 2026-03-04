@@ -3,14 +3,14 @@
 import json
 
 import click
-from cligj import precision_opt
+from rasterio.rio import options
 
 
 @click.command(short_help="Transform coordinates.")
 @click.argument("INPUT", default="-", required=False)
 @click.option("--src-crs", "--src_crs", default="EPSG:4326", help="Source CRS.")
 @click.option("--dst-crs", "--dst_crs", default="EPSG:4326", help="Destination CRS.")
-@precision_opt
+@options.precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
     """Transform coordinates between coordinate reference systems.
