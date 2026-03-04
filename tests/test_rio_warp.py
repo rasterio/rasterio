@@ -12,6 +12,11 @@ from rasterio.warp import SUPPORTED_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 
+# Make a gdal version tuple.
+version_name = rasterio.gdal_version()
+version_name = re.split(r"[a-z]", version_name)[0]
+gdal_version_info = tuple(int(x) for x in version_name.split("."))
+
 
 def test_dst_crs_error(runner, tmpdir):
     """Invalid JSON is a bad parameter."""
@@ -590,7 +595,11 @@ def test_unrotate(runner, tmp_path):
         assert src.transform.d == 0.0
 
 
-@pytest.mark.xfail(reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 @pytest.mark.parametrize(
     "wotopt", ["--to", "--transformer-option", "--wo", "--warper-option"]
 )

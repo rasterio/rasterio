@@ -1322,7 +1322,11 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
     assert np.count_nonzero(out) in expected[method]
 
 
-@pytest.mark.xfail(reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 @pytest.mark.parametrize(
     "test3d,count_nonzero",
     [
@@ -1388,7 +1392,11 @@ def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
     assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
 
 
-@pytest.mark.xfail(reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 @pytest.mark.parametrize(
     "test3d,count_nonzero",
     [
@@ -1497,7 +1505,11 @@ def test_reproject_to_masked_output(path_rgb_byte_tif):
     assert isinstance(out, np.ma.MaskedArray)
 
 
-@pytest.mark.xfail(reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 @pytest.mark.parametrize(
     "test3d,count_nonzero",
     [
@@ -2380,7 +2392,11 @@ def test_rpcs_non_epsg4326():
             )
 
 
-@pytest.mark.xfail(reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 def test_coordinate_pipeline(tmp_path):
     """Transformer COORDINATE_OPERATION option is activated."""
     pipeline = "proj=pipeline step inv proj=utm zone=11 ellps=clrk66 step proj=unitconvert xy_in=rad xy_out=deg step proj=axisswap order=2,1"
@@ -2416,7 +2432,11 @@ def test_coordinate_pipeline(tmp_path):
             assert dst.checksum(1) == 4705
 
 
-@pytest.mark.xfail(reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 def test_geoloc_warp_dataset(data, tmp_path):
     """Warp a dataset using external geolocation arrays."""
     filename = str(data.join("RGB.byte.tif"))
@@ -2461,7 +2481,11 @@ def test_geoloc_warp_dataset(data, tmp_path):
     assert np.count_nonzero(out) in [464910]
 
 
-@pytest.mark.xfail(reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 # Before GDAL 3.5.2 geoloc array files aren't recognized and this error
 # would be seen from the following tests:
 #
@@ -2498,7 +2522,11 @@ def test_geoloc_warp_array(path_rgb_byte_tif):
     assert np.count_nonzero(output[0]) in [464910]
 
 
-@pytest.mark.xfail(reason="Warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.", raises=AssertionError)
+@pytest.mark.xfail(
+    gdal_version_info >= (3, 12, 2),
+    reason="warper implementation has changed. See https://github.com/rasterio/rasterio/issues/3517.",
+    raises=AssertionError,
+)
 def test_geoloc_warp_array_subsampled(path_rgb_byte_tif):
     """Warp an array using subsampled external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
