@@ -2,6 +2,7 @@
 
 
 import os
+import re
 
 import affine
 import numpy as np
