@@ -268,8 +268,14 @@ def reproject(
 
     Returns
     ---------
-    destination: ndarray or Band
-        The transformed ndarray or Band.
+    destination: ndarray, masked array, or None
+        The reprojected data:
+
+        ndarray written in-place if `destination` is a ndarray.
+        None if `destination` is a Band.
+        masked array if `destination` is None and `masked=True`.
+        ndarray if `destination` is None and `masked=False`.
+
     dst_transform: Affine
         The affine transformation matrix of the destination.
     """
