@@ -15,7 +15,7 @@ JSONC_VERSION=0.18
 XZ_VERSION=5.8.1
 LCMS2_VERSION=2.17
 HDF5_VERSION=2.0.0
-LIBAEC_VERSION=1.1.3
+LIBAEC_VERSION=1.1.6
 NETCDF_VERSION=4.10.0
 GEOS_VERSION=3.14.1
 BLOSC_VERSION=1.21.6
@@ -388,10 +388,9 @@ function build_hdf5 {
         -DHDF5_ENABLE_ZLIB_SUPPORT=ON \
         -DZLIB_ROOT=${BUILD_PREFIX} \
         -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=ON \
-        -Dlibaec_DIR=${BUILD_PREFIX} \
+        -Dlibaec_DIR=${BUILD_PREFIX}/lib/cmake/libaec \
         -DSZIP_LIBRARY:PATH=$BUILD_PREFIX/lib/libsz.$lib_ext \
-        -DSZIP_INCLUDE_DIR=$BUILD_PREFIX/include \
-        -DLIBAEC_ROOT=${BUILD_PREFIX} &&
+        -DSZIP_INCLUDE_DIR=$BUILD_PREFIX/include &&
     $cmake --build . -j4 &&
     $cmake --install .)
 	touch hdf5-stamp
