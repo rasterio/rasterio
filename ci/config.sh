@@ -280,8 +280,7 @@ GEOS_URL="http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
 GEOS_FNAME="geos-${GEOS_VERSION}"
 fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 
-HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"; HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
-HDF5_URL="https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz"
+HDF5_URL=https://support.hdfgroup.org/releases/hdf5/${HDF5_VERSION}/downloads/hdf5.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="ce7f5515a95d588b8606c3fb50643f8b88ac52ffbbde9c63bb1edca6a256e964"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
