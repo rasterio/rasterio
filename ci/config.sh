@@ -283,7 +283,7 @@ fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 HDF5_URL=https://support.hdfgroup.org/releases/hdf5/${HDF5_VERSION}/downloads/hdf5.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="ce7f5515a95d588b8606c3fb50643f8b88ac52ffbbde9c63bb1edca6a256e964"
-fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
+fetch_untar ${HDF5_URL} -O ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
 JPEGTURBO_FNAME="libjpeg-turbo-${JPEGTURBO_VERSION}"
