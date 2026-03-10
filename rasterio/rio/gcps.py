@@ -15,6 +15,7 @@ from rasterio.warp import transform_geom
 @options.projection_geographic_opt
 @options.projection_projected_opt
 @options.precision_opt
+@options.sequence_opt
 @options.use_rs_opt
 @options.indent_opt
 @options.compact_opt
