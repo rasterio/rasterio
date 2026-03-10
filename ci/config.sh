@@ -355,7 +355,7 @@ XZ_FNAME="xz-${XZ_VERSION}"
 XZ_SHA256="ce09c50a5962786b83e5da389c90dd2c15ecd0980a258dd01f70f9e7ce58a8f1"
 fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
 
-ZLIB_URL="https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz"
+ZLIB_URL="http://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
 ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz ${ZLIB_SHA256}
