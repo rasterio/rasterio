@@ -14,7 +14,7 @@ GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
 XZ_VERSION=5.8.2
 LCMS2_VERSION=2.17
-HDF5_VERSION=2.0.0
+HDF5_VERSION=2.1.0
 LIBAEC_VERSION=1.1.6
 NETCDF_VERSION=4.10.0
 GEOS_VERSION=3.14.1
@@ -280,10 +280,9 @@ GEOS_URL="http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
 GEOS_FNAME="geos-${GEOS_VERSION}"
 fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 
-HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"; HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
-HDF5_URL="https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz"
+HDF5_URL=http://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
-HDF5_SHA256="f4c2edc5668fb846627182708dbe1e16c60c467e63177a75b0b9f12c19d7efed"
+HDF5_SHA256="ce7f5515a95d588b8606c3fb50643f8b88ac52ffbbde9c63bb1edca6a256e964"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
@@ -356,7 +355,7 @@ XZ_FNAME="xz-${XZ_VERSION}"
 XZ_SHA256="ce09c50a5962786b83e5da389c90dd2c15ecd0980a258dd01f70f9e7ce58a8f1"
 fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
 
-ZLIB_URL="https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz"
+ZLIB_URL="http://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
 ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz ${ZLIB_SHA256}
