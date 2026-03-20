@@ -94,7 +94,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
     `(take foo j)` evaluates to the j-th band of a dataset named foo
     (see help on the --name option above).
 
-    Standard numpy array operators (+, -, *, /) are available.
+    Standard numpy array operators (+, -, /) are available.
 
     When the final result is a list of arrays, a multiple band output
     file is written. When the final result is a single array, a single
