@@ -20,7 +20,9 @@ from rasterio.warp import transform_geom
 @options.indent_opt
 @options.compact_opt
 @click.pass_context
-def gcps(ctx, input, geojson_type, projection, precision, sequence, use_rs, indent, compact):
+def gcps(
+    ctx, input, geojson_type, projection, precision, sequence, use_rs, indent, compact
+):
     """Print GeoJSON representations of a dataset's control points.
 
     Each ground control point is represented as a GeoJSON feature. The
