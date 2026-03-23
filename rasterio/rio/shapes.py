@@ -3,7 +3,6 @@
 import logging
 
 import click
-import cligj
 import rasterio
 
 from rasterio.rio import options
@@ -16,13 +15,13 @@ logger = logging.getLogger(__name__)
 @click.command(short_help="Write shapes extracted from bands or masks.")
 @options.file_in_arg
 @options.output_opt
-@cligj.precision_opt
-@cligj.indent_opt
-@cligj.compact_opt
-@cligj.projection_geographic_opt
-@cligj.projection_projected_opt
+@options.precision_opt
+@options.indent_opt
+@options.compact_opt
+@options.projection_geographic_opt
+@options.projection_projected_opt
 @options.sequence_opt
-@cligj.use_rs_opt
+@options.use_rs_opt
 @options.geojson_type_opt(allowed=("feature", "bbox"), default="feature")
 @click.option(
     "--band/--mask",
