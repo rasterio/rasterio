@@ -15,7 +15,13 @@ from rasterio.warp import transform_geom
 @options.projection_geographic_opt
 @options.projection_projected_opt
 @options.precision_opt
-@options.sequence_opt
+sequence_opt = click.option(
+    "--sequence/--no-sequence",
+    default=True,
+    help="Write a LF-delimited sequence of texts containing individual "
+    "objects or write a single JSON text containing a feature "
+    "collection object (the default).",
+)
 @options.use_rs_opt
 @options.indent_opt
 @options.compact_opt
