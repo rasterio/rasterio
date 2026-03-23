@@ -4,6 +4,13 @@ Changes
 1.5.1 (TBD)
 -----------
 
+Bug fixes:
+
+- Require pyparsing version >= 3.0 to eliminate a deprecation warning for use
+  of parseString (gh-3551).
+- Remove a dependency on unmainted cligj by bringing some CLI options back into
+  Rasterio (gh-3550).
+
 1.5.0 (2026-01-05)
 ------------------
 
