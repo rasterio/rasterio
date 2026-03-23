@@ -82,13 +82,7 @@ class _Collection:
 @options.indent_opt
 @options.compact_opt
 @options.projection_projected_opt
-@click.option(
-    "--sequence/--collection",
-    default=False,
-    help="Write a single JSON text containing a feature collection object "
-    "(the default) or write a LF-delimited sequence of texts containing "
-    "individual objects.",
-)
+@options.sequence_opt
 @options.use_rs_opt
 @click.option(
     "--bidx",
