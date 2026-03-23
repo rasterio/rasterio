@@ -15,7 +15,7 @@ from rasterio.warp import transform_geom
 @options.projection_geographic_opt
 @options.projection_projected_opt
 @options.precision_opt
-sequence_opt = click.option(
+@click.option(
     "--sequence/--no-sequence",
     default=True,
     help="Write a LF-delimited sequence of texts containing individual "
