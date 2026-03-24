@@ -22,15 +22,31 @@ from rasterio.rpc import RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
+from rasterio.dtypes import (
+    complex64,
+    complex128,
+    complex_int16,
+    float32,
+    float64,
+    int16,
+)
+
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import env_ctx_if_needed
+from rasterio.env import env_ctx_if_needed, _GDAL_AT_LEAST_3_10
 from rasterio.errors import (
+    BandOverviewError,
+    CRSError,
     DatasetAttributeError,
-    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    DriverRegistrationError,
+    GDALOptionNotImplementedError,
+    NotGeoreferencedWarning,
+    RasterBlockError,
+    RasterioIOError,
+)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
+from rasterio.serde import to_json
 from rasterio._path import _parse_path
 from rasterio import windows
 
@@ -158,26 +174,20 @@ def _raster_driver_extensions():
 
 
 cdef _band_dtype(GDALRasterBandH band):
-    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity."""
+    """Resolve dtype of a given band"""
     cdef const char * ptype
     cdef int gdal_dtype = GDALGetRasterDataType(band)
-    if gdal_dtype == GDT_Byte and dtypes.dtype_rev["int8"] == 1:
-        # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
-        # with PIXELTYPE=SIGNEDBYTE metadata item in IMAGE_STRUCTURE
-        # metadata domain.
-        ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
-
-        if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
-            return 'int8'
-        else:
-            return 'uint8'
-
     return dtypes.dtype_fwd[gdal_dtype]
 
 
 cdef GDALDatasetH open_dataset(
-        object filename, int flags, object allowed_drivers,
-        object open_options, object siblings) except NULL:
+    object filename,
+    unsigned int flags,
+    object allowed_drivers,
+    object open_options,
+    bint sharing,
+    object siblings,
+) except NULL:
     """Open a dataset and return a handle"""
 
     cdef GDALDatasetH hds = NULL
@@ -212,8 +222,10 @@ cdef GDALDatasetH open_dataset(
         raise NotImplementedError(
             "Sibling files are not implemented")
 
-    # Ensure raster flags
-    flags = flags | 0x02
+    # Ensure default flags added
+    flags = flags | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR
+    if sharing:
+        flags |= GDAL_OF_SHARED
 
     with nogil:
         hds = GDALOpenEx(fname, flags, <const char **>drivers, <const char **>options, NULL)
@@ -266,8 +278,7 @@ cdef class DatasetBase:
     photometric : str
         Photometric interpretation's short name
     """
-
-    def __init__(self, path=None, driver=None, sharing=False, **kwargs):
+    def __init__(self, path=None, driver=None, sharing=False, thread_safe=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -279,6 +290,10 @@ cdef class DatasetBase:
             opening the dataset.
         sharing : bool, optional
             Whether to share underlying GDAL dataset handles (default: False).
+        thread_safe: bool, optional
+            Open GDAL dataset in `thread safe mode <https://gdal.org/en/stable/user/multithreading.html>`__.
+            For multithreaded read-only GDAL dataset operations (e.g. ``GDAL_NUM_THREADS``, `LIBERTIFF driver <https://gdal.org/en/stable/drivers/raster/libertiff.html#open-options>`__).
+            Requires rasterio 1.5+ & GDAL 3.10+.
         kwargs : dict
             GDAL dataset opening options.
 
@@ -286,13 +301,12 @@ cdef class DatasetBase:
         -------
         dataset
         """
-        cdef GDALDatasetH hds = NULL
-        cdef int flags = 0
-        cdef int sharing_flag = (0x20 if sharing else 0x0)
-
-        log.debug("Sharing flag: %r", sharing_flag)
-
         self._hds = NULL
+        cdef unsigned int flags = GDAL_OF_READONLY
+        if thread_safe:
+            if not _GDAL_AT_LEAST_3_10:
+                raise GDALOptionNotImplementedError("'thread_safe' option requires GDAL 3.10+.")
+            flags |= GDAL_OF_THREAD_SAFE
 
         if path is not None:
             path = _parse_path(path)
@@ -303,11 +317,15 @@ cdef class DatasetBase:
             if isinstance(driver, str):
                 driver = [driver]
 
-            # Read-only + Rasters + Sharing + Errors
-            flags = 0x00 | 0x02 | sharing_flag | 0x40
-
             try:
-                self._hds = open_dataset(filename, flags, driver, kwargs, None)
+                self._hds = open_dataset(
+                    filename=filename,
+                    flags=flags,
+                    allowed_drivers=driver,
+                    open_options=kwargs,
+                    sharing=sharing,
+                    siblings=None,
+                )
             except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
 
@@ -330,7 +348,6 @@ cdef class DatasetBase:
 
         self._set_attrs_from_dataset_handle()
         self._env = ExitStack()
-        self._closed = False
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -428,10 +445,11 @@ cdef class DatasetBase:
 
     def stop(self):
         """Close the GDAL dataset handle"""
-        if self._hds != NULL:
-            refcount = GDALDereferenceDataset(self._hds)
-            if refcount == 0:
-                GDALClose(self._hds)
+        if self._hds == NULL:
+            return
+        refcount = GDALDereferenceDataset(self._hds)
+        if refcount == 0:
+            GDALClose(self._hds)
         self._hds = NULL
 
     def close(self):
@@ -439,19 +457,16 @@ cdef class DatasetBase:
         self.stop()
         if self._env:
             self._env.close()
-        self._closed = True
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
         return self
 
     def __exit__(self, *exc_details):
-        if not self._closed:
-            self.close()
+        self.close()
 
     def __dealloc__(self):
-        if self._hds != NULL:
-            GDALClose(self._hds)
+        self.stop()
 
     @property
     def closed(self):
@@ -461,7 +476,7 @@ cdef class DatasetBase:
         -------
         bool
         """
-        return self._closed
+        return self._hds == NULL
 
     @property
     def count(self):
@@ -543,12 +558,12 @@ cdef class DatasetBase:
                 dtype = _band_dtype(band)
 
                 # To address the issue in #1747.
-                if dtype == "complex128":
-                    dtype = "float64"
-                elif dtype == "complex64":
-                    dtype = "float32"
-                elif dtype == "complex_int16":
-                    dtype = "int16"
+                if dtype == complex128:
+                    dtype = float64
+                elif dtype == complex64:
+                    dtype = float32
+                elif dtype == complex_int16:
+                    dtype = int16
 
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
@@ -981,6 +996,8 @@ cdef class DatasetBase:
     def compression(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
         if val:
+            # 'YCbCr JPEG' will be normalized to 'JPEG'
+            val = val.split()[-1]
             try:
                 return Compression(val)
             except ValueError:
@@ -1084,7 +1101,7 @@ cdef class DatasetBase:
                 fld = 'description'
             if fld == 'name':
                 val = val.replace('NETCDF', 'netcdf')
-            subs[idx][fld] = val.replace('"', '')
+            subs[idx][fld] = val
         return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
 

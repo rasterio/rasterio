@@ -105,13 +105,16 @@ class Env:
         -------
         dict
         """
-        return {
-            'GTIFF_IMPLICIT_JPEG_OVR': False,
-            "RASTERIO_ENV": True
-        }
+        return {"GTIFF_IMPLICIT_JPEG_OVR": False, "RASTERIO_ENV": True}
 
-    def __init__(self, session=None, aws_unsigned=False, profile_name=None,
-                 session_class=Session.aws_or_dummy, **options):
+    def __init__(
+        self,
+        session=None,
+        aws_unsigned=False,
+        profile_name=None,
+        session_class=Session.aws_or_dummy,
+        **options,
+    ):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -159,25 +162,25 @@ class Env:
         ...         print(src.profile)
 
         """
-        aws_access_key_id = options.pop('aws_access_key_id', None)
+        aws_access_key_id = options.pop("aws_access_key_id", None)
         # Before 1.0, Rasterio only supported AWS. We will special
         # case AWS in 1.0.x. TODO: warn deprecation in 1.1.
         if aws_access_key_id:
             warnings.warn(
                 "Passing abstract session keyword arguments is deprecated. "
                 "Pass a Rasterio AWSSession object instead.",
-                RasterioDeprecationWarning
+                RasterioDeprecationWarning,
             )
 
-        aws_secret_access_key = options.pop('aws_secret_access_key', None)
-        aws_session_token = options.pop('aws_session_token', None)
-        region_name = options.pop('region_name', None)
+        aws_secret_access_key = options.pop("aws_secret_access_key", None)
+        aws_session_token = options.pop("aws_session_token", None)
+        region_name = options.pop("region_name", None)
 
-        if ('AWS_ACCESS_KEY_ID' in options or
-                'AWS_SECRET_ACCESS_KEY' in options):
+        if "AWS_ACCESS_KEY_ID" in options or "AWS_SECRET_ACCESS_KEY" in options:
             raise EnvError(
                 "GDAL's AWS config options can not be directly set. "
-                "AWS credentials are handled exclusively by boto3.")
+                "AWS credentials are handled exclusively by boto3."
+            )
 
         if session:
             # Passing a session via keyword argument is the canonical
@@ -186,7 +189,7 @@ class Env:
                 warnings.warn(
                     "Passing a boto3 session is deprecated. Pass a Rasterio "
                     "AWSSession object instead.",
-                    RasterioDeprecationWarning
+                    RasterioDeprecationWarning,
                 )
                 session = Session.aws_or_dummy(session=session)
 
@@ -199,9 +202,12 @@ class Env:
                 aws_session_token=aws_session_token,
                 region_name=region_name,
                 profile_name=profile_name,
-                aws_unsigned=aws_unsigned)
+                aws_unsigned=aws_unsigned,
+            )
 
-        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
+        elif (
+            "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ
+        ):
             self.session = Session.from_environ()
             self._session_from_environ = True
 
@@ -236,7 +242,7 @@ class Env:
         return Env(*args, **options)
 
     def aws_creds_from_context_options(self):
-        return {k: v for k, v in self.context_options.items() if k.startswith('AWS_')}
+        return {k: v for k, v in self.context_options.items() if k.startswith("AWS_")}
 
     def credentialize(self):
         """Get credentials and configure GDAL
@@ -253,12 +259,13 @@ class Env:
         self.options.update(**cred_opts)
         setenv(**cred_opts)
 
-        if getattr(self, '_session_from_environ', False):
+        if getattr(self, "_session_from_environ", False):
             # if self.context_options has "AWS_*" credentials from parent context then it should
             # always override what comes back from self.session.get_credential_options()
             # b/c __init__ might have created a session from globally exported "AWS_*" os environ variables
             parent_context_creds = self.aws_creds_from_context_options()
-            if not parent_context_creds: return
+            if not parent_context_creds:
+                return
             self.options.update(**parent_context_creds)
             setenv(**parent_context_creds)
 
@@ -333,8 +340,7 @@ def defenv(**options):
         log.debug("No GDAL environment exists")
         local._env = GDALEnv()
         local._env.update_config_options(**options)
-        log.debug(
-            "New GDAL environment %r created", local._env)
+        log.debug("New GDAL environment %r created", local._env)
     local._env.start()
 
 
@@ -360,8 +366,13 @@ def setenv(**options):
 
 
 def hascreds():
-    warnings.warn("Please use Env.session.hascreds() instead", RasterioDeprecationWarning)
-    return local._env is not None and all(key in local._env.get_config_options() for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
+    warnings.warn(
+        "Please use Env.session.hascreds() instead", RasterioDeprecationWarning
+    )
+    return local._env is not None and all(
+        key in local._env.get_config_options()
+        for key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+    )
 
 
 def delenv():
@@ -376,7 +387,6 @@ def delenv():
 
 
 class NullContextManager:
-
     def __init__(self):
         pass
 
@@ -404,6 +414,7 @@ def env_ctx_if_needed():
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
+
     @wraps(f)
     def wrapper(*args, **kwds):
         if local._env:
@@ -411,12 +422,15 @@ def ensure_env(f):
         else:
             with Env.from_defaults():
                 return f(*args, **kwds)
+
     return wrapper
 
 
 def ensure_env_credentialled(f):
     """DEPRECATED alias for ensure_env_with_credentials"""
-    warnings.warn("Please use ensure_env_with_credentials instead", RasterioDeprecationWarning)
+    warnings.warn(
+        "Please use ensure_env_with_credentials instead", RasterioDeprecationWarning
+    )
     return ensure_env_with_credentials(f)
 
 
@@ -439,6 +453,7 @@ def ensure_env_with_credentials(f):
     scheme "s3".
 
     """
+
     @wraps(f)
     def wrapper(*args, **kwds):
         if local._env:
@@ -475,28 +490,41 @@ class GDALVersion:
 
     major = attr.ib(default=0, validator=attr.validators.instance_of(int))
     minor = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    patch = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
     def __eq__(self, other):
-        return (self.major, self.minor) == tuple(other.major, other.minor)
+        return (self.major, self.minor, self.patch) == (
+            other.major,
+            other.minor,
+            other.patch,
+        )
 
     def __lt__(self, other):
-        return (self.major, self.minor) < tuple(other.major, other.minor)
+        return (self.major, self.minor, self.patch) < (
+            other.major,
+            other.minor,
+            other.patch,
+        )
 
     def __repr__(self):
-        return f"GDALVersion(major={self.major}, minor={self.minor})"
+        return (
+            f"GDALVersion(major={self.major}, minor={self.minor}, patch={self.patch})"
+        )
 
     def __str__(self):
-        return f"{self.major}.{self.minor}"
+        return f"{self.major}.{self.minor}.{self.patch}"
 
     @classmethod
-    def parse(cls, input):
+    def parse(cls, input, include_patch=False):
         """
         Parses input tuple or string to GDALVersion. If input is a GDALVersion
         instance, it is returned.
 
         Parameters
         ----------
-        input: tuple of (major, minor), string, or instance of GDALVersion
+        input: tuple of (major, minor, patch), string, or instance of GDALVersion
+        include_patch: bool, optional
+            If True, patch version is included with comparisons.
 
         Returns
         -------
@@ -506,32 +534,48 @@ class GDALVersion:
         if isinstance(input, cls):
             return input
         if isinstance(input, tuple):
+            if not include_patch:
+                input = input[:2]
             return cls(*input)
         elif isinstance(input, str):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
-            match = re.search(r'^\d+\.\d+', input)
+            match = re.search(
+                r"^(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?", input
+            )
             if not match:
                 raise ValueError(
-                    "value does not appear to be a valid GDAL version "
-                    "number: {}".format(input))
-            major, minor = (int(c) for c in match.group().split('.'))
-            return cls(major=major, minor=minor)
+                    f"value does not appear to be a valid GDAL version number: {input}"
+                )
+            version = match.groupdict()
+            major = int(version["major"])
+            minor = int(version["minor"])
+            patch = int(version["patch"]) if include_patch and version["patch"] else 0
+            return cls(major=major, minor=minor, patch=patch)
 
         raise TypeError("GDALVersion can only be parsed from a string or tuple")
 
     @classmethod
-    def runtime(cls):
+    def runtime(cls, include_patch=False):
         """Return GDALVersion of current GDAL runtime"""
-        return cls.parse(gdal_version())
+        return cls.parse(gdal_version(), include_patch=include_patch)
 
-    def at_least(self, other):
-        other = self.__class__.parse(other)
+    def at_least(self, other, include_patch=False):
+        other = self.__class__.parse(other, include_patch=include_patch)
         return self >= other
 
 
-def require_gdal_version(version, param=None, values=None, is_max_version=False,
-                         reason=''):
+_GDAL_RUNTIME_VERSION = GDALVersion.runtime()
+_GDAL_AT_LEAST_3_10 = _GDAL_RUNTIME_VERSION.at_least("3.10")
+_GDAL_AT_LEAST_3_11 = _GDAL_RUNTIME_VERSION.at_least("3.11")
+_GDAL_AT_LEAST_3_12_1 = GDALVersion.runtime(include_patch=True).at_least(
+    "3.12.1", include_patch=True
+)
+
+
+def require_gdal_version(
+    version, param=None, values=None, is_max_version=False, reason=""
+):
     """A decorator that ensures the called function or parameters are supported
     by the runtime version of GDAL.  Raises GDALVersionError if conditions
     are not met.
@@ -588,57 +632,59 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
     if values is not None:
         if param is None:
-            raise ValueError(
-                'require_gdal_version: param must be provided with values')
+            raise ValueError("require_gdal_version: param must be provided with values")
 
         if not isinstance(values, (tuple, list, set)):
             raise ValueError(
-                'require_gdal_version: values must be a tuple, list, or set')
+                "require_gdal_version: values must be a tuple, list, or set"
+            )
 
     version = GDALVersion.parse(version)
-    runtime = GDALVersion.runtime()
+    runtime = _GDAL_RUNTIME_VERSION
     inequality = ">=" if runtime < version else "<="
     reason = f"\n{reason}" if reason else reason
 
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwds):
-            if ((runtime < version and not is_max_version) or
-                    (is_max_version and runtime > version)):
-
+            if (runtime < version and not is_max_version) or (
+                is_max_version and runtime > version
+            ):
                 if param is None:
                     raise GDALVersionError(
                         "GDAL version must be {} {}{}".format(
-                            inequality, str(version), reason))
+                            inequality, str(version), reason
+                        )
+                    )
 
                 # normalize args and kwds to dict
                 argspec = getargspec(f)
                 full_kwds = kwds.copy()
 
                 if argspec.args:
-                    full_kwds.update(dict(zip(argspec.args[:len(args)], args)))
+                    full_kwds.update(dict(zip(argspec.args[: len(args)], args)))
 
                 if argspec.defaults:
-                    defaults = dict(zip(
-                        reversed(argspec.args), reversed(argspec.defaults)))
+                    defaults = dict(
+                        zip(reversed(argspec.args), reversed(argspec.defaults))
+                    )
                 else:
                     defaults = {}
 
                 if param in full_kwds:
                     if values is None:
                         if param not in defaults or (
-                                full_kwds[param] != defaults[param]):
+                            full_kwds[param] != defaults[param]
+                        ):
                             raise GDALVersionError(
-                                'usage of parameter "{}" requires '
-                                "GDAL {} {}{}".format(
+                                'usage of parameter "{}" requires GDAL {} {}{}'.format(
                                     param, inequality, version, reason
                                 )
                             )
 
                     elif full_kwds[param] in values:
                         raise GDALVersionError(
-                            'parameter "{}={}" requires '
-                            "GDAL {} {}{}".format(
+                            'parameter "{}={}" requires GDAL {} {}{}'.format(
                                 param, full_kwds[param], inequality, version, reason
                             )
                         )
@@ -652,8 +698,7 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
 # Patch the environment if needed, such as in the installed wheel case.
 
-if 'GDAL_DATA' not in os.environ:
-
+if "GDAL_DATA" not in os.environ:
     path = GDALDataFinder().search_wheel()
 
     if path:

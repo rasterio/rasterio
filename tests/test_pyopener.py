@@ -1,11 +1,13 @@
 """Tests of the Python opener VSI plugin."""
 
+import concurrent.futures
 import io
 import os
 import warnings
+import zipfile
+from contextlib import nullcontext
 from pathlib import Path
 from threading import Thread
-import zipfile
 
 from affine import Affine
 import fsspec
@@ -14,6 +16,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.errors import OpenerRegistrationError
 from rasterio.warp import reproject
 
@@ -42,7 +45,8 @@ def test_opener_zipfile_open():
 
 
 @pytest.mark.parametrize(
-    "urlpath", ["file://tests/data/RGB.byte.tif", "zip://RGB.byte.tif::tests/data/files.zip"]
+    "urlpath",
+    ["file://tests/data/RGB.byte.tif", "zip://RGB.byte.tif::tests/data/files.zip"],
 )
 def test_opener_fsspec_open(urlpath):
     """Use fsspec.open as opener."""
@@ -78,6 +82,19 @@ def test_opener_fsspec_http_fs():
         "https://raw.githubusercontent.com/rasterio/rasterio/main/tests/data/float32.tif",
         opener=fs,
     ) as src:
+        profile = src.profile
+        assert profile["driver"] == "GTiff"
+        assert profile["count"] == 1
+
+
+@pytest.mark.network
+def test_fsspec_s3_openfile():
+    """Use fsspec s3 location via OpenFile object."""
+    of = fsspec.open(
+        "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif",
+        anon=True,
+    )
+    with rasterio.open(of) as src:
         profile = src.profile
         assert profile["driver"] == "GTiff"
         assert profile["count"] == 1
@@ -211,6 +228,7 @@ def test_delete_on_overwrite(data):
 def test_opener_registration(opener):
     """Opener is correctly registered."""
     from rasterio._vsiopener import _OPENER_REGISTRY, _opener_registration
+
     with _opener_registration("tests/data/RGB.byte.tif", opener) as registered_vsi_path:
         assert registered_vsi_path.startswith("/vsiriopener_")
         key = (Path("tests/data"), registered_vsi_path.split("/")[1].split("_")[1])
@@ -277,6 +295,24 @@ def test_opener_fsspec_fs_tiff_threads_2():
             assert src.read().shape == (3, 718, 791)
 
 
+def test_opener_fsspec_thread_safe_option():
+    fs = fsspec.filesystem("file")
+    with (
+        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
+        if not _GDAL_AT_LEAST_3_10
+        else nullcontext(),
+        rasterio.Env(GDAL_NUM_THREADS=2),
+        rasterio.open("tests/data/rgb_lzw.tif", thread_safe=True, opener=fs) as src,
+    ):
+
+        def process(window):
+            src.read(window=window).sum()
+
+        windows = [window for ij, window in src.block_windows()]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process, windows)
+
+
 def test_opener_multi_range_read():
     """Test with Opener with multi-range-read method."""
     from rasterio.abc import MultiByteRangeResourceContainer
@@ -301,14 +337,19 @@ def test_opener_multi_range_read():
     class CustomResourceContainer:
         def open(self, path, mode="r", **kwds):
             return CustomResource(path, mode=mode, **kwds)
+
         def isfile(self, path):
             return True
+
         def isdir(self, path):
             return False
+
         def ls(self, path):
             return []
+
         def mtime(self, path):
             return 0
+
         def size(self, path):
             with CustomResource(path) as f:
                 return f.size()

@@ -1,6 +1,7 @@
 """Raster warping and reprojection."""
 
 from math import ceil, floor
+import warnings
 
 from affine import Affine
 import numpy as np
@@ -10,8 +11,8 @@ import rasterio
 from rasterio._base import _transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.env import ensure_env, require_gdal_version
-from rasterio.errors import TransformError, RPCError
+from rasterio.env import ensure_env
+from rasterio.errors import TransformError, RPCError, RasterioDeprecationWarning
 from rasterio.transform import array_bounds
 from rasterio._warp import (
     _calculate_default_transform,
@@ -21,9 +22,9 @@ from rasterio._warp import (
     SUPPORTED_RESAMPLING,
 )
 
+
 @ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
-
     """Transform vectors from source to target coordinate reference system.
 
     Transform vectors of x, y and optionally z from source
@@ -61,17 +62,14 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
 
 
 @ensure_env
-@require_gdal_version('2.1', param='antimeridian_cutting', values=[False],
-                      is_max_version=True,
-                      reason="Antimeridian cutting is always enabled on "
-                             "GDAL >= 2.2")
 def transform_geom(
-        src_crs,
-        dst_crs,
-        geom,
-        antimeridian_cutting=True,
-        antimeridian_offset=10.0,
-        precision=-1):
+    src_crs,
+    dst_crs,
+    geom,
+    antimeridian_cutting=None,
+    antimeridian_offset=None,
+    precision=-1,
+):
     """Transform geometry from source coordinate reference system into target.
 
     Parameters
@@ -82,14 +80,10 @@ def transform_geom(
     dst_crs: CRS or dict
         Target coordinate reference system.
     geom: GeoJSON like dict object or iterable of GeoJSON like objects.
-    antimeridian_cutting: bool, optional
-        If True, cut geometries at the antimeridian, otherwise geometries
-        will not be cut (default).  If False and GDAL is 2.2.0 or newer
-        an exception is raised.  Antimeridian cutting is always on as of
-        GDAL 2.2.0 but this could produce an unexpected geometry.
+    antimeridian_cutting: bool
+        DEPRECATED: Always enabled since GDAL 2.2.
     antimeridian_offset: float
-        Offset from the antimeridian in degrees (default: 10) within which
-        any geometries will be split.
+        DEPRECATED: No longer has any effect since GDAL 2.2.
     precision: float
         If >= 0, geometry coordinates will be rounded to this number of decimal
         places after the transform operation, otherwise original coordinate
@@ -100,24 +94,21 @@ def transform_geom(
     out: GeoJSON like dict object or list of GeoJSON like objects.
         Transformed geometry(s) in GeoJSON dict format
     """
-
+    if antimeridian_cutting is not None or antimeridian_offset is not None:
+        warnings.warn(
+            "The antimeridian_cutting and antimeridian_offset parameters are "
+            "deprecated and no longer have any effect.",
+            RasterioDeprecationWarning,
+        )
     return _transform_geom(
         src_crs,
         dst_crs,
         geom,
-        antimeridian_cutting,
-        antimeridian_offset,
-        precision)
+        precision,
+    )
 
 
-def transform_bounds(
-        src_crs,
-        dst_crs,
-        left,
-        bottom,
-        right,
-        top,
-        densify_pts=21):
+def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21):
     """Transform bounds from src_crs to dst_crs.
 
     Optionally densifying the edges (to account for nonlinear transformations
@@ -178,7 +169,7 @@ def reproject(
     init_dest_nodata=True,
     warp_mem_limit=0,
     src_geoloc_array=None,
-    **kwargs
+    **kwargs,
 ):
     """Reproject a source raster to a destination raster.
 
@@ -278,7 +269,7 @@ def reproject(
     Returns
     ---------
     destination: ndarray or Band
-        The transformed narray or Band.
+        The transformed ndarray or Band.
     dst_transform: Affine
         The affine transformation matrix of the destination.
     """
@@ -310,7 +301,9 @@ def reproject(
         raise ValueError("Must provide destination if dst_transform is provided.")
 
     # calculate the destination transform if not provided
-    if dst_transform is None and (destination is None or isinstance(destination, np.ndarray)):
+    if dst_transform is None and (
+        destination is None or isinstance(destination, np.ndarray)
+    ):
         src_bounds = tuple([None] * 4)
         if isinstance(source, np.ndarray):
             if source.ndim == 3:
@@ -339,7 +332,9 @@ def reproject(
                 else:
                     src_crs_obj = src_crs
                 if src_crs is not None and src_crs_obj.to_epsg() != 4326:
-                    raise RPCError("Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326")
+                    raise RPCError(
+                        "Reprojecting with rational polynomial coefficients using source CRS other than EPSG:4326"
+                    )
 
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
@@ -382,7 +377,7 @@ def reproject(
                 (int(dst_count), int(dst_height), int(dst_width)), dtype=source.dtype
             )
             if masked:
-                destination = np.ma.masked_array(destination).filled(dst_nodata)
+                destination = np.ma.masked_array(destination)
 
     dest = _reproject(
         source,
@@ -402,7 +397,7 @@ def reproject(
         num_threads=num_threads,
         warp_mem_limit=warp_mem_limit,
         src_geoloc_array=src_geoloc_array,
-        **kwargs
+        **kwargs,
     )
 
     return dest, dst_transform
@@ -466,7 +461,7 @@ def calculate_default_transform(
     dst_width=None,
     dst_height=None,
     src_geoloc_array=None,
-    **kwargs
+    **kwargs,
 ):
     """Computes the default dimensions and transform for a reprojection.
 
@@ -542,8 +537,9 @@ def calculate_default_transform(
         )
 
     if (dst_width is None) != (dst_height is None):
-        raise ValueError("Either dst_width and dst_height must be specified "
-                         "or none of them.")
+        raise ValueError(
+            "Either dst_width and dst_height must be specified or none of them."
+        )
 
     if all(x is not None for x in (dst_width, dst_height)):
         dimensions = (dst_width, dst_height)
@@ -565,7 +561,7 @@ def calculate_default_transform(
         gcps=gcps,
         rpcs=rpcs,
         src_geoloc_array=src_geoloc_array,
-        **kwargs
+        **kwargs,
     )
 
     # If resolution is specified, Keep upper-left anchored
@@ -590,8 +586,9 @@ def calculate_default_transform(
         xratio = dst_affine.a / xres
         yratio = dst_affine.e / yres
 
-        dst_affine = Affine(xres, dst_affine.b, dst_affine.c,
-                            dst_affine.d, yres, dst_affine.f)
+        dst_affine = Affine(
+            xres, dst_affine.b, dst_affine.c, dst_affine.d, yres, dst_affine.f
+        )
 
         dst_width = ceil(dst_width * xratio)
         dst_height = ceil(dst_height * yratio)
@@ -603,7 +600,13 @@ def calculate_default_transform(
         dst_width = dimensions[0]
         dst_height = dimensions[1]
 
-        dst_affine = Affine(dst_affine.a * xratio, dst_affine.b, dst_affine.c,
-                            dst_affine.d, dst_affine.e * yratio, dst_affine.f)
+        dst_affine = Affine(
+            dst_affine.a * xratio,
+            dst_affine.b,
+            dst_affine.c,
+            dst_affine.d,
+            dst_affine.e * yratio,
+            dst_affine.f,
+        )
 
     return dst_affine, dst_width, dst_height

@@ -203,24 +203,26 @@ cdef extern from "ogr_srs_api.h" nogil:
                                 char ** ppszReturn,
                                 const char* const* papszOptions)
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
-    cdef extern from "ogr_srs_api.h" nogil:
-
-        int OCTTransformBounds(
-            OGRCoordinateTransformationH hCT,
-            const double xmin,
-            const double ymin,
-            const double xmax,
-            const double ymax,
-            double* out_xmin,
-            double* out_ymin,
-            double* out_xmax,
-            double* out_ymax,
-            const int densify_pts )
+    int OCTTransformBounds(
+        OGRCoordinateTransformationH hCT,
+        const double xmin,
+        const double ymin,
+        const double xmax,
+        const double ymax,
+        double* out_xmin,
+        double* out_ymin,
+        double* out_xmax,
+        double* out_ymax,
+        const int densify_pts )
 
 
 cdef extern from "gdal.h" nogil:
+
+    const int GDAL_OF_READONLY
+    const int GDAL_OF_UPDATE
+    const int GDAL_OF_RASTER
+    const int GDAL_OF_SHARED
+    const int GDAL_OF_VERBOSE_ERROR
 
     ctypedef void * GDALMajorObjectH
     ctypedef void * GDALDatasetH
@@ -243,10 +245,12 @@ cdef extern from "gdal.h" nogil:
         GDT_Int32
         GDT_UInt64
         GDT_Int64
+        GDT_Float16
         GDT_Float32
         GDT_Float64
         GDT_CInt16
         GDT_CInt32
+        GDT_CFloat16
         GDT_CFloat32
         GDT_CFloat64
         GDT_TypeCount
@@ -269,70 +273,46 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
-    cdef extern from "gdal.h" nogil:
-
-        ctypedef enum GDALColorInterp:
-            GCI_Undefined
-            GCI_GrayIndex
-            GCI_PaletteIndex
-            GCI_RedBand
-            GCI_GreenBand
-            GCI_BlueBand
-            GCI_AlphaBand
-            GCI_HueBand
-            GCI_SaturationBand
-            GCI_LightnessBand
-            GCI_CyanBand
-            GCI_YCbCr_YBand
-            GCI_YCbCr_CbBand
-            GCI_YCbCr_CrBand
-            GCI_PanBand
-            GCI_CoastalBand
-            GCI_RedEdgeBand
-            GCI_NIRBand
-            GCI_SWIRBand
-            GCI_MWIRBand
-            GCI_LWIRBand
-            GCI_TIRBand
-            GCI_OtherIRBand
-            GCI_IR_Reserved_1
-            GCI_IR_Reserved_2
-            GCI_IR_Reserved_3
-            GCI_IR_Reserved_4
-            GCI_SAR_Ka_Band
-            GCI_SAR_K_Band
-            GCI_SAR_Ku_Band
-            GCI_SAR_X_Band
-            GCI_SAR_C_Band
-            GCI_SAR_S_Band
-            GCI_SAR_L_Band
-            GCI_SAR_P_Band
-            GCI_SAR_Reserved_1
-            GCI_SAR_Reserved_2
-            GCI_Max
-ELSE:
-    cdef extern from "gdal.h" nogil:
-
-        ctypedef enum GDALColorInterp:
-            GCI_Undefined
-            GCI_GrayIndex
-            GCI_PaletteIndex
-            GCI_RedBand
-            GCI_GreenBand
-            GCI_BlueBand
-            GCI_AlphaBand
-            GCI_HueBand
-            GCI_SaturationBand
-            GCI_LightnessBand
-            GCI_CyanBand
-            GCI_YCbCr_YBand
-            GCI_YCbCr_CbBand
-            GCI_YCbCr_CrBand
-
-
-cdef extern from "gdal.h" nogil:
+    ctypedef enum GDALColorInterp:
+        GCI_Undefined
+        GCI_GrayIndex
+        GCI_PaletteIndex
+        GCI_RedBand
+        GCI_GreenBand
+        GCI_BlueBand
+        GCI_AlphaBand
+        GCI_HueBand
+        GCI_SaturationBand
+        GCI_LightnessBand
+        GCI_CyanBand
+        GCI_YCbCr_YBand
+        GCI_YCbCr_CbBand
+        GCI_YCbCr_CrBand
+        # below enums exist in GDAL 3.10+
+        GCI_PanBand
+        GCI_CoastalBand
+        GCI_RedEdgeBand
+        GCI_NIRBand
+        GCI_SWIRBand
+        GCI_MWIRBand
+        GCI_LWIRBand
+        GCI_TIRBand
+        GCI_OtherIRBand
+        GCI_IR_Reserved_1
+        GCI_IR_Reserved_2
+        GCI_IR_Reserved_3
+        GCI_IR_Reserved_4
+        GCI_SAR_Ka_Band
+        GCI_SAR_K_Band
+        GCI_SAR_Ku_Band
+        GCI_SAR_X_Band
+        GCI_SAR_C_Band
+        GCI_SAR_S_Band
+        GCI_SAR_L_Band
+        GCI_SAR_P_Band
+        GCI_SAR_Reserved_1
+        GCI_SAR_Reserved_2
+        GCI_Max
 
     ctypedef struct GDALColorEntry:
         short c1
@@ -383,7 +363,7 @@ cdef extern from "gdal.h" nogil:
     void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, GDALAccess access) # except -1
-    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, unsigned int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
     GDALDatasetH GDALOpenShared(const char *filename, GDALAccess access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
     void GDALClose(GDALDatasetH hds)
@@ -490,6 +470,11 @@ cdef extern from "gdal.h" nogil:
     int GDALReferenceDataset(GDALDatasetH hds)
     int GDALDereferenceDataset(GDALDatasetH hds)
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
+    cdef extern from "gdal.h" nogil:
+        const int GDAL_OF_THREAD_SAFE
+ELSE:
+    cdef int GDAL_OF_THREAD_SAFE = 0x800
 
 cdef extern from "ogr_api.h" nogil:
 
@@ -689,15 +674,10 @@ cdef extern from "gdalwarper.h" nogil:
         GDALDatasetH hSrcDS, int nPixels, int nLines,
          double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
 
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
-    cdef extern from "gdalwarper.h" nogil:
-
-        GDALDatasetH GDALAutoCreateWarpedVRTEx(
-            GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
-            GDALResampleAlg eResampleAlg, double dfMaxError,
-            const GDALWarpOptions *psOptions, char** papszTransformerOptions)
-
+    GDALDatasetH GDALAutoCreateWarpedVRTEx(
+        GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
+        GDALResampleAlg eResampleAlg, double dfMaxError,
+        const GDALWarpOptions *psOptions, char** papszTransformerOptions)
 
 
 cdef extern from "gdal_alg.h" nogil:
@@ -768,7 +748,28 @@ cdef extern from "gdal_alg.h" nogil:
             void * pTransformArg, double * padfGeoTransformOut, int * pnPixels,
             int * pnLines, double * padfExtent, int nOptions)
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 11):
+    cdef extern from "gdal_alg.h" nogil:
+        const char *GDALGetGenImgProjTranformerOptionList()
+
 
 cdef extern from "ogr_core.h" nogil:
 
     char *OGRGeometryTypeToName(int type)
+
+    ctypedef enum OGRFieldType:
+        OFTInteger
+        OFTIntegerList
+        OFTReal
+        OFTRealList
+        OFTString
+        OFTStringList
+        OFTWideString
+        OFTWideStringList
+        OFTBinary
+        OFTDate
+        OFTTime
+        OFTDateTime
+        OFTInteger64
+        OFTInteger64List
+        OFTMaxType

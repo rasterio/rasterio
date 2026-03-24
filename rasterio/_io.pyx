@@ -29,7 +29,16 @@ from rasterio.errors import (
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
     StatisticsError, RasterioDeprecationWarning
 )
-from rasterio.dtypes import is_ndarray, _is_complex_int, _getnpdtype, _gdal_typename, _get_gdal_dtype
+from rasterio.dtypes import (
+    is_ndarray,
+    _is_complex_int,
+    _getnpdtype,
+    _gdal_typename,
+    _get_gdal_dtype,
+    int8,
+    uint8,
+)
+
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio._path import _parse_path, _UnparsedPath
@@ -159,41 +168,6 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     for i in range(count):
         bandmap[i] = <int>indexes[i]
 
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) >= (3, 6, 0) and (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION, CTE_GDAL_PATCH_VERSION) < (3, 7, 1):
-        # Workaround for https://github.com/rasterio/rasterio/issues/2847
-        # (bug when reading TIFF PlanarConfiguration=Separate images with
-        # multi-threading)
-        # To be removed when GDAL >= 3.7.1 is required
-        cdef const char* interleave = NULL
-        cdef GDALDriverH driver = NULL
-        cdef const char* driver_name = NULL
-        cdef GDALRasterBandH band = NULL
-
-        if CPLGetConfigOption("GDAL_NUM_THREADS", NULL):
-            interleave = GDALGetMetadataItem(hds, "INTERLEAVE", "IMAGE_STRUCTURE")
-            if interleave and interleave == b"BAND":
-                driver = GDALGetDatasetDriver(hds)
-                if driver:
-                    driver_name = GDALGetDescription(driver)
-                    if driver_name and driver_name == b"GTiff":
-                        try:
-                            for i in range(count):
-                                band = GDALGetRasterBand(hds, bandmap[i])
-                                if band == NULL:
-                                    raise ValueError("Null band")
-                                with stack_errors() as checker:
-                                    with nogil:
-                                        retval = GDALRasterIOEx(
-                                            band,
-                                            <GDALRWFlag>mode, xoff, yoff, xsize, ysize,
-                                            <void *>(<char *>buf + i * bufbandspace),
-                                            bufxsize, bufysize, buftype,
-                                            bufpixelspace, buflinespace, &extras)
-                                    checker.exc_wrap_int(retval)
-                            return 0
-                        finally:
-                            CPLFree(bandmap)
-
     # Chain errors coming from GDAL.
     try:
         with stack_errors() as checker:
@@ -278,53 +252,6 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
     return retval
 
 
-cdef _delete_dataset_if_exists(path):
-    """Delete a dataset if it already exists.
-
-    This operates at a lower level than a:
-
-        if rasterio.shutil.exists(path):
-            rasterio.shutil.delete(path)
-
-    and can take some shortcuts.
-
-    Parameters
-    ----------
-    path : str
-        Dataset path.
-
-    Returns
-    -------
-    None
-
-    """
-    cdef GDALDatasetH dataset = NULL
-    cdef GDALDriverH driver = NULL
-    cdef const char *path_c = NULL
-
-    try:
-        with catch_errors():
-            dataset = open_dataset(path, 0x40, None, None, None)
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError, CPLE_HttpResponseError) as exc:
-        log.debug("Skipped delete for overwrite, dataset does not exist: %r", path)
-    else:
-        driver = GDALGetDatasetDriver(dataset)
-        GDALClose(dataset)
-        dataset = NULL
-
-        if driver != NULL:
-            path_b = path.encode("utf-8")
-            path_c = path_b
-
-            with nogil:
-                 err = GDALDeleteDataset(driver, path_c)
-
-            exc_wrap_int(err)
-    finally:
-        if dataset != NULL:
-            GDALClose(dataset)
-
-
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -367,7 +294,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
             return io_band(band, write, 0.0, 0.0, width, height, data, resampling=resampling)
 
         elif ndims == 3:
-            indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
+            indexes = np.arange(1, data.shape[0] + 1, dtype=np.intp)
             return io_multi_band(band, write, 0.0, 0.0, width, height, data, indexes, resampling=resampling)
 
         else:
@@ -647,10 +574,10 @@ cdef class DatasetReaderBase(DatasetBase):
                 if all_valid:
                     mask = np.ma.nomask
                 else:
-                    mask = np.zeros(out.shape, 'uint8')
+                    mask = np.zeros(out.shape, dtype=np.uint8)
                     mask = ~self._read(
-                        indexes, mask, window, 'uint8', masks=True,
-                        resampling=resampling).astype('bool')
+                        indexes, mask, window, dtype=uint8, masks=True,
+                        resampling=resampling).astype(bool)
 
                 kwds = {'mask': mask}
                 # Set a fill value only if the read bands share a
@@ -704,16 +631,16 @@ cdef class DatasetReaderBase(DatasetBase):
                         )
 
                         with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                            mask = np.zeros(out.shape, 'uint8')
+                            mask = np.zeros(out.shape, dtype=np.uint8)
                             mask = ~mask_vrt._read(
-                                indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
+                                indexes, mask, Window(0, 0, window.width, window.height), None).astype(bool)
 
                     else:
-                        mask = np.zeros(out.shape, 'uint8')
+                        mask = np.zeros(out.shape, dtype=np.uint8)
                         window = Window(0, 0, window.width, window.height)
                         log.debug("Boundless read: window=%r", window)
                         mask = ~vrt._read(
-                            indexes, mask, window, None, masks=True).astype('bool')
+                            indexes, mask, window, None, masks=True).astype(bool)
 
                     kwds = {'mask': mask}
 
@@ -829,14 +756,14 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             win_shape += self.shape
 
-        dtype = 'uint8'
+        dtype = np.uint8
 
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
         elif out_shape is not None:
             if len(out_shape) == 2:
                 out_shape = (len(indexes),) + out_shape
-            out = np.zeros(out_shape, 'uint8')
+            out = np.zeros(out_shape, dtype=np.uint8)
 
         if out is not None:
             if out.dtype != _getnpdtype(dtype):
@@ -848,7 +775,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
         else:
-            out = np.zeros(win_shape, 'uint8')
+            out = np.zeros(win_shape, dtype=np.uint8)
 
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
@@ -870,9 +797,9 @@ cdef class DatasetReaderBase(DatasetBase):
                 with DatasetWriterBase(
                         blank_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,
-                        dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
+                        dtype=uint8, crs=self.crs, transform=transform) as blank_dataset:
                     blank_dataset.write(
-                        np.full((self.count, 3, 3), 255, dtype='uint8'))
+                        np.full((self.count, 3, 3), 255, dtype=np.uint8))
 
                 with DatasetReaderBase(blank_path) as blank_dataset:
                     mask_vrt_doc = _boundless_vrt_doc(
@@ -884,9 +811,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     )
 
                     with DatasetReaderBase(_UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
-                        out = np.zeros(out.shape, 'uint8')
+                        out = np.zeros(out.shape, dtype=np.uint8)
                         out = mask_vrt._read(
-                            indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
+                            indexes, out, Window(0, 0, window.width, window.height), None).astype(bool)
 
             else:
                 vrt_doc = _boundless_vrt_doc(
@@ -952,7 +879,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
-        indexes_arr = np.array(indexes, dtype='intp')
+        indexes_arr = np.array(indexes, dtype=np.intp)
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
@@ -1168,10 +1095,7 @@ cdef class DatasetReaderBase(DatasetBase):
         band = self.band(bidx)
 
         if clear_cache:
-            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 2):
-                GDALDatasetClearStatistics(self._hds)
-            ELSE:
-                warnings.warn("Statistics cache not cleared. This option requires GDAL 3.2.")
+            GDALDatasetClearStatistics(self._hds)
 
         try:
             exc_wrap_int(
@@ -1293,28 +1217,28 @@ cdef class MemoryFileBase:
         buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
 
         if buffer == NULL or buffer_len == 0:
-            buff_view = np.array([], dtype='uint8')
+            buff_view = np.array([], dtype=np.uint8)
         else:
             buff_view = <np.uint8_t[:buffer_len]>buffer
         return buff_view
 
     def close(self):
-        if self._vsif != NULL:
-            VSIFCloseL(self._vsif)
-        self._vsif = NULL
+        if self._vsif == NULL:
+            return
+
+        VSIFCloseL(self._vsif)
         VSIRmdirRecursive("/vsimem/{}".format(self._dirname).encode("utf-8"))
+        self._vsif = NULL
 
     def seek(self, offset, whence=0):
         if self.closed:
             raise ValueError("I/O operation on closed MemoryFile")
-        else:
-            return VSIFSeekL(self._vsif, offset, whence)
+        return VSIFSeekL(self._vsif, offset, whence)
 
     def tell(self):
         if self.closed:
             raise ValueError("I/O operation on closed MemoryFile")
-        else:
-            return VSIFTellL(self._vsif)
+        return VSIFTellL(self._vsif)
 
     def read(self, size=-1):
         """Read bytes from MemoryFile.
@@ -1448,8 +1372,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef const char *fname = NULL
-        cdef int flags = 0
-        cdef int sharing_flag = (0x20 if sharing else 0x0)
 
         # Validate write mode arguments.
         if mode in ('w', 'w+'):
@@ -1500,16 +1422,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if mode in ('w', 'w+'):
             options = convert_options(kwargs)
-
-            # Delete this. GDALCreate has been doing the cleanup since
-            # version 3.2.0.
-            if bool(CSLFetchBoolean(options, "APPEND_SUBDATASET", 0)):
-                log.debug("No deletion, subdataset will be added: path=%r", path)
-            else:
-                _delete_dataset_if_exists(vsi_path)
-
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
+
             try:
                 drv = exc_wrap_pointer(GDALGetDriverByName(drv_name))
             except Exception as err:
@@ -1519,11 +1434,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             gdal_dtype = _get_gdal_dtype(self._init_dtype)
-
-            # Before GDAL 3.7, int8 was dealt by GDAL as a GDT_Byte (1)
-            # with PIXELTYPE=SIGNEDBYTE creation option.
-            if _getnpdtype(self._init_dtype) == _getnpdtype('int8') and gdal_dtype == 1:
-                options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.
             try:
@@ -1578,11 +1488,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if isinstance(driver, str):
                 driver = [driver]
 
-            # flags: Update + Raster + Errors
-            flags = 0x01 | sharing_flag | 0x40
-
             try:
-                self._hds = open_dataset(vsi_path, flags, driver, kwargs, None)
+                self._hds = open_dataset(
+                    filename=vsi_path,
+                    flags=GDAL_OF_UPDATE,
+                    allowed_drivers=driver,
+                    open_options=kwargs,
+                    sharing=sharing,
+                    siblings=None,
+                )
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1605,7 +1519,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._rpcs = None
         self._init_gcps = gcps
         self._init_rpcs = rpcs
-        self._closed = True
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
@@ -1635,7 +1548,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = self.read_crs()
         _ = self.meta
         self._env = ExitStack()
-        self._closed = False
 
     def __repr__(self):
         return "<%s RasterUpdater name='%s' mode='%s'>" % (
@@ -1813,8 +1725,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         dtype = _getnpdtype(dtype)
 
-        if dtype.name == "int8":
-            arr = arr.astype("uint8")
+        if dtype.name == int8:
+            arr = arr.astype(np.uint8)
 
         # Require C-continguous arrays (see #108).
         arr = np.require(arr, dtype=dtype, requirements='C')
@@ -1833,7 +1745,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = <int>self.width
             height = <int>self.height
 
-        indexes_arr = np.array(indexes, dtype='intp')
+        indexes_arr = np.array(indexes, dtype=np.intp)
         indexes_count = <int>indexes_arr.shape[0]
 
         try:
@@ -2389,7 +2301,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         self._init_gcps = gcps
         self._rpcs = None
         self._init_rpcs = rpcs
-        self._closed = True
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
@@ -2410,17 +2321,14 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
-                if _getnpdtype(self._init_dtype) == _getnpdtype('int8'):
-                    options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
-
                 tp = self._init_dtype.type
                 gdal_dtype = _get_gdal_dtype(tp)
             else:
                 gdal_dtype = _get_gdal_dtype(self._init_dtype)
 
             self._hds = exc_wrap_pointer(
-                GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, options))
+                GDALCreate(memdrv, "temp", self.width, self.height, self._count, gdal_dtype, options)
+            )
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -2464,9 +2372,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         _ = self.meta
         self._env = ExitStack()
-        self._closed = False
 
     def stop(self):
+        if self._hds == NULL:
+            return
+
         cdef const char *drv_name = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL
@@ -2475,12 +2385,12 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef GDALDatasetH temp = NULL
         cdef const char *fname = NULL
 
+        # Bail out immediately if the GDALDatasetH is NULL.
+        if self._hds == NULL:
+            return
+
         name_b = self.name.encode('utf-8')
         fname = name_b
-
-        # Delete existing file, create.
-        _delete_dataset_if_exists(self.name)
-
         driver_b = self.driver.encode('utf-8')
         drv_name = driver_b
         drv = GDALGetDriverByName(drv_name)

@@ -711,7 +711,7 @@ information on how to build these plugins in general.
 
 To use these plugins with rio, add the commands to the
 ``rasterio.rio_plugins`` entry point in your ``setup.py`` file, as described
-`here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
+`here <https://github.com/click-contrib/click-plugins/blob/main/click_plugins.rst#i-am-a-plugin-author>`__
 and in ``rasterio/rio/main.py``.
 
 See the

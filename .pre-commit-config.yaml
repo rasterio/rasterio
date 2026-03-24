@@ -1,11 +1,18 @@
 repos:
-    -   repo: https://github.com/pycqa/flake8
-        rev: 6.0.0
-        hooks:
-            -   id: flake8
-    -   repo: https://github.com/codespell-project/codespell
-        rev: v2.4.1
-        hooks:
-            -   id: codespell
-                additional_dependencies:
-                    -   tomli
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.8
+    hooks:
+      # Run the linter
+      - id: ruff-check
+        args: [ --fix ]
+      - id: ruff-format

@@ -34,8 +34,11 @@ def mock_fhs(tmpdir):
 @pytest.fixture
 def mock_debian(tmpdir):
     """A fake Debian multi-install system"""
-    tmpdir.ensure("share/gdal/3.5/gdalvrt.xsd")
-    tmpdir.ensure("share/gdal/3.6/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.8/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.9/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.10/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.11/gdalvrt.xsd")
+    tmpdir.ensure("share/gdal/3.12/gdalvrt.xsd")
     tmpdir.ensure(f"share/gdal/{gdal_version.major}.{gdal_version.minor}/gdalvrt.xsd")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
@@ -50,7 +53,9 @@ def test_search_wheel_gdal_data_failure(tmpdir):
 def test_search_wheel_gdal_data(mock_wheel):
     """Find GDAL data in a wheel"""
     finder = GDALDataFinder()
-    assert finder.search_wheel(str(mock_wheel.join("_env.py"))) == str(mock_wheel.join("gdal_data"))
+    assert finder.search_wheel(str(mock_wheel.join("_env.py"))) == str(
+        mock_wheel.join("gdal_data")
+    )
 
 
 def test_search_prefix_gdal_data_failure(tmpdir):
@@ -62,7 +67,9 @@ def test_search_prefix_gdal_data_failure(tmpdir):
 def test_search_prefix_gdal_data(mock_fhs):
     """Find GDAL data under prefix"""
     finder = GDALDataFinder()
-    assert finder.search_prefix(str(mock_fhs)) == str(mock_fhs.join("share").join("gdal"))
+    assert finder.search_prefix(str(mock_fhs)) == str(
+        mock_fhs.join("share").join("gdal")
+    )
 
 
 def test_search_debian_gdal_data_failure(tmpdir):
@@ -75,13 +82,17 @@ def test_search_debian_gdal_data(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()
     assert finder.search_debian(str(mock_debian)) == str(
-        mock_debian.join("share").join("gdal").join(f"{str(gdal_version)}")
+        mock_debian.join("share")
+        .join("gdal")
+        .join(f"{gdal_version.major}.{gdal_version.minor}")
     )
 
 
 def test_search_gdal_data_wheel(mock_wheel):
     finder = GDALDataFinder()
-    assert finder.search(str(mock_wheel.join("_env.py"))) == str(mock_wheel.join("gdal_data"))
+    assert finder.search(str(mock_wheel.join("_env.py"))) == str(
+        mock_wheel.join("gdal_data")
+    )
 
 
 def test_search_gdal_data_fhs(mock_fhs):
@@ -93,7 +104,9 @@ def test_search_gdal_data_debian(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()
     assert finder.search(str(mock_debian)) == str(
-        mock_debian.join("share").join("gdal").join(f"{str(gdal_version)}")
+        mock_debian.join("share")
+        .join("gdal")
+        .join(f"{gdal_version.major}.{gdal_version.minor}")
     )
 
 
@@ -106,7 +119,9 @@ def test_search_wheel_proj_data_failure(tmpdir):
 def test_search_wheel_proj_data(mock_wheel):
     """Find GDAL data in a wheel"""
     finder = PROJDataFinder()
-    assert finder.search_wheel(str(mock_wheel.join("_env.py"))) == str(mock_wheel.join("proj_data"))
+    assert finder.search_wheel(str(mock_wheel.join("_env.py"))) == str(
+        mock_wheel.join("proj_data")
+    )
 
 
 def test_search_prefix_proj_data_failure(tmpdir):
@@ -118,12 +133,16 @@ def test_search_prefix_proj_data_failure(tmpdir):
 def test_search_prefix_proj_data(mock_fhs):
     """Find GDAL data under prefix"""
     finder = PROJDataFinder()
-    assert finder.search_prefix(str(mock_fhs)) == str(mock_fhs.join("share").join("proj"))
+    assert finder.search_prefix(str(mock_fhs)) == str(
+        mock_fhs.join("share").join("proj")
+    )
 
 
 def test_search_proj_data_wheel(mock_wheel):
     finder = PROJDataFinder()
-    assert finder.search(str(mock_wheel.join("_env.py"))) == str(mock_wheel.join("proj_data"))
+    assert finder.search(str(mock_wheel.join("_env.py"))) == str(
+        mock_wheel.join("proj_data")
+    )
 
 
 def test_search_proj_data_fhs(mock_fhs):

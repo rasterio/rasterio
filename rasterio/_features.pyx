@@ -1,16 +1,32 @@
 """Feature extraction"""
 
 import logging
+import warnings
+from contextlib import ExitStack
 
 import numpy as np
 
 from rasterio import dtypes
-from rasterio.dtypes import _getnpdtype
+from rasterio.dtypes import (
+    _getnpdtype,
+    bool_,
+    int8,
+    int16,
+    int32,
+    int64,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    float16,
+    float32,
+    float64,
+)
 from rasterio.enums import MergeAlg
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
-from rasterio.env import GDALVersion
+from rasterio.env import _GDAL_AT_LEAST_3_11, _GDAL_AT_LEAST_3_12_1
 
 
 log = logging.getLogger(__name__)
@@ -25,7 +41,7 @@ def _shapes(image, mask, connectivity, transform):
     ----------
     image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int8, rasterio.int16, rasterio.int32,
-        rasterio.uint8, rasterio.uint16, rasterio.float32, or rasterio.float64.
+        rasterio.uint8, rasterio.uint16, rasterio.float16, rasterio.float32, or rasterio.float64.
     mask : numpy.ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -59,25 +75,43 @@ def _shapes(image, mask, connectivity, transform):
     cdef MemoryDataset mask_ds = None
     cdef ShapeIterator shape_iter = None
     cdef int fieldtp
+    cdef bint is_float = _getnpdtype(image.dtype).kind == "f"
+    cdef dict oft_dtypes = {
+       int8: OFTInteger,
+       int16: OFTInteger,
+       int32: OFTInteger,
+       int64: OFTInteger64,
+       uint8: OFTInteger,
+       uint16: OFTInteger,
+       uint32: OFTInteger64,
+       uint64: OFTInteger64,
+       float32: OFTReal,
+       float64: OFTReal,
+    }
+    if _GDAL_AT_LEAST_3_11:
+        oft_dtypes[float16] = OFTReal
 
-    is_float = _getnpdtype(image.dtype).kind == "f"
-    fieldtp = 2 if is_float else 0
+    cdef str dtype_name = _getnpdtype(image.dtype).name
+    if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
+        raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
 
-    valid_dtypes = ("int16", "int32", "uint8", "uint16", "float32", "float64")
-    if GDALVersion.runtime().at_least("3.7"):
-        valid_dtypes += ("int8",)
+    truncated_dtypes = (uint64,)
+    if not _GDAL_AT_LEAST_3_12_1:
+        truncated_dtypes += (float64,)
 
-    if _getnpdtype(image.dtype).name not in valid_dtypes:
-        raise ValueError("image dtype must be one of: {0}".format(
-            ', '.join(valid_dtypes)))
+    if dtype_name in truncated_dtypes:
+        internal_dtype = "float32" if is_float else "int64"
+        warnings.warn(
+            f"The low-level implementation uses a {internal_dtype} buffer. "
+            "Truncation issues may occur."
+        )
 
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
-    try:
-
+    with ExitStack() as exit_stack:
         if dtypes.is_ndarray(image):
-            mem_ds = MemoryDataset(image, transform=transform)
+            mem_ds = exit_stack.enter_context(MemoryDataset(image, transform=transform))
             band = mem_ds.band(1)
         elif isinstance(image, tuple):
             rdr = image.ds
@@ -89,14 +123,16 @@ def _shapes(image, mask, connectivity, transform):
             if mask.shape != image.shape:
                 raise ValueError("Mask must have same shape as image")
 
-            if _getnpdtype(mask.dtype).name not in ('bool', 'uint8'):
-                raise ValueError("Mask must be dtype rasterio.bool_ or "
-                                 "rasterio.uint8")
+            if _getnpdtype(mask.dtype).name not in (bool_, uint8):
+                raise ValueError(
+                    "Mask must be dtype rasterio.bool_ or rasterio.uint8"
+                )
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_ds = MemoryDataset(mask.astype('uint8'),
-                                         transform=transform)
+                mask_ds = exit_stack.enter_context(
+                    MemoryDataset(mask.astype(np.uint8), transform=transform)
+                )
                 maskband = mask_ds.band(1)
             elif isinstance(mask, tuple):
                 mrdr = mask.ds
@@ -121,21 +157,17 @@ def _shapes(image, mask, connectivity, transform):
         OGR_L_CreateField(layer, fielddefn, 1)
         OGR_Fld_Destroy(fielddefn)
 
-        if connectivity == 8:
-            options = CSLSetNameValue(options, "8CONNECTED", "8")
+        try:
+            if connectivity == 8:
+                options = CSLSetNameValue(options, "8CONNECTED", "8")
 
-        if is_float:
-            GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
-        else:
-            GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
-
-    finally:
-        if mem_ds is not None:
-            mem_ds.close()
-        if mask_ds is not None:
-            mask_ds.close()
-        if options:
-            CSLDestroy(options)
+            if is_float:
+                GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+            else:
+                GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+        finally:
+            if options:
+                CSLDestroy(options)
 
     try:
         # Yield Fiona-style features
@@ -181,7 +213,7 @@ def _sieve(image, size, out, mask, connectivity):
     cdef GDALRasterBandH out_band = NULL
     cdef GDALRasterBandH mask_band = NULL
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
+    valid_dtypes = (int16, int32, uint8, uint16)
 
     if _getnpdtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t in valid_dtypes))
@@ -204,14 +236,13 @@ def _sieve(image, size, out, mask, connectivity):
     if _getnpdtype(image.dtype).name != _getnpdtype(out.dtype).name:
         raise ValueError('out raster must match dtype of image')
 
-    try:
-
+    with ExitStack() as exit_stack:
         if dtypes.is_ndarray(image):
             if len(image.shape) == 2:
                 image = image.reshape(1, *image.shape)
             src_count = image.shape[0]
             src_bidx = list(range(1, src_count + 1))
-            in_mem_ds = MemoryDataset(image)
+            in_mem_ds = exit_stack.enter_context(MemoryDataset(image))
             src_dataset = in_mem_ds
 
         elif isinstance(image, tuple):
@@ -228,7 +259,7 @@ def _sieve(image, size, out, mask, connectivity):
                 out = out.reshape(1, *out.shape)
             dst_count = out.shape[0]
             dst_bidx = list(range(1, dst_count + 1))
-            out_mem_ds = MemoryDataset(out)
+            out_mem_ds = exit_stack.enter_context(MemoryDataset(out))
             dst_dataset = out_mem_ds
 
         elif isinstance(out, tuple):
@@ -243,13 +274,13 @@ def _sieve(image, size, out, mask, connectivity):
             if mask.shape != image.shape[-2:]:
                 raise ValueError("Mask must have same shape as image")
 
-            if _getnpdtype(mask.dtype) not in ('bool', 'uint8'):
+            if _getnpdtype(mask.dtype) not in (bool_, uint8):
                 raise ValueError("Mask must be dtype rasterio.bool_ or "
-                                 "rasterio.uint8")
+                                "rasterio.uint8")
 
             if dtypes.is_ndarray(mask):
                 # A boolean mask must be converted to uint8 for GDAL
-                mask_mem_ds = MemoryDataset(mask.astype('uint8'))
+                mask_mem_ds = exit_stack.enter_context(MemoryDataset(mask.astype(np.uint8)))
                 mask_band = mask_mem_ds.band(1)
 
             elif isinstance(mask, tuple):
@@ -261,14 +292,6 @@ def _sieve(image, size, out, mask, connectivity):
             out_band = (<DatasetReaderBase?>dst_dataset).band(j)
             GDALSieveFilter(in_band, mask_band, out_band, size, connectivity, NULL, NULL, NULL)
             io_auto(out[i - 1], out_band, False)
-
-    finally:
-        if in_mem_ds is not None:
-            in_mem_ds.close()
-        if out_mem_ds is not None:
-            out_mem_ds.close()
-        if mask_mem_ds is not None:
-            mask_mem_ds.close()
 
     if out.shape[0] == 1:
         out = out[0]

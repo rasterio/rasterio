@@ -11,9 +11,9 @@ src = None
 
 n = 1000
 
-t = timeit.timeit(s, setup='from osgeo import gdal', number=n)
+t = timeit.timeit(s, setup="from osgeo import gdal", number=n)
 print("GDAL:")
-print("%f usec\n" % (1000*t/n))
+print("%f usec\n" % (1000 * t / n))
 
 # Rasterio
 s = """
@@ -21,9 +21,9 @@ with rasterio.open('tests/data/RGB.byte.tif') as src:
     arr = src.read(1, masked=False)
 """
 
-t = timeit.timeit(s, setup='import rasterio', number=n)
+t = timeit.timeit(s, setup="import rasterio", number=n)
 print("Rasterio:")
-print("%f usec\n" % (1000*t/n))
+print("%f usec\n" % (1000 * t / n))
 
 # GDAL Extras
 s = """
@@ -39,9 +39,9 @@ src = None
 
 n = 1000
 
-t = timeit.timeit(s, setup='from osgeo import gdal; from osgeo import osr', number=n)
+t = timeit.timeit(s, setup="from osgeo import gdal; from osgeo import osr", number=n)
 print("GDAL + Extras:\n")
-print("%f usec\n" % (1000*t/n))
+print("%f usec\n" % (1000 * t / n))
 
 # Rasterio
 s = """
@@ -52,6 +52,6 @@ with rasterio.open('tests/data/RGB.byte.tif') as src:
     arr = src.read(1, masked=False)
 """
 
-t = timeit.timeit(s, setup='import rasterio', number=n)
+t = timeit.timeit(s, setup="import rasterio", number=n)
 print("Rasterio:\n")
-print("%f usec\n" % (1000*t/n))
+print("%f usec\n" % (1000 * t / n))

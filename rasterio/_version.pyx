@@ -15,7 +15,7 @@ def gdal_version():
 def get_gdal_version_info(str key not None):
     """
 
-    See: `GDALVersionInfo <https://gdal.org/api/raster_c_api.html#_CPPv415GDALVersionInfoPKc>`__
+    See: :c:func:`GDALVersionInfo`
 
     Available keys:
 
@@ -78,6 +78,5 @@ def get_geos_version():
         int major = 0
         int minor = 0
         int patch = 0
-    IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 4):
-        OGRGetGEOSVersion(&major, &minor, &patch)
+    OGRGetGEOSVersion(&major, &minor, &patch)
     return major, minor, patch

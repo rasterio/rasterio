@@ -16,7 +16,7 @@ class TestThreading(unittest.TestCase):
 
         def func(delay):
             try:
-                with rio.open('tests/data/RGB.byte.tif'):
+                with rio.open("tests/data/RGB.byte.tif"):
                     time.sleep(delay)
             except Exception as err:
                 global exceptions
@@ -45,23 +45,25 @@ class TestThreading(unittest.TestCase):
 
 def test_child_thread_inherits_env():
     """A new thread inherit's the main thread's env"""
+
     def func():
-        with rio.Env(lol='wut'):
-            assert get_gdal_config('lol') == 'wut'
+        with rio.Env(lol="wut"):
+            assert get_gdal_config("lol") == "wut"
             # The next config option will have been set in the main thread.
-            assert get_gdal_config('FROM_MAIN') is True
+            assert get_gdal_config("FROM_MAIN") is True
 
     t1 = Thread(target=func)
 
     with rio.Env(FROM_MAIN=True):
         t1.start()
-        assert get_gdal_config('FROM_MAIN') is True
-        assert get_gdal_config('lol') is None
+        assert get_gdal_config("FROM_MAIN") is True
+        assert get_gdal_config("lol") is None
         t1.join()
 
 
 def test_child_thread_isolation():
     """Child threads have isolated environments"""
+
     def func(key, value, other_key):
         env = {key: value}
         with rio.Env(**env):
@@ -69,8 +71,8 @@ def test_child_thread_isolation():
             # The other key is one set in another child thread.
             assert get_gdal_config(other_key) is None
 
-    t1 = Thread(target=func, args=('is_t1', True, 'is_t2'))
-    t2 = Thread(target=func, args=('is_t2', True, 'is_t1'))
+    t1 = Thread(target=func, args=("is_t1", True, "is_t2"))
+    t2 = Thread(target=func, args=("is_t2", True, "is_t1"))
 
     t1.start()
     t2.start()
@@ -78,5 +80,5 @@ def test_child_thread_isolation():
     t2.join()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

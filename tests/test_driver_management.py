@@ -7,22 +7,22 @@ from rasterio._env import driver_count
 def test_drivers():
     with rasterio.Env() as m:
         assert driver_count() > 0
-        assert type(m) == rasterio.Env
+        assert type(m) is rasterio.Env
     assert driver_count() > 0
 
 
 def test_drivers_bwd_compat():
     with rasterio.Env() as m:
         assert driver_count() > 0
-        assert type(m) == rasterio.Env
+        assert type(m) is rasterio.Env
     assert driver_count() > 0
 
 
 def test_cpl_debug_true(tmpdir):
     """Setting CPL_DEBUG=True results in GDAL debug messages."""
-    log = logging.getLogger('rasterio._env')
+    log = logging.getLogger("rasterio._env")
     log.setLevel(logging.DEBUG)
-    logfile = str(tmpdir.join('test.log'))
+    logfile = str(tmpdir.join("test.log"))
     fh = logging.FileHandler(logfile)
     log.addHandler(fh)
 
@@ -36,9 +36,9 @@ def test_cpl_debug_true(tmpdir):
 
 def test_cpl_debug_false(tmpdir):
     """Setting CPL_DEBUG=False results in no GDAL debug messages."""
-    log = logging.getLogger('rasterio._gdal')
+    log = logging.getLogger("rasterio._gdal")
     log.setLevel(logging.DEBUG)
-    logfile = str(tmpdir.join('test.log'))
+    logfile = str(tmpdir.join("test.log"))
     fh = logging.FileHandler(logfile)
     log.addHandler(fh)
 

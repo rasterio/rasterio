@@ -20,8 +20,7 @@ simultaneously can lead to further speedups.
     If you wish to do multiprocessing that is not trivially parallelizable
     across very large images that do not fit in memory, or if you wish to
     do multiprocessing across multiple machines. You might want to have a
-    look at `dask <https://dask.org/>`__ and in particular this
-    `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
+    look at `dask <https://dask.org/>`__.
 
 The Cython function below, included in Rasterio's ``_example`` module,
 simulates a GIL-releasing CPU-intensive raster processing function. You can
@@ -78,8 +77,10 @@ threads simultaneously.
 
     import concurrent.futures
     import threading
+    from contextlib import nullcontext
 
     import rasterio
+    from rasterio.env import GDALVersion
     from rasterio._example import compute
 
 
@@ -89,23 +90,27 @@ threads simultaneously.
         The output is the same as the input, but with band order
         reversed.
         """
-
-        with rasterio.open(infile) as src:
+        gdal_at_least_3_11 = GDALVersion.runtime().at_least("3.11")
+        with rasterio.open(
+            infile,
+            driver="LIBERTIFF" if gdal_at_least_3_11 else None,
+            thread_safe=gdal_at_least_3_11,
+        ) as src:
 
             # Create a destination dataset based on source params. The
             # destination will be tiled, and we'll process the tiles
             # concurrently.
             profile = src.profile
-            profile.update(blockxsize=128, blockysize=128, tiled=True)
+            profile.update(blockxsize=128, blockysize=128, tiled=True, driver="GTiff")
 
-            with rasterio.open(outfile, "w", **src.profile) as dst:
+            with rasterio.open(outfile, "w", **profile) as dst:
                 windows = [window for ij, window in dst.block_windows()]
 
                 # We cannot write to the same file from multiple threads
                 # without causing race conditions. To safely read/write
                 # from multiple threads, we use a lock to protect the
                 # DatasetReader/Writer
-                read_lock = threading.Lock()
+                read_lock = threading.Lock() if not gdal_at_least_3_11 else nullcontext()
                 write_lock = threading.Lock()
 
                 def process(window):

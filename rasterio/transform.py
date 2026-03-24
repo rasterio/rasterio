@@ -43,7 +43,7 @@ class TransformMethodsMixin:
         z=None,
         offset="center",
         transform_method=TransformMethod.affine,
-        **rpc_options
+        **rpc_options,
     ):
         """Get the coordinates x, y of a pixel at row, col.
 
@@ -89,7 +89,7 @@ class TransformMethodsMixin:
         op=None,
         precision=None,
         transform_method=TransformMethod.affine,
-        **rpc_options
+        **rpc_options,
     ):
         """Get the (row, col) index of the pixel containing (x, y).
 
@@ -132,7 +132,9 @@ class TransformMethodsMixin:
             transform = transform[0]
         if not transform:
             raise AttributeError(f"Dataset has no {transform_method}")
-        return tuple(int(val) for val in rowcol(transform, x, y, zs=z, op=op, **rpc_options))
+        return tuple(
+            int(val) for val in rowcol(transform, x, y, zs=z, op=op, **rpc_options)
+        )
 
 
 def get_transformer(transform, **rpc_options):
@@ -151,7 +153,8 @@ def get_transformer(transform, **rpc_options):
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
     return tuple(seq) == GDAL_IDENTITY or (
-        seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0)
+        seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0
+    )
 
 
 def guard_transform(transform):
@@ -161,7 +164,8 @@ def guard_transform(transform):
             raise TypeError(
                 "GDAL-style transforms have been deprecated.  This "
                 "exception will be raised for a period of time to highlight "
-                "potentially confusing errors, but will eventually be removed.")
+                "potentially confusing errors, but will eventually be removed."
+            )
         else:
             transform = Affine(*transform)
     return transform
@@ -187,7 +191,8 @@ def from_bounds(west, south, east, north, width, height):
 
     """
     return Affine.translation(west, north) * Affine.scale(
-        (east - west) / width, (south - north) / height)
+        (east - west) / width, (south - north) / height
+    )
 
 
 def array_bounds(height, width, transform):
@@ -212,7 +217,7 @@ def array_bounds(height, width, transform):
     return west, south, east, north
 
 
-def xy(transform, rows, cols, zs=None, offset='center', **rpc_options):
+def xy(transform, rows, cols, zs=None, offset="center", **rpc_options):
     """Get the x and y coordinates of pixels at `rows` and `cols`.
 
     The pixel's center is returned by default, but a corner can be returned
@@ -328,6 +333,7 @@ class TransformerBase:
     Subclasses must have a _transformer attribute and implement a `_transform` method.
 
     """
+
     def __init__(self):
         self._transformer = None
 
@@ -407,8 +413,8 @@ class TransformerBase:
             )
 
             if op is None:
-                new_rows = np.floor(new_rows).astype(dtype="int32")
-                new_cols = np.floor(new_cols).astype(dtype="int32")
+                new_rows = np.floor(new_rows).astype(dtype=np.int32)
+                new_cols = np.floor(new_cols).astype(dtype=np.int32)
             elif isinstance(op, np.ufunc):
                 op(new_rows, out=new_rows)
                 op(new_cols, out=new_cols)
@@ -424,7 +430,7 @@ class TransformerBase:
         except TypeError:
             raise TransformError("Invalid inputs")
 
-    def xy(self, rows, cols, zs=None, offset='center'):
+    def xy(self, rows, cols, zs=None, offset="center"):
         """
         Returns geographic coordinates given dataset rows and cols coordinates
 
@@ -453,15 +459,15 @@ class TransformerBase:
         IS_SCALAR = isinstance(rows, Number) and isinstance(cols, Number)
         rows, cols, zs = self._ensure_arr_input(rows, cols, zs=zs)
 
-        if offset == 'center':
+        if offset == "center":
             coff, roff = (0.5, 0.5)
-        elif offset == 'ul':
+        elif offset == "ul":
             coff, roff = (0, 0)
-        elif offset == 'ur':
+        elif offset == "ur":
             coff, roff = (1, 0)
-        elif offset == 'll':
+        elif offset == "ll":
             coff, roff = (0, 1)
-        elif offset == 'lr':
+        elif offset == "lr":
             coff, roff = (1, 1)
         else:
             raise TransformError("Invalid offset")
@@ -474,7 +480,10 @@ class TransformerBase:
                 cols, rows, zs, transform_direction=TransformDirection.forward
             )
             new_xs, new_ys = self._transform(
-                offset_cols, offset_rows, zs, transform_direction=TransformDirection.forward
+                offset_cols,
+                offset_rows,
+                zs,
+                transform_direction=TransformDirection.forward,
             )
 
             if IS_SCALAR:
@@ -502,33 +511,34 @@ class GDALTransformerBase(TransformerBase):
 
     def __exit__(self, *args):
         self.close()
-        self._env.close()
+        if self._env:
+            self._env.close()
 
 
 class AffineTransformer(TransformerBase):
     """A pure Python class related to affine based coordinate transformations."""
+
     def __init__(self, affine_transform):
         super().__init__()
         if not isinstance(affine_transform, Affine):
             raise ValueError("Not an affine transform")
         self._transformer = affine_transform
-        self._transform_arr = np.empty((3, 3), dtype='float64')
+        self._transform_arr = np.asarray(affine_transform, dtype="float64").reshape(
+            3, 3
+        )
 
     def _transform(self, xs, ys, zs, transform_direction):
-        transform = self._transform_arr
-        if transform_direction is TransformDirection.forward:
-            transform.flat[:] = self._transformer
-        elif transform_direction is TransformDirection.reverse:
-            transform.flat[:] = ~self._transformer
-
         bi = np.broadcast(xs, ys)
         input_matrix = np.empty((3, bi.size))
         input_matrix[0] = bi.iters[0]
         input_matrix[1] = bi.iters[1]
         input_matrix[2] = 1
-        transform.dot(input_matrix, out=input_matrix)
-        return input_matrix[0], input_matrix[1]
 
+        if transform_direction is TransformDirection.forward:
+            transformed = np.matmul(self._transform_arr, input_matrix, out=input_matrix)
+        elif transform_direction is TransformDirection.reverse:
+            transformed = np.linalg.solve(self._transform_arr, input_matrix)
+        return transformed[0], transformed[1]
 
     def __repr__(self):
         return "<AffineTransformer>"
@@ -545,14 +555,14 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
     method or using context manager interface.
 
     """
+
     def __init__(self, rpcs, **rpc_options):
         if not isinstance(rpcs, (RPC, dict)):
             raise ValueError("RPCTransformer requires RPC")
         super().__init__(rpcs, **rpc_options)
 
     def __repr__(self):
-        return "<{} RPCTransformer>".format(
-            self.closed and 'closed' or 'open')
+        return "<{} RPCTransformer>".format(self.closed and "closed" or "open")
 
 
 class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
@@ -566,11 +576,11 @@ class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
     uses GDALCreateTPSTransformer and GDALTPSTransform instead.
 
     """
+
     def __init__(self, gcps, tps=False):
         if len(gcps) and not isinstance(gcps[0], GroundControlPoint):
             raise ValueError("GCPTransformer requires sequence of GroundControlPoint")
         super().__init__(gcps, tps)
 
     def __repr__(self):
-        return "<{} GCPTransformer>".format(
-            self.closed and 'closed' or 'open')
+        return "<{} GCPTransformer>".format(self.closed and "closed" or "open")

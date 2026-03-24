@@ -39,7 +39,7 @@ The output of the program:
 
     {'type': 'Polygon', 'coordinates': [[(-77.730817, 25.282335), ...]]}
 
-Rasterio supports Python versions 3.6 or higher.
+Rasterio supports Python versions 3.12 or higher.
 
 .. toctree::
    :maxdepth: 2

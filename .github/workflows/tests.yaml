@@ -32,7 +32,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
             python-version: 3.12
@@ -42,50 +42,6 @@ jobs:
           python -m pip install pre-commit
           pre-commit run --show-diff-on-failure --all-files
 
-  numpy_compat_test:
-    runs-on: ubuntu-latest
-    name: Build with Numpy 2.0.0, test with 1.24
-    container: ghcr.io/osgeo/gdal:ubuntu-small-${{ matrix.gdal-version }}
-    env:
-        DEBIAN_FRONTEND: noninteractive
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.10']
-        gdal-version: ['3.8.4']
-
-    steps:
-      - uses: actions/checkout@v5
-      - name: Update
-        run: |
-          apt-get update
-          apt-get -y install software-properties-common
-          add-apt-repository -y ppa:deadsnakes/ppa
-          apt-get update
-      - name: Set up Python ${{ matrix.python-version }}
-        run: |
-          apt-get install -y --no-install-recommends \
-            python${{ matrix.python-version }} \
-            python${{ matrix.python-version }}-dev \
-            python${{ matrix.python-version }}-venv \
-            python3-pip \
-            g++
-      - name: build wheel with Numpy 2
-        run: |
-          python${{ matrix.python-version }} -m venv testenv
-          . testenv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install build
-          python -m build
-      - name: run tests with Numpy 1
-        run: |
-          . testenv/bin/activate
-          python -m pip install numpy==1.24
-          python -m pip wheel -r requirements-dev.txt
-          python -m pip install dist/*.whl
-          python -m pip install aiohttp boto3 fsspec hypothesis packaging pytest shapely
-          rm -rf rasterio
-          python -m pytest -v -m "not wheel" -rxXs
 
   docker_tests:
     needs: linting
@@ -97,28 +53,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
-        gdal-version: ['3.11.4']
+        python-version: ['3.12', '3.13', '3.14']
+        gdal-version: ['3.12.1']
         include:
-          - python-version: '3.13'
+          - python-version: '3.14'
             gdal-version: 'latest'
-          - python-version: '3.9'
-            gdal-version: '3.11.4'
-          - python-version: '3.9'
+          - python-version: '3.12'
+            gdal-version: '3.11.5'
+          - python-version: '3.12'
             gdal-version: '3.10.3'
-          - python-version: '3.9'
+          - python-version: '3.12'
             gdal-version: '3.9.3'
-          - python-version: '3.9'
+          - python-version: '3.12'
             gdal-version: '3.8.5'
-          - python-version: '3.9'
-            gdal-version: '3.7.3'
-          - python-version: '3.9'
-            gdal-version: '3.6.4'
-          - python-version: '3.9'
-            gdal-version: '3.5.3'
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Update
         run: |
@@ -156,16 +106,16 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # macos-13 is OSX Intel
+        # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
-        os: [macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        os: [macos-15-intel, macos-14, windows-latest]
+        python-version: ['3.12', '3.13', '3.14']
         include:
           - os: ubuntu-latest
             python-version: '*'
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Conda
         uses: mamba-org/setup-micromamba@v2
@@ -182,7 +132,7 @@ jobs:
       - name: Install Env
         shell: bash -l {0}
         run: |
-          micromamba run -n test python -m pip install -e . --no-use-pep517 || micromamba run -n test python -m pip install -e .
+          micromamba run -n test python -m pip install -e . || micromamba run -n test python -m pip install -e .
           micromamba run -n test python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment
@@ -191,14 +141,7 @@ jobs:
           micromamba run -n test python -V
           micromamba info
 
-      - name: Test with Coverage (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Test with Coverage
         shell: bash -l {0}
         run: |
-          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
-
-      - name: Test with Coverage (OSX)
-        if: "${{matrix.os}} == 'macos-13' || ${{matrix.os}} == 'macos-14'"
-        shell: bash -l {0}
-        run: |
-           micromamba run python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
+          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing

@@ -6,8 +6,9 @@ import rasterio.env
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def test_band():
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         b = rasterio.band(src, 1)
         assert b.ds == src
         assert b.bidx == 1

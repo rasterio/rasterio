@@ -4,6 +4,7 @@ Utility methods to print system info for debugging
 adapted from :func:`sklearn.utils._show_versions`
 which was adapted from :func:`pandas.show_versions`
 """
+
 import importlib
 import os
 import platform
@@ -57,36 +58,22 @@ def _get_deps_info():
     dict:
         version information on relevant Python libraries
     """
-    deps = [
+    deps = (
         "affine",
         "attrs",
         "certifi",
         "click",
-        "cligj",
         "cython",
         "numpy",
-        "click-plugins",
         "setuptools",
-    ]
-
-    def get_version(module):
-        try:
-            return module.__version__
-        except AttributeError:
-            return module.version
+    )
 
     deps_info = {}
-
     for modname in deps:
         try:
-            if modname in sys.modules:
-                mod = sys.modules[modname]
-            else:
-                mod = importlib.import_module(modname)
-            deps_info[modname] = get_version(mod)
-        except ImportError:
+            deps_info[modname] = importlib.metadata.version(modname)
+        except importlib.metadata.PackageNotFoundError:
             deps_info[modname] = None
-
     return deps_info
 
 

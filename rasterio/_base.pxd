@@ -13,7 +13,6 @@ cdef class DatasetBase:
     cdef public object driver
     cdef public object _count
     cdef public object _dtypes
-    cdef public object _closed
     cdef public object _crs
     cdef public object _crs_wkt
     cdef public object _transform
@@ -34,4 +33,4 @@ cdef class DatasetBase:
 cdef const char *get_driver_name(GDALDriverH driver)
 
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs)
-cdef GDALDatasetH open_dataset(object filename, int mode, object allowed_drivers, object open_options, object siblings) except NULL
+cdef GDALDatasetH open_dataset(object filename, unsigned int flags, object allowed_drivers, object open_options, bint sharing, object siblings) except NULL

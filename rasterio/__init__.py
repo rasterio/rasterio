@@ -41,6 +41,7 @@ from rasterio.dtypes import (
     int32,
     int64,
     uint64,
+    float16,
     float32,
     float64,
     complex_,
@@ -81,8 +82,8 @@ except ImportError:
 
     have_vsi_plugin = False
 
-__all__ = ['band', 'open', 'pad', 'Band', 'Env', 'CRS']
-__version__ = "1.5.0.dev"
+__all__ = ["band", "open", "pad", "Band", "Env", "CRS"]
+__version__ = "1.5.1.dev0"
 __gdal_version__ = gdal_version()
 __proj_version__ = ".".join([str(version) for version in get_proj_version()])
 __geos_version__ = ".".join([str(version) for version in get_geos_version()])
@@ -109,8 +110,9 @@ def open(
     dtype=None,
     nodata=None,
     sharing=False,
+    thread_safe=False,
     opener=None,
-    **kwargs
+    **kwargs,
 ):
     """Open a dataset for reading or writing.
 
@@ -178,6 +180,10 @@ def open(
         dataset handles. If True this function will use a shared
         handle if one is available. Multithreaded programs must avoid
         sharing and should set *sharing* to False.
+    thread_safe: bool, optional
+        Open GDAL dataset in `thread safe mode <https://gdal.org/en/stable/user/multithreading.html>`__.
+        For multithreaded read-only GDAL dataset operations (e.g. ``GDAL_NUM_THREADS``, `LIBERTIFF driver <https://gdal.org/en/stable/drivers/raster/libertiff.html#open-options>`__).
+        Requires rasterio 1.5+ & GDAL 3.10+.
     opener : callable, optional
         A custom dataset opener which can serve GDAL's virtual
         filesystem machinery via Python file-like objects. The
@@ -185,7 +191,7 @@ def open(
         (*fp*, *mode*) or (*fp*, *mode* + 'b') depending on the format
         driver's native mode. *opener* must return a Python file-like
         object that provides read, seek, tell, and close methods. Note:
-        only one opener at a time per fp, mode pair is allowed. 
+        only one opener at a time per fp, mode pair is allowed.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -215,20 +221,19 @@ def open(
     If *fp* is a is a file-like object, its entire contents will be
     read into a MemoryFile instance. It will almost always be better
     to use a path or URL, or the *opener* keyword argument.
-    
+
     Examples
     --------
     To open a local GeoTIFF dataset for reading using standard driver
     discovery and no directives:
 
     >>> import rasterio
-    >>> with rasterio.open('example.tif') as dataset:
+    >>> with rasterio.open("example.tif") as dataset:
     ...     print(dataset.profile)
 
     To open a local JPEG2000 dataset using only the JP2OpenJPEG driver:
 
-    >>> with rasterio.open(
-    ...         'example.jp2', driver='JP2OpenJPEG') as dataset:
+    >>> with rasterio.open("example.jp2", driver="JP2OpenJPEG") as dataset:
     ...     print(dataset.profile)
 
     To create a new 8-band, 16-bit unsigned, tiled, and LZW-compressed
@@ -236,10 +241,19 @@ def open(
 
     >>> from rasterio.transform import from_origin
     >>> with rasterio.open(
-    ...         'example.tif', 'w', driver='GTiff', dtype='uint16',
-    ...         width=720, height=360, count=8, crs='EPSG:4326',
-    ...         transform=from_origin(-180.0, 90.0, 0.5, 0.5),
-    ...         nodata=0, tiled=True, compress='lzw') as dataset:
+    ...     "example.tif",
+    ...     "w",
+    ...     driver="GTiff",
+    ...     dtype="uint16",
+    ...     width=720,
+    ...     height=360,
+    ...     count=8,
+    ...     crs="EPSG:4326",
+    ...     transform=from_origin(-180.0, 90.0, 0.5, 0.5),
+    ...     nodata=0,
+    ...     tiled=True,
+    ...     compress="lzw",
+    ... ) as dataset:
     ...     dataset.write(...)
     """
     if not isinstance(fp, str):
@@ -266,15 +280,18 @@ def open(
     # Check driver/mode blacklist.
     if driver and is_blacklisted(driver, mode):
         raise RasterioIOError(
-            "Blacklisted: file cannot be opened by "
-            "driver '{}' in '{}' mode".format(driver, mode)
+            "Blacklisted: file cannot be opened by driver '{}' in '{}' mode".format(
+                driver, mode
+            )
         )
 
     # This check should come first, since MemoryFile has read/write methods
     # TODO: test for a shared base class or abstract type.
     elif isinstance(fp, (FilePath, MemoryFile)):
         if mode.startswith("r"):
-            dataset = fp.open(driver=driver, sharing=sharing, **kwargs)
+            dataset = fp.open(
+                driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs
+            )
 
         # Note: FilePath does not support writing and an exception will
         # result from this.
@@ -289,7 +306,7 @@ def open(
                 dtype=dtype,
                 nodata=nodata,
                 sharing=sharing,
-                **kwargs
+                **kwargs,
             )
 
         return dataset
@@ -299,14 +316,14 @@ def open(
     # dataset object that we will return. When a dataset's close method
     # is called, this ExitStack will be unwound and the MemoryFile's
     # storage will be cleaned up.
-    elif mode == 'r' and hasattr(fp, 'read'):
+    elif mode == "r" and hasattr(fp, "read"):
         memfile = MemoryFile(fp.read())
         fp.seek(0)
         dataset = memfile.open(driver=driver, sharing=sharing, **kwargs)
         dataset._env.enter_context(memfile)
         return dataset
 
-    elif mode in ('w', 'w+') and hasattr(fp, 'write'):
+    elif mode in ("w", "w+") and hasattr(fp, "write"):
         memfile = MemoryFile()
         dataset = memfile.open(
             driver=driver,
@@ -318,7 +335,7 @@ def open(
             dtype=dtype,
             nodata=nodata,
             sharing=sharing,
-            **kwargs
+            **kwargs,
         )
         dataset._env.enter_context(memfile)
 
@@ -343,7 +360,7 @@ def open(
             opener = fp.fs.open
         else:
             raw_dataset_path = os.fspath(fp)
- 
+
         try:
             # when opener is a callable that takes a filename or URL and returns
             # a file-like object with read, seek, tell, and close methods, we
@@ -358,7 +375,13 @@ def open(
                 path = _parse_path(raw_dataset_path)
 
             if mode == "r":
-                dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+                dataset = DatasetReader(
+                    path,
+                    driver=driver,
+                    sharing=sharing,
+                    thread_safe=thread_safe,
+                    **kwargs,
+                )
             elif mode == "r+":
                 dataset = get_writer_for_path(path, driver=driver)(
                     path, mode, driver=driver, sharing=sharing, **kwargs
@@ -380,7 +403,7 @@ def open(
                         dtype=dtype,
                         nodata=nodata,
                         sharing=sharing,
-                        **kwargs
+                        **kwargs,
                     )
                 else:
                     raise DriverCapabilityError(
@@ -388,7 +411,8 @@ def open(
                     )
             else:
                 raise DriverCapabilityError(
-                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode
+                )
         except Exception:
             stack.close()
             raise
@@ -397,7 +421,7 @@ def open(
         return dataset
 
 
-Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+Band = namedtuple("Band", ["ds", "bidx", "dtype", "shape"])
 Band.__doc__ = """
 Band(s) of a Dataset.
 
@@ -455,6 +479,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     See :func:`numpy.pad` for details on mode and other kwargs.
     """
     import numpy as np
+
     transform = guard_transform(transform)
     padded_array = np.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)

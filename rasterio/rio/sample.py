@@ -1,13 +1,23 @@
+"""Sampling raster values."""
+
 import json
 
 import click
+import numpy
 
 import rasterio
+from rasterio.serde import to_json
+
+
+@to_json.register(numpy.ndarray)
+def _(obj):
+    """Convert an ndarry to a list."""
+    return obj.tolist()
 
 
 @click.command(short_help="Sample a dataset.")
-@click.argument('files', nargs=-1, required=True, metavar='FILE "[x, y]"')
-@click.option('-b', '--bidx', default=None, help="Indexes of input file bands.")
+@click.argument("files", nargs=-1, required=True, metavar='FILE "[x, y]"')
+@click.option("-b", "--bidx", default=None, help="Indexes of input file bands.")
 @click.pass_context
 def sample(ctx, files, bidx):
     """Sample a dataset at one or more points
@@ -53,7 +63,7 @@ def sample(ctx, files, bidx):
     """
     files = list(files)
     source_path = files.pop(0)
-    input = files.pop(0) if files else '-'
+    input = files.pop(0) if files else "-"
 
     # Handle the case of file, stream, or string input.
     try:
@@ -76,4 +86,4 @@ def sample(ctx, files, bidx):
             for vals in src.sample(
                 (json.loads(line) for line in points), indexes=indexes
             ):
-                click.echo(json.dumps(vals.tolist()))
+                click.echo(json.dumps(vals, default=to_json))

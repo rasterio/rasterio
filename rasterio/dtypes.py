@@ -2,24 +2,23 @@
 
 import numpy
 
-from rasterio.env import GDALVersion
+from rasterio.env import _GDAL_AT_LEAST_3_11
 
-_GDAL_AT_LEAST_37 = GDALVersion.runtime().at_least("3.7")
-
-bool_ = 'bool'
-ubyte = uint8 = 'uint8'
-sbyte = int8 = 'int8'
-uint16 = 'uint16'
-int16 = 'int16'
-uint32 = 'uint32'
-int32 = 'int32'
-uint64 = 'uint64'
-int64 = 'int64'
-float32 = 'float32'
-float64 = 'float64'
-complex_ = 'complex'
-complex64 = 'complex64'
-complex128 = 'complex128'
+bool_ = numpy.dtype(bool).name
+ubyte = uint8 = numpy.uint8().dtype.name
+sbyte = int8 = numpy.int8().dtype.name
+uint16 = numpy.uint16().dtype.name
+int16 = numpy.int16().dtype.name
+uint32 = numpy.uint32().dtype.name
+int32 = numpy.int32().dtype.name
+uint64 = numpy.uint64().dtype.name
+int64 = numpy.int64().dtype.name
+float16 = numpy.float16().dtype.name
+float32 = numpy.float32().dtype.name
+float64 = numpy.float64().dtype.name
+complex_ = "complex"  # alias for python built-in complex which maps to numpy.complex128
+complex64 = numpy.complex64().dtype.name
+complex128 = numpy.complex128().dtype.name
 complex_int16 = "complex_int16"
 
 dtype_fwd = {
@@ -36,23 +35,20 @@ dtype_fwd = {
     10: complex64,  # GDT_CFloat32
     11: complex128,  # GDT_CFloat64
     12: uint64,  # GDT_UInt64
-    13: int64, # GDT_Int64
+    13: int64,  # GDT_Int64
+    14: sbyte,  # GDT_Int8
 }
 
-if _GDAL_AT_LEAST_37:
-    dtype_fwd[14] = sbyte  # GDT_Int8
-
-if _GDAL_AT_LEAST_37:
-    dtype_fwd[14] = sbyte # GDT_Int8
+if _GDAL_AT_LEAST_3_11:
+    dtype_fwd[15] = float16  # GDT_Float16
+    dtype_fwd[16] = complex64  # GDT_CFloat16
 
 dtype_rev = {v: k for k, v in dtype_fwd.items()}
 
-dtype_rev["uint8"] = 1
-dtype_rev["complex"] = 11
-dtype_rev["complex_int16"] = 8
-
-if not _GDAL_AT_LEAST_37:
-    dtype_rev["int8"] = 1
+dtype_rev[uint8] = 1
+dtype_rev[complex_] = 11
+dtype_rev[complex64] = 10
+dtype_rev[complex_int16] = 8
 
 
 def _get_gdal_dtype(type_name):
@@ -60,53 +56,58 @@ def _get_gdal_dtype(type_name):
         return dtype_rev[type_name]
     except KeyError:
         raise TypeError(
-            f"Unsupported data type {type_name}. "
-            f"Allowed data types: {list(dtype_rev)}."
+            f"Unsupported data type {type_name}. Allowed data types: {list(dtype_rev)}."
         )
 
+
 typename_fwd = {
-    0: 'Unknown',
-    1: 'Byte',
-    2: 'UInt16',
-    3: 'Int16',
-    4: 'UInt32',
-    5: 'Int32',
-    6: 'Float32',
-    7: 'Float64',
-    8: 'CInt16',
-    9: 'CInt32',
-    10: 'CFloat32',
-    11: 'CFloat64',
-    12: 'UInt64',
-    13: 'Int64',
+    0: "Unknown",
+    1: "Byte",
+    2: "UInt16",
+    3: "Int16",
+    4: "UInt32",
+    5: "Int32",
+    6: "Float32",
+    7: "Float64",
+    8: "CInt16",
+    9: "CInt32",
+    10: "CFloat32",
+    11: "CFloat64",
+    12: "UInt64",
+    13: "Int64",
+    14: "Int8",
 }
 
-
-if _GDAL_AT_LEAST_37:
-    typename_fwd[14] = "Int8"
-
-if _GDAL_AT_LEAST_37:
-    typename_fwd[14] = 'Int8'
+if _GDAL_AT_LEAST_3_11:
+    typename_fwd[15] = "Float16"
+    typename_fwd[16] = "CFloat16"
 
 typename_rev = {v: k for k, v in typename_fwd.items()}
 
-f32i = numpy.finfo("float32")
-f64i = numpy.finfo("float64")
+f16i = numpy.finfo(numpy.float16)
+f32i = numpy.finfo(numpy.float32)
+f64i = numpy.finfo(numpy.float64)
 
 dtype_ranges = {
-    "int8": (-128, 127),
-    "uint8": (0, 255),
-    "uint16": (0, 65535),
-    "int16": (-32768, 32767),
-    "uint32": (0, 4294967295),
-    "int32": (-2147483648, 2147483647),
-    "float32": (float(f32i.min), float(f32i.max)),
-    "float64": (float(f64i.min), float(f64i.max)),
-    "int64": (-9223372036854775808, 9223372036854775807),
-    "uint64": (0, 18446744073709551615),
+    int8: (-128, 127),
+    uint8: (0, 255),
+    uint16: (0, 65535),
+    int16: (-32768, 32767),
+    uint32: (0, 4294967295),
+    int32: (-2147483648, 2147483647),
+    float16: (float(f16i.min), float(f16i.max)),
+    float32: (float(f32i.min), float(f32i.max)),
+    float64: (float(f64i.min), float(f64i.max)),
+    int64: (-9223372036854775808, 9223372036854775807),
+    uint64: (0, 18446744073709551615),
 }
 
-dtype_info_registry = {"c": numpy.finfo, "f": numpy.finfo, "i": numpy.iinfo, "u": numpy.iinfo}
+dtype_info_registry = {
+    "c": numpy.finfo,
+    "f": numpy.finfo,
+    "i": numpy.iinfo,
+    "u": numpy.iinfo,
+}
 
 
 def in_dtype_range(value, dtype):
@@ -158,7 +159,7 @@ def get_minimum_dtype(values):
     min_value = values.min()
     max_value = values.max()
 
-    if values.dtype.kind in {'i', 'u'}:
+    if values.dtype.kind in {"i", "u"}:
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
@@ -174,16 +175,17 @@ def get_minimum_dtype(values):
         elif min_value >= -2147483648 and max_value <= 2147483647:
             return int32
         return int64
-    else:
-        if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
-            return float32
-        return float64
+    if _GDAL_AT_LEAST_3_11 and min_value >= f16i.min and max_value <= f16i.max:
+        return float16
+    if min_value >= -3.4028235e38 and max_value <= 3.4028235e38:
+        return float32
+    return float64
 
 
 def is_ndarray(array):
     """Check if array is a ndarray."""
 
-    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
+    return isinstance(array, numpy.ndarray) or hasattr(array, "__array__")
 
 
 def can_cast_dtype(values, dtype):
@@ -204,7 +206,7 @@ def can_cast_dtype(values, dtype):
     if values.dtype.name == _getnpdtype(dtype).name:
         return True
 
-    elif values.dtype.kind == 'f':
+    elif values.dtype.kind == "f":
         return numpy.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
@@ -227,8 +229,9 @@ def validate_dtype(values, valid_dtypes):
     """
     values = numpy.asanyarray(values)
 
-    return (values.dtype.name in valid_dtypes or
-            get_minimum_dtype(values) in valid_dtypes)
+    return (
+        values.dtype.name in valid_dtypes or get_minimum_dtype(values) in valid_dtypes
+    )
 
 
 def _is_complex_int(dtype):
@@ -237,6 +240,5 @@ def _is_complex_int(dtype):
 
 def _getnpdtype(dtype):
     if _is_complex_int(dtype):
-        return numpy.dtype("complex64")
-    else:
-        return numpy.dtype(dtype)
+        return numpy.complex64().dtype
+    return numpy.dtype(dtype)

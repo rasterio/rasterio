@@ -4,8 +4,8 @@ import attr
 @attr.s(slots=True)
 class RPC:
     """Rational Polynomial Coefficients used to map (x, y, z) <-> (row, col) coordinates.
-    
-    This class contains a mapping between various RPC attributes and values. 
+
+    This class contains a mapping between various RPC attributes and values.
 
     Attributes
     ----------
@@ -46,7 +46,7 @@ class RPC:
 
     def to_gdal(self):
         """Serialize RPC attribute name and values in a form expected by GDAL.
-        
+
         Returns
         -------
         dict
@@ -70,14 +70,14 @@ class RPC:
             "SAMP_DEN_COEFF": " ".join(map(str, self.samp_den_coeff)),
             "SAMP_NUM_COEFF": " ".join(map(str, self.samp_num_coeff)),
             "SAMP_OFF": str(self.samp_off),
-            "SAMP_SCALE": str(self.samp_scale)
+            "SAMP_SCALE": str(self.samp_scale),
         }
-        
+
         if self.err_bias:
             out.update(ERR_BIAS=str(self.err_bias))
         if self.err_rand:
             out.update(ERR_RAND=str(self.err_rand))
-        
+
         return out
 
     @classmethod
@@ -93,7 +93,12 @@ class RPC:
 
         for key, val in rpcs.items():
             # Four items have 20 floats in their values.
-            if key in {"LINE_NUM_COEFF", "LINE_DEN_COEFF", "SAMP_NUM_COEFF", "SAMP_DEN_COEFF"}:
+            if key in {
+                "LINE_NUM_COEFF",
+                "LINE_DEN_COEFF",
+                "SAMP_NUM_COEFF",
+                "SAMP_DEN_COEFF",
+            }:
                 out[key] = [float(v) for v in val.split(maxsplit=20)[:20]]
             # All other items have one float in their values but might also contain non-conforming extra text.
             else:

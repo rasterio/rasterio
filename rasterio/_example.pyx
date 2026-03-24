@@ -15,7 +15,7 @@ def compute(unsigned char[:, :, :] input):
     I = input.shape[0]
     J = input.shape[1]
     K = input.shape[2]
-    output = np.empty((I, J, K), dtype='uint8')
+    output = np.empty((I, J, K), dtype=np.uint8)
     cdef unsigned char[:, :, :] output_view = output
     with nogil:
         for i in range(I):
