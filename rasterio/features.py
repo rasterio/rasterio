@@ -1,21 +1,18 @@
 """Functions for working with features in a raster dataset."""
 
+from contextlib import ExitStack
 import logging
 import math
 import os
 import warnings
-from contextlib import ExitStack
 
 import numpy as np
 
 import rasterio
-from rasterio import warp, windows
+from rasterio import warp
 from rasterio._base import DatasetBase
-from rasterio._features import _bounds, _rasterize, _shapes, _sieve
+from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.dtypes import (
-    float16,
-    float32,
-    float64,
     int8,
     int16,
     int32,
@@ -24,13 +21,18 @@ from rasterio.dtypes import (
     uint16,
     uint32,
     uint64,
+    float16,
+    float32,
+    float64,
 )
 from rasterio.enums import MergeAlg
-from rasterio.env import _GDAL_AT_LEAST_3_11, ensure_env
-from rasterio.errors import RasterioDeprecationWarning, ShapeSkipWarning
+from rasterio.env import ensure_env, _GDAL_AT_LEAST_3_11
+from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
-from rasterio.transform import IDENTITY, Affine, guard_transform
+from rasterio.transform import Affine
+from rasterio.transform import IDENTITY, guard_transform
+from rasterio import windows
 
 log = logging.getLogger(__name__)
 
