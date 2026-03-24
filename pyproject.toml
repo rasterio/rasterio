@@ -125,7 +125,7 @@ markers = [
 ]
 
 [tool.codespell]
-ignore-words-list = ["lsat", "recuse", "crasher"]
+ignore-words-list = ["lsat", "recuse", "crasher", "tbe", "paramter"]
 
 [tool.ruff.format]
 docstring-code-format = true
