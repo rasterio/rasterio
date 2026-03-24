@@ -3,13 +3,14 @@ version: 2
 build:
   os: "ubuntu-22.04"
   tools:
-    python: "mambaforge-4.10"
+    python: "miniforge3-25.11"
 
 sphinx:
   configuration: docs/conf.py
   fail_on_warning: true
 
-formats: all
+formats:
+  - pdf
 
 conda:
   environment: docs/environment.yml
