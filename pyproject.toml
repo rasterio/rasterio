@@ -125,7 +125,8 @@ markers = [
 ]
 
 [tool.codespell]
-ignore-words-list = ["lsat", "recuse", "crasher", "tbe", "paramter"]
+skip = ["rasterio/_vendor/*"]
+ignore-words-list = ["lsat", "recuse", "crasher", "paramter"]
 
 [tool.ruff.format]
 docstring-code-format = true
