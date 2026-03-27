@@ -124,6 +124,10 @@ markers = [
     "network: marks tests that require network access"
 ]
 
+[tool.codespell]
+skip = ["rasterio/_vendor/*"]
+ignore-words-list = ["lsat", "recuse", "crasher", "paramter"]
+
 [tool.ruff.format]
 docstring-code-format = true
 

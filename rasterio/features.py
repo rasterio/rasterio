@@ -512,6 +512,8 @@ def geometry_window(
             RasterioDeprecationWarning,
         )
     if pixel_precision is not None:
+        # N.B. don't fix typo in `paramter` to avoid breaking backward compatibility for
+        # users who are catching/suppressing this warning.
         warnings.warn(
             "The pixel_precision paramter is unused, deprecated, and will be removed in the future.",
             RasterioDeprecationWarning,
