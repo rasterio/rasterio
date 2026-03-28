@@ -103,6 +103,9 @@ warp = "rasterio.rio.warp:warp"
 [tool.setuptools.packages.find]
 include = ["rasterio", "rasterio.*"]
 
+[tool.setuptools.package-data]
+rasterio = ["py.typed", "*.pyi"]
+
 [tool.setuptools.dynamic]
 version = {attr = "rasterio.__version__"}
 
