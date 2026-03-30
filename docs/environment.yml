@@ -6,6 +6,7 @@ dependencies:
 - libgdal=3.8
 - cython=3
 - numpy=2
+- pip
 - sphinx=8.2
 - sphinx-click
 - sphinx-rtd-theme
