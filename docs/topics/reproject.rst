@@ -105,15 +105,15 @@ provided, and returns destination transform and dimensions.
         })
 
         with rasterio.open('/tmp/RGB.byte.wgs84.tif', 'w', **kwargs) as dst:
-            for i in range(1, src.count + 1):
-                reproject(
-                    source=rasterio.band(src, i),
-                    destination=rasterio.band(dst, i),
-                    src_transform=src.transform,
-                    src_crs=src.crs,
-                    dst_transform=transform,
-                    dst_crs=dst_crs,
-                    resampling=Resampling.nearest)
+            bands = list(range(1, src.count + 1))
+            reproject(
+                source=rasterio.band(src, bands),
+                destination=rasterio.band(dst, bands),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs=dst_crs,
+                resampling=Resampling.nearest)
 
 
 See ``rasterio/rio/warp.py`` for more complex examples of reprojection based on
