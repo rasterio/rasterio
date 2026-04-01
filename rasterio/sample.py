@@ -1,3 +1,4 @@
+"""Raster sample module."""
 # Workaround for issue #378. A pure Python generator.
 
 import numpy as np

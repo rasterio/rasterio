@@ -75,7 +75,9 @@ logger = logging.getLogger(__name__)
 
 def _cb_key_val(ctx, param, value):
     """
-    click callback to validate `--opt KEY1=VAL1 --opt KEY2=VAL2` and collect
+    Click callback to parse and validate KEY=VALUE pairs to a dict.
+
+    E.g., this will validate `--opt KEY1=VAL1 --opt KEY2=VAL2` and collect
     in a dictionary like the one below, which is what the CLI function receives.
     If no value or `None` is received then an empty dictionary is returned.
 
@@ -86,7 +88,6 @@ def _cb_key_val(ctx, param, value):
 
     Note: `==VAL` breaks this as `str.split('=', 1)` is used.
     """
-
     if not value:
         return {}
     else:
@@ -152,7 +153,8 @@ def files_inout_handler(ctx, param, value):
 
 def from_like_context(ctx, param, value):
     """Return the value for an option from the context if the option
-    or `--all` is given, else return None."""
+    or `--all` is given, else return None.
+    """  # noqa: D205
     if ctx.obj and ctx.obj.get("like") and (value == "like" or ctx.obj.get("all_like")):
         return ctx.obj["like"][param.name]
     else:
@@ -161,7 +163,8 @@ def from_like_context(ctx, param, value):
 
 def like_handler(ctx, param, value):
     """Copy a dataset's meta property to the command context for access
-    from other callbacks."""
+    from other callbacks.
+    """  # noqa: D205
     if ctx.obj is None:
         ctx.obj = {}
     if value:

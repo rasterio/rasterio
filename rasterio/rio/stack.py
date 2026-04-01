@@ -68,8 +68,8 @@ def stack(
     use_highest_res,
     creation_options,
 ):
-    """Stack a number of bands from one or more input files into a
-    multiband dataset.
+    """
+    Stack a number of bands from one or more input files into a multiband dataset.
 
     Input datasets must be of a kind: same data type, dimensions, etc. The
     output is cloned from the first input.

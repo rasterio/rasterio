@@ -1,6 +1,4 @@
-"""
-Helper objects used by multiple CLI commands.
-"""
+"""Helper objects used by multiple CLI commands."""
 
 import json
 import os
@@ -12,7 +10,9 @@ from rasterio.errors import FileOverwriteError
 
 def coords(obj):
     """Yield all coordinate coordinate tuples from a geometry or feature.
-    From python-geojson package."""
+
+    From python-geojson package.
+    """
     if isinstance(obj, (tuple, list)):
         coordinates = obj
     elif "geometry" in obj:
@@ -30,8 +30,7 @@ def coords(obj):
 def write_features(
     fobj, collection, sequence=False, geojson_type="feature", use_rs=False, **dump_kwds
 ):
-    """Read an iterator of (feat, bbox) pairs and write to file using
-    the selected modes."""
+    """Read an iterator of (feat, bbox) pairs and write to file using the selected modes."""
     # Sequence of features expressed as bbox, feature, or collection.
     if sequence:
         for feat in collection():
