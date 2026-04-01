@@ -34,7 +34,7 @@ class TransformMethodsMixin:
     A subclass with this mixin MUST provide a `transform`
     property.
 
-    """
+    """  # noqa: D205
 
     def xy(
         self,
@@ -446,6 +446,7 @@ class TransformerBase:
             Determines if the returned coordinates are for the center of the
             pixel or for a corner. Available options include center, ul, ur, ll,
             lr.
+
         Raises
         ------
         ValueError
@@ -498,11 +499,14 @@ class TransformerBase:
 
 
 class GDALTransformerBase(TransformerBase):
+    """GDAL transformer base class."""
+
     def __init__(self):
         super().__init__()
         self._env = ExitStack()
 
     def close(self):
+        """Destroy transformer."""
         pass
 
     def __enter__(self):
@@ -546,8 +550,7 @@ class AffineTransformer(TransformerBase):
 
 class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
     """
-    Class related to Rational Polynomial Coeffecients (RPCs) based
-    coordinate transformations.
+    Class related to Rational Polynomial Coeffecients (RPCs) based coordinate transformations.
 
     Uses GDALCreateRPCTransformer and GDALRPCTransform for computations. Options
     for GDALCreateRPCTransformer may be passed using `rpc_options`.
@@ -567,8 +570,7 @@ class RPCTransformer(RPCTransformerBase, GDALTransformerBase):
 
 class GCPTransformer(GCPTransformerBase, GDALTransformerBase):
     """
-    Class related to Ground Control Point (GCPs) based
-    coordinate transformations.
+    Class related to Ground Control Point (GCPs) based coordinate transformations.
 
     Uses GDALCreateGCPTransformer and GDALGCPTransform for computations.
     Ensure that GDAL transformer objects are destroyed by calling `close()`

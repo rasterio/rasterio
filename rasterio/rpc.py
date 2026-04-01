@@ -1,3 +1,5 @@
+"""Rational Polynomial Coefficients module."""
+
 import attr
 
 
@@ -55,7 +57,6 @@ class RPC:
         -----
         The `err_bias` and `err_rand` are optional, and are not written to datasets by GDAL.
         """
-
         out = {
             "HEIGHT_OFF": str(self.height_off),
             "HEIGHT_SCALE": str(self.height_scale),
@@ -83,7 +84,6 @@ class RPC:
     @classmethod
     def from_gdal(cls, rpcs):
         """Deserialize dict values to float or list.
-
 
         Returns
         -------
