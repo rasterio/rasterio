@@ -36,9 +36,9 @@ import sys
 from importlib.metadata import entry_points
 
 import click
-import cligj
 
 import rasterio
+from rasterio.rio import options
 from rasterio.session import AWSSession
 from rasterio._vendor.click_plugins import with_plugins
 
@@ -70,11 +70,9 @@ def show_versions_cb(ctx, param, value):
     )
 )
 @click.group()
-@cligj.verbose_opt
-@cligj.quiet_opt
-@click.option(
-    "--aws-profile", help="Select a profile from the AWS credentials file"
-)
+@options.verbose_opt
+@options.quiet_opt
+@click.option("--aws-profile", help="Select a profile from the AWS credentials file")
 @click.option("--aws-no-sign-requests", is_flag=True, help="Make requests anonymously")
 @click.option(
     "--aws-requester-pays", is_flag=True, help="Requester pays data transfer costs"
