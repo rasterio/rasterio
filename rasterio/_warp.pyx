@@ -226,9 +226,25 @@ cdef GDALWarpOptions * create_warp_options(
 
     return psWOptions
 
+def _warp(
+        source_fn,
+        dest_fn,
+        src_crs=None,
+        src_nodata=None,
+        src_alpha=0,
+        dst_crs=None,
+        dst_nodata=None,
+        dst_alpha=0,
+        resampling=Resampling.nearest,
+        num_threads=1,
+        warp_memory_limit=64,
+        write_flush=False
+):
+    pass
 
 def _reproject(
-        source, destination,
+        source,
+        destination,
         src_transform=None,
         gcps=None,
         rpcs=None,

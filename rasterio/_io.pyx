@@ -59,6 +59,10 @@ np.import_array()
 
 log = logging.getLogger(__name__)
 
+cpdef int unlink_vsi(vsi_path):
+
+    """Unlinks VSI (virtual filesystem) file."""
+    VSIUnlink(<bytes>vsi_path)
 
 def validate_resampling(resampling):
     """Validate that the resampling method is compatible of reads/writes."""
