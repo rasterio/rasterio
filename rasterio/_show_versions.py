@@ -6,6 +6,7 @@ which was adapted from :func:`pandas.show_versions`
 """
 
 import importlib
+import importlib.metadata
 import os
 import platform
 import sys
