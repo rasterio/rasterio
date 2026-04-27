@@ -5,7 +5,6 @@ adapted from :func:`sklearn.utils._show_versions`
 which was adapted from :func:`pandas.show_versions`
 """
 
-import importlib
 import importlib.metadata
 import os
 import platform
