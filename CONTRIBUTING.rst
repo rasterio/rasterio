@@ -234,7 +234,7 @@ Rasterio's dev dependencies.
 
 .. code-block:: console
 
-    $ pip install -e .[test]
+    $ pip install -e ".[test]"
 
 Any time a Cython (``.pyx`` or ``.pxd``) file is edited the extension modules
 need to be recompiled, which is most easily achieved with:
@@ -252,7 +252,7 @@ The dependencies required to build the docs can be installed with:
 
 .. code-block:: console
 
-    $ pip install -e .[docs]
+    $ pip install -e ".[docs]"
 
 Running the tests
 ^^^^^^^^^^^^^^^^^
