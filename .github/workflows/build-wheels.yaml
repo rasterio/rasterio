@@ -196,6 +196,9 @@ jobs:
       matrix:
         os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-15-intel"]
         python-version: ["3.14","3.14t", "3.13", "3.12"]
+        exclude:
+          - os: windows-11-arm
+            python-version: "3.14t"
         
     steps:
       - name: Checkout Rasterio
