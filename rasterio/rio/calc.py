@@ -92,7 +92,7 @@ def calc(
     mem_limit,
     creation_options,
 ):
-    """A raster data calculator
+    r"""A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
     to a new dataset.
