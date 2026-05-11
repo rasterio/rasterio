@@ -92,7 +92,7 @@ def calc(
     mem_limit,
     creation_options,
 ):
-    """A raster data calculator
+    r"""A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
     to a new dataset.
@@ -102,32 +102,33 @@ def calc(
     enclosed in parentheses. Functions include ``read`` (gets a raster
     array) and ``asarray`` (makes a 3-D array from 2-D arrays).
 
-    \b
-        * (read i) evaluates to the i-th input dataset (a 3-D array).
-        * (read i j) evaluates to the j-th band of the i-th dataset (a
-          2-D array).
-        * (read i j 'float64') casts the array to, e.g. float64. This
-          is critical if calculations will produces values that exceed
-          the limits of the dataset's natural data type.
-        * (take foo j) evaluates to the j-th band of a dataset named foo
-          (see help on the --name option above).
-        * Standard numpy array operators (+, -, *, /) are available.
-        * When the final result is a list of arrays, a multiple band
-          output file is written.
-        * When the final result is a single array, a single band output
-          file is written.
+    * (read i) evaluates to the i-th input dataset (a 3-D array).
+    * (read i j) evaluates to the j-th band of the i-th dataset (a
+      2-D array).
+    * (read i j 'float64') casts the array to, e.g. float64. This
+      is critical if calculations will produces values that exceed
+      the limits of the dataset's natural data type.
+    * (take foo j) evaluates to the j-th band of a dataset named foo
+      (see help on the --name option above).
+    * Standard numpy array operators (+, -, \*, /) are available.
+    * When the final result is a list of arrays, a multiple band
+      output file is written.
+    * When the final result is a single array, a single band output
+      file is written.
 
     Example:
 
-    \b
-         $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif \\
+    .. code-block:: console
+
+         $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif
          > /tmp/out.tif
 
     The command above produces a 3-band GeoTIFF with all values scaled
     by 0.95 and incremented by 2.
 
-    \b
-        $ rio calc "(asarray (+ 125 (read 1)) (read 1) (read 1))" \\
+    .. code-block:: console
+
+        $ rio calc "(asarray (+ 125 (read 1)) (read 1) (read 1))"
         > tests/data/shade.tif /tmp/out.tif
 
     The command above produces a 3-band RGB GeoTIFF, with red levels
@@ -135,8 +136,7 @@ def calc(
 
     The maximum amount of memory used to perform calculations defaults to
     64 MB. This number can be increased to improve speed of calculation.
-
-    """  # noqa: W605
+    """
     dst = None
     sources = []
 
