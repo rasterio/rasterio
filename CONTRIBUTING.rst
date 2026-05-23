@@ -122,7 +122,7 @@ C extension modules are written using `Cython <http://cython.org/>`__. The
 Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
-Rasterio works with Python versions 3.10 through 3.14.
+Rasterio works with Python versions >=3.12 as specified in the ``pyproject.toml`` file.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
@@ -157,8 +157,7 @@ Historical Development Environment
 If you prefer not to use the new development environment you may install
 rasterio's dependencies directly onto your computer.
 
-Developing Rasterio requires Python 3.12 or any final release after and
-including 3.12.  We prefer developing with the most recent version of Python
+Developing Rasterio requires Python >=3.12. We prefer developing with the most recent version of Python
 but recognize this is not possible for all contributors.  A C compiler is also
 required to leverage `existing protocols
 <https://docs.python.org/3.12/extending/extending.html>`__ for extending Python
@@ -186,8 +185,8 @@ environment.
 Installing GDAL
 ^^^^^^^^^^^^^^^
 
-The GDAL library and its headers are required to build Rasterio. We do not
-have currently have guidance for any platforms other than Linux and OS X.
+The GDAL library and its headers are required to build Rasterio. We currently do not
+have any guidance for platforms other than Linux and OS X.
 
 On Linux, GDAL and its headers should be available through your distro's
 package manager. For Ubuntu the commands are:
@@ -235,7 +234,7 @@ Rasterio's dev dependencies.
 
 .. code-block:: console
 
-    $ pip install -e .[test]
+    $ pip install -e ".[test]"
 
 Any time a Cython (``.pyx`` or ``.pxd``) file is edited the extension modules
 need to be recompiled, which is most easily achieved with:
@@ -253,7 +252,7 @@ The dependencies required to build the docs can be installed with:
 
 .. code-block:: console
 
-    $ pip install -e .[docs]
+    $ pip install -e ".[docs]"
 
 Running the tests
 ^^^^^^^^^^^^^^^^^
