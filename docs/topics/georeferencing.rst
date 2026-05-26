@@ -40,7 +40,7 @@ argument.
 
 Coordinate Transformation
 -------------------------
-This section describes the three primary kinds of georefencing metadata supported by
+This section describes the three primary kinds of georeferencing metadata supported by
 rasterio.
 
 Affine

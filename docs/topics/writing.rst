@@ -60,5 +60,5 @@ to produce the final output.
 
 Some formats are known to produce invalid results using the
 ``IndirectRasterUpdater``. These formats will raise a :class:`.RasterioIOError`
-if you attempt to write to the. Currently this applies to the ``netCDF``
+if you attempt to write to them. Currently this applies to the ``netCDF``
 driver but please let us know if you experience problems writing other formats.
