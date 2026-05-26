@@ -76,7 +76,7 @@ use case.  Rasterio provides a few utilities to make this even easier:
 
 :func:`~rasterio.warp.transform_bounds`
 transforms the bounding coordinates of the source raster to the target
-coordinate reference system, densifiying points along the edges to account
+coordinate reference system, densifying points along the edges to account
 for non-linear transformations of the edges.
 
 

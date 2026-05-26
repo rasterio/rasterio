@@ -4,7 +4,7 @@ Nodata Masks
 Nodata masks allow you to identify regions of valid data values. In using Rasterio,
 you'll encounter two different kinds of masks.
 
-One is the the valid data mask from GDAL, an unsigned byte array with the same number of
+One is the valid data mask from GDAL, an unsigned byte array with the same number of
 rows and columns as the dataset in which non-zero elements (typically 255) indicate that the
 corresponding data elements are valid. Other elements are invalid, or *nodata*
 elements.

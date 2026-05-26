@@ -299,7 +299,7 @@ The :attr:`.DatasetReader.crs` attribute is an instance of Rasterio's
    >>> from pyproj import Transformer
    >>> src = rasterio.open('example.tif')
    >>> transformer = Transformer.from_crs(src.crs, "EPSG:3857", always_xy=True)
-   >>> transformer.transfform(101985.0, 2826915.0)
+   >>> transformer.transform(101985.0, 2826915.0)
    (-8789636.707871985, 2938035.238323653)
 
 Tags

@@ -1027,7 +1027,7 @@ cdef class DatasetReaderBase(DatasetBase):
     def stats(self, *, indexes=None, approx=False):
         """Update stored statistics for all dataset bands.
 
-        If no stats are provided, statistics will be computed for all
+        If no indexes are provided, statistics will be computed for all
         bands of the dataset.
 
         Parameters
