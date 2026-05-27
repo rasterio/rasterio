@@ -3,6 +3,8 @@ include CHANGES.txt AUTHORS.txt LICENSE.txt README.rst setup.py pyproject.toml
 include rasterio/*.pyx
 include rasterio/*.pxd
 include rasterio/*.pxi
+include rasterio/*.pyi
+include rasterio/py.typed
 exclude rasterio/*.c
 exclude rasterio/*.cpp
 recursive-include examples *.py
