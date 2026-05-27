@@ -291,6 +291,38 @@ def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
             geometry_window(src, [basic_geometry], north_up=False)
 
 
+def test_geometry_window_shear():
+    dataset = mock.MagicMock()
+    dataset.transform = Affine(
+        -0.027845583051108347,
+        -0.633337146168692,
+        356866.23611909203,
+        -0.6312305046859092,
+        0.02684685904145373,
+        6794534.510737031,
+    )
+    dataset.height = 12273
+    dataset.width = 11298
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                (353122.012749, 6790949.15273),
+                (354122.012749, 6790949.15273),
+                (354122.012749, 6791949.15273),
+                (353122.012749, 6791949.15273),
+                (353122.012749, 6790949.15273),
+            ]
+        ],
+    }
+
+    win = geometry_window(dataset, [geometry])
+    assert win.col_off == pytest.approx(4272)
+    assert win.row_off == pytest.approx(4075)
+    assert win.width == pytest.approx(1649)
+    assert win.height == pytest.approx(1647)
+
+
 def test_is_valid_geo_interface(geojson_point):
     """Properly formed Point object with geo interface is valid"""
     assert is_valid_geom(MockGeoInterface(geojson_point))
