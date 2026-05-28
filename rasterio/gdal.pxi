@@ -11,6 +11,7 @@ cdef extern from "cpl_conv.h" nogil:
     void CPLSetConfigOption(const char* key, const char* val)
     const char *CPLGetConfigOption(const char* key, const char* default)
     const char *CPLFindFile(const char *pszClass, const char *pszBasename)
+    char **CSLParseCommandLine(const char *pszCommandLine)
 
 
 cdef extern from "cpl_port.h":
