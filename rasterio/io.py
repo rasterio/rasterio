@@ -136,13 +136,13 @@ class MemoryFile(MemoryFileBase):
         If data has already been written, the file is opened in 'r'
         mode. Otherwise, the file is opened in 'w' mode.
 
-        Parameters
-        ----------
+        Notes
+        -----
         Note well that there is no `path` parameter: a `MemoryFile`
         contains a single dataset and there is no need to specify a
         path.
 
-        Other parameters are optional and have the same semantics as the
+        Parameters other than `path` have the same semantics as the
         parameters of `rasterio.open()`.
         """
         mempath = _UnparsedPath(self.name)
