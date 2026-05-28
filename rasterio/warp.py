@@ -31,7 +31,7 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     coordinate reference system into target.
 
     Parameters
-    ------------
+    ----------
     src_crs: CRS or dict
         Source coordinate reference system, as a rasterio CRS object.
         Example: CRS({'init': 'EPSG:4326'})
@@ -45,7 +45,7 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
         Contains z values.  Assumed to be all 0 if absent.
 
     Returns
-    ---------
+    -------
     out: tuple of array_like, (xs, ys, [zs])
         Tuple of x, y, and optionally z vectors, transformed into the target
         coordinate reference system.
@@ -73,7 +73,7 @@ def transform_geom(
     """Transform geometry from source coordinate reference system into target.
 
     Parameters
-    ------------
+    ----------
     src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
         Example: CRS({'init': 'EPSG:4326'})
@@ -90,7 +90,7 @@ def transform_geom(
         values will be preserved (default).
 
     Returns
-    ---------
+    -------
     out: GeoJSON like dict object or list of GeoJSON like objects.
         Transformed geometry(s) in GeoJSON dict format
     """
@@ -183,7 +183,7 @@ def reproject(
     transforms will be read from the appropriate datasets.
 
     Parameters
-    ------------
+    ----------
     source: ndarray or Band
         The source is a 2 or 3-D ndarray, or a single or a multiple
         Rasterio Band object. The dimensionality of source
@@ -267,7 +267,7 @@ def reproject(
         INIT_DEST=NO_DATA).
 
     Returns
-    ---------
+    -------
     destination: ndarray or Band
         The transformed ndarray or Band.
     dst_transform: Affine

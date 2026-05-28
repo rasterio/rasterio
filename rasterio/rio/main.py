@@ -44,11 +44,13 @@ from rasterio._vendor.click_plugins import with_plugins
 
 
 def configure_logging(verbosity):
+    """Configure logging."""
     log_level = max(10, 30 - 10 * verbosity)
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
 
 def gdal_version_cb(ctx, param, value):
+    """GDAL version callback."""
     if not value or ctx.resilient_parsing:
         return
 
@@ -57,6 +59,7 @@ def gdal_version_cb(ctx, param, value):
 
 
 def show_versions_cb(ctx, param, value):
+    """Show versions callback."""
     if not value or ctx.resilient_parsing:
         return
 

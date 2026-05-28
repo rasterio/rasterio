@@ -112,7 +112,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         pixel coordinates
 
     Yields
-    -------
+    ------
     polygon, value
         A pair of (polygon, value) for each feature found in the image.
         Polygons are GeoJSON-like dicts and the values are the
@@ -436,7 +436,6 @@ def bounds(geometry, north_up=True, transform=None):
     tuple
         Bounding box: (left, bottom, right, top)
     """
-
     geometry = getattr(geometry, "__geo_interface__", None) or geometry
 
     if "bbox" in geometry:
@@ -500,7 +499,7 @@ def geometry_window(
     -------
     rasterio.windows.Window
 
-    """
+    """  # noqa: D205
     if north_up is not None:
         warnings.warn(
             "The north_up parameter is unused, deprecated, and will be removed in the future.",
@@ -549,9 +548,9 @@ def geometry_window(
 
 def is_valid_geom(geom):
     """
-    Checks to see if geometry is a valid GeoJSON geometry type or
-    GeometryCollection.  Geometry must be GeoJSON or implement the geo
-    interface.
+    Checks to see if geometry is a valid GeoJSON geometry type or GeometryCollection.
+
+    Geometry must be GeoJSON or implement the geo interface.
 
     Geometries must be non-empty, and have at least x, y coordinates.
 
@@ -565,7 +564,6 @@ def is_valid_geom(geom):
     -------
     bool: True if object is a valid GeoJSON geometry type
     """
-
     geom_types = {
         "Point",
         "MultiPoint",

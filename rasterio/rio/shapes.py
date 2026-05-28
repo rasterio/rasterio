@@ -69,9 +69,11 @@ def shapes(
     with_nodata,
     as_mask,
 ):
-    """Extracts shapes from one band or mask of a dataset and writes
-    them out as GeoJSON. Unless otherwise specified, the shapes will be
-    transformed to WGS 84 coordinates.
+    """
+    Extracts shapes from one band or mask of a dataset and writes them out as GeoJSON.
+
+    Unless otherwise specified, the shapes will be transformed to WGS 84
+    coordinates.
 
     The default action of this command is to extract shapes from the
     first band of the input dataset. The shapes are polygons bounding
@@ -136,6 +138,8 @@ def shapes(
 
 
 def feature_gen(src, env, *args, **kwargs):
+    """Feature Collection generator."""
+
     class Collection:
         def __init__(self, env):
             self.bboxes = []

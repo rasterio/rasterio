@@ -38,8 +38,9 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin, TransformMethodsMixin
 
 
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin, TransformMethodsMixin):
-    """An unbuffered data and metadata writer. Its methods write data
-    directly to disk.
+    """An unbuffered data and metadata writer.
+
+    Its methods write data directly to disk.
     """
 
     def __repr__(self):
@@ -56,7 +57,7 @@ class BufferedDatasetWriter(
 
     This allows incremental updates to datasets using formats that don't
     otherwise support updates, such as JPEG.
-    """
+    """  # noqa: D205
 
     def __repr__(self):
         return "<{} BufferedDatasetWriter name='{}' mode='{}'>".format(
@@ -75,7 +76,6 @@ class MemoryFile(MemoryFileBase):
 
     Examples
     --------
-
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 

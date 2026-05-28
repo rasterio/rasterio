@@ -81,10 +81,10 @@ def transform_handler(ctx, param, value):
 
 
 def colorinterp_handler(ctx, param, value):
-    """Validate a string like ``red,green,blue,alpha`` and convert to
-    a tuple.  Also handle ``RGB`` and ``RGBA``.
-    """
+    """Validate a string like ``red,green,blue,alpha`` and convert to a tuple.
 
+    Also handle ``RGB`` and ``RGBA``.
+    """
     if value is None:
         return value
     # Using '--like'
@@ -169,7 +169,9 @@ def edit(
     like,
     colorinterp,
 ):
-    """Edit a dataset's metadata: coordinate reference system, affine
+    """Edit a dataset's metadata.
+
+    Editable metadata include coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
     The coordinate reference system may be either a PROJ.4 or EPSG:nnnn

@@ -17,12 +17,14 @@ class WindowError(RasterioError):
 
 class CRSError(ValueError):
     """Raised when a CRS string or mapping is invalid or cannot serve
-    to define a coordinate transformation."""
+    to define a coordinate transformation.
+    """  # noqa: D205
 
 
 class EnvError(RasterioError):
     """Raised when the state of GDAL/AWS environment cannot be created
-    or modified."""
+    or modified.
+    """  # noqa: D205
 
 
 class DriverCapabilityError(RasterioError, ValueError):
@@ -73,8 +75,9 @@ class ShapeSkipWarning(UserWarning):
 
 
 class GDALBehaviorChangeException(RuntimeError):
-    """Raised when GDAL's behavior differs from the given arguments.  For
-    example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
+    """Raised when GDAL's behavior differs from the given arguments.
+
+    For example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
     expecting it to be off will be presented with a MultiPolygon when the
     rest of their code expects a Polygon.
 

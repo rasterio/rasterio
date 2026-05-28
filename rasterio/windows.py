@@ -39,7 +39,7 @@ class WindowMethodsMixin:
     A subclass with this mixin MUST provide the following
     properties: `transform`, `height` and `width`.
 
-    """
+    """  # noqa: D205
 
     def window(self, left, bottom, right, top, precision=None):
         """Get the window corresponding to the bounding coordinates.
@@ -118,7 +118,7 @@ class WindowMethodsMixin:
 def iter_args(function):
     """Decorator to allow function to take either ``*args`` or
     a single iterable which gets expanded to ``*args``.
-    """
+    """  # noqa: D205
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -525,6 +525,7 @@ def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
 
 
 def validate_length_value(instance, attribute, value):
+    """Validate length value to be non-negative."""
     if value and value < 0:
         raise ValueError("Number of columns or rows must be non-negative")
 
@@ -649,8 +650,7 @@ class Window:
         Returns
         -------
         Window
-        """
-
+        """  # noqa: D205
         # Normalize to slices
         if isinstance(rows, (tuple, list)):
             if len(rows) != 2:
@@ -733,6 +733,7 @@ class Window:
         return Window(self.col_off, self.row_off, width, height)
 
     def round_shape(self, **kwds):
+        """Deprecated method; use :meth:`round_lengths` instead."""
         warnings.warn(
             "round_shape is deprecated and will be removed in Rasterio 2.0.0.",
             RasterioDeprecationWarning,
@@ -781,7 +782,6 @@ class Window:
 
         Parameters
         ----------
-
         other: Window
             Another window
 

@@ -1,3 +1,5 @@
+"""The rio mask CLI command."""
+
 import json
 import logging
 
@@ -59,7 +61,9 @@ def mask(
     overwrite,
     creation_options,
 ):
-    """Masks in raster using GeoJSON features (masks out all areas not covered
+    """Mask raster using features.
+
+    Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
     features.  Features are assumed to be in the same coordinate reference
     system as the input raster.
@@ -80,7 +84,6 @@ def mask(
     --crop option is not valid if features are completely outside extent of
     input raster.
     """
-
     output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
     input = files[0]
 

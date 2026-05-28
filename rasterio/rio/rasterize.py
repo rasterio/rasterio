@@ -138,7 +138,6 @@ def rasterize(
     functionality may be added in the future.
 
     """
-
     from rasterio.crs import CRS
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds

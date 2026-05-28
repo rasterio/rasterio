@@ -37,7 +37,6 @@ class _Collection:
         dict
             GeoJSON polygon feature
         """
-
         self._src = dataset
         self._bidx = bidx
         self._precision = precision
@@ -100,7 +99,7 @@ class _Collection:
 def blocks(
     ctx, input, output, precision, indent, compact, projection, sequence, use_rs, bidx
 ):
-    """Write dataset blocks as GeoJSON features.
+    r"""Write dataset blocks as GeoJSON features.
 
     This command prints features describing a raster's internal blocks,
     which are used directly for raster I/O.  These features can be used

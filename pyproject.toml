@@ -135,8 +135,12 @@ docstring-code-format = true
 select = [
     "F",  # pyflakes
     "E", "W",  # pycodestyle
+    "D",  # pydocstyle
 ]
 ignore = [
+    "D400",  # First line should end with a period
+    "D401",  # First line of docstring should be in imperative mood
+    "D105",  # Missing docstring in magic method
     "E501",  # Line too long
     "E722",  # Do not use bare `except`
     "E741",  # Ambiguous variable name
@@ -144,6 +148,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"ci/*" = ["D"]
+"docs/*" = ["D"]
+"examples/*" = ["D"]
+"benchmarks/*" = ["D"]
+"rasterio/_vendor/*" = ["ALL"]
 "rasterio/__init__.py" = ["F401"]
 "rasterio/path.py" = ["F401"]
-"**/tests/*" = ["E402"]
+"**/tests/*" = ["D", "E402"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

@@ -12,6 +12,7 @@ from rasterio.merge import MERGE_METHODS
 
 
 def deprecated_precision(ctx, param, value):
+    """Show RasterioDeprecationWarning if precision is used."""
     if value is not None:
         warnings.warn(
             "The --precision option is unused, deprecated, and will be removed in 2.0.0.",
@@ -88,7 +89,7 @@ def merge(
     use_highest_res,
     creation_options,
 ):
-    """Copy valid pixels from input files to an output file.
+    r"""Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
     coordinate reference system. Rotated rasters cannot be merged.
