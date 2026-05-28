@@ -1,7 +1,7 @@
 import numpy as np
 
 import rasterio
-from rasterio.coords import BoundingBox, disjoint_bounds
+from rasterio.coords import BoundingBox, disjoint_bounds, contains_coord
 
 
 def test_bounds():
@@ -39,3 +39,19 @@ def test_disjoint_bounds_issue1459_south_up():
     a = BoundingBox(left=0.0, bottom=1.0, right=1.0, top=0.0)
     b = BoundingBox(left=0.0, bottom=2.0, right=1.0, top=1.01)
     assert disjoint_bounds(a, b)
+
+
+def test_contains_coord():
+    bounds = BoundingBox(left=0.0, bottom=0.0, right=1.0, top=1.0)
+    assert contains_coord(bounds, (.5, .5))
+    assert contains_coord(bounds, (0, 0))
+    assert not contains_coord(bounds, (-.01, .5))
+    assert not contains_coord(bounds, (0, 2))
+
+
+def test_contains_coord_south_up():
+    bounds = BoundingBox(left=0.0, bottom=1.0, right=1.0, top=0.0)
+    assert contains_coord(bounds, (.5, .5))
+    assert contains_coord(bounds, (0, 0))
+    assert not contains_coord(bounds, (-.01, .5))
+    assert not contains_coord(bounds, (0, 2))
