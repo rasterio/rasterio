@@ -261,7 +261,7 @@ def reproject(
         raster to a destination of the same size is approximately
         56 MB. The default (0) means 64 MB with GDAL 2.2.
     kwargs:  dict, optional
-        Additional arguments passed to both the image to image
+        Additional arguments passed to both the image
         transformer :cpp:func:`GDALCreateGenImgProjTransformer2` (for example,
         MAX_GCP_ORDER=2) and the :cpp:struct:`GDALWarpOptions` (for example,
         INIT_DEST=NO_DATA).
