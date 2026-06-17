@@ -439,7 +439,7 @@ def crop(window: "Window", height: int, width: int) -> "Window":
 
 
 def evaluate(
-    window: "Window" | tuple[tuple[float, float], tuple[float, float]],
+    window: "Window | tuple[tuple[float, float], tuple[float, float]]",
     height: int,
     width: int,
     boundless: bool = False,
