@@ -21,6 +21,7 @@ import collections
 from collections.abc import Iterable
 import functools
 import math
+from typing import Sequence
 import warnings
 
 from affine import Affine
@@ -29,6 +30,11 @@ import numpy as np
 
 from rasterio.errors import WindowError, RasterioDeprecationWarning
 from rasterio.transform import rowcol, guard_transform
+
+
+def validate_length_value(instance, attribute, value) -> None:
+    if value and value < 0:
+        raise ValueError("Number of columns or rows must be non-negative")
 
 
 class WindowMethodsMixin:
@@ -41,7 +47,14 @@ class WindowMethodsMixin:
 
     """
 
-    def window(self, left, bottom, right, top, precision=None):
+    def window(
+        self,
+        left: float,
+        bottom: float,
+        right: float,
+        top: float,
+        precision: int | None = None,
+    ) -> "Window":
         """Get the window corresponding to the bounding coordinates.
 
         The resulting window is not cropped to the row and column
@@ -80,7 +93,7 @@ class WindowMethodsMixin:
             transform=guard_transform(self.transform),
         )
 
-    def window_transform(self, window):
+    def window_transform(self, window: "Window") -> Affine:
         """Get the affine transform for a dataset window.
 
         Parameters
@@ -97,7 +110,7 @@ class WindowMethodsMixin:
         gtransform = guard_transform(self.transform)
         return transform(window, gtransform)
 
-    def window_bounds(self, window):
+    def window_bounds(self, window: "Window"):
         """Get the bounds of a window
 
         Parameters
@@ -130,7 +143,7 @@ def iter_args(function):
     return wrapper
 
 
-def toranges(window):
+def toranges(window) -> tuple[tuple[float, float], tuple[float, float]]:
     """Normalize Windows to range tuples"""
     if isinstance(window, Window):
         return window.toranges()
@@ -138,7 +151,7 @@ def toranges(window):
         return window
 
 
-def get_data_window(arr, nodata=None):
+def get_data_window(arr, nodata=None) -> "Window":
     """Window covering the input array's valid data pixels.
 
     Parameters
@@ -191,7 +204,7 @@ def get_data_window(arr, nodata=None):
     return Window.from_slices(*v)
 
 
-def _compute_union(w1, w2):
+def _compute_union(w1: "Window", w2: "Window") -> tuple[float, float, float, float]:
     """Compute the union of two windows"""
     col_off = min(w1.col_off, w2.col_off)
     row_off = min(w1.row_off, w2.row_off)
@@ -200,13 +213,13 @@ def _compute_union(w1, w2):
     return col_off, row_off, width, height
 
 
-def _union(w1, w2):
+def _union(w1: "Window", w2: "Window") -> "Window":
     coeffs = _compute_union(w1, w2)
     return Window(*coeffs)
 
 
 @iter_args
-def union(*windows):
+def union(*windows: Sequence["Window"]) -> "Window":
     """
     Union windows and return the outermost extent they cover.
 
@@ -223,7 +236,7 @@ def union(*windows):
 
 
 @iter_args
-def intersection(*windows):
+def intersection(*windows: Sequence["Window"]) -> "Window":
     """Innermost extent of window intersections.
 
     Will raise WindowError if windows do not intersect.
@@ -240,7 +253,9 @@ def intersection(*windows):
     return functools.reduce(_intersection, windows)
 
 
-def _compute_intersection(w1, w2):
+def _compute_intersection(
+    w1: "Window", w2: "Window"
+) -> tuple[float, float, float, float]:
     """Compute intersection of window 1 and window 2"""
     col_off = max(w1.col_off, w2.col_off)
     row_off = max(w1.row_off, w2.row_off)
@@ -249,7 +264,7 @@ def _compute_intersection(w1, w2):
     return col_off, row_off, width, height
 
 
-def _intersection(w1, w2):
+def _intersection(w1: "Window", w2: "Window") -> "Window":
     """Compute intersection of window 1 and window 2"""
     coeffs = _compute_intersection(w1, w2)
     if coeffs[2] > 0 and coeffs[3] > 0:
@@ -259,7 +274,7 @@ def _intersection(w1, w2):
 
 
 @iter_args
-def intersect(*windows):
+def intersect(*windows: Sequence["Window"]) -> bool:
     """Test if all given windows intersect.
 
     Parameters
@@ -280,8 +295,15 @@ def intersect(*windows):
 
 
 def from_bounds(
-    left, bottom, right, top, transform=None, height=None, width=None, precision=None
-):
+    left: float,
+    bottom: float,
+    right: float,
+    top: float,
+    transform: Affine | None = None,
+    height: int | None = None,
+    width: int | None = None,
+    precision: int | None = None,
+) -> "Window":
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
@@ -341,7 +363,7 @@ def from_bounds(
     )
 
 
-def transform(window, transform):
+def transform(window: "Window", transform: Affine) -> Affine:
     """Construct an affine transform matrix relative to a window.
 
     Parameters
@@ -362,7 +384,9 @@ def transform(window, transform):
     return Affine.translation(x - transform.c, y - transform.f) * transform
 
 
-def bounds(window, transform, height=0, width=0):
+def bounds(
+    window: "Window", transform: Affine, height: int = 0, width: int = 0
+) -> tuple[float, float, float, float]:
     """Get the spatial bounds of a window.
 
     Parameters
@@ -389,7 +413,7 @@ def bounds(window, transform, height=0, width=0):
     return left, bottom, right, top
 
 
-def crop(window, height, width):
+def crop(window: "Window", height: int, width: int) -> "Window":
     """Crops a window to given height and width.
 
     Parameters
@@ -414,7 +438,12 @@ def crop(window, height, width):
     return Window(col_start, row_start, col_stop - col_start, row_stop - row_start)
 
 
-def evaluate(window, height, width, boundless=False):
+def evaluate(
+    window: "Window" | tuple[tuple[float, float], tuple[float, float]],
+    height: int,
+    width: int,
+    boundless: bool = False,
+) -> "Window":
     """Evaluates a window tuple that may contain relative index values.
 
     The height and width of the array the window targets is the context
@@ -427,6 +456,8 @@ def evaluate(window, height, width, boundless=False):
     height, width: int
         The number of rows or columns in the array that the window
         targets.
+    boundless: bool
+        Whether the inputs are bounded (default) or not.
 
     Returns
     -------
@@ -442,7 +473,9 @@ def evaluate(window, height, width, boundless=False):
         )
 
 
-def shape(window, height=-1, width=-1):
+def shape(
+    window: "Window", height: int | None = -1, width: int | None = -1
+) -> tuple[float, float]:
     """The shape of a window.
 
     height and width arguments are optional if there are no negative
@@ -465,7 +498,9 @@ def shape(window, height=-1, width=-1):
     return evaluated.height, evaluated.width
 
 
-def window_index(window, height=0, width=0):
+def window_index(
+    window: "Window", height: int = 0, width: int = 0
+) -> tuple[slice, slice]:
     """Construct a pair of slice objects for ndarray indexing
 
     Starting indexes are rounded down, Stopping indexes are rounded up.
@@ -485,7 +520,9 @@ def window_index(window, height=0, width=0):
     return window.toslices()
 
 
-def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
+def round_window_to_full_blocks(
+    window: "Window", block_shapes, height=0, width=0
+) -> "Window":
     """Round window to include full expanse of intersecting tiles.
 
     Parameters
@@ -524,11 +561,6 @@ def round_window_to_full_blocks(window, block_shapes, height=0, width=0):
     return Window(col_min, row_min, col_max - col_min, row_max - row_min)
 
 
-def validate_length_value(instance, attribute, value):
-    if value and value < 0:
-        raise ValueError("Number of columns or rows must be non-negative")
-
-
 @attr.s(slots=True, frozen=True, auto_attribs=True)
 class Window:
     """Windows are rectangular subsets of rasters.
@@ -555,14 +587,14 @@ class Window:
     width: float = attr.ib(validator=validate_length_value)
     height: float = attr.ib(validator=validate_length_value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a nicely formatted representation string"""
         return (
             "Window(col_off={self.col_off}, row_off={self.row_off}, "
             "width={self.width}, height={self.height})"
         ).format(self=self)
 
-    def flatten(self):
+    def flatten(self) -> tuple[float, float, float, float]:
         """A flattened form of the window.
 
         Returns
@@ -586,14 +618,14 @@ class Window:
             height=self.height,
         )
 
-    def toranges(self):
+    def toranges(self) -> tuple[tuple[float, float], tuple[float, float]]:
         """Makes an equivalent pair of range tuples"""
         return (
             (self.row_off, self.row_off + self.height),
             (self.col_off, self.col_off + self.width),
         )
 
-    def toslices(self):
+    def toslices(self) -> tuple[slice, slice]:
         """Slice objects for use as an ndarray indexer.
 
         Returns
@@ -619,7 +651,14 @@ class Window:
         )
 
     @classmethod
-    def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):
+    def from_slices(
+        cls,
+        rows: slice | tuple | list,
+        cols: slice | tuple | list,
+        height: float = -1,
+        width: float = -1,
+        boundless: bool | None = False,
+    ) -> "Window":
         """Construct a Window from row and column slices or tuples / lists of
         start and stop indexes. Converts the rows and cols to offsets, height,
         and width.
@@ -712,7 +751,7 @@ class Window:
 
         return cls(col_off=col_off, row_off=row_off, width=num_cols, height=num_rows)
 
-    def round_lengths(self, **kwds):
+    def round_lengths(self, **kwds) -> "Window":
         """Return a copy with width and height rounded.
 
         Lengths are rounded to the nearest whole number. The offsets are
@@ -732,14 +771,14 @@ class Window:
         height = math.floor(self.height + 0.5)
         return Window(self.col_off, self.row_off, width, height)
 
-    def round_shape(self, **kwds):
+    def round_shape(self, **kwds) -> "Window":
         warnings.warn(
             "round_shape is deprecated and will be removed in Rasterio 2.0.0.",
             RasterioDeprecationWarning,
         )
         return self.round_lengths(**kwds)
 
-    def round_offsets(self, **kwds):
+    def round_offsets(self, **kwds) -> "Window":
         """Return a copy with column and row offsets rounded.
 
         Offsets are rounded to the preceding whole number. The lengths
@@ -759,7 +798,7 @@ class Window:
         col_off = math.floor(self.col_off + 0.1)
         return Window(col_off, row_off, self.width, self.height)
 
-    def round(self, ndigits=None):
+    def round(self, ndigits=None) -> "Window":
         """Round a window's offsets and lengths
 
         Rounding to a very small fraction of a pixel can help treat
@@ -772,11 +811,11 @@ class Window:
             round(self.height, ndigits=ndigits),
         )
 
-    def crop(self, height, width):
+    def crop(self, height: int, width: int) -> "Window":
         """Return a copy cropped to height and width"""
         return crop(self, height, width)
 
-    def intersection(self, other):
+    def intersection(self, other: "Window") -> "Window":
         """Return the intersection of this window and another
 
         Parameters
@@ -792,7 +831,7 @@ class Window:
         return intersection([self, other])
 
 
-def subdivide(window, height, width):
+def subdivide(window: Window, height: int, width: int) -> list[Window]:
     """Divide a window into smaller windows.
 
     Windows have no overlap and will be at most the desired

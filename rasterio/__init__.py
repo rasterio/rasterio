@@ -1,5 +1,7 @@
 """Rasterio"""
 
+from __future__ import annotations
+
 from collections import namedtuple
 from contextlib import ExitStack
 import glob
@@ -7,6 +9,7 @@ import logging
 from logging import NullHandler
 import os
 import platform
+from typing import Any
 
 # On Windows we must explicitly register the directories that contain
 # the GDAL and supporting DLLs starting with Python 3.8. Presently, we
@@ -56,6 +59,7 @@ from rasterio.errors import (
 )
 from rasterio.io import (
     DatasetReader,
+    DatasetWriter,
     get_writer_for_path,
     get_writer_for_driver,
     MemoryFile,
@@ -99,21 +103,21 @@ log.addHandler(NullHandler())
 
 @ensure_env_with_credentials
 def open(
-    fp,
-    mode="r",
-    driver=None,
-    width=None,
-    height=None,
-    count=None,
-    crs=None,
-    transform=None,
-    dtype=None,
-    nodata=None,
-    sharing=False,
-    thread_safe=False,
-    opener=None,
-    **kwargs,
-):
+    fp: str | os.PathLike[Any] | MemoryFile | FilePath | Any,
+    mode: str = "r",
+    driver: str | None = None,
+    width: int | None = None,
+    height: int | None = None,
+    count: int | None = None,
+    crs: CRS | str | dict[str, Any] | None = None,
+    transform: Affine | None = None,
+    dtype: str | None = None,
+    nodata: float | int | None = None,
+    sharing: bool = False,
+    thread_safe: bool = False,
+    opener: Any = None,
+    **kwargs: Any,
+) -> DatasetReader | DatasetWriter:
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
