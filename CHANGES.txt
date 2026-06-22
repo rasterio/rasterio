@@ -5,7 +5,8 @@ Changes
 ------------------
 
 Bug fixes:
--
+
+- rasterio.features: Accept triangles (3-vertex polygons) in is_valid_geom and rasterize instead of skipping them (#3279)
 
 Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.1/ci/config.sh#L1-L25
 

@@ -1,5 +1,6 @@
 from copy import deepcopy
 import math
+import warnings
 from unittest import mock
 
 from affine import Affine
@@ -359,6 +360,16 @@ def test_is_valid_geom_polygon(geojson_polygon):
 
     assert is_valid_geom(geojson_polygon)
 
+    # A triangle (3-coordinate ring) is valid (#3279)
+    geom = deepcopy(geojson_polygon)
+    geom["coordinates"] = [[(2, 2), (2, 4.25), (4.25, 2)]]
+    assert is_valid_geom(geom)
+
+    # A 2-coordinate ring is too few to form a polygon and is invalid
+    geom = deepcopy(geojson_polygon)
+    geom["coordinates"] = [[(2, 2), (4.25, 2)]]
+    assert not is_valid_geom(geom)
+
     # Empty iterables are invalid
     geom = deepcopy(geojson_polygon)
     geom["coordinates"] = []
@@ -382,6 +393,16 @@ def test_is_valid_geom_ring(geojson_polygon):
     geojson_ring["coordinates"] = geojson_ring["coordinates"][0]
     assert is_valid_geom(geojson_ring)
 
+    # A triangle ring (3 coordinates) is valid (#3279)
+    geom = deepcopy(geojson_ring)
+    geom["coordinates"] = [(2, 2), (2, 4.25), (4.25, 2)]
+    assert is_valid_geom(geom)
+
+    # A 2-coordinate ring is too few and is invalid
+    geom = deepcopy(geojson_ring)
+    geom["coordinates"] = [(2, 2), (4.25, 2)]
+    assert not is_valid_geom(geom)
+
     # Empty iterables are invalid
     geom = deepcopy(geojson_ring)
     geom["coordinates"] = []
@@ -396,6 +417,16 @@ def test_is_valid_geom_multipolygon(geojson_multipolygon):
     """Properly formed GeoJSON MultiPolygon is valid"""
 
     assert is_valid_geom(geojson_multipolygon)
+
+    # A multipolygon whose ring is a triangle (3 coordinates) is valid (#3279)
+    geom = deepcopy(geojson_multipolygon)
+    geom["coordinates"] = [[[(2, 2), (2, 4.25), (4.25, 2)]]]
+    assert is_valid_geom(geom)
+
+    # A 2-coordinate ring is too few and is invalid
+    geom = deepcopy(geojson_multipolygon)
+    geom["coordinates"] = [[[(2, 2), (4.25, 2)]]]
+    assert not is_valid_geom(geom)
 
     # Empty iterables are invalid
     geom = deepcopy(geojson_multipolygon)
@@ -433,6 +464,22 @@ def test_is_valid_geom_geomcollection(geojson_geomcollection):
 def test_is_valid_geom_invalid_inputs(geom):
     """Improperly formed GeoJSON objects should fail"""
     assert not is_valid_geom(geom)
+
+
+@pytest.mark.parametrize(
+    "geom",
+    [
+        {"type": "Polygon", "coordinates": [[(2, 2), (2, 8), (8, 2)]]},
+        {"type": "MultiPolygon", "coordinates": [[[(2, 2), (2, 8), (8, 2)]]]},
+    ],
+)
+def test_rasterize_triangle(geom):
+    """Triangles are rasterized rather than skipped (#3279)."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ShapeSkipWarning)
+        out = rasterize([geom], out_shape=DEFAULT_SHAPE)
+
+    assert out.sum() > 0
 
 
 def test_rasterize_point(geojson_point):
