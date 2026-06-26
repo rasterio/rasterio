@@ -4,6 +4,12 @@ Changes
 1.5.1 (TBD)
 ------------------
 
+Documentation:
+
+- Note that PROJ transformation grids and the PROJ_NETWORK environment variable
+  are required to apply vertical (datum) shifts when reprojecting or
+  transforming (#2929).
+
 Bug fixes:
 -
 
