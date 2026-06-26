@@ -64,3 +64,13 @@ Why can't rasterio find proj.db (rasterio from PyPI versions >= 1.2.0)?
 -----------------------------------------------------------------------
 
 Starting with version 1.2.0, rasterio wheels on PyPI include PROJ 7.x and GDAL 3.x. The libraries and modules in these wheels are incompatible with older versions of PROJ that may be installed on your system. If ``PROJ_LIB`` (PROJ < 9.1) | ``PROJ_DATA`` (PROJ 9.1+) is set in your program's environment and points to an older version of PROJ, you must unset this variable. Rasterio will then use the version of PROJ contained in the wheel.
+
+Why aren't vertical (datum) shifts applied when I reproject or transform?
+-------------------------------------------------------------------------
+
+When you reproject or transform between coordinate reference systems that have vertical components, for example from ``EPSG:32634+5773`` to ``EPSG:32634+3855``, PROJ needs a transformation grid to compute the vertical shift. To keep their size small the rasterio wheels on the Python Package Index include only a minimal set of PROJ grids, so the grid required for your transformation may be missing. When the grid is not available PROJ applies a shift of zero and the values are returned unchanged instead of an error being raised.
+
+To make these transformations work you can either let PROJ download grids on demand by setting the ``PROJ_NETWORK`` environment variable to ``ON``, or install the grids locally (for example with PROJ's ``projsync`` program or the ``proj-data`` package) and point ``PROJ_DATA`` at the directory that contains them.
+
+.. note::
+   Other distributions of rasterio, such as the conda-forge packages, may include a more complete set of PROJ grids and apply these shifts without extra configuration.
