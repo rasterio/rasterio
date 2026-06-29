@@ -606,25 +606,28 @@ def is_valid_geom(geom):
             return len(coords) >= 2 and len(coords[0]) >= 2
 
         if geom_type == "LinearRing":
-            # Rings must have at least 4 coordinates and at least x, y for
-            # a coordinate
-            return len(coords) >= 4 and len(coords[0]) >= 2
+            # Rings must have at least 3 coordinates and at least x, y for
+            # a coordinate. Unclosed rings are closed by GDAL on write.
+            return len(coords) >= 3 and len(coords[0]) >= 2
 
         if geom_type == "MultiLineString":
             # Multi lines must have at least one LineString
             return len(coords) > 0 and len(coords[0]) >= 2 and len(coords[0][0]) >= 2
 
         if geom_type == "Polygon":
-            # Polygons must have at least 1 ring, with at least 4 coordinates,
-            # with at least x, y for a coordinate
-            return len(coords) > 0 and len(coords[0]) >= 4 and len(coords[0][0]) >= 2
+            # Polygons must have at least 1 ring, with at least 3 coordinates,
+            # with at least x, y for a coordinate. Unclosed rings are closed by
+            # GDAL on write.
+            return len(coords) > 0 and len(coords[0]) >= 3 and len(coords[0][0]) >= 2
 
         if geom_type == "MultiPolygon":
-            # Multi polygons must have at least one Polygon
+            # Multi polygons must have at least one Polygon, whose first ring
+            # has at least 3 coordinates. Unclosed rings are closed by GDAL on
+            # write.
             return (
                 len(coords) > 0
                 and len(coords[0]) > 0
-                and len(coords[0][0]) >= 4
+                and len(coords[0][0]) >= 3
                 and len(coords[0][0][0]) >= 2
             )
 
