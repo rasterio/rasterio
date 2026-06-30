@@ -224,7 +224,7 @@ def _sieve(image, size, out, mask, connectivity):
         raise ValueError('size must be greater than 0')
     elif type(size) == float:
         raise ValueError('size must be an integer number of pixels')
-    elif size > (image.shape[0] * image.shape[1]):
+    elif size > (image.shape[-2] * image.shape[-1]):
         raise ValueError('size must be smaller than size of image')
 
     if connectivity not in (4, 8):

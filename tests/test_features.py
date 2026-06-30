@@ -1115,6 +1115,24 @@ def test_sieve_invalid_size(basic_image):
             sieve(basic_image, invalid_size)
 
 
+@pytest.mark.parametrize("size", [2, 9])
+def test_sieve_3d_size_guard(size):
+    """The size guard must compare against rows * cols, not bands * rows.
+
+    For a 3-D (band, row, col) array a valid size smaller than the number of
+    pixels per band must not raise (gh-3412).
+    """
+    image_2d = np.zeros((4, 4), dtype="int16")
+    image_2d[0, 0] = 1
+    image_3d = image_2d.reshape(1, 4, 4)
+
+    sieved_2d = sieve(image_2d, size)
+    sieved_3d = sieve(image_3d, size)
+
+    # A single-band 3-D input collapses to its 2-D equivalent on output.
+    assert np.array_equal(sieved_3d, sieved_2d)
+
+
 def test_sieve_connectivity_rook(diagonal_image):
     """Diagonals are not connected, so feature is removed."""
     assert not np.any(sieve(diagonal_image, diagonal_image.sum(), connectivity=4))

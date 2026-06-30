@@ -11,7 +11,9 @@ Documentation:
   transforming (#2929).
 
 Bug fixes:
--
+- rasterio.features.sieve: Fix the size guard for 3-D (band, row, col) arrays,
+  which compared size against bands * rows instead of rows * cols and could
+  reject valid sizes (#3412).
 
 Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.1/ci/config.sh#L1-L25
 
