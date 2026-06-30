@@ -117,6 +117,48 @@ def test_bounds_existing_bbox(basic_featurecollection):
     assert bounds(fc) == (0, 10, 10, 20)
 
 
+def test_bounds_existing_bbox_honors_transform():
+    """A cached bbox must not bypass the requested transform (gh-3386)."""
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [[[2, 2], [2, 4], [4, 4], [4, 2], [2, 2]]],
+    }
+    bbox = [2, 2, 4, 4]  # the geometry's exact extent
+    transform = Affine.translation(-1, -1) * Affine.scale(0.5)
+    with_bbox = {"type": "Feature", "bbox": bbox, "geometry": geometry}
+    without_bbox = {"type": "Feature", "geometry": geometry}
+    # The cached-bbox path must agree with the computed path, not return the
+    # untransformed bbox.
+    assert bounds(with_bbox, transform=transform) == bounds(
+        without_bbox, transform=transform
+    )
+
+
+def test_bounds_existing_bbox_honors_north_up():
+    """A cached bbox must not bypass north_up=False, which flips y (gh-3386)."""
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [[[2, 2], [2, 4], [4, 4], [4, 2], [2, 2]]],
+    }
+    bbox = [2, 2, 4, 4]
+    with_bbox = {"type": "Feature", "bbox": bbox, "geometry": geometry}
+    without_bbox = {"type": "Feature", "geometry": geometry}
+    result = bounds(with_bbox, north_up=False)
+    assert result == bounds(without_bbox, north_up=False)
+    # Sanity check that north_up=False actually flips the vertical ordering.
+    assert result != bounds(with_bbox, north_up=True)
+
+
+def test_bounds_existing_bbox_used_by_default():
+    """With default arguments the cached bbox is still returned directly."""
+    feature = {
+        "type": "Feature",
+        "bbox": [0, 100, 10, 200],
+        "geometry": {"type": "Polygon", "coordinates": [[[2, 2], [4, 4], [4, 2]]]},
+    }
+    assert bounds(feature) == (0, 100, 10, 200)
+
+
 def test_geometry_mask(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         basic_image_2x2 == 0,

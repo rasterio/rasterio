@@ -439,7 +439,10 @@ def bounds(geometry, north_up=True, transform=None):
 
     geometry = getattr(geometry, "__geo_interface__", None) or geometry
 
-    if "bbox" in geometry:
+    # A cached bbox is the geometry's untransformed, north-up extent, so it can
+    # only be returned directly when neither a transform nor an axis flip is
+    # requested; otherwise fall through and compute from the coordinates.
+    if "bbox" in geometry and transform is None and north_up:
         return tuple(geometry["bbox"])
 
     geom = geometry.get("geometry") or geometry
