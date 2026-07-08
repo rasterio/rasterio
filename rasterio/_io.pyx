@@ -438,7 +438,7 @@ cdef class DatasetReaderBase(DatasetBase):
             return2d = True
 
             if out is not None and out.ndim == 2:
-                out.shape = (1,) + out.shape
+                out = np.expand_dims(out, axis=0)
 
         if not indexes:
             raise ValueError("No indexes to read")
@@ -657,7 +657,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     out = np.ma.array(out, **kwds)
 
         if return2d:
-            out.shape = out.shape[1:]
+            out = np.squeeze(out, axis=0).copy()
 
         return out
 
@@ -731,7 +731,7 @@ cdef class DatasetReaderBase(DatasetBase):
             indexes = [indexes]
             return2d = True
             if out is not None and out.ndim == 2:
-                out.shape = (1,) + out.shape
+                out = np.expand_dims(out, 0)
         if not indexes:
             raise ValueError("No indexes to read")
 
@@ -828,7 +828,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         indexes, out, Window(0, 0, window.width, window.height), None, masks=True)
 
         if return2d:
-            out.shape = out.shape[1:]
+            out = np.squeeze(out, axis=0).copy()
 
         return out
 
