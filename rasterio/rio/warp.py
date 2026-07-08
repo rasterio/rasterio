@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.env import setenv
-from rasterio.errors import CRSError
+from rasterio.errors import CRSError, RasterioIOError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
@@ -407,6 +407,22 @@ def warp(
                 click.echo("Output dataset profile:")
                 click.echo(json.dumps(dict(**out_kwargs), indent=2, default=to_json))
             else:
+                # Guard against unreasonable output dimensions that
+                # can result from mismatched bounds and resolution
+                # units (e.g. projected-metre bounds with a
+                # degree-scale resolution).  GDAL may hang or OOM
+                # instead of failing fast.
+                MAX_PIXELS = 10_000_000_000  # 10 billion pixels
+                total_pixels = dst_width * dst_height
+                if total_pixels > MAX_PIXELS:
+                    raise RasterioIOError(
+                        f"Output dimensions {dst_width} x {dst_height} "
+                        f"({total_pixels:,} pixels) exceed the safety "
+                        f"limit of {MAX_PIXELS:,} pixels. Check that "
+                        "--bounds and --res use the same units as "
+                        "--dst-crs."
+                    )
+
                 with rasterio.open(output, "w", **out_kwargs) as dst:
                     reproject(
                         source=rasterio.band(src, list(range(1, src.count + 1))),
