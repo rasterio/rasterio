@@ -42,7 +42,7 @@ def show(
     title=None,
     transform=None,
     percent_range=None,
-    adjust=True,
+    adjust=False,
     **kwargs,
 ):
     """Display a raster or raster band using matplotlib.
