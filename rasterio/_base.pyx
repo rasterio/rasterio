@@ -99,7 +99,7 @@ def get_dataset_driver(path):
 def driver_supports_mode(drivername, creation_mode):
     """Return True if the driver supports the mode"""
     cdef GDALDriverH driver = NULL
-    cdef char **metadata = NULL
+    cdef CSLConstList metadata = NULL
 
     drivername = drivername.encode('utf-8')
     creation_mode = creation_mode.encode('utf-8')
@@ -1149,7 +1149,7 @@ cdef class DatasetBase:
         a namespace other than the default.
         """
         cdef GDALMajorObjectH obj = NULL
-        cdef char **metadata = NULL
+        cdef CSLConstList metadata = NULL
         cdef char *item = NULL
         cdef const char *domain = NULL
         cdef char *key = NULL
