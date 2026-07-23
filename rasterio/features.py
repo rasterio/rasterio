@@ -219,19 +219,19 @@ def rasterize(
     dst_path=None,
     dst_kwds=None,
 ):
-    """Return an image array with input geometries burned in.
+    """Burn vector shapes into an array.
 
-    Warnings will be raised for any invalid or empty geometries, and
-    an exception will be raised if there are no valid shapes
+    Warnings or exceptions (optionally) will be raised for any invalid
+    shape, and an exception will be raised if there are no valid shapes
     to rasterize.
 
     Parameters
     ----------
-    shapes : iterable of (`geometry`, `value`) pairs or geometries
-        The `geometry` can either be an object that implements the geo
-        interface or GeoJSON-like object. If no `value` is provided
-        the `default_value` will be used. If `value` is `None` the
-        `fill` value will be used.
+    shapes : iterable of shapes or shape, value pairs
+        The `shape` can be an object that implements the geo interface
+        or a GeoJSON-like object. If no `value` is provided the
+        `default_value` will be used. If `value` is `None` the `fill`
+        value will be used.
     out_shape : tuple or list with 2 integers
         Shape of output :class:`numpy.ndarray`.
     fill : int or float, optional
