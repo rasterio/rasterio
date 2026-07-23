@@ -27,7 +27,7 @@ from rasterio.dtypes import (
 )
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, _GDAL_AT_LEAST_3_11
-from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
