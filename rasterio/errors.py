@@ -66,6 +66,10 @@ class RPCError(ValueError):
     """Raised when RPC transformation is invalid"""
 
 
+class InvalidShapeError(RasterioError, ValueError):
+    """Raised when a shape or geometry is invalid."""
+
+
 class ShapeSkipWarning(UserWarning):
     """Warn that an invalid or empty shape in a collection has been skipped"""
 

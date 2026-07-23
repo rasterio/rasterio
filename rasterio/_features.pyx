@@ -7,6 +7,8 @@ from contextlib import ExitStack
 import numpy as np
 
 from rasterio import dtypes
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
 from rasterio.dtypes import (
     _getnpdtype,
     bool_,
@@ -23,11 +25,8 @@ from rasterio.dtypes import (
     float64,
 )
 from rasterio.enums import MergeAlg
-
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
 from rasterio.env import _GDAL_AT_LEAST_3_11, _GDAL_AT_LEAST_3_12_1
-
+from rasterio.errors import InvalidShapeError, ShapeSkipWarning
 
 log = logging.getLogger(__name__)
 
@@ -299,7 +298,7 @@ def _sieve(image, size, out, mask, connectivity):
     return out
 
 
-def _rasterize(shapes, image, transform, all_touched, merge_alg):
+def _rasterize(shapes, image, transform, all_touched, merge_alg, skip_invalid=True):
     """Burns input geometries into `image`.
 
     The `image` array is modified in place.
@@ -324,6 +323,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                 the new value will overwrite the existing value.
             MergeAlg.add:
                 the new value will be added to the existing raster.
+    skip_invalid : bool, optional Whether to skip invalid geometries,
+        with a warning (the default), or raise an exception.
 
     Returns
     -------
@@ -355,7 +356,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
 
     """
     cdef int retval
-    cdef int i
+    cdef int i, index
     cdef size_t num_geoms = 0
     cdef OGRGeometryH *geoms = NULL
     cdef char **options = NULL
@@ -383,15 +384,19 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         for i in range(<int>num_geoms):
             geoms[i] = NULL
 
-        for i, (geometry, value) in enumerate(all_shapes):
+        for index, (geometry, value) in enumerate(all_shapes):
             try:
-                geoms[i] = OGRGeomBuilder().build(geometry)
-                pixel_values[i] = <double>value
+                geoms[index] = OGRGeomBuilder().build(geometry)
+                pixel_values[index] = <double>value
             except Exception as error:
-                log.error(
-                    "Geometry %r at index %d with value %d skipped due to error: %r",
-                    geometry, i, value, error
-                )
+                if skip_invalid:
+                    warnings.warn(
+                        f"Invalid shape will not be rasterized: {geometry=}, {index=}, {value=}, {error=}",
+                        ShapeSkipWarning,
+                    )
+                else:
+                    log.error("Invalid shape will not be rasterized: geometry=%r, index=%r, value=%r, error=%r", geometry, index, value, error)
+                    raise InvalidShapeError("Invalid shape will not be rasterized") from error
 
         if isinstance(image, DatasetWriterBase):
             band_ids = <int *>CPLMalloc(<int>image.count*sizeof(int))

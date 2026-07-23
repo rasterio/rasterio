@@ -338,37 +338,8 @@ def rasterize(
 
         geom = getattr(geom, '__geo_interface__', None) or geom
 
-        if is_valid_geom(geom):
-            shape_values.append(value)
-            geom_type = geom['type']
-
-            if geom_type == 'GeometryCollection':
-                # GeometryCollections need to be handled as individual parts to
-                # avoid holes in output:
-                # https://github.com/rasterio/rasterio/issues/1253.
-                # Only 1-level deep since GeoJSON spec discourages nested
-                # GeometryCollections
-                for part in geom['geometries']:
-                    valid_shapes.append((part, value))
-
-            elif geom_type == 'MultiPolygon':
-                # Same issue as above
-                for poly in geom['coordinates']:
-                    valid_shapes.append(({'type': 'Polygon', 'coordinates': poly}, value))
-
-            else:
-                valid_shapes.append((geom, value))
-
-        else:
-            if skip_invalid:
-                warnings.warn(
-                    "Invalid or empty shape {} at index {} will not be rasterized.".format(
-                        geom, index
-                    ),
-                    ShapeSkipWarning,
-                )
-            else:
-                raise ValueError("Invalid or empty shape cannot be rasterized.")
+        shape_values.append(value)
+        valid_shapes.append((geom, value))
 
     # If neither an out array or dtype were given, we get the output
     # data type from the shapes values, including the default.
@@ -407,7 +378,14 @@ def rasterize(
         transform = guard_transform(transform)
 
         if valid_shapes:
-            _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+            _rasterize(
+                valid_shapes,
+                out,
+                transform,
+                all_touched,
+                merge_alg,
+                skip_invalid=skip_invalid,
+            )
 
         if isinstance(out, np.ndarray):
             if masked and not hasattr(out, "mask"):
