@@ -303,6 +303,18 @@ def test_plot_normalize():
     np.testing.assert_array_almost_equal(np.linspace(0, 1, 10), b)
 
 
+def test_show_array_respects_vmin_vmax():
+    """show() must delegate value scaling to imshow() so a user-supplied
+    vmin/vmax applies to the real single-band values instead of the data
+    being crushed to 0-1 by adjust_band() (issue #3549)."""
+    data = np.linspace(-33.0, 0.0, 100).reshape(10, 10)
+    fig, ax = plt.subplots(1)
+    show(data, ax=ax, cmap="gray", vmin=-33.0, vmax=0.0)
+    displayed = np.asarray(ax.images[0].get_array())
+    plt.close(fig)
+    np.testing.assert_array_almost_equal(displayed, data)
+
+
 def test_issue3007():
     """Don't squeeze further than 2D."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:

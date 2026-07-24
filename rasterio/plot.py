@@ -31,8 +31,19 @@ def get_plt():
         raise ImportError(msg)
 
 
-def show(source, with_bounds=True, contour=False, contour_label_kws=None, indexes=None,
-         ax=None, title=None, transform=None, percent_range=None, adjust=True, **kwargs):
+def show(
+    source,
+    with_bounds=True,
+    contour=False,
+    contour_label_kws=None,
+    indexes=None,
+    ax=None,
+    title=None,
+    transform=None,
+    percent_range=None,
+    adjust=False,
+    **kwargs,
+):
     """Display a raster or raster band using matplotlib.
 
     Parameters
