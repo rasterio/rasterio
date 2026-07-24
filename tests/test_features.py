@@ -535,6 +535,17 @@ def test_rasterize_polygon(geojson_polygon, basic_image_2x2):
     )
 
 
+def test_rasterize_triangle(geojson_polygon, basic_image_2x2):
+    coords = [geojson_polygon["coordinates"][0][:-2]]
+    triangle = dict(type="Polygon", coordinates=coords)
+    expected = basic_image_2x2
+    expected[2, 3] = 0
+
+    assert np.array_equal(
+        rasterize([triangle], out_shape=DEFAULT_SHAPE, skip_invalid=False), expected
+    )
+
+
 def test_rasterize_multipolygon(geojson_multipolygon):
     expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
     expected[0:1, 0:1] = 1
@@ -632,7 +643,7 @@ def test_rasterize_invalid_geom(input):
 
 def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
     """Rasterize operation should succeed for at least one valid geometry."""
-    with pytest.warns(ShapeSkipWarning, match="Invalid or empty shape"):
+    with pytest.warns(ShapeSkipWarning, match="Invalid shape"):
         out = rasterize(
             [geojson_polygon, {"type": "Polygon", "coordinates": []}],
             out_shape=DEFAULT_SHAPE,
@@ -881,7 +892,9 @@ def test_rasterize__numpy_coordinates__fail():
             2,
         ),
     ]
-    out = rasterio.features.rasterize(shapes=shapes, out_shape=(100, 100))
+    with pytest.warns(ShapeSkipWarning):
+        out = rasterio.features.rasterize(shapes=shapes, out_shape=(100, 100))
+
     assert out.shape == (100, 100)
     # will fail and be filled with 0
     assert (out == 0).all()
