@@ -11,7 +11,10 @@ Documentation:
   transforming (#2929).
 
 Bug fixes:
--
+
+- rasterio.plot.show: Restore the ``adjust=False`` default so a user-supplied
+  vmin/vmax/norm is honored for single-band data instead of being rescaled to
+  0-1 (#3549).
 
 Full list of software versions: https://github.com/rasterio/rasterio/blob/1.5.1/ci/config.sh#L1-L25
 
