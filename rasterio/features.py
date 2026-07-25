@@ -135,6 +135,12 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     - :cpp:func:`GDALFPolygonize`
 
     """
+    # A Band is a namedtuple, and the low-level implementation reads .dtype,
+    # .ds and .bidx off it. A plain (dataset, bidx) tuple passes the same
+    # isinstance check but has none of those, so promote it to a Band here.
+    if isinstance(source, tuple) and not isinstance(source, rasterio.Band):
+        source = rasterio.band(*source)
+
     if hasattr(source, "mask") and mask is None:
         mask = ~source.mask
         source = source.data

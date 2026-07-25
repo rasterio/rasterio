@@ -956,6 +956,19 @@ def test_shapes_band(pixelated_image, pixelated_image_file):
         assert truth[0] == list(shapes(band, mask=band))[0]
 
 
+def test_shapes_dataset_bidx_tuple(pixelated_image, pixelated_image_file):
+    """A (dataset, bidx) tuple should behave like the band it names.
+
+    The docstring has always advertised this form, but the low-level
+    implementation reads .dtype, .ds and .bidx straight off the argument. A
+    plain tuple satisfies its isinstance check while having none of them.
+    """
+    truth = list(shapes(pixelated_image))
+
+    with rasterio.open(pixelated_image_file) as src:
+        assert truth == list(shapes((src, 1)))
+
+
 def test_shapes_connectivity_rook(diagonal_image):
     """
     Diagonals are not connected, so there will be 1 feature per pixel plus
