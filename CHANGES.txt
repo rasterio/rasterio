@@ -9,6 +9,9 @@ Documentation:
 - Note that PROJ transformation grids and the PROJ_NETWORK environment variable
   are required to apply vertical (datum) shifts when reprojecting or
   transforming (#2929).
+- DatasetReader.sample: Document that a generator is returned rather than
+  arrays, add an example of consuming it, and fix the malformed underline that
+  kept the "Returns" section from rendering (#3018).
 
 Bug fixes:
 

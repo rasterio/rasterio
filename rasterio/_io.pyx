@@ -1011,11 +1011,22 @@ cdef class DatasetReaderBase(DatasetBase):
             dataset.
 
         Returns
-        ------
-        iterable
-            Arrays of length equal to the number of specified indexes
+        -------
+        generator of numpy.ndarray
+            A generator, not a sequence: nothing is read until it is
+            iterated over. It yields one array per coordinate pair, each
+            of length equal to the number of specified indexes,
             containing the dataset values for the bands corresponding to
             those indexes.
+
+        Examples
+        --------
+        Consume the generator to get the values:
+
+        >>> with rasterio.open("tests/data/RGB.byte.tif") as dataset:
+        ...     values = list(dataset.sample([(220650.0, 2719200.0)]))
+        >>> values
+        [array([18, 25, 14], dtype=uint8)]
 
         """
         # In https://github.com/rasterio/rasterio/issues/378 a user has
