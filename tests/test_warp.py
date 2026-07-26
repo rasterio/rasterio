@@ -555,8 +555,8 @@ def test_reproject_view():
     reduced_array = source[window.toslices()]
     reduced_transform = windows.transform(window, src.transform)
 
-    # Assert that we're working with a view.
-    assert reduced_array.base is source
+    # Assert that we're working with a view of a view.
+    assert reduced_array.base is source.base
 
     dst_crs = dict(
         proj="merc",

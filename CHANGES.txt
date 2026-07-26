@@ -8,10 +8,12 @@ Documentation:
 
 - Note that PROJ transformation grids and the PROJ_NETWORK environment variable
   are required to apply vertical (datum) shifts when reprojecting or
-  transforming (#2929).
+  transforming (gh-2929).
 
 Bug fixes:
 
+- Eliminate numpy deprecation warnings by reshaping views instead of setting
+  their shape attributes (gh-3592).
 - Require pyparsing version >= 3.0 to eliminate a deprecation warning for use
   of parseString (gh-3551).
 - Remove a dependency on unmainted cligj by bringing some CLI options back into
