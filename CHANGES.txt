@@ -12,6 +12,8 @@ Documentation:
 
 Bug fixes:
 
+- Acknowledge the Python deprecation warnings from using "fork" start mode in
+  testing warp error propagation (gh-3600).
 - Eliminate numpy deprecation warnings by reshaping views instead of setting
   their shape attributes (gh-3592).
 - Require pyparsing version >= 3.0 to eliminate a deprecation warning for use

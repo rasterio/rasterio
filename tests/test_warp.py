@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import warnings
 
 from affine import Affine
 import numpy as np
@@ -2323,9 +2324,14 @@ def http_error_server(data):
     Handler = functools.partial(RangeRequestErrorHandler, directory=str(data))
     httpd = http.server.HTTPServer(("", 0), Handler)
     mp_context = multiprocessing.get_context("fork")
-    p = mp_context.Process(target=httpd.serve_forever)
-    p.start()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        p = mp_context.Process(target=httpd.serve_forever)
+        p.start()
+
     yield f"{httpd.server_address[0]}:{httpd.server_address[1]}"
+
     p.terminate()
     p.join()
 
