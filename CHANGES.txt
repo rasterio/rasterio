@@ -12,6 +12,8 @@ Documentation:
 
 Bug fixes:
 
+- Acknowledge new runtime warnings about invalid type casting using numpy
+  (gh-3599).
 - Acknowledge the Python deprecation warnings from using "fork" start mode in
   testing warp error propagation (gh-3600).
 - Eliminate numpy deprecation warnings by reshaping views instead of setting
