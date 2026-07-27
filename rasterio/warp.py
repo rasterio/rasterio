@@ -174,6 +174,7 @@ def reproject(
     resampling=Resampling.nearest,
     num_threads=1,
     init_dest_nodata=True,
+    tolerance=0.125,
     warp_mem_limit=0,
     src_geoloc_array=None,
     **kwargs
@@ -261,6 +262,10 @@ def reproject(
     init_dest_nodata: bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
+    tolerance : float, optional
+        The maximum error tolerance in input pixels when
+        approximating the warp transformation. Default: 0.125,
+        or one-eigth of a pixel.
     warp_mem_limit : int, optional
         The warp operation memory limit in MB. Larger values allow the
         warp operation to be carried out in fewer chunks. The amount of
@@ -398,6 +403,7 @@ def reproject(
         resampling=resampling,
         init_dest_nodata=init_dest_nodata,
         num_threads=num_threads,
+        tolerance=tolerance,
         warp_mem_limit=warp_mem_limit,
         src_geoloc_array=src_geoloc_array,
         **kwargs
