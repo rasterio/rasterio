@@ -12,6 +12,8 @@ Documentation:
 
 Bug fixes:
 
+- A test of subdataset support is skipped for GDAL versions >= 3.13.0 (gh-).
+  The most recent versions of GDAL have a NetCDF filename parsing defect.
 - Acknowledge new runtime warnings about invalid type casting using numpy
   (gh-3599).
 - Acknowledge the Python deprecation warnings from using "fork" start mode in
