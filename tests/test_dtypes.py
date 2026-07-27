@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 
@@ -127,7 +129,9 @@ def test_can_cast_dtype_nan(dtype):
 
 @pytest.mark.parametrize("dtype", ["uint8", "uint16", "uint32", "int32"])
 def test_cant_cast_dtype_nan(dtype):
-    assert not can_cast_dtype([np.nan], dtype)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        assert not can_cast_dtype([np.nan], dtype)
 
 
 def test_validate_dtype():
