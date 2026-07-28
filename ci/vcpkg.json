@@ -5,5 +5,8 @@
         { "name": "tiff", "features": [ "zstd", "lerc", "webp"] },
         { "name": "gdal", "features": [ "netcdf" ]}
     ],
+    "overrides": [
+       { "name": "libaec", "version": "1.1.7#1" }
+    ],
     "builtin-baseline": "89dac9685f8d0ebd0a07d8b93ed51215c3a2fb2c"
 }
