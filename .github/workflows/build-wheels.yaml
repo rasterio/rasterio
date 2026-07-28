@@ -140,9 +140,8 @@ jobs:
         if: ${{ matrix.msvc_arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@v4.1.1
         env:
-          CIBW_ENABLE: cpython-freethreading
           CIBW_SKIP: '*pp* *musllinux*'
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_ENVIRONMENT_LINUX:
