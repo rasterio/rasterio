@@ -456,7 +456,7 @@ def band(ds, bidx):
 
 
 def pad(array, transform, pad_width, mode=None, **kwargs):
-    """pad array and adjust affine transform matrix.
+    """Pad array and adjust affine transform matrix.
 
     Parameters
     ----------

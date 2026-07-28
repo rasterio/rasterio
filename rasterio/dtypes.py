@@ -184,7 +184,6 @@ def get_minimum_dtype(values):
 
 def is_ndarray(array):
     """Check if array is a ndarray."""
-
     return isinstance(array, numpy.ndarray) or hasattr(array, "__array__")
 
 

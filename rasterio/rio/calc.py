@@ -33,6 +33,7 @@ def _read_array(ix, subix=None, dtype=None):
 
 
 def asarray(*args):
+    """Returns as NumPy array."""
     if len(args) == 1 and hasattr(args[0], "__iter__"):
         return numpy.asanyarray(list(args[0]))
     else:
@@ -49,8 +50,8 @@ class FuncMapper(UserDict, Mapping):
         elif key in __builtins__ and not key.startswith("__"):
             return __builtins__[key]
         else:
-            return (
-                lambda g, *args, **kwargs: getattr(g, key)(*args, **kwargs)
+            return lambda g, *args, **kwargs: (
+                getattr(g, key)(*args, **kwargs)
                 if callable(getattr(g, key))
                 else getattr(g, key)
             )
@@ -92,7 +93,7 @@ def calc(
     mem_limit,
     creation_options,
 ):
-    """A raster data calculator
+    r"""A raster data calculator.
 
     Evaluates an expression using input datasets and writes the result
     to a new dataset.
@@ -136,7 +137,7 @@ def calc(
     The maximum amount of memory used to perform calculations defaults to
     64 MB. This number can be increased to improve speed of calculation.
 
-    """  # noqa: W605
+    """
     dst = None
     sources = []
 
