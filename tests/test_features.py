@@ -1309,12 +1309,12 @@ def test_sieve_bands(pixelated_image, pixelated_image_file):
     truth = sieve(pixelated_image, 9)
 
     with rasterio.open(pixelated_image_file) as src:
-        assert np.array_equal(truth, sieve(rasterio.band(src, [1]), 9))
+        assert np.array_equal(truth, sieve(rasterio.band(src, [1]), 9)[0])
 
         # Mask band should also work but will be a no-op
         assert np.array_equal(
             pixelated_image,
-            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1))
+            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1))[0],
         )
 
 
@@ -1323,10 +1323,23 @@ def test_sieve_dataset(pixelated_image, pixelated_image_file):
     truth = sieve(pixelated_image, 9)
 
     with rasterio.open(pixelated_image_file) as src:
-        assert np.array_equal(truth, sieve(src, 9))
+        assert np.array_equal(truth, sieve(src, 9)[0])
 
         # Mask band should also work but will be a no-op
         assert np.array_equal(
-            pixelated_image,
-            sieve(src, 9, mask=rasterio.band(src, 1))
+            pixelated_image, sieve(src, 9, mask=rasterio.band(src, 1))[0]
         )
+
+
+@pytest.mark.parametrize("size", [2, 9])
+@pytest.mark.parametrize(
+    "image",
+    [
+        np.array([1] + 15 * [0], dtype="uint8").reshape((4, 4)),
+        np.array([1] + 15 * [0], dtype="uint8").reshape((1, 4, 4)),
+    ],
+)
+def test_sieve_3d_size_guard(size, image):
+    """Verify fix for gh-3412."""
+    sieved = sieve(image, size)
+    assert np.all(sieved == 0)
