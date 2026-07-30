@@ -16,6 +16,10 @@ Bug fixes:
   when optional parameters (transform and/or north_up=False) are provided.
   An unreported bug where transformation matrices were not applied to feature
   and geometry collections has also been fixed (gh-).
+- The size guard in sieve() was defective for 3D sources and has been fixed
+  (gh-). As a side benefit, the dimensionality of output has been made
+  consistent with the read() method of datasets: 3D output is no longer
+  automatically squeezed to 2D. The previous behavior was a bug.
 - A test of subdataset support is skipped for GDAL versions >= 3.13.0 (gh-).
   The most recent versions of GDAL have a NetCDF filename parsing defect.
 - Acknowledge new runtime warnings about invalid type casting using numpy
