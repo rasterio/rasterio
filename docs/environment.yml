@@ -9,3 +9,4 @@ dependencies:
 - numpy=2
 - sphinx-click
 - sphinx-rtd-theme
+- sphinx=8.2.3
