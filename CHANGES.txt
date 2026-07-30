@@ -12,6 +12,10 @@ Documentation:
 
 Bug fixes:
 
+- The size guard in sieve() was defective for 3D sources and has been fixed
+  (gh-). As a side benefit, the dimensionality of output has been made
+  consistent with the read() method of datasets: 3D output is no longer
+  automatically squeezed to 2D. The previous behavior was a bug.
 - A test of subdataset support is skipped for GDAL versions >= 3.13.0 (gh-).
   The most recent versions of GDAL have a NetCDF filename parsing defect.
 - Acknowledge new runtime warnings about invalid type casting using numpy
