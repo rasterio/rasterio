@@ -467,41 +467,36 @@ def _bounds(geometry, north_up=True, transform=None):
 
     if 'features' in geometry and geometry["features"]:
         xmins, ymins, xmaxs, ymaxs = zip(
-            *[_bounds(feat["geometry"]) for feat in geometry["features"]]
+            *[_bounds(feat["geometry"], transform=transform) for feat in geometry["features"]]
         )
-        if north_up:
-            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
-        else:
-            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
     elif 'geometries' in geometry and geometry['geometries']:
-        xmins, ymins, xmaxs, ymaxs = zip(*[_bounds(geom) for geom in geometry["geometries"]])
-        if north_up:
-            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
-        else:
-            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+        xmins, ymins, xmaxs, ymaxs = zip(
+            *[_bounds(geom, transform=transform) for geom in geometry["geometries"]])
 
     elif 'coordinates' in geometry:
-        # Input is a singular geometry object
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
             # Because the affine transform matrix only applies in 2D we
             # must slice away any possible Z coordinate from a point.
             xyz_px = [transform * point[:2] for point in xyz]
             xyz = tuple(zip(*xyz_px))
-            return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
         else:
             xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
-            if north_up:
-                return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
-            else:
-                return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
 
-    # all valid inputs returned above, so whatever falls through is an error
-    raise ValueError(
-            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
-            "or FeatureCollection"
-        )
+        xmins, ymins, xmaxs, ymaxs = [min(xyz[0])], [min(xyz[1])], [max(xyz[0])], [max(xyz[1])]
+
+    else:
+        raise ValueError(
+                "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+                "or FeatureCollection"
+            )
+
+    if north_up:
+        return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+    else:
+        return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
 GEOMETRY_TYPES = {

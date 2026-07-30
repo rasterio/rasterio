@@ -99,6 +99,26 @@ def test_bounds_existing_bbox(basic_featurecollection):
     assert bounds(fc) == (0, 10, 10, 20)
 
 
+def test_bounds_with_transform(basic_featurecollection):
+    """Test bounds with an existing bbox and a provided transform."""
+    fc = basic_featurecollection
+    fc["bbox"] = [0, 10, 10, 20]
+    fc["features"][0]["bbox"] = [0, 100, 10, 200]
+
+    transform = Affine.scale(2.0)
+    assert bounds(fc, transform=transform) == (4, 4, 8.5, 8.5)
+
+
+def test_bounds_south_up(basic_featurecollection):
+    """Test south-up bounds with an existing bbox and a provided transform."""
+    fc = basic_featurecollection
+    fc["bbox"] = [0, 10, 10, 20]
+    fc["features"][0]["bbox"] = [0, 100, 10, 200]
+
+    transform = Affine.scale(2.0, -2.0)
+    assert bounds(fc, transform=transform, north_up=False) == (4, -4, 8.5, -8.5)
+
+
 def test_geometry_mask(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         basic_image_2x2 == 0,

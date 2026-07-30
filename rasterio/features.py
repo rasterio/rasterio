@@ -394,14 +394,21 @@ def rasterize(
 
 
 def bounds(geometry, north_up=True, transform=None):
-    """Return a (left, bottom, right, top) bounding box.
+    """Get the bounding box (left, bottom, right, top) of the geometry.
 
-    From Fiona 1.4.8. Modified to return bbox from geometry if available.
+    If north_up is True and transform is not defined, the GeoJSON "bbox"
+    attribute of the input geometry will be directly used.
 
     Parameters
     ----------
     geometry: GeoJSON-like feature (implements __geo_interface__),
-              feature collection, or geometry.
+        feature collection, or geometry.
+    north_up : bool, optional
+        Whether the bounding box should be oriented north-up (the
+        default), or flipped south-up.
+    transform : Affine, optional
+        If provided, the geometry's coordinates will be transformed
+        prior to bounding box calculation.
 
     Returns
     -------
@@ -411,8 +418,8 @@ def bounds(geometry, north_up=True, transform=None):
 
     geometry = getattr(geometry, '__geo_interface__', None) or geometry
 
-    if 'bbox' in geometry:
-        return tuple(geometry['bbox'])
+    if "bbox" in geometry and north_up and not transform:
+        return tuple(geometry["bbox"])
 
     geom = geometry.get('geometry') or geometry
 
