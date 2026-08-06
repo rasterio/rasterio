@@ -445,18 +445,30 @@ cdef class DatasetBase:
 
     def stop(self):
         """Close the GDAL dataset handle"""
-        if self._hds == NULL:
-            return
-        refcount = GDALDereferenceDataset(self._hds)
-        if refcount == 0:
-            GDALClose(self._hds)
-        self._hds = NULL
+        if self._hds != NULL:
+            refcount = GDALDereferenceDataset(self._hds)
+            if refcount == 0:
+                GDALClose(self._hds)
+            self._hds = NULL
 
     def close(self):
         """Close the dataset and unwind attached exit stack."""
-        self.stop()
-        if self._env:
-            self._env.close()
+        if not self.closed:
+            self.stop()
+            if self._env:
+                self._env.close()
+
+    def __del__(self):
+        # Implementation borrowed from IOBase.
+        try:
+            closed = self.closed
+        except AttributeError:
+            return
+
+        if closed:
+            return
+
+        self.close()
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
@@ -464,9 +476,6 @@ cdef class DatasetBase:
 
     def __exit__(self, *exc_details):
         self.close()
-
-    def __dealloc__(self):
-        self.stop()
 
     @property
     def closed(self):
