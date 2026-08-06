@@ -12,6 +12,9 @@ Documentation:
 
 Bug fixes:
 
+- DatasetBase.__dealloc__ has been removed and replaced by a __del__ method
+  modeled after that of io.IOBase. This eliminates cryptic partial error
+  messages from being printed as rio-calc finishes and finalizes (gh-).
 - The "bbox" attribute of GeoJSON data is no longer used by features.bounds()
   when optional parameters (transform and/or north_up=False) are provided.
   An unreported bug where transformation matrices were not applied to feature
