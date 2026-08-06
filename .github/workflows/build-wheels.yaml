@@ -140,7 +140,7 @@ jobs:
         if: ${{ matrix.msvc_arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v4.1.1
+        uses: pypa/cibuildwheel@v4.2.0
         env:
           CIBW_SKIP: '*pp* *musllinux*'
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -194,7 +194,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-15-intel"]
-        python-version: ["3.14","3.14t", "3.13", "3.12"]
+        python-version: ["3.15", "3.15t", "3.14", "3.14t", "3.13", "3.12"]
         
     steps:
       - name: Checkout Rasterio
