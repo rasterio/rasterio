@@ -1,14 +1,8 @@
 Changes
 =======
 
-1.5.1 (2016-08-07)
+1.5.1 (2026-08-06)
 ------------------
-
-Documentation:
-
-- Note that PROJ transformation grids and the PROJ_NETWORK environment variable
-  are required to apply vertical (datum) shifts when reprojecting or
-  transforming (gh-2929).
 
 Bug fixes:
 
@@ -16,15 +10,16 @@ Bug fixes:
   modeled after that of io.IOBase. This eliminates cryptic partial error
   messages from being printed as rio-calc finishes and finalizes (gh-3612).
 - The "bbox" attribute of GeoJSON data is no longer used by features.bounds()
-  when optional parameters (transform and/or north_up=False) are provided.
-  An unreported bug where transformation matrices were not applied to feature
-  and geometry collections has also been fixed (gh-3609).
+  when optional parameters (transform and/or north_up=False) are provided.  An
+  unreported bug where transformation matrices were not applied to feature and
+  geometry collections has also been fixed (gh-3609).
 - The size guard in sieve() was defective for 3D sources and has been fixed
   (gh-3606). As a side benefit, the dimensionality of output has been made
   consistent with the read() method of datasets: 3D output is no longer
   automatically squeezed to 2D. The previous behavior was a bug.
-- A test of subdataset support is skipped for GDAL versions >= 3.13.0 (gh-3534).
-  The most recent versions of GDAL have a NetCDF filename parsing defect.
+- A test of subdataset support is skipped for GDAL versions >= 3.13.0
+  (gh-3534).  The most recent versions of GDAL have a NetCDF filename parsing
+  defect.
 - Acknowledge new runtime warnings about invalid type casting using numpy
   (gh-3599).
 - Acknowledge the Python deprecation warnings from using "fork" start mode in
@@ -35,6 +30,22 @@ Bug fixes:
   of parseString (gh-3551).
 - Remove a dependency on unmainted cligj by bringing some CLI options back into
   Rasterio (gh-3550).
+- Avoid a ValueError in reproject() when using a "==" comparison between array
+  masks and np.ma.nomasked (gh-3531).
+
+Documentation:
+
+- Note that PROJ transformation grids and the PROJ_NETWORK environment variable
+  are required to apply vertical (datum) shifts when reprojecting or
+  transforming (gh-2929).
+
+Dependencies:
+
+- Rasterio 1.5.1 is compatible with affine versions 3.0rc1 and newer.
+
+Packaging:
+
+- Wheels include GDAL 3.12.4, netCDF 4.10.1, cURL 8.20.0, and PROJ 9.8.1.
 
 1.5.0 (2026-01-05)
 ------------------
