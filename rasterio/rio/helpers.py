@@ -11,7 +11,7 @@ from rasterio.errors import FileOverwriteError
 
 
 def coords(obj):
-    """Yield all coordinate coordinate tuples from a geometry or feature.
+    """Yield all coordinate tuples from a geometry or feature.
     From python-geojson package."""
     if isinstance(obj, (tuple, list)):
         coordinates = obj
