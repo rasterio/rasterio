@@ -91,6 +91,14 @@ class _Collection:
 )
 @options.use_rs_opt
 @click.option(
+    "--sequence/--collection",
+    default=False,
+    help="Write a single JSON text containing a feature collection object "
+    "(the default) or write a LF-delimited sequence of texts containing "
+    "individual objects.",
+)
+@options.use_rs_opt
+@click.option(
     "--bidx",
     type=click.INT,
     default=0,

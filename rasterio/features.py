@@ -27,7 +27,7 @@ from rasterio.dtypes import (
 )
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env, _GDAL_AT_LEAST_3_11
-from rasterio.errors import ShapeSkipWarning, RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.io import DatasetWriter
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
@@ -214,19 +214,19 @@ def rasterize(
     dst_path=None,
     dst_kwds=None,
 ):
-    """Return an image array with input geometries burned in.
+    """Burn vector shapes into an array.
 
-    Warnings will be raised for any invalid or empty geometries, and
-    an exception will be raised if there are no valid shapes
+    Warnings or exceptions (optionally) will be raised for any invalid
+    shape, and an exception will be raised if there are no valid shapes
     to rasterize.
 
     Parameters
     ----------
-    shapes : iterable of (`geometry`, `value`) pairs or geometries
-        The `geometry` can either be an object that implements the geo
-        interface or GeoJSON-like object. If no `value` is provided
-        the `default_value` will be used. If `value` is `None` the
-        `fill` value will be used.
+    shapes : iterable of shapes or shape, value pairs
+        The `shape` can be an object that implements the geo interface
+        or a GeoJSON-like object. If no `value` is provided the
+        `default_value` will be used. If `value` is `None` the `fill`
+        value will be used.
     out_shape : tuple or list with 2 integers
         Shape of output :class:`numpy.ndarray`.
     fill : int or float, optional
@@ -342,39 +342,8 @@ def rasterize(
 
         geom = getattr(geom, "__geo_interface__", None) or geom
 
-        if is_valid_geom(geom):
-            shape_values.append(value)
-            geom_type = geom["type"]
-
-            if geom_type == "GeometryCollection":
-                # GeometryCollections need to be handled as individual parts to
-                # avoid holes in output:
-                # https://github.com/rasterio/rasterio/issues/1253.
-                # Only 1-level deep since GeoJSON spec discourages nested
-                # GeometryCollections
-                for part in geom["geometries"]:
-                    valid_shapes.append((part, value))
-
-            elif geom_type == "MultiPolygon":
-                # Same issue as above
-                for poly in geom["coordinates"]:
-                    valid_shapes.append(
-                        ({"type": "Polygon", "coordinates": poly}, value)
-                    )
-
-            else:
-                valid_shapes.append((geom, value))
-
-        else:
-            if skip_invalid:
-                warnings.warn(
-                    "Invalid or empty shape {} at index {} will not be rasterized.".format(
-                        geom, index
-                    ),
-                    ShapeSkipWarning,
-                )
-            else:
-                raise ValueError("Invalid or empty shape cannot be rasterized.")
+        shape_values.append(value)
+        valid_shapes.append((geom, value))
 
     # If neither an out array or dtype were given, we get the output
     # data type from the shapes values, including the default.
@@ -413,7 +382,14 @@ def rasterize(
         transform = guard_transform(transform)
 
         if valid_shapes:
-            _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
+            _rasterize(
+                valid_shapes,
+                out,
+                transform,
+                all_touched,
+                merge_alg,
+                skip_invalid=skip_invalid,
+            )
 
         if isinstance(out, np.ndarray):
             if masked and not hasattr(out, "mask"):
@@ -422,14 +398,21 @@ def rasterize(
 
 
 def bounds(geometry, north_up=True, transform=None):
-    """Return a (left, bottom, right, top) bounding box.
+    """Get the bounding box (left, bottom, right, top) of the geometry.
 
-    From Fiona 1.4.8. Modified to return bbox from geometry if available.
+    If north_up is True and transform is not defined, the GeoJSON "bbox"
+    attribute of the input geometry will be directly used.
 
     Parameters
     ----------
     geometry: GeoJSON-like feature (implements __geo_interface__),
-              feature collection, or geometry.
+        feature collection, or geometry.
+    north_up : bool, optional
+        Whether the bounding box should be oriented north-up (the
+        default), or flipped south-up.
+    transform : Affine, optional
+        If provided, the geometry's coordinates will be transformed
+        prior to bounding box calculation.
 
     Returns
     -------
@@ -439,7 +422,7 @@ def bounds(geometry, north_up=True, transform=None):
 
     geometry = getattr(geometry, "__geo_interface__", None) or geometry
 
-    if "bbox" in geometry:
+    if "bbox" in geometry and north_up and not transform:
         return tuple(geometry["bbox"])
 
     geom = geometry.get("geometry") or geometry

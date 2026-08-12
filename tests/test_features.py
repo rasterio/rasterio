@@ -117,6 +117,26 @@ def test_bounds_existing_bbox(basic_featurecollection):
     assert bounds(fc) == (0, 10, 10, 20)
 
 
+def test_bounds_with_transform(basic_featurecollection):
+    """Test bounds with an existing bbox and a provided transform."""
+    fc = basic_featurecollection
+    fc["bbox"] = [0, 10, 10, 20]
+    fc["features"][0]["bbox"] = [0, 100, 10, 200]
+
+    transform = Affine.scale(2.0)
+    assert bounds(fc, transform=transform) == (4, 4, 8.5, 8.5)
+
+
+def test_bounds_south_up(basic_featurecollection):
+    """Test south-up bounds with an existing bbox and a provided transform."""
+    fc = basic_featurecollection
+    fc["bbox"] = [0, 10, 10, 20]
+    fc["features"][0]["bbox"] = [0, 100, 10, 200]
+
+    transform = Affine.scale(2.0, -2.0)
+    assert bounds(fc, transform=transform, north_up=False) == (4, -4, 8.5, -8.5)
+
+
 def test_geometry_mask(basic_geometry, basic_image_2x2):
     assert np.array_equal(
         basic_image_2x2 == 0,
@@ -545,6 +565,17 @@ def test_rasterize_polygon(geojson_polygon, basic_image_2x2):
     )
 
 
+def test_rasterize_triangle(geojson_polygon, basic_image_2x2):
+    coords = [geojson_polygon["coordinates"][0][:-2]]
+    triangle = dict(type="Polygon", coordinates=coords)
+    expected = basic_image_2x2
+    expected[2, 3] = 0
+
+    assert np.array_equal(
+        rasterize([triangle], out_shape=DEFAULT_SHAPE, skip_invalid=False), expected
+    )
+
+
 def test_rasterize_multipolygon(geojson_multipolygon):
     expected = np.zeros(shape=DEFAULT_SHAPE, dtype="uint8")
     expected[0:1, 0:1] = 1
@@ -645,7 +676,7 @@ def test_rasterize_invalid_geom(input):
 
 def test_rasterize_skip_only_invalid_geom(geojson_polygon, basic_image_2x2):
     """Rasterize operation should succeed for at least one valid geometry."""
-    with pytest.warns(ShapeSkipWarning, match="Invalid or empty shape"):
+    with pytest.warns(ShapeSkipWarning, match="Invalid shape"):
         out = rasterize(
             [geojson_polygon, {"type": "Polygon", "coordinates": []}],
             out_shape=DEFAULT_SHAPE,
@@ -896,7 +927,9 @@ def test_rasterize__numpy_coordinates__fail():
             2,
         ),
     ]
-    out = rasterio.features.rasterize(shapes=shapes, out_shape=(100, 100))
+    with pytest.warns(ShapeSkipWarning):
+        out = rasterio.features.rasterize(shapes=shapes, out_shape=(100, 100))
+
     assert out.shape == (100, 100)
     # will fail and be filled with 0
     assert (out == 0).all()
@@ -1279,12 +1312,12 @@ def test_sieve_bands(pixelated_image, pixelated_image_file):
     truth = sieve(pixelated_image, 9)
 
     with rasterio.open(pixelated_image_file) as src:
-        assert np.array_equal(truth, sieve(rasterio.band(src, [1]), 9))
+        assert np.array_equal(truth, sieve(rasterio.band(src, [1]), 9)[0])
 
         # Mask band should also work but will be a no-op
         assert np.array_equal(
             pixelated_image,
-            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1)),
+            sieve(rasterio.band(src, [1]), 9, mask=rasterio.band(src, 1))[0],
         )
 
 
@@ -1293,9 +1326,23 @@ def test_sieve_dataset(pixelated_image, pixelated_image_file):
     truth = sieve(pixelated_image, 9)
 
     with rasterio.open(pixelated_image_file) as src:
-        assert np.array_equal(truth, sieve(src, 9))
+        assert np.array_equal(truth, sieve(src, 9)[0])
 
         # Mask band should also work but will be a no-op
         assert np.array_equal(
-            pixelated_image, sieve(src, 9, mask=rasterio.band(src, 1))
+            pixelated_image, sieve(src, 9, mask=rasterio.band(src, 1))[0]
         )
+
+
+@pytest.mark.parametrize("size", [2, 9])
+@pytest.mark.parametrize(
+    "image",
+    [
+        np.array([1] + 15 * [0], dtype="uint8").reshape((4, 4)),
+        np.array([1] + 15 * [0], dtype="uint8").reshape((1, 4, 4)),
+    ],
+)
+def test_sieve_3d_size_guard(size, image):
+    """Verify fix for gh-3412."""
+    sieved = sieve(image, size)
+    assert np.all(sieved == 0)

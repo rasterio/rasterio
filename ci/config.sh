@@ -1,28 +1,28 @@
-PROJ_VERSION=9.7.1
-SQLITE_VERSION=3510200
-OPENSSL_VERSION=3.6.1
-CURL_VERSION=8.18.0
+PROJ_VERSION=9.8.1
+SQLITE_VERSION=3530100
+OPENSSL_VERSION=3.6.2
+CURL_VERSION=8.20.0
 ZLIB_VERSION=1.3.2
 TIFF_VERSION=4.7.1
-NGHTTP2_VERSION=1.68.0
+NGHTTP2_VERSION=1.69.0
 LERC_VERSION=4.0.0
 LIBWEBP_VERSION=1.6.0
 ZSTD_VERSION=1.5.7
-LIBPNG_VERSION=1.6.54
+LIBPNG_VERSION=1.6.58
 OPENJPEG_VERSION=2.5.4
 GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
-XZ_VERSION=5.8.2
+XZ_VERSION=5.8.3
 LCMS2_VERSION=2.17
-HDF5_VERSION=2.1.0
-LIBAEC_VERSION=1.1.6
-NETCDF_VERSION=4.10.0
+HDF5_VERSION=2.1.1
+LIBAEC_VERSION=1.1.7
+NETCDF_VERSION=4.10.1
 GEOS_VERSION=3.14.1
 BLOSC_VERSION=1.21.6
 PCRE_VERSION=10.47
 EXPAT_VERSION=2.7.4
 LIBDEFLATE_VERSION=1.24
-JPEGTURBO_VERSION=3.1.3
+JPEGTURBO_VERSION=3.1.4
 
 BUILD_PREFIX="${BUILD_PREFIX:-/usr/local}"
 
@@ -255,7 +255,11 @@ fetch_untar ${BLOSC_URL} -O ${BLOSC_FNAME}.tar.gz
 
 CURL_URL="https://curl.se/download/curl-${CURL_VERSION}.tar.gz"
 CURL_FNAME="curl-${CURL_VERSION}"
+<<<<<<< HEAD
 CURL_SHA256="e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f"
+=======
+CURL_SHA256="fc5819cad3f9f5482669adcdc49a782c15f36d2a0715b395b06d9173593d2dc0"
+>>>>>>> maint-1.5
 fetch_untar ${CURL_URL} ${CURL_FNAME}.tar.gz ${CURL_SHA256}
 
 if [ -n "$IS_MACOS" ]; then
@@ -276,13 +280,19 @@ GIFLIB_FNAME="giflib-${GIFLIB_VERSION}"
 GIFLIB_SHA256="be7ffbd057cadebe2aa144542fd90c6838c6a083b5e8a9048b8ee3b66b29d5fb"
 fetch_untar ${GIFLIB_URL} -O ${GIFLIB_FNAME}.tar.gz ${GIFLIB_SHA256}
 
-GEOS_URL="http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
+GEOS_URL="https://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
 GEOS_FNAME="geos-${GEOS_VERSION}"
 fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 
+<<<<<<< HEAD
 HDF5_URL=http://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="ce7f5515a95d588b8606c3fb50643f8b88ac52ffbbde9c63bb1edca6a256e964"
+=======
+HDF5_URL=https://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
+HDF5_FNAME="hdf5-${HDF5_VERSION}"
+HDF5_SHA256="efff93b5a904d66e8f626d7da60b5eedc9faf544be27dbabbaa87967b8ad798b"
+>>>>>>> maint-1.5
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
@@ -331,7 +341,11 @@ fetch_untar ${OPENJPEG_URL} -O ${OPENJPEG_FNAME}.tar.gz
 
 OPENSSL_URL="https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
 OPENSSL_FNAME="openssl-${OPENSSL_VERSION}"
+<<<<<<< HEAD
 OPENSSL_SHA256="b1bfedcd5b289ff22aee87c9d600f515767ebf45f77168cb6d64f231f518a82e"
+=======
+OPENSSL_SHA256="aaf51a1fe064384f811daeaeb4ec4dce7340ec8bd893027eee676af31e83a04f"
+>>>>>>> maint-1.5
 fetch_untar ${OPENSSL_URL} ${OPENSSL_FNAME}.tar.gz ${OPENSSL_SHA256}
 
 PCRE2_URL="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2"
@@ -352,10 +366,17 @@ fetch_untar ${TIFF_URL} ${TIFF_FNAME}.tar.gz
 
 XZ_URL="https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz"
 XZ_FNAME="xz-${XZ_VERSION}"
+<<<<<<< HEAD
 XZ_SHA256="ce09c50a5962786b83e5da389c90dd2c15ecd0980a258dd01f70f9e7ce58a8f1"
 fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
 
 ZLIB_URL="http://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
+=======
+XZ_SHA256="3d3a1b973af218114f4f889bbaa2f4c037deaae0c8e815eec381c3d546b974a0"
+fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
+
+ZLIB_URL="https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
+>>>>>>> maint-1.5
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
 ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz ${ZLIB_SHA256}

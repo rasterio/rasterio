@@ -24,6 +24,6 @@ RUN python${PYTHON_VERSION} -m venv /venv && \
 
 FROM gdal
 COPY . .
-RUN /venv/bin/python setup.py install
+RUN /venv/bin/python -m pip install .
 ENTRYPOINT ["/venv/bin/rio"]
 CMD ["--help"]

@@ -7,6 +7,8 @@ from contextlib import ExitStack
 import numpy as np
 
 from rasterio import dtypes
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
 from rasterio.dtypes import (
     _getnpdtype,
     bool_,
@@ -23,11 +25,8 @@ from rasterio.dtypes import (
     float64,
 )
 from rasterio.enums import MergeAlg
-
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
 from rasterio.env import _GDAL_AT_LEAST_3_11, _GDAL_AT_LEAST_3_12_1
-
+from rasterio.errors import InvalidShapeError, ShapeSkipWarning
 
 log = logging.getLogger(__name__)
 
@@ -215,6 +214,8 @@ def _sieve(image, size, out, mask, connectivity):
 
     valid_dtypes = (int16, int32, uint8, uint16)
 
+    return2d = False
+
     if _getnpdtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t in valid_dtypes))
         raise ValueError(
@@ -224,7 +225,7 @@ def _sieve(image, size, out, mask, connectivity):
         raise ValueError('size must be greater than 0')
     elif type(size) == float:
         raise ValueError('size must be an integer number of pixels')
-    elif size > (image.shape[0] * image.shape[1]):
+    elif size > (image.shape[-2] * image.shape[-1]):
         raise ValueError('size must be smaller than size of image')
 
     if connectivity not in (4, 8):
@@ -237,29 +238,40 @@ def _sieve(image, size, out, mask, connectivity):
         raise ValueError('out raster must match dtype of image')
 
     with ExitStack() as exit_stack:
+
+        # Normalize source raster.
         if dtypes.is_ndarray(image):
             if len(image.shape) == 2:
-                image = image.reshape(1, *image.shape)
-            src_count = image.shape[0]
+                norm_image = np.expand_dims(image, axis=0)  # npnp  imag.reshape(1, *image.shape)
+                return2d = True
+            else:
+                norm_image = image
+
+            src_count = norm_image.shape[0]
             src_bidx = list(range(1, src_count + 1))
-            in_mem_ds = exit_stack.enter_context(MemoryDataset(image))
+            in_mem_ds = exit_stack.enter_context(MemoryDataset(norm_image))
             src_dataset = in_mem_ds
 
         elif isinstance(image, tuple):
             src_dataset, src_bidx, dtype, shape = image
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
+                return2d = True
 
         else:
             raise ValueError("Invalid source image")
 
         if dtypes.is_ndarray(out):
             log.debug("out array: %r", out)
+
             if len(out.shape) == 2:
-                out = out.reshape(1, *out.shape)
-            dst_count = out.shape[0]
+                norm_out = np.expand_dims(out, axis=0)  # out.reshape(1, *out.shape)
+            else:
+                norm_out = out
+
+            dst_count = norm_out.shape[0]
             dst_bidx = list(range(1, dst_count + 1))
-            out_mem_ds = exit_stack.enter_context(MemoryDataset(out))
+            out_mem_ds = exit_stack.enter_context(MemoryDataset(norm_out))
             dst_dataset = out_mem_ds
 
         elif isinstance(out, tuple):
@@ -291,15 +303,15 @@ def _sieve(image, size, out, mask, connectivity):
             in_band = (<DatasetReaderBase?>src_dataset).band(i)
             out_band = (<DatasetReaderBase?>dst_dataset).band(j)
             GDALSieveFilter(in_band, mask_band, out_band, size, connectivity, NULL, NULL, NULL)
-            io_auto(out[i - 1], out_band, False)
+            io_auto(norm_out[i - 1], out_band, False)
 
-    if out.shape[0] == 1:
-        out = out[0]
+    if return2d:
+        norm_out = np.squeeze(norm_out, axis=0)
 
-    return out
+    return norm_out
 
 
-def _rasterize(shapes, image, transform, all_touched, merge_alg):
+def _rasterize(shapes, image, transform, all_touched, merge_alg, skip_invalid=True):
     """Burns input geometries into `image`.
 
     The `image` array is modified in place.
@@ -324,6 +336,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                 the new value will overwrite the existing value.
             MergeAlg.add:
                 the new value will be added to the existing raster.
+    skip_invalid : bool, optional Whether to skip invalid geometries,
+        with a warning (the default), or raise an exception.
 
     Returns
     -------
@@ -355,7 +369,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
 
     """
     cdef int retval
-    cdef int i
+    cdef int i, index
     cdef size_t num_geoms = 0
     cdef OGRGeometryH *geoms = NULL
     cdef char **options = NULL
@@ -383,15 +397,19 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         for i in range(<int>num_geoms):
             geoms[i] = NULL
 
-        for i, (geometry, value) in enumerate(all_shapes):
+        for index, (geometry, value) in enumerate(all_shapes):
             try:
-                geoms[i] = OGRGeomBuilder().build(geometry)
-                pixel_values[i] = <double>value
+                geoms[index] = OGRGeomBuilder().build(geometry)
+                pixel_values[index] = <double>value
             except Exception as error:
-                log.error(
-                    "Geometry %r at index %d with value %d skipped due to error: %r",
-                    geometry, i, value, error
-                )
+                if skip_invalid:
+                    warnings.warn(
+                        f"Invalid shape will not be rasterized: {geometry=}, {index=}, {value=}, {error=}",
+                        ShapeSkipWarning,
+                    )
+                else:
+                    log.error("Invalid shape will not be rasterized: geometry=%r, index=%r, value=%r, error=%r", geometry, index, value, error)
+                    raise InvalidShapeError("Invalid shape will not be rasterized") from error
 
         if isinstance(image, DatasetWriterBase):
             band_ids = <int *>CPLMalloc(<int>image.count*sizeof(int))
@@ -449,41 +467,36 @@ def _bounds(geometry, north_up=True, transform=None):
 
     if 'features' in geometry and geometry["features"]:
         xmins, ymins, xmaxs, ymaxs = zip(
-            *[_bounds(feat["geometry"]) for feat in geometry["features"]]
+            *[_bounds(feat["geometry"], transform=transform) for feat in geometry["features"]]
         )
-        if north_up:
-            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
-        else:
-            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
     elif 'geometries' in geometry and geometry['geometries']:
-        xmins, ymins, xmaxs, ymaxs = zip(*[_bounds(geom) for geom in geometry["geometries"]])
-        if north_up:
-            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
-        else:
-            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+        xmins, ymins, xmaxs, ymaxs = zip(
+            *[_bounds(geom, transform=transform) for geom in geometry["geometries"]])
 
     elif 'coordinates' in geometry:
-        # Input is a singular geometry object
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
             # Because the affine transform matrix only applies in 2D we
             # must slice away any possible Z coordinate from a point.
             xyz_px = [transform * point[:2] for point in xyz]
             xyz = tuple(zip(*xyz_px))
-            return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
         else:
             xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
-            if north_up:
-                return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
-            else:
-                return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
 
-    # all valid inputs returned above, so whatever falls through is an error
-    raise ValueError(
-            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
-            "or FeatureCollection"
-        )
+        xmins, ymins, xmaxs, ymaxs = [min(xyz[0])], [min(xyz[1])], [max(xyz[0])], [max(xyz[1])]
+
+    else:
+        raise ValueError(
+                "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+                "or FeatureCollection"
+            )
+
+    if north_up:
+        return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+    else:
+        return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
 GEOMETRY_TYPES = {
