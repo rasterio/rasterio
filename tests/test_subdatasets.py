@@ -5,8 +5,6 @@ import shutil
 import platform
 
 import pytest
-import shutil
-import platform
 import rasterio
 
 version_name = rasterio.gdal_version()
@@ -29,7 +27,10 @@ def test_subdatasets():
             assert name.startswith("netcdf")
 
 
-@pytest.mark.skipif(gdal_version_info >= (3, 13, 0), reason="GDAL bug https://github.com/OSGeo/gdal/issues/14978")
+@pytest.mark.skipif(
+    gdal_version_info >= (3, 13, 0),
+    reason="GDAL bug https://github.com/OSGeo/gdal/issues/14978",
+)
 @pytest.mark.skipif(
     not HAVE_NETCDF or platform.system() == "Windows",
     reason="GDAL not compiled with NetCDF driver or Windows machine.",

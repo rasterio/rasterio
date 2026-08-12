@@ -241,4 +241,5 @@ def test_snuggs_isin():
     """Assert fix for gh-3287."""
     import numpy
     from rasterio._vendor import snuggs
+
     assert snuggs.eval("(all (isin arr 1))", arr=numpy.array([1, 1]))

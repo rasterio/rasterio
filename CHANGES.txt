@@ -28,8 +28,8 @@ Bug fixes:
   their shape attributes (gh-3592).
 - Require pyparsing version >= 3.0 to eliminate a deprecation warning for use
   of parseString (gh-3551).
-- Remove a dependency on unmainted cligj by bringing some CLI options back into
-  Rasterio (gh-3550).
+- Remove a dependency on unmaintained cligj by bringing some CLI options back
+  into Rasterio (gh-3550).
 - Avoid a ValueError in reproject() when using a "==" comparison between array
   masks and np.ma.nomasked (gh-3531).
 
