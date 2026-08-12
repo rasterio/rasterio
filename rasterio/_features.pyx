@@ -138,7 +138,7 @@ def _shapes(image, mask, connectivity, transform):
                 maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
 
         # Create an in-memory feature store.
-        driver = OGRGetDriverByName("Memory")
+        driver = OGRGetDriverByName("MEM")
         if driver == NULL:
             raise ValueError("NULL driver")
         fs = OGR_Dr_CreateDataSource(driver, "temp", NULL)

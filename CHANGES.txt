@@ -1,6 +1,15 @@
 Changes
 =======
 
+TBD
+---
+
+Bug fixes:
+
+- Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
+  deprecation warning from GDAL (gh-). See also
+  https://github.com/OSGeo/gdal/issues/12102.
+
 1.5.1 (2026-08-07)
 ------------------
 
