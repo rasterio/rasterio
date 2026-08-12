@@ -48,15 +48,15 @@ cdef extern from "cpl_progress.h":
 
 cdef extern from "cpl_string.h" nogil:
 
-    int CSLCount(char **papszStrList)
+    int CSLCount(CSLConstList papszStrList)
     char **CSLAddString(char **strlist, const char *string)
-    char **CSLAddNameValue(char **papszStrList, const char *pszName,
+    char **CSLAddNameValue(CSLConstList papszStrList, const char *pszName,
                            const char *pszValue)
-    char **CSLDuplicate(char **papszStrList)
-    int CSLFindName(char **papszStrList, const char *pszName)
-    int CSLFindString(char **papszStrList, const char *pszString)
-    int CSLFetchBoolean(char **papszStrList, const char *pszName, int default)
-    const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
+    char **CSLDuplicate(CSLConstList papszStrList)
+    int CSLFindName(CSLConstList papszStrList, const char *pszName)
+    int CSLFindString(CSLConstList papszStrList, const char *pszString)
+    int CSLFetchBoolean(CSLConstList papszStrList, const char *pszName, int default)
+    const char *CSLFetchNameValue(CSLConstList papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
     void CSLDestroy(char **list)
     char **CSLMerge(char **first, char **second)

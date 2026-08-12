@@ -99,7 +99,7 @@ def get_dataset_driver(path):
 def driver_supports_mode(drivername, creation_mode):
     """Return True if the driver supports the mode"""
     cdef GDALDriverH driver = NULL
-    cdef char **metadata = NULL
+    cdef CSLConstList metadata = NULL
 
     drivername = drivername.encode('utf-8')
     creation_mode = creation_mode.encode('utf-8')
@@ -445,18 +445,30 @@ cdef class DatasetBase:
 
     def stop(self):
         """Close the GDAL dataset handle"""
-        if self._hds == NULL:
-            return
-        refcount = GDALDereferenceDataset(self._hds)
-        if refcount == 0:
-            GDALClose(self._hds)
-        self._hds = NULL
+        if self._hds != NULL:
+            refcount = GDALDereferenceDataset(self._hds)
+            if refcount == 0:
+                GDALClose(self._hds)
+            self._hds = NULL
 
     def close(self):
         """Close the dataset and unwind attached exit stack."""
-        self.stop()
-        if self._env:
-            self._env.close()
+        if not self.closed:
+            self.stop()
+            if self._env:
+                self._env.close()
+
+    def __del__(self):
+        # Implementation borrowed from IOBase.
+        try:
+            closed = self.closed
+        except AttributeError:
+            return
+
+        if closed:
+            return
+
+        self.close()
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
@@ -464,9 +476,6 @@ cdef class DatasetBase:
 
     def __exit__(self, *exc_details):
         self.close()
-
-    def __dealloc__(self):
-        self.stop()
 
     @property
     def closed(self):
@@ -1149,7 +1158,7 @@ cdef class DatasetBase:
         a namespace other than the default.
         """
         cdef GDALMajorObjectH obj = NULL
-        cdef char **metadata = NULL
+        cdef CSLConstList metadata = NULL
         cdef char *item = NULL
         cdef const char *domain = NULL
         cdef char *key = NULL

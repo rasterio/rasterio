@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "rasterio"
 dynamic = ["version"]
 authors = [
-    {name = "Sean Gillies", email = "sean@mapbox.com"},
+    {name = "Sean Gillies", email = "sean.gillies@gmail.com"},
 ]
 maintainers = [
     {name = "Rasterio contributors"},
