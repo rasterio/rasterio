@@ -9,6 +9,7 @@ import numpy as np
 from rasterio import dtypes
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._io cimport DatasetReaderBase, DatasetWriterBase, MemoryDataset, io_auto
+from rasterio._version import gdal_version
 from rasterio.dtypes import (
     _getnpdtype,
     bool_,
@@ -138,7 +139,17 @@ def _shapes(image, mask, connectivity, transform):
                 maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
 
         # Create an in-memory feature store.
-        driver = OGRGetDriverByName("MEM")
+        # With newer versions of GDAL, the MEM driver is used to avoid
+        # a deprecation warning. Memory is a deprecated alias for MEM.
+        gdal_version_info = tuple(
+            int(item.strip()) for item in gdal_version().split(".")
+        )
+
+        if gdal_version_info >= (3, 11, 0):
+            driver = OGRGetDriverByName("MEM")
+        else:
+            driver = OGRGetDriverByName("Memory")
+
         if driver == NULL:
             raise ValueError("NULL driver")
         fs = OGR_Dr_CreateDataSource(driver, "temp", NULL)
