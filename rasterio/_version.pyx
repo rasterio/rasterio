@@ -24,8 +24,8 @@ def _gdal_version_info():
     """
     gdal_ver = get_gdal_version_info("RELEASE_NAME")
     dev_tag_idx = gdal_ver.find("dev")
-    gdal_version_cleaned = gdal_ver[:dev_tag_idx] if dev_tag_idx >= 0 else gdal_ver
-    return tuple(int(item.strip()) for item in gdal_ver.split("."))
+    gdal_ver_cleaned = gdal_ver[:dev_tag_idx] if dev_tag_idx >= 0 else gdal_ver
+    return tuple(int(item.strip()) for item in gdal_ver_cleaned.split("."))
 
 
 def get_gdal_version_info(str key not None):
