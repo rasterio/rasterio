@@ -51,14 +51,14 @@ jobs:
 
       - name: Install Python build dependencies
         run: |
-          pip install --upgrade pip setuptools wheel build twine
+          python -m pip install --upgrade pip
+          python -m pip install --group build twine
 
       - name: Build source distribution
         run: python -m build --sdist
 
       - name: Verify sdist for PyPI
-        run: |
-           twine check dist/*
+        run: twine check --strict dist/*
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v7
@@ -216,7 +216,8 @@ jobs:
       - name: Install dependencies and rasterio wheel
         shell: bash
         run: |
-          python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec s3fs requests
+          python -m pip install --upgrade pip
+          python -m pip install --group tests
           python -m pip install --pre --no-deps --no-index --find-links dist rasterio
           python -m pip install rasterio
           python -m pip list

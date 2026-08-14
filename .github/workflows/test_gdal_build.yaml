@@ -70,7 +70,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip wheel -r requirements-dev.txt
           python -m pip install -r requirements-dev.txt
-          python -m pip install --no-deps --force-reinstall -e .[test]
+          python -m pip install --no-deps --force-reinstall -e . --group tests
 
       - name: Test
         shell: bash

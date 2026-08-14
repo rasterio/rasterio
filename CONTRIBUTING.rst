@@ -220,21 +220,15 @@ then:
 
 .. code-block:: console
 
-    $ pip install -U pip
-    $ pip install -r requirements-dev.txt
+    $ pip install --upgrade pip
+    $ pip install --group dev
 
 Installing Rasterio
 ^^^^^^^^^^^^^^^^^^^
 
 Rasterio, its Cython extensions, normal dependencies, and dev dependencies can
 be installed with ``$ pip``.  Installing Rasterio in editable mode while
-developing is very convenient but only affects the Python files.  Specifying the
-``[test]`` extra in the command below tells ``$ pip`` to also install
-Rasterio's dev dependencies.
-
-.. code-block:: console
-
-    $ pip install -e ".[test]"
+developing is very convenient but only affects the Python files.
 
 Any time a Cython (``.pyx`` or ``.pxd``) file is edited the extension modules
 need to be recompiled, which is most easily achieved with:
@@ -252,7 +246,7 @@ The dependencies required to build the docs can be installed with:
 
 .. code-block:: console
 
-    $ pip install -e ".[docs]"
+    $ pip install --group docs
 
 Running the tests
 ^^^^^^^^^^^^^^^^^

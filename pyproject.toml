@@ -1,5 +1,6 @@
 [build-system]
 requires = [
+    # NOTE: when updating this table, also update `dependency-groups.build`
     "setuptools>=77.0.3",
     "cython>=3.1,<=3.2",
     "numpy>=2,<3",
@@ -46,7 +47,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-all = ["rasterio[docs,ipython,plot,s3,test]"]
+all = ["rasterio[ipython,plot,s3]"]
+s3 = ["boto3>=1.2.4"]
+ipython = ["ipython>=2.0"]
+plot = ["matplotlib"]
+
+[dependency-groups]
+build = [
+    "build",
+    "cython>=3.1,<=3.2",
+    "delocate; sys_platform == 'darwin'",
+    "numpy>=2,<3",
+    "setuptools>=77.0.3",
+    "wheel",
+]
 docs = [
     "ghp-import",
     "numpydoc",
@@ -54,20 +68,23 @@ docs = [
     "sphinx-click",
     "sphinx-rtd-theme",
 ]
-ipython = ["ipython>=2.0"]
-plot = ["matplotlib"]
-s3 = ["boto3>=1.2.4"]
-test = [
+tests = [
     "aiohttp",
     "boto3>=1.2.4",
-    "fsspec",
+    "fsspec>=2025.9.0",
     "hypothesis",
     "matplotlib",
     "packaging",
-    "pytest-cov>=2.2.0",
     "pytest>=2.8.2",
+    "pytest-cov>=2.2.0",
     "requests",
+    "s3fs>=2025.9.0",
     "shapely",
+]
+dev = [
+    "pre-commit",
+    {include-group = "build"},
+    {include-group = "tests"},
 ]
 
 [project.urls]
