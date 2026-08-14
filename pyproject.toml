@@ -73,13 +73,13 @@ tests = [
     "boto3>=1.2.4",
     "fsspec>=2025.9.0",
     "hypothesis",
-    "matplotlib",
+    "matplotlib; python_version < '3.15'",  # TODO: remove when .whl available
     "packaging",
     "pytest>=2.8.2",
     "pytest-cov>=2.2.0",
     "requests",
     "s3fs>=2025.9.0",
-    "shapely",
+    "shapely; python_version < '3.15' or platform_machine != 'arm64'",  # TODO: remove when .whl available
 ]
 dev = [
     "pre-commit",
