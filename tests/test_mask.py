@@ -5,7 +5,7 @@ from affine import Affine
 import rasterio
 from rasterio.mask import raster_geometry_mask, mask
 
-from .conftest import MockGeoInterface
+from .common import MockGeoInterface
 
 
 def test_raster_geometrymask(basic_image_2x2, basic_image_file, basic_geometry):

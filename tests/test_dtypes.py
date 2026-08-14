@@ -31,7 +31,7 @@ from rasterio.dtypes import (
     _getnpdtype,
     _get_gdal_dtype,
 )
-from tests.conftest import gdal_version, requires_gdal3_11
+from tests.common import gdal_version, requires_gdal3_11
 
 
 def test_is_ndarray():

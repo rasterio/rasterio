@@ -20,7 +20,7 @@ from rasterio.features import (
     shapes,
 )
 
-from .conftest import (
+from .common import (
     MockGeoInterface,
     requires_gdal3_11,
     requires_gdal_lt_3_11,

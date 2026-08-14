@@ -32,7 +32,7 @@ from rasterio.session import (
     AzureSession,
 )
 
-from .conftest import credentials
+from .common import credentials
 
 
 L8TIF = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/45/C/VQ/2022/11/S2B_45CVQ_20221102_0_L2A/B01.tif"

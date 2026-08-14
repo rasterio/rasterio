@@ -16,7 +16,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
 from rasterio import windows
 
-from .conftest import gdal_version
+from .common import gdal_version
 
 
 @pytest.fixture(scope="function")

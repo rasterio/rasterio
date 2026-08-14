@@ -13,7 +13,7 @@ from rasterio.enums import Compression
 from rasterio.errors import DatasetAttributeError, RasterioIOError
 from rasterio.transform import Affine
 
-from .conftest import assert_bounding_box_equal
+from .common import assert_bounding_box_equal
 
 
 def test_files(data):
