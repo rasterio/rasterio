@@ -1,6 +1,5 @@
 """Raster stacking tool."""
 
-from collections.abc import Iterable
 from contextlib import ExitStack, contextmanager
 import logging
 import os
@@ -12,9 +11,8 @@ import numbers
 import numpy as np
 
 import rasterio
-from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import RasterioError, StackError
+from rasterio.errors import RasterioError, StackError, WindowError
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -280,76 +278,97 @@ def stack(
         else:
             chunks = [dout_window]
 
+        def _intersect_bounds(bounds1, bounds2, transform):
+            """Based on gdal_merge.py."""
+            int_w = max(bounds1[0], bounds2[0])
+            int_e = min(bounds1[2], bounds2[2])
+
+            if int_w >= int_e:
+                raise ValueError
+
+            if transform.e < 0:
+                # north up
+                int_s = max(bounds1[1], bounds2[1])
+                int_n = min(bounds1[3], bounds2[3])
+                if int_s >= int_n:
+                    raise ValueError
+            else:
+                int_s = min(bounds1[1], bounds2[1])
+                int_n = max(bounds1[3], bounds2[3])
+                if int_n >= int_s:
+                    raise ValueError
+
+            return int_w, int_s, int_e, int_n
+
         logger.debug("Chunks=%r", chunks)
 
         for chunk in chunks:
-            dst_w, dst_s, dst_e, dst_n = windows.bounds(chunk, output_transform)
             dest = np.zeros((output_count, chunk.height, chunk.width), dtype=dt)
             if inrange:
                 dest.fill(nodataval)
 
-            dst_idx = 0
-            for idx, (dataset, src_indexes) in enumerate(zip(sources, indexes)):
-                with dataset_opener(dataset) as src:
-                    if disjoint_bounds((dst_w, dst_s, dst_e, dst_n), src.bounds):
-                        logger.debug(
-                            "Skipping source: src=%r, bounds=%r",
-                            src,
-                            (dst_w, dst_s, dst_e, dst_n),
-                        )
-                        continue
+            chunk_bounds = windows.bounds(chunk, output_transform)
+            chunk_transform = windows.transform(chunk, output_transform)
 
+            def win_align(window):
+                """Round window offsets and lengths for array indexing."""
+                row_off = math.floor(window.row_off + 0.1)
+                col_off = math.floor(window.col_off + 0.1)
+                height = math.floor(window.height + 0.5)
+                width = math.floor(window.width + 0.5)
+                return windows.Window(col_off, row_off, width, height)
+
+            dst_idx = 0
+            for dataset, src_indexes in zip(sources, indexes):
+                with dataset_opener(dataset) as src:
                     if first_crs != src.crs:
                         raise RasterioError(f"CRS mismatch with source: {dataset}")
-
-                    src_window = windows.from_bounds(
-                        dst_w, dst_s, dst_e, dst_n, src.transform
-                    ).round(3)
 
                     if src_indexes is None:
                         src_indexes = src.indexes
                     elif isinstance(src_indexes, int):
                         src_indexes = [src_indexes]
 
-                    temp_shape = (len(src_indexes), chunk.height, chunk.width)
+                    region_start = dst_idx
+                    dst_idx += len(src_indexes)
 
+                    try:
+                        ibounds = _intersect_bounds(
+                            src.bounds, chunk_bounds, chunk_transform
+                        )
+                        src_window = windows.from_bounds(*ibounds, src.transform)
+                        dst_window = windows.from_bounds(*ibounds, chunk_transform)
+                    except (ValueError, WindowError):
+                        logger.debug(
+                            "Skipping source: src=%r, bounds=%r", src, src.bounds
+                        )
+                        continue
+
+                    dst_window = win_align(dst_window)
                     temp_src = src.read(
-                        out_shape=temp_shape,
+                        out_shape=(
+                            len(src_indexes),
+                            dst_window.height,
+                            dst_window.width,
+                        ),
                         window=src_window,
-                        boundless=True,
                         masked=True,
                         indexes=src_indexes,
                         resampling=resampling,
                     )
 
-                if isinstance(src_indexes, int):
-                    region = dest[dst_idx, :, :]
-                    dst_idx += 1
-                elif isinstance(src_indexes, Iterable):
-                    region = dest[dst_idx : dst_idx + len(src_indexes), :, :]
-                    dst_idx += len(src_indexes)
-
-                if cmath.isnan(nodataval):
-                    region_mask = np.isnan(region)
-                elif not np.issubdtype(region.dtype, np.integer):
-                    region_mask = np.isclose(region, nodataval)
-                else:
-                    region_mask = region == nodataval
-
-                # Ensure common shape, resolving issue #2202.
-                temp = temp_src[:, : region.shape[1], : region.shape[2]]
-                temp_mask = np.ma.getmask(temp)
+                rows, cols = dst_window.toslices()
+                region = dest[region_start:dst_idx, rows, cols]
 
                 np.copyto(
                     region,
-                    temp,
+                    temp_src,
                     casting="unsafe",
                 )
 
             if dst:
-                dst_window = windows.from_bounds(
-                    dst_w, dst_s, dst_e, dst_n, output_transform
-                ).round(3)
+                dst_window = windows.from_bounds(*chunk_bounds, output_transform)
+                dst_window = win_align(dst_window)
                 dst.write(dest, window=dst_window)
 
         if dst is None:

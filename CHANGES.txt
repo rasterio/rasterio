@@ -6,6 +6,9 @@ TBD
 
 Bug fixes:
 
+- Stack reads only source and chunk intersections, fixing array output from
+  WarpedVRT inputs and preserving destination band positions for disjoint
+  chunked sources (gh-3518).
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
   deprecation warning from GDAL (gh-). See also
   https://github.com/OSGeo/gdal/issues/12102.
