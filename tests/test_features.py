@@ -20,8 +20,8 @@ from rasterio.features import (
     shapes,
 )
 
-from .common import (
-    MockGeoInterface,
+from .classes import MockGeoInterface
+from .marks import (
     requires_gdal3_11,
     requires_gdal_lt_3_11,
     requires_gdal3_12_1,

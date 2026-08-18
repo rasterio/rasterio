@@ -5,7 +5,7 @@ import pytest
 import rasterio
 from rasterio.rio.main import main_group
 
-from .common import credentials
+from .marks import credentials
 
 
 with rasterio.Env() as env:

@@ -7,7 +7,7 @@ import pytest
 
 import rasterio
 
-from tests.common import gdal_version
+from tests.marks import gdal_version
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

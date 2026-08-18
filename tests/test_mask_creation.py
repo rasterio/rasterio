@@ -10,7 +10,7 @@ from rasterio.enums import MaskFlags
 from rasterio.errors import RasterioIOError
 from rasterio.windows import Window
 
-from .common import gdal_version
+from .marks import gdal_version
 
 
 def test_create_internal_mask(data):
