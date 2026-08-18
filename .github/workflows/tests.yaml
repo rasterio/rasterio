@@ -91,7 +91,7 @@ jobs:
           python${{ matrix.python-version }} -m venv testenv
           . testenv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install --no-deps --force-reinstall -e .[test]
+          python -m pip install --no-deps --force-reinstall -e . --group tests
 
       - name: run tests
         run: |
