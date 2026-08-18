@@ -17,6 +17,7 @@ from rasterio.transform import (
     GCPTransformer,
     RPCTransformer,
     get_transformer,
+    matmul,
     rowcol,
     xy,
 )
@@ -128,42 +129,42 @@ def test_array_bounds():
         pytest.param(
             2,
             2,
-            Affine.translation(2, 2) * Affine.scale(1, -1),
+            matmul(Affine.translation(2, 2), Affine.scale(1, -1)),
             (2.0, 0.0, 4.0, 2.0),
             id="Translated transform",
         ),
         pytest.param(
             2,
             2,
-            Affine.scale(4) * Affine.scale(1, -1),
+            matmul(Affine.scale(4), Affine.scale(1, -1)),
             (0.0, -8.0, 8.0, 0.0),
             id="Scaled transform",
         ),
         pytest.param(
             2,
             2,
-            Affine.rotation(90) * Affine.scale(1, -1),
+            matmul(Affine.rotation(90), Affine.scale(1, -1)),
             (0.0, 0.0, 2.0, 2.0),
             id="90 degree rotated transform",
         ),
         pytest.param(
             2,
             2,
-            Affine.rotation(45) * Affine.scale(1, -1),
+            matmul(Affine.rotation(45), Affine.scale(1, -1)),
             (0.0, -math.sqrt(2), 2 * math.sqrt(2), math.sqrt(2)),
             id="45 degree rotated transform",
         ),
         pytest.param(
             2,
             2,
-            Affine.scale(4, 1) * Affine.scale(1, -1),
+            matmul(Affine.scale(4, 1), Affine.scale(1, -1)),
             (0, -2.0, 8.0, 0.0),
             id="Rectangular pixel transform",
         ),
         pytest.param(
             6,
             2,
-            Affine.scale(1, -1),
+            matmul(Affine.scale(1, -1), Affine.translation(0, 0)),
             (0, -2.0, 6.0, 0.0),
             id="Differing width and height",
         ),
@@ -428,6 +429,81 @@ def test_from_gcps():
         assert not aff == src.transform
         assert len(aff) == 9
         assert not transform.tastes_like_gdal(aff)
+
+
+def test_matmul():
+    try:  # affine>=3.0.0
+        _ = Affine.identity() @ Affine.identity()
+        test_matmul = True
+    except TypeError:  # affine<3.0.0
+        test_matmul = False
+
+    # inputs
+    a = Affine.translation(2, 3)
+    b = Affine.scale(4, 5)
+    c = Affine.rotation(30)
+    v = (6.0, 7.0)
+
+    # matrix @ matrix
+    ab = matmul(a, b)
+    bc = matmul(b, c)
+    abc = matmul(a, b, c)
+    acb = matmul(a, c, b)
+    bac = matmul(b, a, c)
+    assert isinstance(ab, Affine)
+    assert isinstance(abc, Affine)
+    if test_matmul:
+        assert ab == a @ b
+        assert bc == b @ c
+        assert abc == a @ b @ c
+        assert acb == a @ c @ b
+        assert bac == b @ a @ c
+    else:  # test mul (instead of matmul) for affine<3.0.0
+        assert ab == a * b
+        assert bc == b * c
+        assert abc == a * b * c
+        assert acb == a * c * b
+        assert bac == b * a * c
+
+    # matrix @ vector
+    av = matmul(a, v)
+    assert isinstance(av, tuple)
+    if test_matmul:
+        assert av == a @ v
+    else:
+        assert av == a * v
+
+    # matrix @ matrix @ vector
+    abv = matmul(a, b, v)
+    assert isinstance(abv, tuple)
+    if test_matmul:
+        assert abv == a @ b @ v
+    else:
+        assert abv == a * b * v
+
+    # matrix @ array
+    xy, yv = numpy.meshgrid(numpy.arange(0, 100, 10), numpy.arange(0, 200, 10))
+    xs, ys = matmul(a, (xy, yv))
+    assert isinstance(xs, numpy.ndarray)
+    assert isinstance(ys, numpy.ndarray)
+    if test_matmul:
+        expected_xs, expected_ys = a @ (xy, yv)
+    else:
+        expected_xs, expected_ys = a * (xy, yv)
+    numpy.testing.assert_array_equal(xs, expected_xs)
+    numpy.testing.assert_array_equal(ys, expected_ys)
+
+
+def test_matmul_errors():
+    # wrong type on rhs
+    with pytest.raises(TypeError):
+        matmul(Affine.identity(), 1)
+    # can't do vector @ matrix
+    with pytest.raises(TypeError):
+        matmul((1, 2), Affine.identity())
+    # can't do matrix @ vector @ matrix
+    with pytest.raises(TypeError):
+        matmul(Affine.identity(), (1, 2), Affine.identity())
 
 
 @pytest.mark.parametrize(

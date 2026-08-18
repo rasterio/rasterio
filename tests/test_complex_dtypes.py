@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.transform import Affine, matmul
 
 
 @pytest.fixture(scope="function")
@@ -35,9 +36,7 @@ def test_read_array(tempfile, dtype, height, width):
 
 def test_complex_nodata(tmpdir):
     """A complex dataset can be created with a real nodata value"""
-    import numpy as np
     import rasterio
-    from rasterio.transform import Affine
 
     x = np.linspace(-4.0, 4.0, 240)
     y = np.linspace(-3.0, 3.0, 180)
@@ -45,9 +44,9 @@ def test_complex_nodata(tmpdir):
     Z1 = np.ones_like(X) + 1j
 
     res = (x[-1] - x[0]) / 240.0
-    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) * Affine.scale(
-        res, -res
-    )
+    translation = Affine.translation(x[0] - res / 2, y[-1] - res / 2)
+    scale = Affine.scale(res, -res)
+    transform1 = matmul(translation, scale)
 
     tempfile = str(tmpdir.join("test.tif"))
     with rasterio.open(
@@ -71,9 +70,7 @@ def test_complex_nodata(tmpdir):
 @pytest.mark.gdalbin
 def test_complex_int16(tmpdir):
     """A cint16 dataset can be created"""
-    import numpy as np
     import rasterio
-    from rasterio.transform import Affine
 
     x = np.linspace(-4.0, 4.0, 240)
     y = np.linspace(-3.0, 3.0, 180)
@@ -81,9 +78,9 @@ def test_complex_int16(tmpdir):
     Z1 = np.ones_like(X) + 1j
 
     res = (x[-1] - x[0]) / 240.0
-    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) * Affine.scale(
-        res, -res
-    )
+    translation = Affine.translation(x[0] - res / 2, y[-1] - res / 2)
+    scale = Affine.scale(res, -res)
+    transform1 = matmul(translation, scale)
 
     tempfile = str(tmpdir.join("test.tif"))
 

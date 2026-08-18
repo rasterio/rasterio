@@ -7,11 +7,11 @@ import numpy
 import pytest
 import warnings
 
-import affine
 import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import MergeError, RasterioError
+from rasterio.transform import Affine, matmul
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
 from rasterio import windows
@@ -21,8 +21,8 @@ from .marks import gdal_version
 
 @pytest.fixture(scope="function")
 def test_data_complex(tmp_path):
-    transform = affine.Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
-    t2 = transform * transform.translation(0, 3)
+    transform = Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
+    t2 = matmul(transform, Affine.translation(0, 3))
 
     with rasterio.open(
         tmp_path.joinpath("r2.tif"),
@@ -59,7 +59,7 @@ def test_data_complex(tmp_path):
 def test_data_dir_overlapping(tmp_path):
     kwargs = {
         "crs": "EPSG:4326",
-        "transform": affine.Affine(0.2, 0, -114, 0, -0.2, 46),
+        "transform": Affine(0.2, 0, -114, 0, -0.2, 46),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -76,7 +76,7 @@ def test_data_dir_overlapping(tmp_path):
         data = numpy.ones((10, 10), dtype=rasterio.uint8) * 3
         dst.write(data, indexes=1)
 
-    kwargs["transform"] = affine.Affine(0.2, 0, -113, 0, -0.2, 45)
+    kwargs["transform"] = Affine(0.2, 0, -113, 0, -0.2, 45)
 
     with rasterio.open(tmp_path.joinpath("se.tif"), "w", **kwargs) as dst:
         data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
@@ -264,15 +264,15 @@ def test_complex_outrange_nodata_():
 @pytest.mark.parametrize(
     "matrix",
     [
-        affine.Affine.scale(-1, 1),
-        affine.Affine.scale(1, -1),
-        affine.Affine.rotation(45.0),
+        Affine.scale(-1, 1),
+        Affine.scale(1, -1),
+        Affine.rotation(45.0),
     ],
 )
 def test_failure_source_transforms(data, matrix):
     """Rotated, flipped, and upside down rasters cannot be merged."""
     with rasterio.open(str(data.join("RGB.byte.tif")), "r+") as src:
-        src.transform = matrix * src.transform
+        src.transform = matmul(matrix, src.transform)
         with pytest.raises(MergeError):
             merge([src])
 

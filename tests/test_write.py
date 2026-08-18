@@ -3,7 +3,6 @@ import re
 from pathlib import Path
 import subprocess
 
-import affine
 import numpy as np
 import pytest
 
@@ -12,6 +11,7 @@ from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError
+from rasterio.transform import Affine, matmul
 
 
 def test_validate_dtype_None(tmpdir):
@@ -187,7 +187,7 @@ def test_write_float(tmpdir):
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(
+    transform = Affine(
         300.0379266750948, 0.0, 101985.0, 0.0, -300.041782729805, 2826915.0
     )
 
@@ -220,7 +220,7 @@ def test_write_crs_transform(tmpdir):
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(
+    transform = Affine(
         300.0379266750948, 0.0, 101985.0, 0.0, -300.041782729805, 2826915.0
     )
     with rasterio.open(
@@ -255,7 +255,7 @@ def test_write_crs_transform_2(tmpdir, monkeypatch):
     monkeypatch.delenv("GDAL_DATA", raising=False)
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(
+    transform = Affine(
         300.0379266750948, 0.0, 101985.0, 0.0, -300.041782729805, 2826915.0
     )
     with rasterio.open(
@@ -284,7 +284,7 @@ def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(
+    transform = Affine(
         300.0379266750948, 0.0, 101985.0, 0.0, -300.041782729805, 2826915.0
     )
     wkt = 'PROJCS["WGS 84 / UTM zone 18N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32618"]]'
@@ -415,7 +415,7 @@ def test_creation_metadata_deprecation(tmpdir):
 def test_wplus_transform(tmpdir):
     """Transform is set on a new dataset created in w+ mode (see issue #1359)"""
     name = str(tmpdir.join("test.tif"))
-    transform = affine.Affine.translation(10.0, 10.0) * affine.Affine.scale(0.5, -0.5)
+    transform = matmul(Affine.translation(10.0, 10.0), Affine.scale(0.5, -0.5))
     with rasterio.open(
         name,
         "w+",
@@ -494,7 +494,7 @@ def test_issue2088(tmpdir, capsys, driver):
         count=1,
         height=256,
         width=256,
-        transform=affine.Affine.identity(),
+        transform=Affine.identity(),
     ) as src:
         data = np.ones((256, 256), dtype=np.uint8)
         src.write(data, 1)
@@ -520,7 +520,7 @@ def test_write_cog__from_numpy(tmp_path):
         "height": data.shape[1],
         "count": 1,
         "dtype": np.uint8,
-        "transform": affine.Affine(3.5, 0.0, 558838.0, 0.0, -3.5, 5927362.0),
+        "transform": Affine(3.5, 0.0, 558838.0, 0.0, -3.5, 5927362.0),
         "crs": 32630,
         "nodata": 0,
         "driver": "COG",
