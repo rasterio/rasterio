@@ -6,7 +6,7 @@ import rasterio
 from rasterio.enums import ColorInterp
 from rasterio.env import GDALVersion
 
-from .conftest import gdal_version
+from .marks import gdal_version
 
 
 def test_cmyk_interp(tmpdir):

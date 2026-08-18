@@ -9,7 +9,7 @@ from rasterio._env import (
     get_gdal_data,
 )
 
-from .conftest import gdal_version
+from .marks import gdal_version
 
 
 @pytest.fixture

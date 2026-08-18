@@ -21,7 +21,7 @@ from rasterio.transform import (
     xy,
 )
 
-from .conftest import assert_bounding_box_equal
+from .assertions import assert_bounding_box_equal
 
 
 def gcps():
