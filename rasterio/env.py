@@ -24,6 +24,8 @@ from rasterio.session import Session, DummySession
 
 
 class ThreadEnv(threading.local):
+    """Thread environment."""
+
     def __init__(self):
         self._env = None  # Initialises in each thread
 
@@ -146,7 +148,6 @@ class Env:
 
         Examples
         --------
-
         >>> with Env(CPL_DEBUG=True, CPL_CURL_VERBOSE=True):
         ...     with rasterio.open("https://example.com/a.tif") as src:
         ...         print(src.profile)
@@ -242,6 +243,7 @@ class Env:
         return Env(*args, **options)
 
     def aws_creds_from_context_options(self):
+        """Get credentials from context options."""
         return {k: v for k, v in self.context_options.items() if k.startswith("AWS_")}
 
     def credentialize(self):
@@ -354,6 +356,7 @@ def getenv():
 
 
 def hasenv():
+    """Check if there is an existing environment."""
     return bool(local._env)
 
 
@@ -366,6 +369,7 @@ def setenv(**options):
 
 
 def hascreds():
+    """Check if the given configuration has proper credentials."""
     warnings.warn(
         "Please use Env.session.hascreds() instead", RasterioDeprecationWarning
     )
@@ -387,6 +391,8 @@ def delenv():
 
 
 class NullContextManager:
+    """A do-nothing context manager."""
+
     def __init__(self):
         pass
 
@@ -413,7 +419,8 @@ def env_ctx_if_needed():
 
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
-    calls any GDAL C functions."""
+    calls any GDAL C functions.
+    """  # noqa: D205
 
     @wraps(f)
     def wrapper(*args, **kwds):
@@ -483,10 +490,11 @@ def ensure_env_with_credentials(f):
 @attr.s(slots=True)
 @total_ordering
 class GDALVersion:
-    """Convenience class for obtaining GDAL major and minor version components
-    and comparing between versions.  This is highly simplistic and assumes a
-    very normal numbering scheme for versions and ignores everything except
-    the major and minor components."""
+    """Convenience class to obtain and compare GDAL versions.
+
+    This is highly simplistic and assumes a very normal numbering scheme for
+    versions and ignores everything except the major and minor components.
+    """
 
     major = attr.ib(default=0, validator=attr.validators.instance_of(int))
     minor = attr.ib(default=0, validator=attr.validators.instance_of(int))
@@ -516,9 +524,9 @@ class GDALVersion:
 
     @classmethod
     def parse(cls, input, include_patch=False):
-        """
-        Parses input tuple or string to GDALVersion. If input is a GDALVersion
-        instance, it is returned.
+        """Parses input tuple or string to GDALVersion.
+
+        If input is a GDALVersion instance, it is returned.
 
         Parameters
         ----------
@@ -530,7 +538,6 @@ class GDALVersion:
         -------
         GDALVersion instance
         """
-
         if isinstance(input, cls):
             return input
         if isinstance(input, tuple):
@@ -561,6 +568,7 @@ class GDALVersion:
         return cls.parse(gdal_version(), include_patch=include_patch)
 
     def at_least(self, other, include_patch=False):
+        """Check if this version is greater than or equal to another."""
         other = self.__class__.parse(other, include_patch=include_patch)
         return self >= other
 
@@ -609,7 +617,7 @@ def require_gdal_version(
 
 
     Parameters
-    ------------
+    ----------
     version: tuple, string, or GDALVersion
     param: string (optional, default: None)
         If `values` are absent, then all use of this parameter with a value
@@ -626,10 +634,9 @@ def require_gdal_version(
         if necessary context to the user.
 
     Returns
-    ---------
+    -------
     wrapped function
-    """
-
+    """  # noqa: D205
     if values is not None:
         if param is None:
             raise ValueError("require_gdal_version: param must be provided with values")

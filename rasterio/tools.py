@@ -64,7 +64,6 @@ class JSONSequenceTool:
         ------------
         Writes sequences of JSON texts to the named output file.
         """
-
         src_kwargs = src_kwargs or {}
         dst_kwargs = dst_kwargs or {}
         func_args = func_args or []
