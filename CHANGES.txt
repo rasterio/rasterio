@@ -1,11 +1,13 @@
 Changes
 =======
 
-TBD
----
+1.5.2 (TBD)
+-----------
 
 Bug fixes:
 
+- The stack() function can now accept WarpedVRT sources using the same
+  compositing logic implemented previously in merge() (gh-).
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
   deprecation warning from GDAL (gh-). See also
   https://github.com/OSGeo/gdal/issues/12102.
