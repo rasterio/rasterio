@@ -29,7 +29,7 @@ from rasterio.errors import (
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError,
     WarpOperationError)
-from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
+from rasterio.transform import Affine, from_bounds, guard_transform, matmul, tastes_like_gdal
 
 cimport cython
 cimport numpy as np
@@ -1168,10 +1168,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             ):
                 # Note: scaling on the right hand side of multiplication
                 # preserves the origin of the geotransform matrix.
-                self.dst_transform = self.src_transform * Affine.scale(
+                src_scale = Affine.scale(
                     self.src_dataset.width / self.dst_width,
                     self.src_dataset.height / self.dst_height
                 )
+                self.dst_transform = matmul(self.src_transform, src_scale)
 
             # Case 3
             elif (
@@ -1194,9 +1195,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     rpcs=self.src_dataset.rpcs,
                     **self.warp_extras,
                 )
-                self.dst_transform = self.dst_transform * Affine.scale(
-                    width / self.dst_width, height / self.dst_height
-                )
+                dst_scale = Affine.scale(width / self.dst_width, height / self.dst_height)
+                self.dst_transform = matmul(self.dst_transform, dst_scale)
 
             # If we get here it's because the tests above are buggy.
             # We raise a Python exception to indicate that.

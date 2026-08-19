@@ -40,7 +40,7 @@ from rasterio.dtypes import (
 )
 
 from rasterio.sample import sample_gen
-from rasterio.transform import Affine
+from rasterio.transform import Affine, matmul
 from rasterio._path import _parse_path, _UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
@@ -794,7 +794,10 @@ cdef class DatasetReaderBase(DatasetBase):
 
             if all_valid:
                 blank_path = _UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
-                transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
+                translation1 = Affine.translation(self.transform.xoff, self.transform.yoff)
+                scale = Affine.scale(self.width / 3, self.height / 3)
+                translation2 = Affine.translation(-self.transform.xoff, -self.transform.yoff)
+                transform = matmul(translation1, matmul(scale, matmul(translation2, self.transform)))
                 with DatasetWriterBase(
                         blank_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,

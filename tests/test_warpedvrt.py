@@ -3,7 +3,6 @@
 import logging
 import shutil
 
-import affine
 import numpy
 import pytest
 
@@ -14,6 +13,7 @@ from rasterio.enums import Resampling, MaskFlags
 from rasterio.errors import WarpOptionsError
 from rasterio.io import MemoryFile
 from rasterio import shutil as rio_shutil
+from rasterio.transform import Affine, matmul
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
@@ -189,9 +189,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         extent = (-20037508.34, 20037508.34)
         size = (2**16) * 256
         resolution = (extent[1] - extent[0]) / size
-        dst_transform = affine.Affine(
-            resolution, 0.0, extent[0], 0.0, -resolution, extent[1]
-        )
+        dst_transform = Affine(resolution, 0.0, extent[0], 0.0, -resolution, extent[1])
         with WarpedVRT(
             src, crs=DST_CRS, width=size, height=size, transform=dst_transform
         ) as vrt:
@@ -216,7 +214,7 @@ def test_warp_extras(path_rgb_byte_tif):
 
 
 def test_transformer_options(path_rgb_byte_tif):
-    transform = affine.Affine(
+    transform = Affine(
         1.0003577499128138,
         0.0,
         -8848646.496183893,
@@ -242,7 +240,7 @@ def test_transformer_options(path_rgb_byte_tif):
 
 
 def test_transformer_options__width_height(path_rgb_byte_tif):
-    transform = affine.Affine(79.1, 0.0, 0.0, 0.0, -71.8, 718.0)
+    transform = Affine(79.1, 0.0, 0.0, 0.0, -71.8, 718.0)
     transformer_options = {
         "SRC_METHOD": "NO_GEOTRANSFORM",
         "DST_METHOD": "NO_GEOTRANSFORM",
@@ -321,7 +319,7 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
         left, bottom, right, top = dst_bounds
         xres = (right - left) / dst_width
         yres = (top - bottom) / dst_height
-        dst_transform = affine.Affine(xres, 0.0, left, 0.0, -yres, top)
+        dst_transform = Affine(xres, 0.0, left, 0.0, -yres, top)
 
         # The 'complex' test case hits the affected code path
         vrt_options = {"dst_crs": dst_crs}
@@ -378,8 +376,9 @@ def test_image(red_green):
             rasterio.open(str(red_green.join("red.tif"))) as src,
             WarpedVRT(
                 src,
-                transform=affine.Affine.translation(-src.width / 4, src.height / 4)
-                * src.transform,
+                transform=matmul(
+                    Affine.translation(-src.width / 4, src.height / 4), src.transform
+                ),
                 width=2 * src.width,
                 height=2 * src.height,
             ) as vrt,
@@ -399,8 +398,9 @@ def test_image_nodata_mask(red_green):
         WarpedVRT(
             src,
             nodata=0,
-            transform=affine.Affine.translation(-src.width / 2, src.height / 2)
-            * src.transform,
+            transform=matmul(
+                Affine.translation(-src.width / 2, src.height / 2), src.transform
+            ),
             width=3 * src.width,
             height=3 * src.height,
         ) as vrt,
@@ -559,8 +559,9 @@ def test_out_dtype(red_green):
         rasterio.open(str(red_green.join("red.tif"))) as src,
         WarpedVRT(
             src,
-            transform=affine.Affine.translation(-src.width / 4, src.height / 4)
-            * src.transform,
+            transform=matmul(
+                Affine.translation(-src.width / 4, src.height / 4), src.transform
+            ),
             width=2 * src.width,
             height=2 * src.height,
         ) as vrt,
@@ -579,8 +580,9 @@ def test_sample(red_green):
         rasterio.open(str(red_green.join("red.tif"))) as src,
         WarpedVRT(
             src,
-            transform=affine.Affine.translation(-src.width / 4, src.height / 4)
-            * src.transform,
+            transform=matmul(
+                Affine.translation(-src.width / 4, src.height / 4), src.transform
+            ),
             width=2 * src.width,
             height=2 * src.height,
         ) as vrt,
@@ -739,7 +741,7 @@ def test_warpedvrt_gcps__width_height(affine_c_param, tmp_path):
         assert vrt.width == 10
         assert vrt.crs == crs
         assert vrt.dst_transform.almost_equals(
-            affine.Affine(
+            Affine(
                 22271.389322449897,
                 0.0,
                 affine_c_param,
@@ -759,7 +761,7 @@ def test_warpedvrt_rpcs__width_height():
         assert vrt.width == 10
         assert vrt.crs == CRS.from_epsg(4326)
         assert vrt.dst_transform.almost_equals(
-            affine.Affine(
+            Affine(
                 0.008598908695300157,
                 0.0,
                 -123.48824818566573,

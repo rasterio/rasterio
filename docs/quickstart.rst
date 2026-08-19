@@ -119,14 +119,14 @@ position of the upper left corner.
 
 .. code-block:: pycon
 
-    >>> dataset.transform * (0, 0)
+    >>> dataset.transform @ (0, 0)
     (358485.0, 4265115.0)
 
 The position of the lower right corner is obtained similarly.
 
 .. code-block:: pycon
 
-    >>> dataset.transform * (dataset.width, dataset.height)
+    >>> dataset.transform @ (dataset.width, dataset.height)
     (590415.0, 4028985.0)
 
 But what do these numbers mean? 4028985 meters from where? These coordinate
@@ -266,7 +266,7 @@ product of a translation and a scaling.
 
    >>> from rasterio.transform import Affine
    >>> res = (x[-1] - x[0]) / 240.0
-   >>> transform = Affine.translation(x[0] - res / 2, y[0] + res / 2) * Affine.scale(res, -res)
+   >>> transform = Affine.translation(x[0] - res / 2, y[0] + res / 2) @ Affine.scale(res, -res)
    >>> transform
    Affine(0.03333333333333333, 0.0, -4.016666666666667,
           0.0, -0.03333333333333333, 3.0166666666666666)

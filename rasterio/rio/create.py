@@ -12,7 +12,7 @@ from rasterio.errors import (
     RasterioIOError,
 )
 from rasterio.rio import options
-from rasterio.transform import Affine, guard_transform
+from rasterio.transform import Affine, guard_transform, matmul
 
 
 def crs_handler(ctx, param, value):
@@ -140,7 +140,7 @@ def create(
         left, bottom, right, top = bounds
         sx = (right - left) / width
         sy = (bottom - top) / height
-        geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
+        geo_transform = matmul(Affine.translation(left, top), Affine.scale(sx, sy))
     if transform:
         if geo_transform is not None:
             click.echo(

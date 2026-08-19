@@ -28,7 +28,7 @@ import attr
 import numpy as np
 
 from rasterio.errors import WindowError, RasterioDeprecationWarning
-from rasterio.transform import rowcol, guard_transform
+from rasterio.transform import rowcol, guard_transform, matmul
 
 
 class WindowMethodsMixin:
@@ -358,8 +358,8 @@ def transform(window, transform):
 
     """
     window = evaluate(window, height=0, width=0)
-    x, y = transform * (window.col_off or 0.0, window.row_off or 0.0)
-    return Affine.translation(x - transform.c, y - transform.f) * transform
+    x, y = matmul(transform, (window.col_off or 0.0, window.row_off or 0.0))
+    return matmul(Affine.translation(x - transform.c, y - transform.f), transform)
 
 
 def bounds(window, transform, height=0, width=0):
@@ -384,8 +384,8 @@ def bounds(window, transform, height=0, width=0):
     col_min = window.col_off
     col_max = col_min + window.width
 
-    left, bottom = transform * (col_min, row_max)
-    right, top = transform * (col_max, row_min)
+    left, bottom = matmul(transform, (col_min, row_max))
+    right, top = matmul(transform, (col_max, row_min))
     return left, bottom, right, top
 
 

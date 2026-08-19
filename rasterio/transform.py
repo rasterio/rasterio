@@ -1,7 +1,7 @@
 """Geospatial transforms"""
 
 from contextlib import ExitStack
-from functools import partial
+from functools import partial, reduce
 import numpy as np
 import warnings
 from numbers import Number
@@ -179,7 +179,9 @@ def from_origin(west, north, xsize, ysize):
     sizes `xsize`, `ysize`.
 
     """
-    return Affine.translation(west, north) * Affine.scale(xsize, -ysize)
+    translation = Affine.translation(west, north)
+    scale = Affine.scale(xsize, -ysize)
+    return matmul(translation, scale)
 
 
 def from_bounds(west, south, east, north, width, height):
@@ -190,9 +192,9 @@ def from_bounds(west, south, east, north, width, height):
     `height` in number of pixels.
 
     """
-    return Affine.translation(west, north) * Affine.scale(
-        (east - west) / width, (south - north) / height
-    )
+    translation = Affine.translation(west, north)
+    scale = Affine.scale((east - west) / width, (south - north) / height)
+    return matmul(translation, scale)
 
 
 def array_bounds(height, width, transform):
@@ -207,9 +209,9 @@ def array_bounds(height, width, transform):
         west, south, east, north = c, f + e * height, c + a * width, f
     else:
         c0x, c0y = c, f
-        c1x, c1y = transform * (0, height)
-        c2x, c2y = transform * (width, height)
-        c3x, c3y = transform * (width, 0)
+        c1x, c1y = matmul(transform, (0, height))
+        c2x, c2y = matmul(transform, (width, height))
+        c3x, c3y = matmul(transform, (width, 0))
         xs = (c0x, c1x, c2x, c3x)
         ys = (c0y, c1y, c2y, c3y)
         west, south, east, north = min(xs), min(ys), max(xs), max(ys)
@@ -323,6 +325,33 @@ def from_gcps(gcps):
 
     """
     return Affine.from_gdal(*_transform_from_gcps(gcps))
+
+
+# Compatibility function for older versions of the affine package
+# that do not support the @ matmul operator.
+# This can be removed when rasterio drops support for affine<3.0.0
+try:  # affine>=3.0.0
+    _ = IDENTITY @ IDENTITY  # noqa
+
+    def _matmul(a, b):
+        """Use matmul for affine>=3.0.0"""
+        if not isinstance(a, Affine):
+            raise TypeError(f"Expected Affine, got {type(a)}")
+        return a @ b
+except TypeError:  # affine<3.0.0
+
+    def _matmul(a, b):
+        """Use mul (instead of matmul) for affine<3.0.0"""
+        if not isinstance(a, Affine):
+            raise TypeError(f"Expected Affine, got {type(a)}")
+        return a * b
+
+
+def matmul(*items):
+    return reduce(_matmul, items)
+
+
+matmul.__doc__ = _matmul.__doc__
 
 
 class TransformerBase:
