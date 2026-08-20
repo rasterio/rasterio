@@ -5,7 +5,6 @@ from io import BytesIO
 from pathlib import Path
 import concurrent.futures
 import os.path
-import platform
 
 from affine import Affine
 import numpy
