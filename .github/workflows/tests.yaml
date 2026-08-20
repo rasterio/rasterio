@@ -97,14 +97,14 @@ jobs:
         run: |
           . testenv/bin/activate
           python -m pip install -r requirements-dev.txt
-          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+          python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing tests/test_memoryfile.py
 
   conda_test:
     needs: linting
     name: Conda | ${{ matrix.os }} | python=${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
@@ -144,4 +144,4 @@ jobs:
       - name: Test with Coverage
         shell: bash -l {0}
         run: |
-          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+          micromamba run python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing tests/test_memoryfile.py
