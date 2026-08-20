@@ -54,6 +54,5 @@ cdef extern from "gdal_alg.h":
         void *pTransformerArg, int bDstToSrc, int nPointCount, double *x,
         double *y, double *z, int *panSuccess)
 
-
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
     pass
