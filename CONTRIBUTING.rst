@@ -11,6 +11,19 @@ Rights
 
 The BSD license (see LICENSE.txt) applies to all contributions.
 
+Human communication
+-------------------
+
+Today, much computer software is developed largely or entirely by AI agents.
+Rasterio is not such a project. We value hand-crafted code. Even more, we value
+human-to-human communication. Discussions between humans help the project's
+community grow and keep the project viable. Discussions between maintainers and AI agents do not.
+
+Use LLM coding tools on your own computer if you like, but please engage
+personally in issue and PR threads. Issues and PRs written by LLMs can't expect immediate attention
+or close reading by a human, that would not be fair to this project or its
+maintainers.
+
 Issue Conventions
 -----------------
 
