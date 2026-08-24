@@ -81,10 +81,10 @@ jobs:
            arch: x86_64
            cmake_osx_architectures: x86_64
            macos_deployment_target: "15.0"
-         - os: macos-14
+         - os: macos-15
            arch: arm64
            cmake_osx_architectures: arm64
-           macos_deployment_target: "14.0"
+           macos_deployment_target: "15.0"
          - os: "windows-2022"
            arch: "auto64"
            triplet: "x64-windows"
@@ -104,12 +104,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v7
-
-      - name: Activate MSVC
-        uses: ilammy/msvc-dev-cmd@v1.13.0
-        with:
-           arch: ${{ matrix.msvc_arch }}
-        if: ${{ matrix.msvc_arch }}
 
       - name: Bootstrap vcpkg
         env:
@@ -156,6 +150,7 @@ jobs:
             PROJ_DATA=${GITHUB_WORKSPACE}/rasterio_libs/share/proj
             LDFLAGS="${LDFLAGS} -arch ${{ matrix.arch }} -Wl,-rpath,${GITHUB_WORKSPACE}/rasterio_libs/lib"
             GDAL_VERSION=${{ env.GDAL_VERSION }}
+          CIBW_ARCHS_WINDOWS: "${{ matrix.arch }}"
           CIBW_ENVIRONMENT_WINDOWS:
             VCPKG_INSTALL="C:/vcpkg/installed/${{ matrix.triplet }}"
             GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
@@ -193,7 +188,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-15-intel"]
+        os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-15", "macos-15-intel"]
         python-version: ["3.15", "3.15t", "3.14", "3.14t", "3.13", "3.12"]
         
     steps:
