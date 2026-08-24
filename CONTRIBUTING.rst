@@ -21,7 +21,7 @@ agents that post comments on your behalf.
 If you use LLMs when contributing, whether to read the project or draft
 changes, be transparent about that use and take personal responsibility for all
 of it. Be mindful that code review is done by human maintainers for this
-project and that we prefer well-crafted code. Vibe coding is not welcome here.
+project and that we prefer well-crafted code. All contributions should be fully understood by the author(s) submitting them to the project.
 
 Issue Conventions
 -----------------
