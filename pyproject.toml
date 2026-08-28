@@ -116,7 +116,7 @@ filterwarnings = [
     "ignore::rasterio.errors.NotGeoreferencedWarning",
     "ignore::rasterio.errors.RasterioDeprecationWarning",
     "ignore:numpy.ufunc size changed",
-    "ignore:Use `@` matmul instead of `*` mul operator for matrix multiplication:PendingDeprecationWarning",
+    "ignore:Use \`@\` matmul:PendingDeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",
