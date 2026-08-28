@@ -272,7 +272,7 @@ def test_memfile_thread_safe_option(rgb_file_object):
     with (
         pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
         # rasterio.Env(GDAL_NUM_THREADS=2),
-        MemoryFile(rgb_file_object.read()) as mem,
+        MemoryFile(rgb_file_object) as mem,
         mem.open(thread_safe=True) as src,
     ):
         def process(window):
