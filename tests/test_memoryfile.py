@@ -260,18 +260,9 @@ def test_file_object_read_variant(rgb_file_bytes):
         assert src.read().shape == (3, 718, 791)
 
 
-# @pytest.mark.skipif(
-#     platform.system() in ["Windows", "Darwin"],
-#     reason="https://github.com/rasterio/rasterio/issues/3499",
-# )
 def test_memfile_thread_safe_option(rgb_file_object):
-    # from rasterio import shutil
-    # memfilename = "/vsimem/test_memfile_thread_safe_option.tif"
-    # shutil.copy(path_rgb_byte_tif, memfilename, driver="GTiff")
-
     with (
         pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
-        # rasterio.Env(GDAL_NUM_THREADS=2),
         MemoryFile(rgb_file_object) as mem,
         mem.open(thread_safe=True) as src,
     ):
