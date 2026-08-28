@@ -22,6 +22,8 @@ class TransformDirection(IntEnum):
 
 
 class TransformMethod(Enum):
+    """Georeferencing transform method."""
+
     affine = "transform"
     gcps = "gcps"
     rpcs = "rpcs"
@@ -76,7 +78,7 @@ class Resampling(IntEnum):
     """Available warp resampling algorithms.
 
     Notes
-    ----------
+    -----
     The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
     'lanczos', 'average', 'mode', and 'gauss', are available for making
     dataset overviews.
@@ -175,6 +177,8 @@ class Compression(Enum):
 
 
 class Interleaving(Enum):
+    """Raster band interleave method."""
+
     pixel = "PIXEL"
     line = "LINE"
     band = "BAND"
@@ -183,6 +187,8 @@ class Interleaving(Enum):
 
 
 class MaskFlags(IntEnum):
+    """Mask band flags."""
+
     all_valid = 1
     per_dataset = 2
     alpha = 4
@@ -190,6 +196,8 @@ class MaskFlags(IntEnum):
 
 
 class PhotometricInterp(Enum):
+    """Photometric interpretation flag."""
+
     black = "MINISBLACK"
     white = "MINISWHITE"
     rgb = "RGB"
@@ -201,7 +209,7 @@ class PhotometricInterp(Enum):
 
 
 class MergeAlg(Enum):
-    """Available rasterization algorithms"""
+    """Available rasterization algorithms."""
 
     replace = "REPLACE"
     add = "ADD"
@@ -209,9 +217,9 @@ class MergeAlg(Enum):
 
 class WktVersion(Enum):
     """
-     .. versionadded:: 1.3.0
+    Supported CRS WKT string versions.
 
-    Supported CRS WKT string versions
+     .. versionadded:: 1.3.0
     """
 
     #: WKT Version 2 from 2015

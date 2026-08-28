@@ -79,7 +79,7 @@ def create(
     overwrite,
     creation_options,
 ):
-    """Create an empty dataset.
+    r"""Create an empty dataset.
 
     The fundamental, required parameters are: format driver name, data
     type, count of bands, height and width in pixels. Long and short

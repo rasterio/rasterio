@@ -1,3 +1,5 @@
+"""rio bounds prints bounding boxes to stdout as GeoJSON."""
+
 import logging
 import os
 
@@ -44,8 +46,9 @@ def bounds(
     use_rs,
     geojson_type,
 ):
-    """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
-    geojsonio::
+    """Write bounding boxes to stdout as GeoJSON.
+
+    For example, to use with geojsonio::
 
       $ rio bounds *.tif | geojsonio
 

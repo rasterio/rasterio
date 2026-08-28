@@ -29,7 +29,6 @@ def rm(path, yes, driver):
     deleting side car files.  This command is aware of datasets and
     their sidecar files.
     """
-
     try:
         rasterio.shutil.delete(path, driver=driver)
     except (DriverRegistrationError, RasterioIOError) as e:
