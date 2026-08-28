@@ -7,9 +7,11 @@ Changes
 Bug fixes:
 
 - The stack() function can now accept WarpedVRT sources using the same
-  compositing logic implemented previously in merge() (gh-).
+  compositing logic implemented previously in merge() (gh-3629).
+- Use stricter and more correct type casting in the MemoryFile constructor
+  to avoid invalid memory access on Windowns (gh-3631).
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
-  deprecation warning from GDAL (gh-). See also
+  deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
 
 1.5.1 (2026-08-07)
