@@ -234,6 +234,8 @@ def test_complex_merge(test_data_complex):
 
     with warnings.catch_warnings():
         warnings.simplefilter('error')
+        warnings.simplefilter("ignore:Use:PendingDeprecationWarning")
+
         result, _ = merge([test_data_complex/"r2.tif"])
         assert result.dtype == numpy.complex64
         assert numpy.all(result == 1)
@@ -243,7 +245,8 @@ def test_complex_nodata(test_data_complex):
     inputs = list(test_data_complex.iterdir())
 
     with warnings.catch_warnings():
-        warnings.simplefilter('error')
+        warnings.simplefilter("error")
+        warnings.simplefilter("ignore:Use:PendingDeprecationWarning")
 
         result, _ = merge(inputs, nodata=numpy.nan)
         assert numpy.all(numpy.isnan(result[:, 2]))
