@@ -264,17 +264,16 @@ def test_file_object_read_variant(rgb_file_bytes):
 #     platform.system() in ["Windows", "Darwin"],
 #     reason="https://github.com/rasterio/rasterio/issues/3499",
 # )
-def test_memfile_thread_safe_option(path_rgb_byte_tif):  # rgb_file_object):
-    from rasterio import shutil
-    memfilename = "/vsimem/test_memfile_thread_safe_option.tif"
-    shutil.copy(path_rgb_byte_tif, memfilename, driver="GTiff")
+def test_memfile_thread_safe_option(rgb_file_object):
+    # from rasterio import shutil
+    # memfilename = "/vsimem/test_memfile_thread_safe_option.tif"
+    # shutil.copy(path_rgb_byte_tif, memfilename, driver="GTiff")
 
     with (
         pytest.raises(rasterio.errors.GDALOptionNotImplementedError) if not _GDAL_AT_LEAST_3_10 else nullcontext(),
-        rasterio.open(memfilename, thread_safe=True) as src,
         # rasterio.Env(GDAL_NUM_THREADS=2),
-        # MemoryFile(rgb_file_object) as mem,
-        # mem.open(thread_safe=True) as src,
+        MemoryFile(rgb_file_object.read()) as mem,
+        mem.open(thread_safe=True) as src,
     ):
         def process(window):
             src.read(window=window).sum()

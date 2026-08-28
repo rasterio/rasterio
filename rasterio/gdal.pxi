@@ -15,6 +15,7 @@ cdef extern from "cpl_conv.h" nogil:
 
 cdef extern from "cpl_port.h":
     ctypedef char **CSLConstList
+    ctypedef unsigned char GByte
 
 
 cdef extern from "cpl_error.h" nogil:

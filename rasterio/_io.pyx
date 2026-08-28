@@ -1162,11 +1162,11 @@ cdef class MemoryFileBase:
         self._path = self.name.encode('utf-8')
 
         self._initial_bytes = initial_bytes
-        cdef unsigned char *buffer = self._initial_bytes
+        cdef GByte *buffer = self._initial_bytes
 
         if self._initial_bytes:
             self._vsif = VSIFileFromMemBuffer(
-               self._path, buffer, len(self._initial_bytes), 0)
+               <const char *>self._path, <GByte *>buffer, <vsi_l_offset>len(self._initial_bytes), <int>0)
             self.mode = "r"
 
         else:
