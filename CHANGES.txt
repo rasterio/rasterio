@@ -1,11 +1,13 @@
 Changes
 =======
 
-TBD
----
+1.5.2 (TBD)
+-----------
 
 Bug fixes:
 
+- The stack() function can now accept WarpedVRT sources using the same
+  compositing logic implemented previously in merge() (gh-3629).
 - Use stricter and more correct type casting in the MemoryFile constructor
   to avoid invalid memory access on Windowns (gh-3631).
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
