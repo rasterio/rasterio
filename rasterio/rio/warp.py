@@ -351,7 +351,7 @@ def warp(
                 res = max(px, py)
                 dst_width = max(int(round((right - left) / res)), 1)
                 dst_height = max(int(round((top - bottom) / res)), 1)
-                dst_transform = Affine.translation(left, top) * Affine.scale(res, -res)
+                dst_transform = Affine.translation(left, top) @ Affine.scale(res, -res)
 
             if target_aligned_pixels:
                 dst_transform, dst_width, dst_height = aligned_target(

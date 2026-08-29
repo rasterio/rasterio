@@ -140,7 +140,7 @@ def create(
         left, bottom, right, top = bounds
         sx = (right - left) / width
         sy = (bottom - top) / height
-        geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
+        geo_transform = Affine.translation(left, top) @ Affine.scale(sx, sy)
     if transform:
         if geo_transform is not None:
             click.echo(

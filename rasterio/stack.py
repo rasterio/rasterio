@@ -212,7 +212,7 @@ def stack(
         output_width = int(round((dst_e - dst_w) / res[0]))
         output_height = int(round((dst_n - dst_s) / res[1]))
 
-        output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
+        output_transform = Affine.translation(dst_w, dst_n) @ Affine.scale(
             res[0], -res[1]
         )
 

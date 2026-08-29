@@ -691,10 +691,10 @@ def dataset_features(
 
         # Decimation of the raster produces a georeferencing
         # shift that we correct with a translation.
-        transform *= Affine.translation(src.width % x_sampling, src.height % y_sampling)
+        transform @= Affine.translation(src.width % x_sampling, src.height % y_sampling)
 
         # And follow by scaling.
-        transform *= Affine.scale(x_sampling, y_sampling)
+        transform @= Affine.scale(x_sampling, y_sampling)
 
     # Most of the time, we'll use the valid data mask.
     # We skip reading it if we're extracting every possible

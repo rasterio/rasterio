@@ -1,6 +1,6 @@
-import affine
 import numpy
 import pytest
+from affine import Affine
 
 import rasterio
 
@@ -14,7 +14,7 @@ def test_write_int8_mem(nodata):
         "count": 1,
         "dtype": "int8",
         "crs": "EPSG:3857",
-        "transform": affine.Affine(10, 0, 0, 0, -10, 0),
+        "transform": Affine(10, 0, 0, 0, -10, 0),
         "nodata": nodata,
     }
 
@@ -39,7 +39,7 @@ def test_write_int8_fs(tmp_path, nodata):
         "count": 1,
         "dtype": "int8",
         "crs": "EPSG:3857",
-        "transform": affine.Affine(10, 0, 0, 0, -10, 0),
+        "transform": Affine(10, 0, 0, 0, -10, 0),
         "nodata": nodata,
     }
 
