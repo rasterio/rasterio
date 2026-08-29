@@ -13,7 +13,7 @@ from rasterio.enums import Resampling, MaskFlags
 from rasterio.errors import WarpOptionsError
 from rasterio.io import MemoryFile
 from rasterio import shutil as rio_shutil
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
@@ -376,8 +376,8 @@ def test_image(red_green):
             rasterio.open(str(red_green.join("red.tif"))) as src,
             WarpedVRT(
                 src,
-                transform=matmul(
-                    Affine.translation(-src.width / 4, src.height / 4), src.transform
+                transform=(
+                    Affine.translation(-src.width / 4, src.height / 4) @ src.transform
                 ),
                 width=2 * src.width,
                 height=2 * src.height,
@@ -398,8 +398,8 @@ def test_image_nodata_mask(red_green):
         WarpedVRT(
             src,
             nodata=0,
-            transform=matmul(
-                Affine.translation(-src.width / 2, src.height / 2), src.transform
+            transform=(
+                Affine.translation(-src.width / 2, src.height / 2) @ src.transform
             ),
             width=3 * src.width,
             height=3 * src.height,
@@ -559,8 +559,8 @@ def test_out_dtype(red_green):
         rasterio.open(str(red_green.join("red.tif"))) as src,
         WarpedVRT(
             src,
-            transform=matmul(
-                Affine.translation(-src.width / 4, src.height / 4), src.transform
+            transform=(
+                Affine.translation(-src.width / 4, src.height / 4) @ src.transform
             ),
             width=2 * src.width,
             height=2 * src.height,
@@ -580,8 +580,8 @@ def test_sample(red_green):
         rasterio.open(str(red_green.join("red.tif"))) as src,
         WarpedVRT(
             src,
-            transform=matmul(
-                Affine.translation(-src.width / 4, src.height / 4), src.transform
+            transform=(
+                Affine.translation(-src.width / 4, src.height / 4) @ src.transform
             ),
             width=2 * src.width,
             height=2 * src.height,

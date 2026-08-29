@@ -1,6 +1,5 @@
 import rasterio
 from rasterio.errors import NodataShadowWarning, NotGeoreferencedWarning
-from rasterio.transform import matmul
 from affine import Affine
 import pytest
 
@@ -32,7 +31,7 @@ def test_notgeoref_warning():
 @pytest.mark.parametrize(
     "transform, gcps, rpcs",
     [
-        (matmul(Affine.identity(), Affine.scale(2.0)), None, None),
+        (Affine.identity() @ Affine.scale(2.0), None, None),
         (None, [rasterio.control.GroundControlPoint(0, 0, 0, 0, 0)], None),
         (None, None, gen_rpcs()),
     ],

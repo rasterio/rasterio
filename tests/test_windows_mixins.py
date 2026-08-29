@@ -3,7 +3,7 @@ from hypothesis.strategies import composite, floats, integers
 
 from rasterio import windows
 from rasterio.coords import BoundingBox
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 
 
 class FakeDataset(windows.WindowMethodsMixin):
@@ -35,10 +35,12 @@ def dataset_utm(draw):
     res = draw(
         floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False)
     )
+    h = draw(integers(min_value=1, max_value=1000))
+    w = draw(integers(min_value=1, max_value=1000))
     return FakeDataset(
-        transform=matmul(Affine.translation(x, y), Affine.scale(res, -res)),
-        height=draw(integers(min_value=1, max_value=1000)),
-        width=draw(integers(min_value=1, max_value=1000)),
+        transform=Affine.translation(x, y) @ Affine.scale(res, -res),
+        height=h,
+        width=w,
     )
 
 
@@ -54,10 +56,12 @@ def dataset_utm_north_down(draw):
     res = draw(
         floats(min_value=0.1, max_value=30, allow_nan=False, allow_infinity=False)
     )
+    h = draw(integers(min_value=1, max_value=1000))
+    w = draw(integers(min_value=1, max_value=1000))
     return FakeDataset(
-        transform=matmul(Affine.translation(x, y), Affine.scale(res)),
-        height=draw(integers(min_value=1, max_value=1000)),
-        width=draw(integers(min_value=1, max_value=1000)),
+        transform=Affine.translation(x, y) @ Affine.scale(res),
+        height=h,
+        width=w,
     )
 
 
@@ -71,8 +75,8 @@ def assert_windows_almost_equal(a, b):
 @given(dataset=dataset_utm())
 def test_window_rt(dataset):
     """Get correct window for full dataset extent"""
-    left, top = matmul(dataset.transform, (0, 0))
-    right, bottom = matmul(dataset.transform, (dataset.width, dataset.height))
+    left, top = dataset.transform @ (0, 0)
+    right, bottom = dataset.transform @ (dataset.width, dataset.height)
     assert_windows_almost_equal(
         dataset.window(left, bottom, right, top),
         windows.Window(0, 0, dataset.width, dataset.height),
@@ -82,8 +86,8 @@ def test_window_rt(dataset):
 @given(dataset=dataset_utm_north_down())
 def test_window_rt_north_down(dataset):
     """Get correct window for full dataset extent"""
-    left, top = matmul(dataset.transform, (0, 0))
-    right, bottom = matmul(dataset.transform, (dataset.width, dataset.height))
+    left, top = dataset.transform @ (0, 0)
+    right, bottom = dataset.transform @ (dataset.width, dataset.height)
     assert_windows_almost_equal(
         dataset.window(left, bottom, right, top),
         windows.Window(0, 0, dataset.width, dataset.height),

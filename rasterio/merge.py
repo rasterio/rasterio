@@ -20,7 +20,7 @@ from rasterio.errors import (
     WindowError,
 )
 from rasterio.io import DatasetWriter
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 from rasterio.windows import subdivide
 
 logger = logging.getLogger(__name__)
@@ -338,9 +338,9 @@ def merge(
         output_width = int(round((dst_e - dst_w) / res[0]))
         output_height = int(round((dst_n - dst_s) / res[1]))
 
-        translation = Affine.translation(dst_w, dst_n)
-        scale = Affine.scale(res[0], -res[1])
-        output_transform = matmul(translation, scale)
+        output_transform = Affine.translation(dst_w, dst_n) @ Affine.scale(
+            res[0], -res[1]
+        )
 
         if dtype is not None:
             dt = dtype

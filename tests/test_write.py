@@ -11,7 +11,7 @@ from rasterio.drivers import blacklist
 from rasterio.enums import MaskFlags, Resampling
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 
 
 def test_validate_dtype_None(tmpdir):
@@ -415,7 +415,7 @@ def test_creation_metadata_deprecation(tmpdir):
 def test_wplus_transform(tmpdir):
     """Transform is set on a new dataset created in w+ mode (see issue #1359)"""
     name = str(tmpdir.join("test.tif"))
-    transform = matmul(Affine.translation(10.0, 10.0), Affine.scale(0.5, -0.5))
+    transform = Affine.translation(10.0, 10.0) @ Affine.scale(0.5, -0.5)
     with rasterio.open(
         name,
         "w+",

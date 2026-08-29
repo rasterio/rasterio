@@ -14,7 +14,7 @@ from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
-from rasterio.transform import Affine, matmul, rowcol
+from rasterio.transform import Affine, rowcol
 from rasterio.serde import to_json
 from rasterio.warp import (
     reproject,
@@ -351,9 +351,7 @@ def warp(
                 res = max(px, py)
                 dst_width = max(int(round((right - left) / res)), 1)
                 dst_height = max(int(round((top - bottom) / res)), 1)
-                translation = Affine.translation(left, top)
-                scale = Affine.scale(res, -res)
-                dst_transform = matmul(translation, scale)
+                dst_transform = Affine.translation(left, top) @ Affine.scale(res, -res)
 
             if target_aligned_pixels:
                 dst_transform, dst_width, dst_height = aligned_target(

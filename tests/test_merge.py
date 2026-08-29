@@ -11,7 +11,7 @@ import rasterio
 from rasterio.merge import merge
 from rasterio.crs import CRS
 from rasterio.errors import MergeError, RasterioError
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import aligned_target
 from rasterio import windows
@@ -22,7 +22,7 @@ from .marks import gdal_version
 @pytest.fixture(scope="function")
 def test_data_complex(tmp_path):
     transform = Affine(30.0, 0.0, 215200.0, 0.0, -30.0, 4397500.0)
-    t2 = matmul(transform, Affine.translation(0, 3))
+    t2 = transform @ Affine.translation(0, 3)
 
     with rasterio.open(
         tmp_path.joinpath("r2.tif"),
@@ -272,7 +272,7 @@ def test_complex_outrange_nodata_():
 def test_failure_source_transforms(data, matrix):
     """Rotated, flipped, and upside down rasters cannot be merged."""
     with rasterio.open(str(data.join("RGB.byte.tif")), "r+") as src:
-        src.transform = matmul(matrix, src.transform)
+        src.transform = matrix @ src.transform
         with pytest.raises(MergeError):
             merge([src])
 

@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.transform import Affine, matmul
+from rasterio.transform import Affine
 
 
 @pytest.fixture(scope="function")
@@ -44,9 +44,9 @@ def test_complex_nodata(tmpdir):
     Z1 = np.ones_like(X) + 1j
 
     res = (x[-1] - x[0]) / 240.0
-    translation = Affine.translation(x[0] - res / 2, y[-1] - res / 2)
-    scale = Affine.scale(res, -res)
-    transform1 = matmul(translation, scale)
+    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) @ Affine.scale(
+        res, -res
+    )
 
     tempfile = str(tmpdir.join("test.tif"))
     with rasterio.open(
@@ -78,9 +78,9 @@ def test_complex_int16(tmpdir):
     Z1 = np.ones_like(X) + 1j
 
     res = (x[-1] - x[0]) / 240.0
-    translation = Affine.translation(x[0] - res / 2, y[-1] - res / 2)
-    scale = Affine.scale(res, -res)
-    transform1 = matmul(translation, scale)
+    transform1 = Affine.translation(x[0] - res / 2, y[-1] - res / 2) @ Affine.scale(
+        res, -res
+    )
 
     tempfile = str(tmpdir.join("test.tif"))
 

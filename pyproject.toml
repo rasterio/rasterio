@@ -37,8 +37,8 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "affine",
-    "attrs",
+    "affine>=3.0.0",
+    "attrs>=21.3.0",
     "certifi",
     # Avoid https://github.com/pallets/click/issues/2939
     "click>=4.0,!=8.2.*",

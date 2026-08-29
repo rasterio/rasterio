@@ -27,7 +27,6 @@ from rasterio.dtypes import (
 from rasterio.enums import MergeAlg
 from rasterio.env import _GDAL_AT_LEAST_3_11, _GDAL_AT_LEAST_3_12_1
 from rasterio.errors import InvalidShapeError, ShapeSkipWarning
-from rasterio.transform import matmul
 
 log = logging.getLogger(__name__)
 
@@ -480,7 +479,7 @@ def _bounds(geometry, north_up=True, transform=None):
             xyz = list(_explode(geometry['coordinates']))
             # Because the affine transform matrix only applies in 2D we
             # must slice away any possible Z coordinate from a point.
-            xyz_px = [matmul(transform, point[:2]) for point in xyz]
+            xyz_px = [transform @ point[:2] for point in xyz]
             xyz = tuple(zip(*xyz_px))
         else:
             xyz = tuple(zip(*list(_explode(geometry['coordinates']))))

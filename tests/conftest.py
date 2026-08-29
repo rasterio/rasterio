@@ -8,7 +8,6 @@ import sys
 import uuid
 import zipfile
 
-import affine
 import numpy as np
 import pytest
 from click.testing import CliRunner
@@ -578,7 +577,7 @@ def _path_multiband_no_colorinterp(tmpdir):
             "width": 10,
             "count": count,
             "dtype": rasterio.ubyte,
-            "transform": affine.Affine(1, 0.0, 0, 0.0, -1, 1),
+            "transform": Affine(1, 0.0, 0, 0.0, -1, 1),
             "driver": "GTiff",
             "photometric": "minisblack",
         }
