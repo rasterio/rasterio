@@ -5,7 +5,6 @@ from hypothesis import given, settings
 from hypothesis.strategies import floats
 import numpy
 import pytest
-import warnings
 
 import affine
 import rasterio
