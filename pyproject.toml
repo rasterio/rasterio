@@ -109,6 +109,7 @@ version = {attr = "rasterio.__version__"}
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
+    "error",
     "ignore:FilePath is supplanted",
     "ignore:is_valid is not useful",
     "ignore:The given matrix is",
