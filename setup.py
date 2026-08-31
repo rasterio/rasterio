@@ -358,7 +358,7 @@ if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'].update(linetrace=True)
     cythonize_options['annotate'] = True
     ext_options['define_macros'].extend(
-        [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')])
+        [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1'), ('CYTHON_USE_SYS_MONITORING', '0')])
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
