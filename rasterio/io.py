@@ -3,6 +3,7 @@
 Instances of these classes are called dataset objects.
 """
 
+from contextlib import ExitStack
 import logging
 import warnings
 
@@ -199,6 +200,7 @@ class _FilePath(FilePathBase):
         super().__init__(
             filelike_obj, dirname=dirname, filename=filename
         )
+        self._env = ExitStack()
 
     @ensure_env
     def open(self, driver=None, sharing=False, thread_safe=False, **kwargs):
@@ -228,12 +230,16 @@ class _FilePath(FilePathBase):
         # Assume we were given a non-empty file-like object
         log.debug(f"VSI path: {mempath.path}")
 
-        return DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+        rd = DatasetReader(mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+        self._env.push(rd)
+        return rd
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
+        if self._env:
+            self._env.close()
         self.close()
 
 

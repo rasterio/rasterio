@@ -30,7 +30,9 @@ def test_cpl_debug_true(tmpdir):
         with rasterio.open("tests/data/RGB.byte.tif"):
             pass
 
-    log = open(logfile).read()
+    with open(logfile) as logf:
+        log = logf.read()
+
     assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" in log
 
 
@@ -47,5 +49,7 @@ def test_cpl_debug_false(tmpdir):
             pass
 
     # Expect no debug messages from GDAL.
-    log = open(logfile).read()
+    with open(logfile) as logf:
+        log = logf.read()
+
     assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" not in log

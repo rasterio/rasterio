@@ -110,6 +110,7 @@ version = {attr = "rasterio.__version__"}
 testpaths = ["tests"]
 filterwarnings = [
     "error",
+    "ignore:unclosed <socket.socket:ResourceWarning",
     "ignore:FilePath is supplanted",
     "ignore:is_valid is not useful",
     "ignore:The given matrix is",

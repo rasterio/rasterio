@@ -285,9 +285,9 @@ def test_file_object_read_variant2(rgb_file_bytes):
 
 def teste_srtm_hgt_object_read(path_srtm_hgt):
     """An example of reading from a MemoryFile object with a driver which requires a filename"""
-    with rasterio.open(
-        MemoryFile(open(path_srtm_hgt, "rb").read(), filename=path_srtm_hgt)
-    ) as src:
+    with open(path_srtm_hgt, "rb") as srtm_file, MemoryFile(
+        srtm_file, filename=path_srtm_hgt
+    ) as memfile, rasterio.open(memfile) as src:
         assert src.driver == "SRTMHGT"
         assert src.count == 1
         assert src.dtypes == ("int16",)

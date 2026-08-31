@@ -324,7 +324,9 @@ def test_safe_osr_release(tmpdir):
     with rasterio.Env():
         CRS({}) == CRS({})
 
-    log = open(logfile).read()
+    with open(logfile) as logf:
+        log = logf.read()
+
     assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
 
 

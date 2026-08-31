@@ -1,8 +1,7 @@
 """$ rio shapes"""
 
-
-
 import logging
+import sys
 
 import click
 import rasterio
@@ -92,8 +91,7 @@ def shapes(
     if compact:
         dump_kwds['separators'] = (',', ':')
 
-    stdout = click.open_file(
-        output, 'w') if output else click.get_text_stream('stdout')
+    stdout = click.open_file(output, 'w') if output else sys.stdout
 
     bidx = 1 if bandidx is None and band else bandidx
 
