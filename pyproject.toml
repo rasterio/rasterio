@@ -118,7 +118,7 @@ filterwarnings = [
     "ignore::rasterio.errors.NotGeoreferencedWarning",
     "ignore::rasterio.errors.RasterioDeprecationWarning",
     "ignore:numpy.ufunc size changed",
-    "ignore:Use:PendingDeprecationWarning",
+    "ignore:Use .* matmul instead of:PendingDeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",

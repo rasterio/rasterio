@@ -199,7 +199,7 @@ cdef void* pyopener_open(
     if not "b" in mode:
         mode += "b"
 
-    registry = _OPENER_REGISTRY.get({})
+    registry = _OPENER_REGISTRY.get()
     log.debug(
         "Looking up opener in pyopener_open: urlpath=%r, registry=%r, key=%r",
         urlpath,
