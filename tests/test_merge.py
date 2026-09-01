@@ -5,7 +5,6 @@ from hypothesis import given, settings
 from hypothesis.strategies import floats
 import numpy
 import pytest
-import warnings
 
 import affine
 import rasterio
@@ -231,25 +230,19 @@ def test_merge_destination_2(tmp_path):
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
 def test_complex_merge(test_data_complex):
-
-    with warnings.catch_warnings():
-        warnings.simplefilter('error')
-        result, _ = merge([test_data_complex/"r2.tif"])
-        assert result.dtype == numpy.complex64
-        assert numpy.all(result == 1)
+    result, _ = merge([test_data_complex/"r2.tif"])
+    assert result.dtype == numpy.complex64
+    assert numpy.all(result == 1)
 
 
 def test_complex_nodata(test_data_complex):
     inputs = list(test_data_complex.iterdir())
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('error')
+    result, _ = merge(inputs, nodata=numpy.nan)
+    assert numpy.all(numpy.isnan(result[:, 2]))
 
-        result, _ = merge(inputs, nodata=numpy.nan)
-        assert numpy.all(numpy.isnan(result[:, 2]))
-
-        result, _ = merge(inputs, nodata=0-1j)
-        assert numpy.all(result[:, 2] == 0-1j)
+    result, _ = merge(inputs, nodata=0-1j)
+    assert numpy.all(result[:, 2] == 0-1j)
 
 
 def test_complex_outrange_nodata_():

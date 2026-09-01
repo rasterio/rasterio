@@ -109,6 +109,8 @@ version = {attr = "rasterio.__version__"}
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
+    "error",
+    "ignore:unclosed <socket.socket:ResourceWarning",
     "ignore:FilePath is supplanted",
     "ignore:is_valid is not useful",
     "ignore:The given matrix is",
@@ -116,6 +118,7 @@ filterwarnings = [
     "ignore::rasterio.errors.NotGeoreferencedWarning",
     "ignore::rasterio.errors.RasterioDeprecationWarning",
     "ignore:numpy.ufunc size changed",
+    "ignore:Use .* matmul instead of:PendingDeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",

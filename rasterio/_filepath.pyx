@@ -173,6 +173,7 @@ cdef size_t filepath_read(void *pFile, void *pBuffer, size_t nSize, size_t nCoun
 
 cdef int filepath_close(void *pFile) except -1 with gil:
     cdef object file_obj = <object>pFile
+    file_obj.close()
     _OPEN_FILE_OBJS.remove(file_obj)
     return 0
 

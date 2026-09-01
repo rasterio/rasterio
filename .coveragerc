@@ -1,5 +1,5 @@
 [run]
-plugins = Cython.Coverage
+# plugins = Cython.Coverage
 source = rasterio
 omit = *.pxd
 branch = True

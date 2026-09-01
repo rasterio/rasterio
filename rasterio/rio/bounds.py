@@ -1,5 +1,8 @@
+"""rio-bounds"""
+
 import logging
 import os
+import sys
 
 import click
 from .helpers import write_features, to_lower
@@ -54,7 +57,7 @@ def bounds(
         dump_kwds['indent'] = indent
     if compact:
         dump_kwds['separators'] = (',', ':')
-    stdout = click.get_text_stream('stdout')
+    stdout = sys.stdout
 
     # This is the generator for (feature, bbox) pairs.
     class Collection:

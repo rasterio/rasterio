@@ -3,6 +3,7 @@
 import json
 import logging
 import os.path
+import sys
 
 import click
 
@@ -143,8 +144,7 @@ def blocks(
     if compact:
         dump_kwds['separators'] = (',', ':')
 
-    stdout = click.open_file(
-        output, 'w') if output else click.get_text_stream('stdout')
+    stdout = click.open_file(output, 'w') if output else sys.stdout
 
     with ctx.obj['env'], rasterio.open(input) as src:
 
