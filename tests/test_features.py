@@ -1,3 +1,5 @@
+"""Tests of rasterio.features."""
+
 from copy import deepcopy
 import math
 from unittest import mock
@@ -966,7 +968,7 @@ def test_shapes_2509(basic_image):
     assert value == 0
 
 
-def test_shapes_band(pixelated_image, pixelated_image_file):
+def test_shapes_band_obj(pixelated_image, pixelated_image_file):
     """Shapes from a band should match shapes from an array."""
     truth = list(shapes(pixelated_image))
 
@@ -976,6 +978,14 @@ def test_shapes_band(pixelated_image, pixelated_image_file):
 
         # Mask band should function, but will mask out some results
         assert truth[0] == list(shapes(band, mask=band))[0]
+
+
+def test_shapes_band_tuple(pixelated_image, pixelated_image_file):
+    """Shapes() accepts a tuple argument."""
+    truth = list(shapes(pixelated_image))
+
+    with rasterio.open(pixelated_image_file) as src:
+        assert truth == list(shapes((src, 1)))
 
 
 def test_shapes_connectivity_rook(diagonal_image):
@@ -1103,6 +1113,7 @@ def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
     with pytest.warns(UserWarning, match="Truncation issues"):
         shape, value = next(shapes(basic_image.astype(dtype) * test_value))
         assert_allclose(value, test_value)
+
 
 @pytest.mark.parametrize(
     "dtype, test_value",

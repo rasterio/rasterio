@@ -6,6 +6,12 @@ Changes
 
 Bug fixes:
 
+- The features.shape() function properly accepts a (dataset, integer) pair as
+  source as advertised (gh-3638).
+- Usage of a deprecated click function has been replaced (gh-3635).
+- The PendingDeprecationWarning from affine 3.0.1 has been silenced (gh-3635).
+- Several instances of Python files left unclosed by Rasterio have been tracked
+  down and addressed (gh-3635).
 - The stack() function can now accept WarpedVRT sources using the same
   compositing logic implemented previously in merge() (gh-3629).
 - Use stricter and more correct type casting in the MemoryFile constructor

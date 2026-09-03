@@ -71,11 +71,9 @@ def _shapes(image, mask, connectivity, transform):
     cdef OGRLayerH layer = NULL
     cdef OGRFieldDefnH fielddefn = NULL
     cdef char **options = NULL
-    cdef MemoryDataset mem_ds = None
     cdef MemoryDataset mask_ds = None
     cdef ShapeIterator shape_iter = None
     cdef int fieldtp
-    cdef bint is_float = _getnpdtype(image.dtype).kind == "f"
     cdef dict oft_dtypes = {
        int8: OFTInteger,
        int16: OFTInteger,
@@ -91,9 +89,21 @@ def _shapes(image, mask, connectivity, transform):
     if _GDAL_AT_LEAST_3_11:
         oft_dtypes[float16] = OFTReal
 
-    cdef str dtype_name = _getnpdtype(image.dtype).name
+    # Validate the input image data type.
+    if dtypes.is_ndarray(image):
+        dtype_name = _getnpdtype(image.dtype).name
+    elif hasattr(image, "ds"):
+        dtype_name = _getnpdtype(image.dtype).name
+    elif isinstance(image, tuple):
+        ds, _ = image
+        dtype_name = _getnpdtype(ds.dtypes[0]).name
+    else:
+        raise ValueError("Invalid source image")
+
     if (fieldtp := oft_dtypes.get(dtype_name, -1)) == -1:
         raise ValueError(f"image dtype must be one of: {', '.join(oft_dtypes)}")
+
+    is_float = _getnpdtype(dtype_name).kind == "f"
 
     truncated_dtypes = (uint64,)
     if not _GDAL_AT_LEAST_3_12_1:
@@ -106,16 +116,21 @@ def _shapes(image, mask, connectivity, transform):
             "Truncation issues may occur."
         )
 
+    # Validate connectivity.
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
     with ExitStack() as exit_stack:
+
         if dtypes.is_ndarray(image):
-            mem_ds = exit_stack.enter_context(MemoryDataset(image, transform=transform))
-            band = mem_ds.band(1)
+            ds = exit_stack.enter_context(MemoryDataset(image, transform=transform))
+            band = (<MemoryDataset?>ds).band(1)
+        elif hasattr(image, "ds"):
+            ds = image.ds
+            band = (<DatasetReaderBase?>ds).band(image.bidx)
         elif isinstance(image, tuple):
-            rdr = image.ds
-            band = (<DatasetReaderBase?>rdr).band(image.bidx)
+            ds, bidx = image
+            band = (<DatasetReaderBase?>ds).band(bidx)
         else:
             raise ValueError("Invalid source image")
 
