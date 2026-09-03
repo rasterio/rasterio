@@ -2,7 +2,6 @@
 
 import logging
 import warnings
-from collections import namedtuple
 from contextlib import ExitStack
 
 import numpy as np
