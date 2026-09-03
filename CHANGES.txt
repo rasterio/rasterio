@@ -4,6 +4,10 @@ Changes
 1.5.2 (TBD)
 -----------
 
+Dependencies:
+
+- Rasterio allows Cython<=3.3 (gh-3639).
+
 Bug fixes:
 
 - The features.shape() function properly accepts a (dataset, integer) pair as
