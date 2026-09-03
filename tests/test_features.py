@@ -1,3 +1,5 @@
+"""Tests of rasterio.features."""
+
 from copy import deepcopy
 import math
 from unittest import mock
@@ -973,6 +975,18 @@ def test_shapes_band(pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file) as src:
         band = rasterio.band(src, 1)
         assert truth == list(shapes(band))
+
+        # Mask band should function, but will mask out some results
+        assert truth[0] == list(shapes(band, mask=band))[0]
+
+
+def test_shapes_band_2(pixelated_image, pixelated_image_file):
+    """Shapes from a band should match shapes from an array."""
+    truth = list(shapes(pixelated_image))
+
+    with rasterio.open(pixelated_image_file) as src:
+        band = rasterio.band(src, 1)
+        assert truth == list(shapes((src, 1)))
 
         # Mask band should function, but will mask out some results
         assert truth[0] == list(shapes(band, mask=band))[0]
