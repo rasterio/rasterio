@@ -1114,6 +1114,7 @@ def test_shapes_partially_supported_dtypes(basic_image, dtype, test_value):
         shape, value = next(shapes(basic_image.astype(dtype) * test_value))
         assert_allclose(value, test_value)
 
+
 @pytest.mark.parametrize(
     "dtype, test_value",
     [
