@@ -7,6 +7,7 @@ Changes
 Dependencies:
 
 - Rasterio allows Cython<=3.3 (gh-3639).
+- Use GDAL 3.12.2 in wheels to avoid GDAL netCDF reader bug (gh-3640).
 
 Bug fixes:
 
@@ -23,6 +24,10 @@ Bug fixes:
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
   deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
+
+Packaging:
+
+- Wheels include GDAL 3.12.2, netCDF 4.10.1, cURL 8.20.0, and PROJ 9.8.1.
 
 1.5.1 (2026-08-07)
 ------------------

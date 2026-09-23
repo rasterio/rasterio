@@ -27,7 +27,7 @@ permissions:
   actions: read
 
 env:
-  GDAL_VERSION: 3.12.4
+  GDAL_VERSION: 3.12.2
 
 jobs:
 
