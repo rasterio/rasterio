@@ -15,7 +15,7 @@ pytest-cov>=2.2.0
 pytest-randomly==3.10.1
 requests
 s3fs>=2025.9.0
-shapely
+shapely; python_version < "3.15" and (sys_platform != "win32" or platform_machine != "arm64")
 sphinx
 sphinx-click
 sphinx-rtd-theme
