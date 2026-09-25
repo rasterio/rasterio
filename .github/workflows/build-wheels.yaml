@@ -73,19 +73,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-         - os: ubuntu-22.04
+         - os: ubuntu-24.04
            arch: x86_64
-         - os: ubuntu-22.04-arm
+         - os: ubuntu-24.04-arm
            arch: aarch64
          - os: macos-15-intel
            arch: x86_64
            cmake_osx_architectures: x86_64
            macos_deployment_target: "15.0"
-         - os: macos-14
+         - os: macos-15
            arch: arm64
            cmake_osx_architectures: arm64
-           macos_deployment_target: "14.0"
-         - os: "windows-2022"
+           macos_deployment_target: "15.0"
+         - os: "windows-2025"
            arch: "auto64"
            triplet: "x64-windows"
            vcpkg_cache: "c:\\vcpkg\\installed"
