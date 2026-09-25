@@ -32,7 +32,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
             python-version: 3.12
@@ -68,7 +68,7 @@ jobs:
             gdal-version: '3.8.5'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Update
         run: |
@@ -115,7 +115,7 @@ jobs:
             python-version: '*'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Conda
         uses: mamba-org/setup-micromamba@v2
