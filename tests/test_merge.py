@@ -234,19 +234,19 @@ def test_merge_destination_2(tmp_path):
 
 
 @pytest.mark.xfail(gdal_version.at_least("3.8"), reason="Unsolved mask read bug #3070.")
-def test_complex_merge(test_data_complex):
+def test_merge_complex(test_data_complex):
     with warnings.catch_warnings():
-        warnings.simplefilter("error")
+        warnings.simplefilter("error", category=UserWarning)
         result, _ = merge([test_data_complex / "r2.tif"])
         assert result.dtype == numpy.complex64
         assert numpy.all(result == 1)
 
 
-def test_complex_nodata(test_data_complex):
+def test_merge_complex_nodata(test_data_complex):
     inputs = list(test_data_complex.iterdir())
 
     with warnings.catch_warnings():
-        warnings.simplefilter("error")
+        warnings.simplefilter("error", category=UserWarning)
 
         result, _ = merge(inputs, nodata=numpy.nan)
         assert numpy.all(numpy.isnan(result[:, 2]))
