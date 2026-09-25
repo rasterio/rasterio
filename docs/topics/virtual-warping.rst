@@ -47,7 +47,7 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
           dst_transform = vrt.window_transform(dst_window)
           scaling = Affine.scale(dst_window.height / 512,
                                  dst_window.width / 512)
-          dst_transform *= scaling
+          dst_transform @= scaling
           profile['transform'] = dst_transform
 
           # Write the image tile to disk.
@@ -105,9 +105,8 @@ CRS, and cell size within a pre-defined bounding box:
 
     import os
 
-    import affine
-
     import rasterio
+    from affine import Affine
     from rasterio.crs import CRS
     from rasterio.enums import Resampling
     from rasterio import shutil as rio_shutil
@@ -134,8 +133,8 @@ CRS, and cell size within a pre-defined bounding box:
     left, bottom, right, top = dst_bounds
     xres = (right - left) / dst_width
     yres = (top - bottom) / dst_height
-    dst_transform = affine.Affine(xres, 0.0, left,
-                                  0.0, -yres, top)
+    dst_transform = Affine(xres, 0.0, left,
+                           0.0, -yres, top)
 
     vrt_options = {
         'resampling': Resampling.cubic,

@@ -42,7 +42,7 @@ method.
         )
 
         # scale image transform
-        transform = dataset.transform * dataset.transform.scale(
+        transform = dataset.transform @ dataset.transform.scale(
             (dataset.width / data.shape[-1]),
             (dataset.height / data.shape[-2])
         )

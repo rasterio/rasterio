@@ -363,9 +363,8 @@ def test_calculate_default_transform_geoloc_array():
     )
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        xs, ys = src.transform * np.meshgrid(
-            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
-        )
+        xy, yv = np.meshgrid(np.arange(0, src.width, 10), np.arange(0, src.height, 10))
+        xs, ys = src.transform @ (xy, yv)
         dst_transform, width, height = calculate_default_transform(
             src.crs,
             CRS.from_epsg(4326),
@@ -2476,9 +2475,8 @@ def test_geoloc_warp_dataset(data, tmp_path):
 
     # Extract geolocation arrays and create suitable destination dataset.
     with rasterio.open(filename) as src:
-        xs, ys = src.transform * np.meshgrid(
-            np.arange(src.width), np.arange(src.height)
-        )
+        xy, yv = np.meshgrid(np.arange(src.width), np.arange(src.height))
+        xs, ys = src.transform @ (xy, yv)
 
         profile = src.profile
         profile.update(
@@ -2531,9 +2529,8 @@ def test_geoloc_warp_dataset(data, tmp_path):
 def test_geoloc_warp_array(path_rgb_byte_tif):
     """Warp an array using external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        xs, ys = src.transform * np.meshgrid(
-            np.arange(src.width), np.arange(src.height)
-        )
+        xy, yv = np.meshgrid(np.arange(src.width), np.arange(src.height))
+        xs, ys = src.transform @ (xy, yv)
         source = src.read()
 
     output = np.zeros((3, 800, 880), dtype="uint8")
@@ -2563,9 +2560,8 @@ def test_geoloc_warp_array(path_rgb_byte_tif):
 def test_geoloc_warp_array_subsampled(path_rgb_byte_tif):
     """Warp an array using subsampled external geolocation arrays."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        xs, ys = src.transform * np.meshgrid(
-            np.arange(0, src.width, 10), np.arange(0, src.height, 10)
-        )
+        xy, yv = np.meshgrid(np.arange(0, src.width, 10), np.arange(0, src.height, 10))
+        xs, ys = src.transform @ (xy, yv)
         source = src.read()
 
     output = np.zeros((3, 800, 880), dtype="uint8")

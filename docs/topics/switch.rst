@@ -261,20 +261,20 @@ The :attr:`.DatasetReader.transform` attribute is comparable to the
 It's not just an array of affine transformation matrix elements, it's an
 instance of an ``Affine`` class and has many handy methods. For example, the
 spatial coordinates of the upper left corner of any raster element is the
-product of the :attr:`.DatasetReader.transform` matrix and the ``(column, row)`` index
-of the element.
+matrix multiplication of the :attr:`.DatasetReader.transform` matrix and the
+``(column, row)`` index of the element.
 
 .. code-block:: pycon
 
    >>> src = rasterio.open('example.tif')
-   >>> src.transform * (0, 0)
+   >>> src.transform @ (0, 0)
    (101985.0, 2826915.0)
 
 The affine transformation matrix can be inverted as well.
 
 .. code-block:: pycon
 
-   >>> ~src.transform * (101985.0, 2826915.0)
+   >>> ~src.transform @ (101985.0, 2826915.0)
    (0.0, 0.0)
 
 To help developers switch, ``Affine`` instances can be created from or
