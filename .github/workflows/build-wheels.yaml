@@ -105,12 +105,6 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
 
-      - name: Activate MSVC
-        uses: ilammy/msvc-dev-cmd@v1.13.0
-        with:
-           arch: ${{ matrix.msvc_arch }}
-        if: ${{ matrix.msvc_arch }}
-
       - name: Bootstrap vcpkg
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
@@ -156,6 +150,7 @@ jobs:
             PROJ_DATA=${GITHUB_WORKSPACE}/rasterio_libs/share/proj
             LDFLAGS="${LDFLAGS} -arch ${{ matrix.arch }} -Wl,-rpath,${GITHUB_WORKSPACE}/rasterio_libs/lib"
             GDAL_VERSION=${{ env.GDAL_VERSION }}
+          CIBW_ARCHS_WINDOWS: "${{ matrix.arch }}"
           CIBW_ENVIRONMENT_WINDOWS:
             VCPKG_INSTALL="C:/vcpkg/installed/${{ matrix.triplet }}"
             GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
