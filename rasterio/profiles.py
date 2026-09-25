@@ -15,7 +15,8 @@ class Profile(UserDict):
 
     def __init__(self, data={}, **kwds):
         """Create a new profile based on the class defaults, which are
-        overlaid with items from the `data` dict and keyword arguments."""
+        overlaid with items from the `data` dict and keyword arguments.
+        """  # noqa: D205
         UserDict.__init__(self)
         initdata = self.defaults.copy()
         initdata.update(data)

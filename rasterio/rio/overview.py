@@ -11,6 +11,7 @@ from rasterio.enums import OverviewResampling
 
 
 def build_handler(ctx, param, value):
+    """Callback for overview --build value."""
     if value:
         try:
             if "^" in value:
@@ -29,7 +30,8 @@ def build_handler(ctx, param, value):
 
 
 def get_maximum_overview_level(width, height, minsize=256):
-    """
+    """Get maximum overview level.
+
     Calculate the maximum overview level of a dataset at which
     the smallest overview is smaller than `minsize`.
 

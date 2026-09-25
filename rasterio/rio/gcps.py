@@ -29,7 +29,7 @@ from rasterio.warp import transform_geom
 def gcps(
     ctx, input, geojson_type, projection, precision, sequence, use_rs, indent, compact
 ):
-    """Print GeoJSON representations of a dataset's control points.
+    r"""Print GeoJSON representations of a dataset's control points.
 
     Each ground control point is represented as a GeoJSON feature. The
     'properties' member of each feature contains a JSON representation
@@ -48,7 +48,6 @@ def gcps(
         info:
             A brief description of the control point.
     """
-
     # Handle the invalid combinations of args.
     if geojson_type == "feature" and indent and not use_rs:
         raise click.BadParameter(

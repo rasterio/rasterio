@@ -162,9 +162,11 @@ def stack(
                     best_res = min(
                         best_res,
                         src.res,
-                        key=lambda x: x
-                        if isinstance(x, numbers.Number)
-                        else math.sqrt(x[0] ** 2 + x[1] ** 2),
+                        key=lambda x: (
+                            x
+                            if isinstance(x, numbers.Number)
+                            else math.sqrt(x[0] ** 2 + x[1] ** 2)
+                        ),
                     )
 
                 # The stack tool requires non-rotated rasters with origins at their

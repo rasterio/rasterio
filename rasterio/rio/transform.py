@@ -13,7 +13,7 @@ from rasterio.rio import options
 @options.precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
-    """Transform coordinates between coordinate reference systems.
+    r"""Transform coordinates between coordinate reference systems.
 
     JSON arrays of coordinates, interleaved, are read from stdin.
     Aarrays of transformed coordinates are written to stdout.

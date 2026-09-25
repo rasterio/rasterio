@@ -20,7 +20,7 @@ def _(obj):
 @click.option("-b", "--bidx", default=None, help="Indexes of input file bands.")
 @click.pass_context
 def sample(ctx, files, bidx):
-    """Sample a dataset at one or more points
+    r"""Sample a dataset at one or more points
 
     Sampling points (x, y) encoded as JSON arrays, in the coordinate
     reference system of the dataset, are read from the second

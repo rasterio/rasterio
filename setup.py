@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+"""Setuptools build script."""
 # These following environmental variables influence this script:
 #
 # GDAL_CONFIG: the path to a gdal-config program that points to GDAL headers,
@@ -32,6 +32,7 @@ log = logging.getLogger()
 
 
 def copy_data_tree(datadir, destdir):
+    """Copy data tree to destination dir."""
     try:
         shutil.rmtree(destdir)
     except OSError:
@@ -79,7 +80,6 @@ def _find_executable(executable_name: str) -> str | None:
 
     Return the absolute path to the executable if found, otherwise None.
     """
-
     log.info("Searching for executable %s on sys.prefix")
     executable_path = shutil.which(executable_name, path=sys.prefix)
     if executable_path is None:
@@ -108,7 +108,6 @@ def find_gdal_install_with_executable(
 
     This does not check if the install is complete.
     """
-
     executable_path = _find_executable(executable_name)
     # Run it to get the GDAL version
     result = check_output([executable_name, "--version"], text=True).strip()
@@ -139,7 +138,6 @@ def fill_gdal_build_options_using_executable(executable_name: str) -> None:
 
     Raise `RuntimeError` if we don't find a GDAL install.
     """
-
     global \
         gdal_data_dir, \
         gdalversion, \
@@ -204,7 +202,6 @@ def fill_gdal_build_options_using_gdal_config() -> None:
     If gdal-config's path isn't found, raise `FileNotFoundError`.
     If it fails, raise `CalledProcessError`.
     """
-
     global gdalversion
 
     log.info("Using gdal-config to get GDAL build options")

@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_plt():
-    """import matplotlib.pyplot
+    """Import matplotlib.pyplot
+
     raise import error if matplotlib is not installed
     """
     try:
@@ -204,7 +205,7 @@ def plotting_extent(source, transform=None):
     -------
     tuple of float
         left, right, bottom, top
-    """
+    """  # noqa: D205
     if hasattr(source, "bounds"):
         extent = (
             source.bounds.left,
@@ -235,7 +236,7 @@ def reshape_as_image(arr):
     ----------
     arr : array-like of shape (bands, rows, columns)
         image to reshape
-    """
+    """  # noqa: D205
     # swap the axes order from (bands, rows, columns) to (rows, columns, bands)
     im = np.ma.transpose(arr, [1, 2, 0])
     return im
@@ -250,7 +251,7 @@ def reshape_as_raster(arr):
     ----------
     arr : array-like in the image form of (rows, columns, bands)
         image to reshape
-    """
+    """  # noqa: D205
     # swap the axes order from (rows, columns, bands) to (bands, rows, columns)
     im = np.transpose(arr, [2, 0, 1])
     return im
@@ -374,6 +375,7 @@ def contrast_strech(arr, percent_range=(2.0, 98.0)):
 
 def adjust_band(band, kind=None):
     """Adjust a band to be between 0 and 1.
+
     Parameters
     ----------
     band : array, shape (height, width)

@@ -137,7 +137,7 @@ def warp(
     warper_options,
     dry_run,
 ):
-    """
+    r"""
     Warp a raster dataset.
 
     If a template raster is provided using the --like option, the

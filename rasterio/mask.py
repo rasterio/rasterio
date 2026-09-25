@@ -21,8 +21,7 @@ def raster_geometry_mask(
     pad=False,
     pad_width=0.5,
 ):
-    """Create a mask from shapes, transform, and optional window within original
-    raster.
+    """Create a mask from shapes, transform, and optional window within original raster.
 
     By default, mask is intended for use as a numpy mask, where pixels that
     overlap shapes are False.
@@ -136,6 +135,7 @@ def mask(
     indexes=None,
 ):
     """Creates a masked or filled array using input shapes.
+
     Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
 
@@ -194,7 +194,6 @@ def mask(
                 Information for mapping pixel coordinates in `masked` to another
                 coordinate system.
     """
-
     if nodata is None:
         if dataset.nodata is not None:
             nodata = dataset.nodata

@@ -27,10 +27,11 @@ blacklist = {
 @ensure_env
 def raster_driver_extensions():
     """
+    Map of extensions to the driver.
+
     Returns
     -------
-    dict:
-        Map of extensions to the driver.
+    dict
     """
     return _raster_driver_extensions()
 

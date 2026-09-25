@@ -380,7 +380,6 @@ class OSSSession(Session):
         oss_endpoint: string, optional (default: None)
             the region attached to the bucket
         """
-
         self._creds = {
             "oss_access_key_id": oss_access_key_id,
             "oss_secret_access_key": oss_secret_access_key,
@@ -432,7 +431,6 @@ class GSSession(Session):
         google_application_credentials: string
             Path to the google application credentials JSON file.
         """
-
         if google_application_credentials is not None:
             self._creds = {
                 "google_application_credentials": google_application_credentials
@@ -546,12 +544,14 @@ class SwiftSession(Session):
     @classmethod
     def hascreds(cls, config):
         """Determine if the given configuration has proper credentials
+
         Parameters
         ----------
         cls : class
             A Session class.
         config : dict
             GDAL configuration as a dict.
+
         Returns
         -------
         bool
@@ -565,6 +565,7 @@ class SwiftSession(Session):
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
+
         Returns
         -------
         dict
