@@ -79,7 +79,7 @@ tests = [
     "pytest-cov>=2.2.0",
     "requests",
     "s3fs>=2025.9.0",
-    "shapely; python_version < '3.15' or platform_machine != 'arm64'",  # TODO: remove when .whl available
+    "shapely==2.2.0rc1;sys_platform != 'win32' or platform_machine != 'ARM64'",  # TODO: update when .whl available
 ]
 dev = [
     "pre-commit",
