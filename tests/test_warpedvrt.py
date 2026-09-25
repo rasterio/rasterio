@@ -18,7 +18,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
-from .conftest import gdal_version, credentials
+from .marks import gdal_version, credentials
 
 log = logging.getLogger(__name__)
 

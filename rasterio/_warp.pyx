@@ -21,7 +21,6 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError, stack_errors)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
-from rasterio.dtypes import dtype_ranges
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import Env, GDALVersion
 from rasterio.crs import CRS

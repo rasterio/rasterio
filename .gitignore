@@ -80,6 +80,9 @@ tests/data/all-nodata.tif.aux.xml
 # vim
 .*.swp
 
+# lock files, e.g. uv, pixi
+*.lock
+
 # Random local dev files
 ignore/
 .env
