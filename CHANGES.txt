@@ -11,6 +11,10 @@ Dependencies:
 
 Bug fixes:
 
+- Errors raised while closing a dataset during interpreter shutdown are now
+  silenced, as io.IOBase does. Datasets left open in xarray's file cache (for
+  example by rioxarray.open_rasterio()) no longer print "Error in
+  sys.excepthook" at exit (gh-3646).
 - The features.shape() function properly accepts a (dataset, integer) pair as
   source as advertised (gh-3638).
 - Usage of a deprecated click function has been replaced (gh-3635).

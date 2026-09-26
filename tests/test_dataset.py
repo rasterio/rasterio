@@ -4,6 +4,9 @@
 import math
 import os
 from pathlib import Path
+import subprocess
+import sys
+import textwrap
 from unittest.mock import MagicMock
 
 import pytest
@@ -120,3 +123,53 @@ def test_bounds(width, height, transform, expected_bounds, image_file_with_custo
     filepath = image_file_with_custom_size_and_transform(width, height, transform)
     with rasterio.open(filepath) as dataset:
         assert_bounding_box_equal(expected_bounds, dataset.bounds)
+
+
+# Simulate a close() that fails because module globals were torn down, as
+# contextlib's sys is when a dataset is finalized late in interpreter shutdown
+# (for example from xarray's file cache). See gh-3646.
+FAILING_CLOSE = """
+import contextlib, sys
+import rasterio
+
+_close = contextlib.ExitStack.close
+
+def close(self, _finalizing=sys.is_finalizing, _close=_close):
+    if {always} or _finalizing():
+        raise AttributeError("simulated torn-down module global")
+    return _close(self)
+
+contextlib.ExitStack.close = close
+dataset = rasterio.open({path!r})
+"""
+
+
+def test_del_silent_during_interpreter_shutdown(path_rgb_byte_tif):
+    """Errors from closing a dataset at interpreter exit are not reported."""
+    script = FAILING_CLOSE.format(always=False, path=path_rgb_byte_tif)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert "simulated torn-down module global" not in result.stderr
+    assert "sys.excepthook" not in result.stderr
+
+
+def test_del_reports_errors_outside_shutdown(path_rgb_byte_tif):
+    """Errors from closing a dataset are still reported before shutdown."""
+    script = FAILING_CLOSE.format(
+        always=True, path=path_rgb_byte_tif
+    ) + textwrap.dedent(
+        """
+        del dataset
+        import gc
+        gc.collect()
+        print("after del")
+        """
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert "after del" in result.stdout
+    assert "simulated torn-down module global" in result.stderr

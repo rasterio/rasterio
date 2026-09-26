@@ -7,6 +7,7 @@ from contextlib import ExitStack
 import logging
 import math
 import os
+import sys
 import warnings
 
 from libc.string cimport strncmp
@@ -55,6 +56,10 @@ cimport cython
 include "gdal.pxi"
 
 log = logging.getLogger(__name__)
+
+# Kept at C level: module globals may already be torn down when a dataset is
+# finalized during interpreter shutdown.
+cdef object _is_finalizing = sys.is_finalizing
 
 
 cdef const char *get_driver_name(GDALDriverH driver):
@@ -468,7 +473,16 @@ cdef class DatasetBase:
         if closed:
             return
 
-        self.close()
+        try:
+            self.close()
+        except BaseException:
+            # Like IOBase's finalizer, silence errors during interpreter
+            # shutdown. By then module globals may be gone (for example the
+            # sys module that contextlib's ExitStack needs), so close() can
+            # fail after stop() has already released the GDAL handle, and no
+            # exception hook is left to report the error.
+            if not _is_finalizing():
+                raise
 
     def __enter__(self):
         self._env.enter_context(env_ctx_if_needed())
