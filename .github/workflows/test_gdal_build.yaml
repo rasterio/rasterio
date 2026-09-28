@@ -31,11 +31,14 @@ jobs:
       - name: Set up Python
         run: |
           apt-get install -y --no-install-recommends \
-            python3.12 \
             python3.12-dev \
-            python3.12-venv \
-            python3-pip \
             g++
+
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: '3.12'
+          activate-environment: 'true'
 
       - name: Install GDAL
         shell: bash
@@ -65,18 +68,13 @@ jobs:
       - name: Install dependencies
         run: |
           export PATH="${GDAL_DIR}/bin/:${PATH}"
-          python3.12 -m venv testenv
-          . testenv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip wheel -r requirements-dev.txt
-          python -m pip install -r requirements-dev.txt
-          python -m pip install --no-deps --force-reinstall -e . --group tests
+          uv pip install -r requirements-dev.txt
+          uv pip install --no-deps --force-reinstall -e . --group tests
 
       - name: Test
         shell: bash
         run: |
           export PATH="${GDAL_DIR}/bin/:${PATH}"
-          . testenv/bin/activate
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
       - if: success()
