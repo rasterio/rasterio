@@ -33,7 +33,7 @@ from rasterio.dtypes import (
 
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import env_ctx_if_needed, _GDAL_AT_LEAST_3_10
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import (
     BandOverviewError,
     CRSError,
@@ -304,8 +304,6 @@ cdef class DatasetBase:
         self._hds = NULL
         cdef unsigned int flags = GDAL_OF_READONLY
         if thread_safe:
-            if not _GDAL_AT_LEAST_3_10:
-                raise GDALOptionNotImplementedError("'thread_safe' option requires GDAL 3.10+.")
             flags |= GDAL_OF_THREAD_SAFE
 
         if path is not None:

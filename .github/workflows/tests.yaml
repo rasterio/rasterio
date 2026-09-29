@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-            python-version: 3.12
+            python-version: '3.13'
       - name: Code Linting
         shell: bash
         run: |
@@ -53,19 +53,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.12', '3.13', '3.14']
-        gdal-version: ['3.12.1']
+        python-version: ['3.13', '3.14', '3.15']
+        gdal-version: ['3.13.3']
         include:
           - python-version: '3.14'
             gdal-version: 'latest'
-          - python-version: '3.12'
+          - python-version: '3.13'
+            gdal-version: '3.13.3'
+          - python-version: '3.13'
+            gdal-version: '3.12.4'
+          - python-version: '3.13'
             gdal-version: '3.11.5'
-          - python-version: '3.12'
+          - python-version: '3.13'
             gdal-version: '3.10.3'
-          - python-version: '3.12'
-            gdal-version: '3.9.3'
-          - python-version: '3.12'
-            gdal-version: '3.8.5'
 
     steps:
       - uses: actions/checkout@v7
@@ -108,7 +108,7 @@ jobs:
         # macos-15-intel is OSX Intel
         # macos-14 is OSX Arm64
         os: [macos-15-intel, macos-14, windows-latest]
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.13', '3.14' ]
         include:
           - os: ubuntu-latest
             python-version: '*'

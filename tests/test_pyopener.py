@@ -5,7 +5,6 @@ import io
 import os
 import warnings
 import zipfile
-from contextlib import nullcontext
 from pathlib import Path
 from threading import Thread
 
@@ -16,7 +15,6 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.errors import OpenerRegistrationError
 from rasterio.warp import reproject
 
@@ -298,9 +296,6 @@ def test_opener_fsspec_fs_tiff_threads_2():
 def test_opener_fsspec_thread_safe_option():
     fs = fsspec.filesystem("file")
     with (
-        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
-        if not _GDAL_AT_LEAST_3_10
-        else nullcontext(),
         rasterio.Env(GDAL_NUM_THREADS=2),
         rasterio.open("tests/data/rgb_lzw.tif", thread_safe=True, opener=fs) as src,
     ):

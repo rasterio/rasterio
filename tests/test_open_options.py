@@ -1,12 +1,11 @@
 """Tests of dataset opening options and driver choice"""
 
-from contextlib import nullcontext
 import concurrent.futures
 
 import pytest
 
 import rasterio
-from rasterio.env import _GDAL_AT_LEAST_3_10, _GDAL_AT_LEAST_3_11
+from rasterio.env import _GDAL_AT_LEAST_3_11
 from rasterio.transform import Affine
 
 
@@ -32,9 +31,6 @@ def test_open_specific_driver_with_options():
 
 def test_open_thread_safe(path_rgb_byte_tif, tmp_path):
     with (
-        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
-        if not _GDAL_AT_LEAST_3_10
-        else nullcontext(),
         rasterio.Env(GDAL_NUM_THREADS=2),
         rasterio.open(
             path_rgb_byte_tif,

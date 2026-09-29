@@ -1,7 +1,6 @@
 """MemoryFile tests.  MemoryFile requires GDAL 2.0+.
 Tests in this file will ONLY run for GDAL >= 2.x"""
 
-from contextlib import nullcontext
 from io import BytesIO
 from pathlib import Path
 import concurrent.futures
@@ -15,7 +14,6 @@ import pytest
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
 from rasterio.enums import MaskFlags
-from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.shutil import copyfiles
 
 
@@ -268,9 +266,6 @@ def test_file_object_read_variant(rgb_file_bytes):
 )
 def test_memfile_thread_safe_option(rgb_file_object):
     with (
-        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
-        if not _GDAL_AT_LEAST_3_10
-        else nullcontext(),
         rasterio.Env(GDAL_NUM_THREADS=2),
         rasterio.open(MemoryFile(rgb_file_object), thread_safe=True) as src,
     ):

@@ -2,10 +2,10 @@ name: _rasterio
 channels:
 - conda-forge
 dependencies:
-- python=3.12
-- libgdal=3.8
+- python=3.13
+- libgdal=3.10
 - cython=3
-- numpy=2
+- numpy=2.1
 - pip
 - sphinx=8.2
 - sphinx-click
