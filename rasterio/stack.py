@@ -14,7 +14,7 @@ import numpy as np
 import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.enums import Resampling
-from rasterio.errors import StackError, RasterioError, WindowError
+from rasterio.errors import StackError, RasterioError, WindowError, _suppress_affine_pending_deprecation
 from rasterio.io import DatasetWriter
 from rasterio import windows
 from rasterio.transform import Affine
@@ -212,9 +212,10 @@ def stack(
         output_width = int(round((dst_e - dst_w) / res[0]))
         output_height = int(round((dst_n - dst_s) / res[1]))
 
-        output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
-            res[0], -res[1]
-        )
+        with _suppress_affine_pending_deprecation():
+            output_transform = Affine.translation(dst_w, dst_n) * Affine.scale(
+                res[0], -res[1]
+            )
 
         if dtype is not None:
             dt = dtype

@@ -12,6 +12,7 @@ import logging
 import numpy as np
 
 import rasterio
+from rasterio.errors import _suppress_affine_pending_deprecation
 from rasterio.io import DatasetReader
 from rasterio.transform import guard_transform
 
@@ -211,8 +212,9 @@ def plotting_extent(source, transform=None):
     else:
         transform = guard_transform(transform)
         rows, cols = source.shape[0:2]
-        left, top = transform * (0, 0)
-        right, bottom = transform * (cols, rows)
+        with _suppress_affine_pending_deprecation():
+            left, top = transform * (0, 0)
+            right, bottom = transform * (cols, rows)
         extent = (left, right, bottom, top)
 
     return extent

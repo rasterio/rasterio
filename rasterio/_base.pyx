@@ -43,6 +43,7 @@ from rasterio.errors import (
     NotGeoreferencedWarning,
     RasterBlockError,
     RasterioIOError,
+    _suppress_affine_pending_deprecation,
 )
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
@@ -967,9 +968,10 @@ cdef class DatasetBase:
             return BoundingBox(c, f + e * height, c + a * width, f)
         else:
             c0x, c0y = c, f
-            c1x, c1y = self.transform * (0, height)
-            c2x, c2y = self.transform * (width, height)
-            c3x, c3y = self.transform * (width, 0)
+            with _suppress_affine_pending_deprecation():
+                c1x, c1y = self.transform * (0, height)
+                c2x, c2y = self.transform * (width, height)
+                c3x, c3y = self.transform * (width, 0)
             xs = (c0x, c1x, c2x, c3x)
             ys = (c0y, c1y, c2y, c3y)
             return BoundingBox(min(xs), min(ys), max(xs), max(ys))
