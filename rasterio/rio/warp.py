@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.env import setenv
-from rasterio.errors import CRSError
+from rasterio.errors import CRSError, _suppress_affine_pending_deprecation
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.rio.options import _cb_key_val
@@ -328,7 +328,8 @@ def warp(
                 res = max(px, py)
                 dst_width = max(int(round((right - left) / res)), 1)
                 dst_height = max(int(round((top - bottom) / res)), 1)
-                dst_transform = Affine.translation(left, top) * Affine.scale(res, -res)
+                with _suppress_affine_pending_deprecation():
+                    dst_transform = Affine.translation(left, top) * Affine.scale(res, -res)
 
             if target_aligned_pixels:
                 dst_transform, dst_width, dst_height = aligned_target(

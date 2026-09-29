@@ -24,6 +24,7 @@ Bug fixes:
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
   deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
+- Acknowledge PendingDeprecationWarning from affine (gh-3634)
 
 Packaging:
 

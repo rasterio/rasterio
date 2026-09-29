@@ -10,6 +10,7 @@ from rasterio.errors import (
     CRSError,
     FileOverwriteError,
     RasterioIOError,
+    _suppress_affine_pending_deprecation,
 )
 from rasterio.rio import options
 from rasterio.transform import Affine, guard_transform
@@ -140,7 +141,8 @@ def create(
         left, bottom, right, top = bounds
         sx = (right - left) / width
         sy = (bottom - top) / height
-        geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
+        with _suppress_affine_pending_deprecation():
+            geo_transform = Affine.translation(left, top) * Affine.scale(sx, sy)
     if transform:
         if geo_transform is not None:
             click.echo(
