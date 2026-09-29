@@ -25,6 +25,7 @@ Bug fixes:
   deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
 - Acknowledge PendingDeprecationWarning from affine (gh-3634)
+- Ensure COG dtype correct on write (gh-3652)
 
 Packaging:
 

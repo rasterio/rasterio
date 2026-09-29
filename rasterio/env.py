@@ -543,6 +543,7 @@ _GDAL_RUNTIME_VERSION = GDALVersion.runtime()
 _GDAL_AT_LEAST_3_10 = _GDAL_RUNTIME_VERSION.at_least("3.10")
 _GDAL_AT_LEAST_3_11 = _GDAL_RUNTIME_VERSION.at_least("3.11")
 _GDAL_AT_LEAST_3_12_1 = GDALVersion.runtime(include_patch=True).at_least("3.12.1", include_patch=True)
+_GDAL_EQ_3_13_3 = GDALVersion.runtime(include_patch=True) == GDALVersion.parse("3.13.3", include_patch=True)
 
 
 def require_gdal_version(version, param=None, values=None, is_max_version=False,
