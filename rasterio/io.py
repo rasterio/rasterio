@@ -15,7 +15,7 @@ from rasterio._io import (
     MemoryFileBase,
 )
 from rasterio.windows import WindowMethodsMixin
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, _GDAL_EQ_3_13_3
 from rasterio.errors import RasterioDeprecationWarning
 from rasterio.transform import TransformMethodsMixin
 from rasterio._path import _UnparsedPath
@@ -287,7 +287,9 @@ def get_writer_for_driver(driver):
     if not driver:
         raise ValueError("'driver' is required to read/write dataset.")
     cls = None
-    if driver_can_create(driver):
+    # COG & GDAL 3.13.3 fails with DatasetWriter (BufferedDatasetWriter works)
+    # https://github.com/rasterio/rasterio/issues/3652
+    if (driver != "COG" or not _GDAL_EQ_3_13_3) and driver_can_create(driver):
         cls = DatasetWriter
     elif driver_can_create_copy(driver):  # pragma: no branch
         cls = BufferedDatasetWriter

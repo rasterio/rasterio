@@ -1,7 +1,9 @@
 """Tests of the rasterio.io module."""
 
+import numpy as np
 import pytest
 
+import rasterio
 from rasterio.io import DatasetReader, DatasetWriter
 
 
@@ -35,3 +37,20 @@ def test_datasetwriter_no_crs(tmp_path):
         count=1,
         dtype="uint8",
     ).name.endswith("lol.tif")
+
+
+def test_write_cog_dtype(tmp_path):
+    # https://github.com/rasterio/rasterio/issues/3652
+    with rasterio.open(
+        tmp_path.joinpath("test_cog.tif"),
+        mode="w",
+        driver="COG",
+        width=2,
+        height=2,
+        count=1,
+        dtype="float32",
+        nodata=np.nan,
+        crs="EPSG:3857",
+        transform=rasterio.transform.from_origin(0, 2000, 1000, 1000)
+    ) as dst:
+        assert dst.dtypes[0] == "float32"
