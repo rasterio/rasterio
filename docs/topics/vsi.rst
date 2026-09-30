@@ -150,8 +150,7 @@ formats depending on them cannot be used in this way.
 
 To gain support for auxiliary "sidecar" files such as .aux.xml and .msk files
 that may accompany GeoTIFFs, an fsspec-like filesystem object may be used as
-the opener. See
-`fsspec documentation <https://filesystem-spec.readthedocs.io>`__ for details.
+the opener.
 
 .. code-block:: python
 
