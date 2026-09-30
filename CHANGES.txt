@@ -14,7 +14,7 @@ Bug fixes:
 - The features.shape() function properly accepts a (dataset, integer) pair as
   source as advertised (gh-3638).
 - Usage of a deprecated click function has been replaced (gh-3635).
-- The PendingDeprecationWarning from affine 3.0.1 has been silenced (gh-3635).
+- The PendingDeprecationWarning from affine 3.0.1 has been silenced (gh-3635, gh-3634).
 - Several instances of Python files left unclosed by Rasterio have been tracked
   down and addressed (gh-3635).
 - The stack() function can now accept WarpedVRT sources using the same
@@ -25,7 +25,6 @@ Bug fixes:
   deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
 - Let shapes() take a tuple as advertised (gh-3638)
-- Acknowledge PendingDeprecationWarning from affine (gh-3634)
 - Ensure COG dtype correct on write (gh-3652)
 
 Packaging:
