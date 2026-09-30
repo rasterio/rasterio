@@ -31,7 +31,7 @@ Bug fixes:
 Packaging:
 
 - Wheels include GDAL 3.12.2, netCDF 4.10.1, cURL 8.20.0, and PROJ 9.8.1.
-- HDF5, Expat, libexpat (gh-3645, gh-3651)
+- Wheels update HDF5, Expat, libexpat (gh-3645, gh-3651)
 - Python 3.15 wheels for Windows ARM (gh-3622)
 
 1.5.1 (2026-08-07)
