@@ -154,8 +154,8 @@ the opener.
 
 .. code-block:: python
 
+    import fsspec
     import rasterio
-    from fsspec
 
     fs = fsspec.filesystem("s3", anon=True)
 
