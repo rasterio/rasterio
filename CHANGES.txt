@@ -24,12 +24,15 @@ Bug fixes:
 - Use "MEM" instead of "Memory" driver in _shapes() to avoid a problematic
   deprecation warning from GDAL (gh-3621). See also
   https://github.com/OSGeo/gdal/issues/12102.
+- Let shapes() take a tuple as advertised (gh-3638)
 - Acknowledge PendingDeprecationWarning from affine (gh-3634)
 - Ensure COG dtype correct on write (gh-3652)
 
 Packaging:
 
 - Wheels include GDAL 3.12.2, netCDF 4.10.1, cURL 8.20.0, and PROJ 9.8.1.
+- HDF5, Expat, libexpat (gh-3645, gh-3651)
+- Python 3.15 wheels for Windows ARM (gh-3622)
 
 1.5.1 (2026-08-07)
 ------------------
