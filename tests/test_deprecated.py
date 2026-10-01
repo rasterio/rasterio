@@ -1,7 +1,7 @@
 """Unittests for deprecated features"""
 
-import affine
 import pytest
+from affine import Affine
 
 import rasterio
 
@@ -11,7 +11,5 @@ def test_open_transform_gdal_geotransform(path_rgb_byte_tif):
     an exception.
     """
     with pytest.raises(TypeError):
-        with rasterio.open(
-            path_rgb_byte_tif, transform=tuple(affine.Affine.identity().to_gdal())
-        ):
+        with rasterio.open(path_rgb_byte_tif, transform=Affine.identity().to_gdal()):
             pass

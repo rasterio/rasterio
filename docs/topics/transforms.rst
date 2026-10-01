@@ -31,9 +31,9 @@ This is approximately equivalent to
 
     >>> transform = Affine(300.0379266750948, 0.0, 101985.0, 0.0,
                            -300.041782729805, 2826915.0)
-    >>> transform * (0.5, 0.5)
+    >>> transform @ (0.5, 0.5)
     (102135.01896333754, 2826764.979108635)
-    >>> ~transform * (102135.01896333754, 2826764.979108635)
+    >>> ~transform @ (102135.01896333754, 2826764.979108635)
     (0.5, 0.5)
 
 The dataset methods :meth:`~.DatasetReader.xy` and :meth:`~.DatasetReader.index` use :mod:`rasterio.transform` under the hood

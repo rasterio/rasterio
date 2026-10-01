@@ -248,8 +248,8 @@ def test_geometry_window_rotated_boundless():
     dataset = mock.MagicMock()
     dataset.transform = (
         Affine.rotation(-45.0)
-        * Affine.translation(-sqrt2, sqrt2)
-        * Affine.scale(sqrt2 / 2.0, -sqrt2 / 2.0)
+        @ Affine.translation(-sqrt2, sqrt2)
+        @ Affine.scale(sqrt2 / 2.0, -sqrt2 / 2.0)
     )
     dataset.height = 4.0
     dataset.width = 4.0
@@ -475,7 +475,7 @@ def test_rasterize_to_dataset(tmp_path, geojson_point):
         height=10,
         dtype="uint8",
         crs="EPSG:4326",
-        transform=Affine.translation(0.0, 0.0) * Affine.scale(1.0, 1.0),
+        transform=Affine.translation(0.0, 0.0) @ Affine.scale(1.0, 1.0),
     ) as dst:
         rasterize([geojson_point], dst_path=dst)
 
@@ -497,7 +497,7 @@ def test_rasterize_to_file(tmp_path, geojson_point):
         height=10,
         dtype="uint8",
         crs="EPSG:4326",
-        transform=Affine.translation(0.0, 0.0) * Affine.scale(1.0, 1.0),
+        transform=Affine.translation(0.0, 0.0) @ Affine.scale(1.0, 1.0),
     )
     rasterize(
         [geojson_point], nodata=0.0, dst_path=(tmp_path / "test.tif"), dst_kwds=dst_kwds

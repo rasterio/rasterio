@@ -364,7 +364,7 @@ def test_write_plus_mode():
             height=32,
             width=32,
             crs="EPSG:3226",
-            transform=Affine.identity() * Affine.scale(0.5, -0.5),
+            transform=Affine.scale(0.5, -0.5),
         ) as dst:
             dst.write(numpy.full((32, 32), 255, dtype="uint8"), 1)
             dst.write(numpy.full((32, 32), 204, dtype="uint8"), 2)
@@ -386,7 +386,7 @@ def test_write_plus_model_jpeg():
                 height=32,
                 width=32,
                 crs="EPSG:3226",
-                transform=Affine.identity() * Affine.scale(0.5, -0.5),
+                transform=Affine.scale(0.5, -0.5),
             ) as dst:
                 dst.write(numpy.full((32, 32), 255, dtype="uint8"), 1)
                 dst.write(numpy.full((32, 32), 204, dtype="uint8"), 2)
@@ -478,7 +478,7 @@ def test_write_plus_mode_requires_width():
                 count=3,
                 height=32,
                 crs="EPSG:3226",
-                transform=Affine.identity() * Affine.scale(0.5, -0.5),
+                transform=Affine.scale(0.5, -0.5),
             )
 
 
@@ -492,7 +492,7 @@ def test_write_plus_mode_blockxsize_requires_width():
                 count=3,
                 height=32,
                 crs="EPSG:3226",
-                transform=Affine.identity() * Affine.scale(0.5, -0.5),
+                transform=Affine.scale(0.5, -0.5),
                 blockxsize=128,
             )
 
@@ -517,7 +517,7 @@ def test_close_derived_datasets():
             height=32,
             width=32,
             crs="EPSG:3226",
-            transform=Affine.identity() * Affine.scale(0.5, -0.5),
+            transform=Affine.scale(0.5, -0.5),
         )
         assert not dataset.closed
     assert dataset.closed

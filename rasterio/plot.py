@@ -217,8 +217,8 @@ def plotting_extent(source, transform=None):
     else:
         transform = guard_transform(transform)
         rows, cols = source.shape[0:2]
-        left, top = transform * (0, 0)
-        right, bottom = transform * (cols, rows)
+        left, top = transform @ (0, 0)
+        right, bottom = transform @ (cols, rows)
         extent = (left, right, bottom, top)
 
     return extent
