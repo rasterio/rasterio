@@ -29,7 +29,7 @@ from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError,
-    WarpOperationError, _suppress_affine_pending_deprecation)
+    WarpOperationError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport cython

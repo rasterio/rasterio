@@ -43,7 +43,6 @@ from rasterio.errors import (
     NotGeoreferencedWarning,
     RasterBlockError,
     RasterioIOError,
-    _suppress_affine_pending_deprecation,
 )
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal

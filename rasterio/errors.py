@@ -1,9 +1,5 @@
 """Errors and Warnings."""
 
-import warnings
-
-from contextlib import contextmanager
-
 from click import FileError
 
 
@@ -183,15 +179,3 @@ class MergeError(RasterioError):
 
 class StackError(RasterioError):
     """Raised when rasters cannot be stacked."""
-
-
-@contextmanager
-def _suppress_affine_pending_deprecation():
-    """Context manager to suppress affine pending deprecation warnings."""
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            "Use.*matmul instead of.*mul operator for matrix multiplication",
-            category=PendingDeprecationWarning,
-        )
-        yield

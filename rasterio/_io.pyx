@@ -27,7 +27,7 @@ from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
     UnsupportedOperation, OverviewCreationError, RasterBlockError, InvalidArrayError,
-    StatisticsError, RasterioDeprecationWarning, _suppress_affine_pending_deprecation
+    StatisticsError, RasterioDeprecationWarning
 )
 from rasterio.dtypes import (
     is_ndarray,
