@@ -440,8 +440,7 @@ def _opener_registration(urlpath, obj):
             _ = registry.pop(key, None)
             _OPENER_REGISTRY.set(registry)
 
-            IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 9):
-                retval = VSIRemovePluginHandler(prefix_bytes)
+            retval = VSIRemovePluginHandler(prefix_bytes)
 
 
 class FileContainer(ABC):

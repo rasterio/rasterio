@@ -148,10 +148,7 @@ cdef extern from "cpl_vsi.h" nogil:
 
     void VSICurlPartialClearCache(const char *)
     void VSICurlClearCache()
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 9):
-    cdef extern from "cpl_vsi.h" nogil:
-        int VSIRemovePluginHandler(const char*)
+    int VSIRemovePluginHandler(const char*)
 
 
 cdef extern from "ogr_srs_api.h" nogil:
@@ -469,12 +466,7 @@ cdef extern from "gdal.h" nogil:
 
     int GDALReferenceDataset(GDALDatasetH hds)
     int GDALDereferenceDataset(GDALDatasetH hds)
-
-IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 10):
-    cdef extern from "gdal.h" nogil:
-        const int GDAL_OF_THREAD_SAFE
-ELSE:
-    cdef int GDAL_OF_THREAD_SAFE = 0x800
+    const int GDAL_OF_THREAD_SAFE
 
 cdef extern from "ogr_api.h" nogil:
 

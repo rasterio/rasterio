@@ -3,7 +3,6 @@ Tests in this file will ONLY run for GDAL >= 3.x"""
 
 # TODO: delete at version 2.0. FilePath is deprecated in version 1.4.
 
-from contextlib import nullcontext
 from io import BytesIO
 import concurrent.futures
 import logging
@@ -13,7 +12,6 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.env import _GDAL_AT_LEAST_3_10
 from rasterio.shutil import copyfiles
 from rasterio.windows import Window
 
@@ -250,9 +248,6 @@ def test_quieter_vsi_plugin_notifications(caplog, path_rgb_byte_tif):
 
 def test_filepath_thread_safe_option(rgb_file_object):
     with (
-        pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
-        if not _GDAL_AT_LEAST_3_10
-        else nullcontext(),
         rasterio.Env(GDAL_NUM_THREADS=2),
         rasterio.open(FilePath(rgb_file_object), thread_safe=True) as src,
     ):
