@@ -3,6 +3,7 @@
 import json
 import logging
 import os.path
+import sys
 
 import click
 
@@ -99,6 +100,14 @@ class _Collection:
 )
 @options.use_rs_opt
 @click.option(
+    "--sequence/--collection",
+    default=False,
+    help="Write a single JSON text containing a feature collection object "
+    "(the default) or write a LF-delimited sequence of texts containing "
+    "individual objects.",
+)
+@options.use_rs_opt
+@click.option(
     "--bidx",
     type=click.INT,
     default=0,
@@ -149,7 +158,7 @@ def blocks(
     if compact:
         dump_kwds["separators"] = (",", ":")
 
-    stdout = click.open_file(output, "w") if output else click.get_text_stream("stdout")
+    stdout = click.open_file(output, "w") if output else sys.stdout
 
     with ctx.obj["env"], rasterio.open(input) as src:
         if bidx and bidx not in src.indexes:

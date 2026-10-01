@@ -5,6 +5,8 @@ import shutil
 import platform
 
 import pytest
+
+
 import rasterio
 
 version_name = rasterio.gdal_version()

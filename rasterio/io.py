@@ -3,6 +3,7 @@
 Instances of these classes are called dataset objects.
 """
 
+from contextlib import ExitStack
 import logging
 import warnings
 
@@ -14,7 +15,7 @@ from rasterio._io import (
     MemoryFileBase,
 )
 from rasterio.windows import WindowMethodsMixin
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, _GDAL_EQ_3_13_3
 from rasterio.errors import RasterioDeprecationWarning
 from rasterio.transform import TransformMethodsMixin
 from rasterio._path import _UnparsedPath
@@ -218,6 +219,7 @@ class _FilePath(FilePathBase):
             RasterioDeprecationWarning,
         )
         super().__init__(filelike_obj, dirname=dirname, filename=filename)
+        self._env = ExitStack()
 
     @ensure_env
     def open(self, driver=None, sharing=False, thread_safe=False, **kwargs):
@@ -247,14 +249,18 @@ class _FilePath(FilePathBase):
         # Assume we were given a non-empty file-like object
         log.debug(f"VSI path: {mempath.path}")
 
-        return DatasetReader(
+        rd = DatasetReader(
             mempath, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs
         )
+        self._env.push(rd)
+        return rd
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
+        if self._env:
+            self._env.close()
         self.close()
 
 
@@ -304,7 +310,9 @@ def get_writer_for_driver(driver):
     if not driver:
         raise ValueError("'driver' is required to read/write dataset.")
     cls = None
-    if driver_can_create(driver):
+    # COG & GDAL 3.13.3 fails with DatasetWriter (BufferedDatasetWriter works)
+    # https://github.com/rasterio/rasterio/issues/3652
+    if (driver != "COG" or not _GDAL_EQ_3_13_3) and driver_can_create(driver):
         cls = DatasetWriter
     elif driver_can_create_copy(driver):  # pragma: no branch
         cls = BufferedDatasetWriter

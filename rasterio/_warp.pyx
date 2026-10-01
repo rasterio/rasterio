@@ -21,6 +21,7 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError, stack_errors)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
+from rasterio.dtypes import dtype_ranges
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import Env, GDALVersion
 from rasterio.crs import CRS
@@ -28,7 +29,7 @@ from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError,
-    WarpOperationError)
+    WarpOperationError, _suppress_affine_pending_deprecation)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport cython

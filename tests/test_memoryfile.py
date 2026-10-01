@@ -6,7 +6,6 @@ from io import BytesIO
 from pathlib import Path
 import concurrent.futures
 import os.path
-import platform
 
 from affine import Affine
 import numpy
@@ -262,17 +261,13 @@ def test_file_object_read_variant(rgb_file_bytes):
         assert src.read().shape == (3, 718, 791)
 
 
-@pytest.mark.skipif(
-    platform.system() in ["Windows", "Darwin"],
-    reason="https://github.com/rasterio/rasterio/issues/3499",
-)
 def test_memfile_thread_safe_option(rgb_file_object):
     with (
         pytest.raises(rasterio.errors.GDALOptionNotImplementedError)
         if not _GDAL_AT_LEAST_3_10
         else nullcontext(),
-        rasterio.Env(GDAL_NUM_THREADS=2),
-        rasterio.open(MemoryFile(rgb_file_object), thread_safe=True) as src,
+        MemoryFile(rgb_file_object) as mem,
+        mem.open(thread_safe=True) as src,
     ):
 
         def process(window):
@@ -294,9 +289,11 @@ def test_file_object_read_variant2(rgb_file_bytes):
 
 def teste_srtm_hgt_object_read(path_srtm_hgt):
     """An example of reading from a MemoryFile object with a driver which requires a filename"""
-    with rasterio.open(
-        MemoryFile(open(path_srtm_hgt, "rb").read(), filename=path_srtm_hgt)
-    ) as src:
+    with (
+        open(path_srtm_hgt, "rb") as srtm_file,
+        MemoryFile(srtm_file, filename=path_srtm_hgt) as memfile,
+        rasterio.open(memfile) as src,
+    ):
         assert src.driver == "SRTMHGT"
         assert src.count == 1
         assert src.dtypes == ("int16",)
