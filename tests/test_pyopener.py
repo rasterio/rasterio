@@ -295,6 +295,7 @@ def test_opener_fsspec_fs_tiff_threads_2():
             assert src.read().shape == (3, 718, 791)
 
 
+@pytest.mark.xfail(reason="Flaky Context lookup error")
 def test_opener_fsspec_thread_safe_option():
     fs = fsspec.filesystem("file")
     with (

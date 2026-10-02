@@ -2,7 +2,7 @@
 requires = [
     # NOTE: when updating this table, also update `dependency-groups.build`
     "setuptools>=77.0.3",
-    "cython>=3.1,<=3.2",
+    "cython>=3.1,<=3.3",
     "numpy>=2,<3",
 ]
 build-backend = "setuptools.build_meta"
@@ -126,6 +126,8 @@ version = {attr = "rasterio.__version__"}
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
+    "error",
+    "ignore:unclosed <socket.socket:ResourceWarning",
     "ignore:FilePath is supplanted",
     "ignore:is_valid is not useful",
     "ignore:The given matrix is",
@@ -133,6 +135,7 @@ filterwarnings = [
     "ignore::rasterio.errors.NotGeoreferencedWarning",
     "ignore::rasterio.errors.RasterioDeprecationWarning",
     "ignore:numpy.ufunc size changed",
+    "ignore:Use .* matmul instead of:PendingDeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",
