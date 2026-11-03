@@ -164,9 +164,8 @@ jobs:
             cmake --version
             bash ./ci/config.sh
           CIBW_BEFORE_ALL_MACOS: |
-            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg jpeg-turbo libpng xz giflib rtmpdump brotli snappy libavif libzip
-            # brew remove -f --ignore-dependencies curl php
             HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake libtool coreutils cmake wget
+            brew remove -f --ignore-dependencies liblerc webp zstd libtiff libxcb libxdcmp lcms2 xmlto ghostscript lz4 openjpeg jpeg-turbo libpng xz giflib rtmpdump brotli snappy libavif libzip
             bash ./ci/config.sh
           CIBW_BEFORE_BUILD_MACOS: |
             export GDAL_CONFIG=${GITHUB_WORKSPACE}/rasterio_libs/bin/gdal-config
