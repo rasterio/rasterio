@@ -420,9 +420,17 @@ cdef class DatasetBase:
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
         cdef const char *wkt = GDALGetProjectionRef(self.handle())
+        cdef OGRSpatialReferenceH srs = GDALGetSpatialRef(self.handle())
+        cdef CRS crs
+        cdef double epoch
         if wkt == NULL:
             raise ValueError("Unexpected NULL spatial reference")
-        return self._handle_crswkt(wkt)
+        crs = self._handle_crswkt(wkt)
+        if crs is not None and srs != NULL:
+            epoch = OSRGetCoordinateEpoch(srs)
+            if epoch:
+                OSRSetCoordinateEpoch(crs._osr, epoch)
+        return crs
 
     def read_transform(self):
         """Return the stored GDAL GeoTransform"""

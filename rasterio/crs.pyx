@@ -168,6 +168,20 @@ cdef class CRS:
         return self._wkt
 
     @property
+    def coord_epoch(self):
+        """The coordinate epoch of the CRS as a decimal year string.
+
+        .. versionadded:: 1.6.0
+
+        Returns
+        -------
+        str or None
+
+        """
+        epoch = OSRGetCoordinateEpoch(self._osr)
+        return str(epoch) if epoch else None
+
+    @property
     def is_geographic(self):
         """Test if the CRS is a geographic coordinate reference system.
 
@@ -967,12 +981,17 @@ cdef class CRS:
     __nonzero__ = __bool__
 
     def __getstate__(self):
-        return self.to_wkt()
+        return self.to_wkt(), self.coord_epoch
 
     def __setstate__(self, state):
         cdef CRS tmp
+        epoch = None
+        if not isinstance(state, str):
+            state, epoch = state
         tmp = CRS.from_wkt(state)
         self._osr = OSRClone(tmp._osr)
+        if epoch is not None:
+            OSRSetCoordinateEpoch(self._osr, float(epoch))
         self._wkt = tmp._wkt
         self._data = tmp.data
         self._epsg = tmp._epsg

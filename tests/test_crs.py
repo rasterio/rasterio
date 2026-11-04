@@ -9,6 +9,7 @@ import subprocess
 import pytest
 
 import rasterio
+import rasterio.shutil
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS, epsg_treats_as_latlong, epsg_treats_as_northingeasting
 from rasterio.enums import WktVersion
@@ -280,6 +281,25 @@ def test_can_create_osr_invalid_epsg_0():
 
 def test_has_wkt_property():
     assert CRS({"init": "epsg:4326"}).wkt.startswith('GEOGCS["WGS 84",DATUM')
+
+
+def test_coord_epoch(tmp_path):
+    """The coordinate epoch is a string, or None when it is not set."""
+    wkt = CRS.from_epsg(32618).to_wkt(version=WktVersion.WKT2_2019)
+    assert CRS.from_epsg(32618).coord_epoch is None
+    vrt_path = tmp_path / "epoch.vrt"
+    vrt_path.write_text(
+        '<VRTDataset rasterXSize="1" rasterYSize="1">'
+        f'<SRS coordinateEpoch="2016.47">{wkt}</SRS>'
+        '<VRTRasterBand dataType="Byte" band="1"/>'
+        "</VRTDataset>"
+    )
+    tif_path = tmp_path / "epoch.tif"
+    rasterio.shutil.copy(vrt_path, tif_path)
+    with rasterio.open(tif_path) as src:
+        assert src.crs.coord_epoch == "2016.47"
+        assert copy.copy(src.crs).coord_epoch == "2016.47"
+        assert pickle.loads(pickle.dumps(src.crs)).coord_epoch == "2016.47"
 
 
 def test_repr():
