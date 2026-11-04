@@ -8,6 +8,10 @@ Dependencies:
 
 - 
 
+Enhancements:
+
+- CRS objects expose a read-only coordinate epoch (gh-3669).
+
 Bug fixes:
 
 -
