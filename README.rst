@@ -111,7 +111,7 @@ Rasterio CLI
 ============
 
 Rasterio's command line interface, named "rio", is documented at `cli.rst
-<https://github.com/rasterio/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
+<https://github.com/rasterio/rasterio/blob/main/docs/cli.rst>`__. Its ``rio
 insp`` command opens the hood of any raster dataset so you can poke around
 using Python.
 
@@ -155,7 +155,7 @@ Rio Plugins
 -----------
 
 Rio provides the ability to create subcommands using plugins.  See
-`cli.rst <https://github.com/rasterio/rasterio/blob/master/docs/cli.rst#rio-plugins>`__
+`cli.rst <https://github.com/rasterio/rasterio/blob/main/docs/cli.rst#rio-plugins>`__
 for more information on building plugins.
 
 See the
