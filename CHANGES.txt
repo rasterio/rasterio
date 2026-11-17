@@ -14,7 +14,8 @@ Bug fixes:
 
 Packaging:
 
--
+- Linux and macOS wheels include a CycloneDX SBOM of their bundled libraries
+  at .dist-info/sboms/rasterio.cdx.json, as specified by PEP 770.
 
 1.5.2 (2026-09-30)
 ------------------

@@ -17,6 +17,7 @@ on:
     paths:
       - ".github/workflows/build-wheels.yaml"
       - "ci/config.sh"
+      - "ci/sbom.py"
 
 # cancel running jobs on new commit to PR
 concurrency:
@@ -175,6 +176,11 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.triplet }}/bin -w {dest_dir} {wheel}
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: export DYLD_LIBRARY_PATH=${GITHUB_WORKSPACE}/rasterio_libs/lib:$DYLD_LIBRARY_PATH && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: export 'LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH' && auditwheel repair -w {dest_dir} {wheel}
+
+      - name: Add SBOM of bundled libraries (PEP 770)
+        if: runner.os != 'Windows'
+        run: python3 ci/sbom.py wheelhouse
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -230,6 +236,11 @@ jobs:
           rio env --formats
           PROJ_NETWORK=ON python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon and not test_reproject_error_propagation and not test_info_azure_unsigned and not test_decimated_no_use_overview and not test_datasetreader_ctor_url and not test_copyfiles_same_dataset_another_name and not test_python_file_reuse"
 
+
+      - name: Check SBOM is installed
+        if: runner.os != 'Windows'
+        shell: bash
+        run: python -c "import json; from importlib.metadata import files; assert json.loads(next(f for f in files('rasterio') if f.name == 'rasterio.cdx.json').read_text())['components']"
 
       - name: Check for conflicts with fiona wheel
         # Execute this step only if fiona wheel is available for the platform
