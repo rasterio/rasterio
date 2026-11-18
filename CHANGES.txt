@@ -8,9 +8,18 @@ Dependencies:
 
 - 
 
+Enhancements:
+
+- Make WktVersion.WKT_2019 the default in CRS.to_wkt (gh-3682)
+
+
 Bug fixes:
 
 -
+
+Removal:
+
+- Remove morph_to_esri_dialect from CRS.to_wkt (gh-3683)
 
 Packaging:
 
