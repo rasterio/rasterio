@@ -46,20 +46,20 @@ class CustomCRS:
 def test_crs_constructor_dict():
     """Can create a CRS from a dict"""
     crs = CRS({"init": "epsg:3857"})
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
+    assert 'PROJCRS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_keywords():
     """Can create a CRS from keyword args, ignoring unknowns"""
     # Note: `init="epsg:dddd"` is no longer recommended usage.
     crs = CRS(init="epsg:3857", foo="bar")
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
+    assert 'PROJCRS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_crs_obj():
     """Can create a CRS from a CRS obj"""
     crs = CRS(CRS.from_epsg(3857))
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
+    assert 'PROJCRS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 @pytest.fixture(scope="session")
@@ -279,7 +279,7 @@ def test_can_create_osr_invalid_epsg_0():
 
 
 def test_has_wkt_property():
-    assert CRS({"init": "epsg:4326"}).wkt.startswith('GEOGCS["WGS 84",DATUM')
+    assert CRS({"init": "epsg:4326"}).wkt.startswith('GEOGCRS["WGS 84"')
 
 
 def test_repr():
@@ -365,7 +365,7 @@ def test_to_wkt__version(version):
 
 def test_to_wkt__env_version():
     with Env(OSR_WKT_FORMAT="WKT2_2018"):
-        assert CRS.from_epsg(4326).to_wkt().startswith('GEOGCRS["WGS 84",')
+        assert CRS.from_epsg(4326).to_wkt(version=None).startswith('GEOGCRS["WGS 84",')
 
 
 def test_to_wkt__version_invalid():
@@ -375,12 +375,12 @@ def test_to_wkt__version_invalid():
 
 def test_compound_crs():
     wkt = """COMPD_CS["unknown",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],VERT_CS["unknown",VERT_DATUM["unknown",2005],UNIT["metre",1.0,AUTHORITY["EPSG","9001"]],AXIS["Up",UP]]]"""
-    assert CRS.from_wkt(wkt).wkt.startswith("COMPD_CS")
+    assert CRS.from_wkt(wkt).wkt.startswith("COMPOUNDCRS")
 
 
 def test_dataset_compound_crs():
     with rasterio.open("tests/data/compdcs.vrt") as dataset:
-        assert dataset.crs.wkt.startswith("COMPD_CS")
+        assert dataset.crs.wkt.startswith("COMPOUNDCRS")
 
 
 @pytest.mark.wheel
@@ -436,8 +436,8 @@ def test_issue1609_wktext_a():
         "no_defs": True,
     }
     wkt = CRS(src_proj).wkt
-    assert 'PROJECTION["Polar_Stereographic"]' in wkt
-    assert 'PARAMETER["latitude_of_origin",-70]' in wkt
+    assert 'METHOD["Polar Stereographic (variant B)"' in wkt
+    assert 'PARAMETER["Latitude of standard parallel",-70' in wkt
 
 
 def test_empty_crs_str():
@@ -511,7 +511,7 @@ def test_units_factor(epsg_code, units_factor):
 def test_crs_copy():
     """CRS can be copied"""
     assert copy.copy(CRS.from_epsg(3857)).wkt.startswith(
-        'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84"'
+        'PROJCRS["WGS 84 / Pseudo-Mercator",BASEGEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84"'
     )
 
 
@@ -730,7 +730,7 @@ def test_crs_proj_json__from_string():
 
 
 def test_crs_compound_epsg():
-    assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPD")
+    assert CRS.from_string("EPSG:4326+3855").to_wkt().startswith("COMPOUNDCRS")
 
 
 @pytest.mark.parametrize(

@@ -387,20 +387,16 @@ cdef class CRS:
         """
         return ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items()])
 
-    def to_wkt(self, morph_to_esri_dialect=False, version=None):
+    def to_wkt(self, version=WktVersion.WKT2_2019):
         """Convert to a OGC WKT representation.
 
          .. versionadded:: 1.3.0 version
 
         Parameters
         ----------
-        morph_to_esri_dialect : bool, optional
-            Whether or not to morph to the Esri dialect of WKT Only
-            applies to GDAL versions < 3. This parameter will be removed
-            in a future version of rasterio.
         version : WktVersion or str, optional
             The version of the WKT output.
-            Only works with GDAL 3+. Default is WKT1_GDAL.
+            Set to None to use GDAL defaults.
 
         Returns
         -------
@@ -418,11 +414,6 @@ cdef class CRS:
 
         try:
             if OSRGetName(self._osr) != NULL:
-                if morph_to_esri_dialect:
-                    warnings.warn(
-                        "'morph_to_esri_dialect' ignored with GDAL 3+. "
-                        "Use 'version=WktVersion.WKT1_ESRI' instead."
-                    )
                 if version:
                     version = WktVersion(version).value
                     wkt_format = "FORMAT={}".format(version).encode("utf-8")
