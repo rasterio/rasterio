@@ -400,6 +400,7 @@ if "clean" not in sys.argv:
         Extension("rasterio._transform", ["rasterio/_transform.pyx"], **ext_options),
         Extension("rasterio._filepath", ["rasterio/_filepath.pyx"], **cpp_ext_options),
         Extension("rasterio._vsiopener", ["rasterio/_vsiopener.pyx"], **ext_options),
+        Extension("rasterio._pipeline", ["rasterio/_pipeline.pyx"], **ext_options),
     ]
     ext_modules = cythonize(
         extensions, quiet=True, compile_time_env=compile_time_env, **cythonize_options

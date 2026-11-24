@@ -754,6 +754,65 @@ IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 11):
         const char *GDALGetGenImgProjTranformerOptionList()
 
 
+IF (CTE_GDAL_MAJOR_VERSION, CTE_GDAL_MINOR_VERSION) >= (3, 12):
+    cdef extern from "gdalalgorithm_c.h" nogil:
+        ctypedef void *GDALAlgorithmRegistryH
+        ctypedef void *GDALAlgorithmH
+        ctypedef void *GDALAlgorithmArgH
+        ctypedef void *GDALArgDatasetValueH
+
+        GDALAlgorithmRegistryH GDALGetGlobalAlgorithmRegistry()
+        void GDALAlgorithmRegistryRelease(GDALAlgorithmRegistryH hReg)
+        GDALAlgorithmH GDALAlgorithmRegistryInstantiateAlg(
+            GDALAlgorithmRegistryH hReg, const char *pszAlgName
+        )
+        void GDALAlgorithmRelease(GDALAlgorithmH hAlg)
+        GDALAlgorithmH GDALAlgorithmInstantiateSubAlgorithm(
+            GDALAlgorithmH hAlg, const char *pszSubAlgName
+        )
+        bint GDALAlgorithmParseCommandLineArguments(
+            GDALAlgorithmH hAlg, char **papszArgs
+        )
+        GDALAlgorithmArgH GDALAlgorithmGetArg(
+            GDALAlgorithmH hAlg, const char *pszArgName
+        )
+        GDALAlgorithmArgH GDALAlgorithmGetArgNonConst(
+            GDALAlgorithmH hAlg, const char *pszArgName
+        )
+        void GDALAlgorithmArgRelease(GDALAlgorithmArgH hArg)
+        bint GDALAlgorithmArgIsSpecified(GDALAlgorithmArgH hArg)
+        const char *GDALAlgorithmArgGetAsString(GDALAlgorithmArgH hArg)
+        GDALArgDatasetValueH GDALAlgorithmArgGetAsDatasetValue(
+            GDALAlgorithmArgH hArg
+        )
+        bint GDALAlgorithmArgSetAsString(
+            GDALAlgorithmArgH hArg, const char *pszValue
+        )
+        bint GDALAlgorithmArgSetAsStringList(
+            GDALAlgorithmArgH hArg, char **papszValue
+        )
+        bint GDALAlgorithmArgSetDataset(
+            GDALAlgorithmArgH hArg, GDALDatasetH hDS
+        )
+        bint GDALAlgorithmArgSetDatasets(
+            GDALAlgorithmArgH hArg, size_t nCount, GDALDatasetH *pahDS
+        )
+        bint GDALAlgorithmArgSetDatasetNames(
+            GDALAlgorithmArgH hArg, char **papszNames
+        )
+        bint GDALAlgorithmRun(
+            GDALAlgorithmH hAlg,
+            GDALProgressFunc pfnProgress,
+            void *pProgressData,
+        )
+        bint GDALAlgorithmFinalize(GDALAlgorithmH hAlg)
+        void GDALArgDatasetValueRelease(GDALArgDatasetValueH hValue)
+        GDALDatasetH GDALArgDatasetValueGetDatasetIncreaseRefCount(
+            GDALArgDatasetValueH hValue
+        )
+
+
+
 cdef extern from "ogr_core.h" nogil:
 
     char *OGRGeometryTypeToName(int type)
